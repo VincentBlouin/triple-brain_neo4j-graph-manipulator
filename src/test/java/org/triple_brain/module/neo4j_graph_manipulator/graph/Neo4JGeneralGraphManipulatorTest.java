@@ -10,6 +10,7 @@ import org.neo4j.graphdb.Transaction;
 import org.triple_brain.module.model.User;
 import org.triple_brain.module.model.graph.Vertex;
 import org.triple_brain.module.model.graph.scenarios.TestScenarios;
+import org.triple_brain.module.model.graph.scenarios.VerticesCalledABAndC;
 
 import javax.inject.Inject;
 
@@ -53,10 +54,12 @@ public class Neo4JGeneralGraphManipulatorTest {
     public void before() throws Exception{
         injector.injectMembers(this);
         transaction = graphDb.beginTx();
-        testScenarios.makeGraphHave3VerticesABCWhereAIsDefaultCenterVertexAndAPointsToBAndBPointsToC(
+        VerticesCalledABAndC verticesCalledABAndC = testScenarios.makeGraphHave3VerticesABCWhereAIsDefaultCenterVertexAndAPointsToBAndBPointsToC(
                 neo4JUserGraphFactory.withUser(user)
         );
-
+        vertexA = verticesCalledABAndC.vertexA();
+        vertexB = verticesCalledABAndC.vertexB();
+        vertexC = verticesCalledABAndC.vertexC();
     }
 
     @After

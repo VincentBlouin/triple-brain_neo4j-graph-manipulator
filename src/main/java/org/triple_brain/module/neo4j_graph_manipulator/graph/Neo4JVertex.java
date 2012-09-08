@@ -1,6 +1,7 @@
 package org.triple_brain.module.neo4j_graph_manipulator.graph;
 
 import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.Relationship;
 import org.triple_brain.module.model.FriendlyResource;
 import org.triple_brain.module.model.Suggestion;
 import org.triple_brain.module.model.TripleBrainUris;
@@ -9,11 +10,11 @@ import org.triple_brain.module.model.graph.Edge;
 import org.triple_brain.module.model.graph.Vertex;
 
 import java.net.URI;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import static com.hp.hpl.jena.vocabulary.RDF.type;
-import static com.hp.hpl.jena.vocabulary.RDFS.label;
 
 /*
 * Copyright Mozilla Public License 1.1
@@ -22,24 +23,26 @@ public class Neo4JVertex extends Vertex {
 
     protected User owner;
     protected Node node;
+    protected Neo4JGraphElement graphElement;
 
-    public static Neo4JVertex loadUsingNodeOfOwner(Node node, User owner){
+    public static Neo4JVertex loadUsingNodeOfOwner(Node node, User owner) {
         return new Neo4JVertex(
                 node,
                 owner
         );
     }
 
-    public static Neo4JVertex createUsingEmptyNodeUriAndOwner(Node node, String uri, User owner){
-        node.setProperty(Neo4JUserGraph.URI_PROPERTY_NAME, uri);
-        node.setProperty(label.getURI(), "");
+    public static Neo4JVertex createUsingEmptyNodeUriAndOwner(Node node, URI uri, User owner) {
+        Neo4JVertex vertex = new Neo4JVertex(node, owner);
+        vertex.graphElement = Neo4JGraphElement.initiateProperties(node, uri);
         node.setProperty(type.getURI(), TripleBrainUris.TRIPLE_BRAIN_VERTEX);
-        return new Neo4JVertex(node, owner);
+        return vertex;
     }
 
-    protected Neo4JVertex(Node node, User owner){
+    protected Neo4JVertex(Node node, User owner) {
         this.node = node;
         this.owner = owner;
+        graphElement = Neo4JGraphElement.withPropertyContainer(node);
     }
 
     @Override
@@ -59,7 +62,20 @@ public class Neo4JVertex extends Vertex {
 
     @Override
     public Edge edgeThatLinksToDestinationVertex(Vertex destinationVertex) {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        for (Relationship relationship : connectedEdgesAsRelationships()) {
+            Edge edge = Neo4JEdge.loadWithRelationshipOfOwner(
+                    relationship,
+                    owner
+            );
+            if (edge.hasVertex(destinationVertex)) {
+                return edge;
+            }
+        }
+        throw new RuntimeException(
+                "Edge between vertex with " + id() +
+                        " and vertex with id " + destinationVertex.id() +
+                        " was not found"
+        );
     }
 
     @Override
@@ -74,7 +90,20 @@ public class Neo4JVertex extends Vertex {
 
     @Override
     public Edge addVertexAndRelation() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        Node newVertexNode = node.getGraphDatabase().createNode();
+        Neo4JVertex.createUsingEmptyNodeUriAndOwner(
+                newVertexNode,
+                owner.generateUri(),
+                owner
+        );
+        Relationship newRelationship = node.createRelationshipTo(
+                newVertexNode,
+                Relationships.TRIPLE_BRAIN_EDGE
+        );
+        return Neo4JEdge.createWithRelationshipAndOwner(
+                newRelationship,
+                owner
+        );
     }
 
     @Override
@@ -99,7 +128,20 @@ public class Neo4JVertex extends Vertex {
 
     @Override
     public Set<Edge> connectedEdges() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        Set<Edge> edges = new HashSet<Edge>();
+        for (Relationship relationship : connectedEdgesAsRelationships()) {
+            edges.add(
+                    Neo4JEdge.loadWithRelationshipOfOwner(
+                            relationship,
+                            owner
+                    )
+            );
+        }
+        return edges;
+    }
+
+    private Iterable<Relationship> connectedEdgesAsRelationships() {
+        return node.getRelationships(Relationships.TRIPLE_BRAIN_EDGE);
     }
 
     @Override
@@ -159,17 +201,17 @@ public class Neo4JVertex extends Vertex {
 
     @Override
     public String id() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        return graphElement.id();
     }
 
     @Override
     public String label() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        return graphElement.label();
     }
 
     @Override
     public void label(String label) {
-        //To change body of implemented methods use File | Settings | File Templates.
+        graphElement.label(label);
     }
 
     @Override
