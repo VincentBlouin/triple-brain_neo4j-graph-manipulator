@@ -57,7 +57,7 @@
         <dependency>
             <groupId>org.neo4j</groupId>
             <artifactId>neo4j-kernel</artifactId>
-            <version>1.7.2</version>
+            <version>1.8.M07</version>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
@@ -65,12 +65,6 @@
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>4.10</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.neo4j</groupId>
-            <artifactId>neo4j-cypher</artifactId>
-            <version>1.8.M07</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
