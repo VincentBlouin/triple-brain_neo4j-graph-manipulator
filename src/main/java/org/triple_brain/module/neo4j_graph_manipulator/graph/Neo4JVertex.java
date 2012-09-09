@@ -14,8 +14,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import static com.hp.hpl.jena.vocabulary.RDF.type;
-
 /*
 * Copyright Mozilla Public License 1.1
 */
@@ -35,7 +33,12 @@ public class Neo4JVertex extends Vertex {
     public static Neo4JVertex createUsingEmptyNodeUriAndOwner(Node node, URI uri, User owner) {
         Neo4JVertex vertex = new Neo4JVertex(node, owner);
         vertex.graphElement = Neo4JGraphElement.initiateProperties(node, uri);
-        node.setProperty(type.getURI(), TripleBrainUris.TRIPLE_BRAIN_VERTEX);
+        Node typeAsNode = node.getGraphDatabase().createNode();
+        typeAsNode.setProperty(Neo4JUserGraph.URI_PROPERTY_NAME, TripleBrainUris.TRIPLE_BRAIN_VERTEX);
+        node.createRelationshipTo(
+                typeAsNode,
+                Relationships.TYPE
+        );
         return vertex;
     }
 
@@ -47,7 +50,16 @@ public class Neo4JVertex extends Vertex {
 
     @Override
     public boolean hasEdge(Edge edge) {
-        return false;  //To change body of implemented methods use File | Settings | File Templates.
+        for(Relationship relationship : connectedEdgesAsRelationships()){
+            Edge edgeToCompare = Neo4JEdge.loadWithRelationshipOfOwner(
+                    relationship,
+                    owner
+            );
+            if(edge.equals(edgeToCompare)){
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
@@ -113,7 +125,14 @@ public class Neo4JVertex extends Vertex {
 
     @Override
     public void remove() {
-        //To change body of implemented methods use File | Settings | File Templates.
+        for(Edge edge : connectedEdges()){
+            edge.remove();
+        }
+        for(Relationship relationship : node.getRelationships()){
+            relationship.delete();
+        }
+        node.removeProperty(Neo4JUserGraph.URI_PROPERTY_NAME);
+        node.delete();
     }
 
     @Override
@@ -216,6 +235,6 @@ public class Neo4JVertex extends Vertex {
 
     @Override
     public boolean hasLabel() {
-        return false;  //To change body of implemented methods use File | Settings | File Templates.
+        return graphElement.hasLabel();
     }
 }

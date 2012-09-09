@@ -67,7 +67,8 @@ public class Neo4JEdge extends Edge {
 
     @Override
     public void remove() {
-        //To change body of implemented methods use File | Settings | File Templates.
+        relationship.removeProperty(Neo4JUserGraph.URI_PROPERTY_NAME);
+        relationship.delete();
     }
 
     @Override
@@ -87,6 +88,6 @@ public class Neo4JEdge extends Edge {
 
     @Override
     public boolean hasLabel() {
-        return false;  //To change body of implemented methods use File | Settings | File Templates.
+        return graphElement.hasLabel();
     }
 }
