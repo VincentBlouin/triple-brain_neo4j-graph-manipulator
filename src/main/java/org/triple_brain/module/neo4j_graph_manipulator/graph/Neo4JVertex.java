@@ -2,6 +2,7 @@ package org.triple_brain.module.neo4j_graph_manipulator.graph;
 
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
+import org.triple_brain.module.common_utils.Uris;
 import org.triple_brain.module.model.FriendlyResource;
 import org.triple_brain.module.model.Suggestion;
 import org.triple_brain.module.model.TripleBrainUris;
@@ -10,6 +11,7 @@ import org.triple_brain.module.model.graph.Edge;
 import org.triple_brain.module.model.graph.Vertex;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -33,12 +35,11 @@ public class Neo4JVertex extends Vertex {
     public static Neo4JVertex createUsingEmptyNodeUriAndOwner(Node node, URI uri, User owner) {
         Neo4JVertex vertex = new Neo4JVertex(node, owner);
         vertex.graphElement = Neo4JGraphElement.initiateProperties(node, uri);
-        Node typeAsNode = node.getGraphDatabase().createNode();
-        typeAsNode.setProperty(Neo4JUserGraph.URI_PROPERTY_NAME, TripleBrainUris.TRIPLE_BRAIN_VERTEX);
-        node.createRelationshipTo(
-                typeAsNode,
-                Relationships.TYPE
-        );
+
+        vertex.addType(FriendlyResource.withUriAndLabel(
+                Uris.get(TripleBrainUris.TRIPLE_BRAIN_VERTEX),
+                ""
+        ));
         return vertex;
     }
 
@@ -50,12 +51,12 @@ public class Neo4JVertex extends Vertex {
 
     @Override
     public boolean hasEdge(Edge edge) {
-        for(Relationship relationship : connectedEdgesAsRelationships()){
+        for (Relationship relationship : connectedEdgesAsRelationships()) {
             Edge edgeToCompare = Neo4JEdge.loadWithRelationshipOfOwner(
                     relationship,
                     owner
             );
-            if(edge.equals(edgeToCompare)){
+            if (edge.equals(edgeToCompare)) {
                 return true;
             }
         }
@@ -125,10 +126,10 @@ public class Neo4JVertex extends Vertex {
 
     @Override
     public void remove() {
-        for(Edge edge : connectedEdges()){
+        for (Edge edge : connectedEdges()) {
             edge.remove();
         }
-        for(Relationship relationship : node.getRelationships()){
+        for (Relationship relationship : node.getRelationships()) {
             relationship.delete();
         }
         node.removeProperty(Neo4JUserGraph.URI_PROPERTY_NAME);
@@ -195,7 +196,15 @@ public class Neo4JVertex extends Vertex {
 
     @Override
     public void addType(FriendlyResource type) {
-        //To change body of implemented methods use File | Settings | File Templates.
+        Node typeAsNode = node.getGraphDatabase().createNode();
+        typeAsNode.setProperty(
+                Neo4JUserGraph.URI_PROPERTY_NAME,
+                type.uri().toString()
+        );
+        node.createRelationshipTo(
+                typeAsNode,
+                Relationships.TYPE
+        );
     }
 
     @Override
@@ -205,7 +214,11 @@ public class Neo4JVertex extends Vertex {
 
     @Override
     public Set<FriendlyResource> getAdditionalTypes() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        Set<FriendlyResource> additionalTypes = new HashSet<FriendlyResource>();
+//        for(Relationship relationship : node.getRelationships(Relationships.TYPE)){
+//            relationship.
+//        }
+        return additionalTypes;
     }
 
     @Override
