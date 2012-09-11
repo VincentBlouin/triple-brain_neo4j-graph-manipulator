@@ -1,6 +1,7 @@
 package org.triple_brain.module.neo4j_graph_manipulator.graph;
 
 import com.hp.hpl.jena.vocabulary.RDFS;
+import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 import org.triple_brain.module.common_utils.Uris;
@@ -129,9 +130,13 @@ public class Neo4JVertex extends Vertex {
         for (Edge edge : connectedEdges()) {
             edge.remove();
         }
+        for(Relationship relationship: node.getRelationships(Direction.OUTGOING, Relationships.TYPE)){
+            relationship.getEndNode().delete();
+        }
         for (Relationship relationship : node.getRelationships()) {
             relationship.delete();
         }
+
         node.removeProperty(Neo4JUserGraph.URI_PROPERTY_NAME);
         node.delete();
     }

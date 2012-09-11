@@ -26,41 +26,52 @@ public class Neo4JSubGraph implements SubGraph{
 
     @Override
     public Vertex vertexWithIdentifier(String identifier) {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        for(Vertex vertex : vertices()){
+            if(vertex.id().equals(identifier)){
+                return vertex;
+            }
+        }
+        throw new RuntimeException("vertex with identifier " + identifier + " not found");
     }
 
     @Override
     public Edge edgeWithIdentifier(String identifier) {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        for(Edge edge : edges()){
+            if(edge.id().equals(identifier)){
+                return edge;
+            }
+        }
+        throw new RuntimeException("edge with identifier " + identifier + " not found");
     }
 
     @Override
     public int numberOfEdgesAndVertices() {
-        return 0;  //To change body of implemented methods use File | Settings | File Templates.
+        return numberOfEdges() +
+                numberOfVertices();
     }
 
     @Override
     public int numberOfEdges() {
-        return 0;  //To change body of implemented methods use File | Settings | File Templates.
+        return edges.size();
     }
 
     @Override
     public int numberOfVertices() {
-        return 0;  //To change body of implemented methods use File | Settings | File Templates.
+        return vertices.size();
     }
 
     @Override
     public boolean containsVertex(Vertex vertex) {
-        return false;  //To change body of implemented methods use File | Settings | File Templates.
+        return vertices.contains(vertex);
     }
 
     @Override
     public Set<Vertex> vertices() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        return vertices;
     }
 
     @Override
     public Set<Edge> edges() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        return edges;
     }
 }
