@@ -41,11 +41,6 @@ public class Neo4JUserGraph implements UserGraph {
     }
 
     @Override
-    public void remove() {
-        //To change body of implemented methods use File | Settings | File Templates.
-    }
-
-    @Override
     public Vertex defaultVertex() {
         Node node = nodeIndex.get(
                 URI_PROPERTY_NAME,

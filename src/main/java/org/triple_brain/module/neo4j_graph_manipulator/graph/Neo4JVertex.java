@@ -1,5 +1,6 @@
 package org.triple_brain.module.neo4j_graph_manipulator.graph;
 
+import com.hp.hpl.jena.vocabulary.RDFS;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 import org.triple_brain.module.common_utils.Uris;
@@ -11,7 +12,6 @@ import org.triple_brain.module.model.graph.Edge;
 import org.triple_brain.module.model.graph.Vertex;
 
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -201,6 +201,10 @@ public class Neo4JVertex extends Vertex {
                 Neo4JUserGraph.URI_PROPERTY_NAME,
                 type.uri().toString()
         );
+        typeAsNode.setProperty(
+                RDFS.label.getURI(),
+                type.label()
+        );
         node.createRelationshipTo(
                 typeAsNode,
                 Relationships.TYPE
@@ -215,9 +219,16 @@ public class Neo4JVertex extends Vertex {
     @Override
     public Set<FriendlyResource> getAdditionalTypes() {
         Set<FriendlyResource> additionalTypes = new HashSet<FriendlyResource>();
-//        for(Relationship relationship : node.getRelationships(Relationships.TYPE)){
-//            relationship.
-//        }
+        for(Relationship relationship : node.getRelationships(Relationships.TYPE)){
+            Node node = relationship.getEndNode();
+            FriendlyResource type = FriendlyResource.withUriAndLabel(
+                    Uris.get(node.getProperty(Neo4JUserGraph.URI_PROPERTY_NAME).toString()),
+                    node.getProperty(RDFS.label.getURI()).toString()
+            );
+            if(!type.uri().toString().equals(TripleBrainUris.TRIPLE_BRAIN_VERTEX)){
+                additionalTypes.add(type);
+            }
+        }
         return additionalTypes;
     }
 
