@@ -1,9 +1,12 @@
 package org.triple_brain.module.neo4j_graph_manipulator.graph;
 
+import com.google.inject.assistedinject.Assisted;
+import com.google.inject.assistedinject.AssistedInject;
 import com.hp.hpl.jena.vocabulary.RDFS;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
+import org.neo4j.graphdb.index.ReadableIndex;
 import org.triple_brain.module.common_utils.Uris;
 import org.triple_brain.module.model.FriendlyResource;
 import org.triple_brain.module.model.Suggestion;
@@ -12,6 +15,7 @@ import org.triple_brain.module.model.User;
 import org.triple_brain.module.model.graph.Edge;
 import org.triple_brain.module.model.graph.Vertex;
 
+import javax.inject.Inject;
 import java.net.URI;
 import java.util.HashSet;
 import java.util.List;
@@ -25,35 +29,48 @@ public class Neo4JVertex extends Vertex {
     protected User owner;
     protected Node node;
     protected Neo4JGraphElement graphElement;
+    private ReadableIndex<Node> nodeIndex;
 
-    public static Neo4JVertex loadUsingNodeOfOwner(Node node, User owner) {
-        return new Neo4JVertex(
-                node,
-                owner
-        );
-    }
+    @Inject
+    protected Neo4JVertexFactory vertexFactory;
 
-    public static Neo4JVertex createUsingEmptyNodeUriAndOwner(Node node, URI uri, User owner) {
-        Neo4JVertex vertex = new Neo4JVertex(node, owner);
-        vertex.graphElement = Neo4JGraphElement.initiateProperties(node, uri);
+    @Inject
+    protected Neo4JEdgeFactory edgeFactory;
 
-        vertex.addType(FriendlyResource.withUriAndLabel(
-                Uris.get(TripleBrainUris.TRIPLE_BRAIN_VERTEX),
-                ""
-        ));
-        return vertex;
-    }
+    @Inject
+    protected SuggestionNeo4JConverter suggestionNeo4JConverter;
 
-    protected Neo4JVertex(Node node, User owner) {
+    @AssistedInject
+    protected Neo4JVertex(
+            ReadableIndex<Node> nodeIndex,
+            @Assisted Node node,
+            @Assisted User owner
+    ) {
+        this.nodeIndex = nodeIndex;
         this.node = node;
         this.owner = owner;
         graphElement = Neo4JGraphElement.withPropertyContainer(node);
     }
 
+    @AssistedInject
+    protected Neo4JVertex(
+            ReadableIndex<Node> nodeIndex,
+            @Assisted Node node,
+            @Assisted URI uri,
+            @Assisted User owner
+    ) {
+        this(nodeIndex, node, owner);
+        this.graphElement = Neo4JGraphElement.initiateProperties(node, uri);
+        this.addType(FriendlyResource.withUriAndLabel(
+                Uris.get(TripleBrainUris.TRIPLE_BRAIN_VERTEX),
+                ""
+        ));
+    }
+
     @Override
     public boolean hasEdge(Edge edge) {
         for (Relationship relationship : connectedEdgesAsRelationships()) {
-            Edge edgeToCompare = Neo4JEdge.loadWithRelationshipOfOwner(
+            Edge edgeToCompare = edgeFactory.loadWithRelationshipOfOwner(
                     relationship,
                     owner
             );
@@ -77,7 +94,7 @@ public class Neo4JVertex extends Vertex {
     @Override
     public Edge edgeThatLinksToDestinationVertex(Vertex destinationVertex) {
         for (Relationship relationship : connectedEdgesAsRelationships()) {
-            Edge edge = Neo4JEdge.loadWithRelationshipOfOwner(
+            Edge edge = edgeFactory.loadWithRelationshipOfOwner(
                     relationship,
                     owner
             );
@@ -105,7 +122,7 @@ public class Neo4JVertex extends Vertex {
     @Override
     public Edge addVertexAndRelation() {
         Node newVertexNode = node.getGraphDatabase().createNode();
-        Neo4JVertex.createUsingEmptyNodeUriAndOwner(
+        vertexFactory.createUsingEmptyNodeUriAndOwner(
                 newVertexNode,
                 owner.generateUri(),
                 owner
@@ -114,9 +131,10 @@ public class Neo4JVertex extends Vertex {
                 newVertexNode,
                 Relationships.TRIPLE_BRAIN_EDGE
         );
-        return Neo4JEdge.createWithRelationshipAndOwner(
+        return edgeFactory.createWithRelationshipAndOwner(
                 newRelationship,
-                owner
+                owner,
+                owner.generateUri()
         );
     }
 
@@ -130,7 +148,7 @@ public class Neo4JVertex extends Vertex {
         for (Edge edge : connectedEdges()) {
             edge.remove();
         }
-        for(Relationship relationship: node.getRelationships(Direction.OUTGOING, Relationships.TYPE)){
+        for (Relationship relationship : node.getRelationships(Direction.OUTGOING, Relationships.TYPE)) {
             relationship.getEndNode().delete();
         }
         for (Relationship relationship : node.getRelationships()) {
@@ -156,7 +174,7 @@ public class Neo4JVertex extends Vertex {
         Set<Edge> edges = new HashSet<Edge>();
         for (Relationship relationship : connectedEdgesAsRelationships()) {
             edges.add(
-                    Neo4JEdge.loadWithRelationshipOfOwner(
+                    edgeFactory.loadWithRelationshipOfOwner(
                             relationship,
                             owner
                     )
@@ -186,12 +204,19 @@ public class Neo4JVertex extends Vertex {
 
     @Override
     public void suggestions(Set<Suggestion> suggestions) {
-        //To change body of implemented methods use File | Settings | File Templates.
+
     }
 
     @Override
     public Set<Suggestion> suggestions() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        Set<Suggestion> suggestions = new HashSet<>();
+        for (Relationship relationship : node.getRelationships(Relationships.SUGGESTION)) {
+            Suggestion suggestion = suggestionNeo4JConverter.nodeToSuggestion(
+                    relationship.getEndNode()
+            );
+            suggestions.add(suggestion);
+        }
+        return suggestions;
     }
 
     @Override
@@ -217,20 +242,30 @@ public class Neo4JVertex extends Vertex {
     }
 
     @Override
-    public void removeFriendlyResource(FriendlyResource type) {
-        //To change body of implemented methods use File | Settings | File Templates.
+    public void removeFriendlyResource(FriendlyResource friendlyResource) {
+        Node node = nodeIndex.get(
+                Neo4JUserGraph.URI_PROPERTY_NAME,
+                friendlyResource.uri().toString()
+        ).getSingle();
+        node.getRelationships()
+                .iterator()
+                .next()
+                .delete();
+        node.removeProperty(RDFS.label.getURI());
+        node.removeProperty(Neo4JUserGraph.URI_PROPERTY_NAME);
+        node.delete();
     }
 
     @Override
     public Set<FriendlyResource> getAdditionalTypes() {
         Set<FriendlyResource> additionalTypes = new HashSet<FriendlyResource>();
-        for(Relationship relationship : node.getRelationships(Relationships.TYPE)){
+        for (Relationship relationship : node.getRelationships(Relationships.TYPE)) {
             Node node = relationship.getEndNode();
             FriendlyResource type = FriendlyResource.withUriAndLabel(
                     Uris.get(node.getProperty(Neo4JUserGraph.URI_PROPERTY_NAME).toString()),
                     node.getProperty(RDFS.label.getURI()).toString()
             );
-            if(!type.uri().toString().equals(TripleBrainUris.TRIPLE_BRAIN_VERTEX)){
+            if (!type.uri().toString().equals(TripleBrainUris.TRIPLE_BRAIN_VERTEX)) {
                 additionalTypes.add(type);
             }
         }

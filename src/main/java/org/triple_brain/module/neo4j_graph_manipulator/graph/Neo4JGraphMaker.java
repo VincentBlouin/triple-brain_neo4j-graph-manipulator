@@ -19,6 +19,9 @@ public class Neo4JGraphMaker implements GraphMaker {
     @Inject
     protected Neo4JUserGraphFactory neo4JUserGraphFactory;
 
+    @Inject
+    protected Neo4JVertexFactory vertexFactory;
+
     @Override
     public UserGraph createForUser(User user) {
         Vertex vertex = createDefaultVertexForUser(user);
@@ -27,7 +30,7 @@ public class Neo4JGraphMaker implements GraphMaker {
     }
 
     private Vertex createDefaultVertexForUser(User user) {
-        return Neo4JVertex.createUsingEmptyNodeUriAndOwner(
+        return vertexFactory.createUsingEmptyNodeUriAndOwner(
                 graphDb.createNode(),
                 user.defaultVertexUri(),
                 user

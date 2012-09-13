@@ -9,5 +9,5 @@ public enum Relationships implements RelationshipType {
     TRIPLE_BRAIN_EDGE,
     TYPE,
     LABEL,
-
+    SUGGESTION
 }

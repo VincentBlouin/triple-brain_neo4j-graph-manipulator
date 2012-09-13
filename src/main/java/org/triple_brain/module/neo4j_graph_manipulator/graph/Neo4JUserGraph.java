@@ -1,6 +1,7 @@
 package org.triple_brain.module.neo4j_graph_manipulator.graph;
 
 import com.google.inject.assistedinject.Assisted;
+import com.google.inject.assistedinject.AssistedInject;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
@@ -28,6 +29,9 @@ public class Neo4JUserGraph implements UserGraph {
     private ReadableIndex<Relationship> relationshipIndex;
 
     @Inject
+    protected Neo4JVertexFactory vertexFactory;
+
+    @AssistedInject
     protected Neo4JUserGraph(
             GraphDatabaseService graphDb,
             ReadableIndex<Node> nodeIndex,
@@ -46,7 +50,7 @@ public class Neo4JUserGraph implements UserGraph {
                 URI_PROPERTY_NAME,
                 user.defaultVertexUri()
         ).getSingle();
-        return Neo4JVertex.loadUsingNodeOfOwner(
+        return vertexFactory.loadUsingNodeOfOwner(
                 node,
                 user
         );
