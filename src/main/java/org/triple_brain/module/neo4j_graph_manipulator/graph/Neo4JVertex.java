@@ -25,7 +25,6 @@ import java.util.Set;
 */
 public class Neo4JVertex extends Vertex {
 
-    protected User owner;
     protected Node node;
     protected Neo4JGraphElement graphElement;
     private ReadableIndex<Node> nodeIndex;
@@ -54,8 +53,7 @@ public class Neo4JVertex extends Vertex {
         this.suggestionConverter = suggestionConverter;
         this.friendlyResourceUtils = friendlyResourceUtils;
         this.node = node;
-        this.owner = owner;
-        graphElement = Neo4JGraphElement.withPropertyContainer(node);
+        graphElement = Neo4JGraphElement.withPropertyContainerAndOwner(node, owner);
     }
 
     @AssistedInject
@@ -70,7 +68,7 @@ public class Neo4JVertex extends Vertex {
             @Assisted User owner
     ) {
         this(nodeIndex, vertexFactory, edgeFactory, suggestionConverter, friendlyResourceUtils, node, owner);
-        this.graphElement = Neo4JGraphElement.initiateProperties(node, uri);
+        this.graphElement = Neo4JGraphElement.initiatePropertiesAndSetOwner(node, uri, owner);
         this.addType(FriendlyResource.withUriAndLabel(
                 Uris.get(TripleBrainUris.TRIPLE_BRAIN_VERTEX),
                 ""
@@ -82,7 +80,7 @@ public class Neo4JVertex extends Vertex {
         for (Relationship relationship : connectedEdgesAsRelationships()) {
             Edge edgeToCompare = edgeFactory.loadWithRelationshipOfOwner(
                     relationship,
-                    owner
+                    graphElement.owner()
             );
             if (edge.equals(edgeToCompare)) {
                 return true;
@@ -106,7 +104,7 @@ public class Neo4JVertex extends Vertex {
         for (Relationship relationship : connectedEdgesAsRelationships()) {
             Edge edge = edgeFactory.loadWithRelationshipOfOwner(
                     relationship,
-                    owner
+                    graphElement.owner()
             );
             if (edge.hasVertex(destinationVertex)) {
                 return edge;
@@ -134,8 +132,8 @@ public class Neo4JVertex extends Vertex {
         Node newVertexNode = node.getGraphDatabase().createNode();
         vertexFactory.createUsingEmptyNodeUriAndOwner(
                 newVertexNode,
-                owner.generateUri(),
-                owner
+                graphElement.owner().generateUri(),
+                graphElement.owner()
         );
         Relationship newRelationship = node.createRelationshipTo(
                 newVertexNode,
@@ -143,7 +141,7 @@ public class Neo4JVertex extends Vertex {
         );
         return edgeFactory.createWithRelationshipAndOwner(
                 newRelationship,
-                owner
+                graphElement.owner()
         );
     }
 
@@ -160,7 +158,7 @@ public class Neo4JVertex extends Vertex {
         );
         return edgeFactory.createWithRelationshipAndOwner(
                 relationship,
-                owner
+                graphElement.owner()
         );
     }
 
@@ -196,7 +194,7 @@ public class Neo4JVertex extends Vertex {
             edges.add(
                     edgeFactory.loadWithRelationshipOfOwner(
                             relationship,
-                            owner
+                            graphElement.owner()
                     )
             );
         }
@@ -314,5 +312,10 @@ public class Neo4JVertex extends Vertex {
     @Override
     public boolean hasLabel() {
         return graphElement.hasLabel();
+    }
+
+    @Override
+    public User owner() {
+        return graphElement.owner();
     }
 }

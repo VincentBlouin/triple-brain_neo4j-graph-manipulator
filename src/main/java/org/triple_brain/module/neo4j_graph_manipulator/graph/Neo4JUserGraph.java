@@ -13,8 +13,6 @@ import org.triple_brain.module.model.graph.Vertex;
 import org.triple_brain.module.model.graph.exceptions.InvalidDepthOfSubVerticesException;
 import org.triple_brain.module.model.graph.exceptions.NonExistingResourceException;
 
-import javax.inject.Inject;
-
 /*
 * Copyright Mozilla Public License 1.1
 */
@@ -27,21 +25,25 @@ public class Neo4JUserGraph implements UserGraph {
     private GraphDatabaseService graphDb;
     private ReadableIndex<Node> nodeIndex;
     private ReadableIndex<Relationship> relationshipIndex;
+    private Neo4JVertexFactory vertexFactory;
+    private Neo4JSubGraphExtractorFactory subGraphExtractorFactory;
 
-    @Inject
-    protected Neo4JVertexFactory vertexFactory;
 
     @AssistedInject
     protected Neo4JUserGraph(
             GraphDatabaseService graphDb,
             ReadableIndex<Node> nodeIndex,
             ReadableIndex<Relationship> relationshipIndex,
+            Neo4JVertexFactory vertexFactory,
+            Neo4JSubGraphExtractorFactory subGraphExtractorFactory,
             @Assisted User user
     ) {
         this.graphDb = graphDb;
         this.nodeIndex = nodeIndex;
         this.relationshipIndex = relationshipIndex;
         this.user = user;
+        this.vertexFactory = vertexFactory;
+        this.subGraphExtractorFactory = subGraphExtractorFactory;
     }
 
     @Override
@@ -75,12 +77,26 @@ public class Neo4JUserGraph implements UserGraph {
 
     @Override
     public SubGraph graphWithDepthAndCenterVertexId(Integer depthOfSubVertices, String centerVertexURI) throws NonExistingResourceException {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        Node node = nodeIndex.get(
+                URI_PROPERTY_NAME,
+                centerVertexURI
+        ).getSingle();
+        Vertex centerVertex = vertexFactory.loadUsingNodeOfOwner(
+                node,
+                user
+        );
+        return subGraphExtractorFactory.withCenterVertexAndDepth(
+                centerVertex,
+                depthOfSubVertices
+        ).load();
     }
 
     @Override
     public SubGraph graphWithDefaultVertexAndDepth(Integer depth) throws InvalidDepthOfSubVerticesException {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        return graphWithDepthAndCenterVertexId(
+                depth,
+                defaultVertex().id()
+        );
     }
 
     @Override

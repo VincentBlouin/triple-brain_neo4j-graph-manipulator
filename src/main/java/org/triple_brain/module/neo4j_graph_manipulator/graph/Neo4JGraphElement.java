@@ -2,6 +2,7 @@ package org.triple_brain.module.neo4j_graph_manipulator.graph;
 
 import com.hp.hpl.jena.vocabulary.RDFS;
 import org.neo4j.graphdb.PropertyContainer;
+import org.triple_brain.module.model.User;
 import org.triple_brain.module.model.graph.GraphElement;
 
 import java.net.URI;
@@ -12,25 +13,28 @@ import java.net.URI;
 public class Neo4JGraphElement implements GraphElement {
 
     private PropertyContainer propertyContainer;
+    private User owner;
 
-    public static Neo4JGraphElement withPropertyContainer(PropertyContainer propertyContainer){
-        return new Neo4JGraphElement(propertyContainer);
+    public static Neo4JGraphElement withPropertyContainerAndOwner(PropertyContainer propertyContainer, User owner){
+        return new Neo4JGraphElement(propertyContainer, owner);
     }
 
-    public static Neo4JGraphElement initiateProperties(PropertyContainer propertyContainer, URI uri){
+    public static Neo4JGraphElement initiatePropertiesAndSetOwner(PropertyContainer propertyContainer, URI uri, User owner){
         propertyContainer.setProperty(
                 Neo4JUserGraph.URI_PROPERTY_NAME,
                 uri.toString()
         );
         Neo4JGraphElement neo4JGraphElement = new Neo4JGraphElement(
-                propertyContainer
+                propertyContainer,
+                owner
         );
         neo4JGraphElement.label("");
         return neo4JGraphElement;
     }
 
-    protected Neo4JGraphElement(PropertyContainer propertyContainer){
+    protected Neo4JGraphElement(PropertyContainer propertyContainer, User owner){
         this.propertyContainer = propertyContainer;
+        this.owner = owner;
     }
 
     @Override
@@ -51,5 +55,10 @@ public class Neo4JGraphElement implements GraphElement {
     @Override
     public boolean hasLabel() {
         return propertyContainer.hasProperty(RDFS.label.getURI());
+    }
+
+    @Override
+    public User owner() {
+        return owner;
     }
 }

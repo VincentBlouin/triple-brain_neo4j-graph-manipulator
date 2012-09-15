@@ -13,7 +13,6 @@ import org.triple_brain.module.model.graph.Vertex;
 public class Neo4JEdge extends Edge {
 
     private Relationship relationship;
-    private User owner;
     protected Neo4JGraphElement graphElement;
     protected Neo4JVertexFactory vertexFactory;
     protected Neo4JEdgeFactory edgeFactory;
@@ -28,12 +27,12 @@ public class Neo4JEdge extends Edge {
         this.vertexFactory = vertexFactory;
         this.edgeFactory = edgeFactory;
         this.relationship = relationship;
-        this.owner = owner;
         graphElement = relationship.hasProperty(Neo4JUserGraph.URI_PROPERTY_NAME) ?
-                Neo4JGraphElement.withPropertyContainer(relationship) :
-                Neo4JGraphElement.initiateProperties(
+                Neo4JGraphElement.withPropertyContainerAndOwner(relationship, owner) :
+                Neo4JGraphElement.initiatePropertiesAndSetOwner(
                         relationship,
-                        owner.generateUri()
+                        owner.generateUri(),
+                        owner
                 );
     }
 
@@ -41,7 +40,7 @@ public class Neo4JEdge extends Edge {
     public Vertex sourceVertex() {
         return vertexFactory.loadUsingNodeOfOwner(
                 relationship.getStartNode(),
-                owner
+                graphElement.owner()
         );
     }
 
@@ -49,7 +48,7 @@ public class Neo4JEdge extends Edge {
     public Vertex destinationVertex() {
         return vertexFactory.loadUsingNodeOfOwner(
                 relationship.getEndNode(),
-                owner
+                graphElement.owner()
         );
     }
 
@@ -90,5 +89,10 @@ public class Neo4JEdge extends Edge {
     @Override
     public boolean hasLabel() {
         return graphElement.hasLabel();
+    }
+
+    @Override
+    public User owner() {
+        return graphElement.owner();
     }
 }
