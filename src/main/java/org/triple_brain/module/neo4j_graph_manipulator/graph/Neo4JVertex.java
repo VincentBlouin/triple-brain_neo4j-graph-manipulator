@@ -143,14 +143,25 @@ public class Neo4JVertex extends Vertex {
         );
         return edgeFactory.createWithRelationshipAndOwner(
                 newRelationship,
-                owner,
-                owner.generateUri()
+                owner
         );
     }
 
     @Override
     public Edge addRelationToVertex(Vertex destinationVertex) {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        Node destinationNode = nodeIndex.get(
+                Neo4JUserGraph.URI_PROPERTY_NAME,
+                destinationVertex.id()
+        ).getSingle();
+
+        Relationship relationship = node.createRelationshipTo(
+                destinationNode,
+                Relationships.TRIPLE_BRAIN_EDGE
+        );
+        return edgeFactory.createWithRelationshipAndOwner(
+                relationship,
+                owner
+        );
     }
 
     @Override

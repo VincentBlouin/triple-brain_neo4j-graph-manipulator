@@ -7,9 +7,6 @@ import org.triple_brain.module.model.User;
 import org.triple_brain.module.model.graph.Edge;
 import org.triple_brain.module.model.graph.Vertex;
 
-import javax.inject.Inject;
-import java.net.URI;
-
 /*
 * Copyright Mozilla Public License 1.1
 */
@@ -18,33 +15,26 @@ public class Neo4JEdge extends Edge {
     private Relationship relationship;
     private User owner;
     protected Neo4JGraphElement graphElement;
-    @Inject
     protected Neo4JVertexFactory vertexFactory;
-
-    @Inject
-    protected static Neo4JEdgeFactory edgeFactory;
+    protected Neo4JEdgeFactory edgeFactory;
 
     @AssistedInject
     protected Neo4JEdge(
+            Neo4JVertexFactory vertexFactory,
+            Neo4JEdgeFactory edgeFactory,
             @Assisted Relationship relationship,
             @Assisted User owner
     ) {
+        this.vertexFactory = vertexFactory;
+        this.edgeFactory = edgeFactory;
         this.relationship = relationship;
         this.owner = owner;
-        graphElement = Neo4JGraphElement.withPropertyContainer(relationship);
-    }
-
-    @AssistedInject
-    protected Neo4JEdge(
-            @Assisted Relationship relationship,
-            @Assisted User owner,
-            @Assisted URI uri
-    ) {
-        this(relationship, owner);
-        graphElement = Neo4JGraphElement.initiateProperties(
-                relationship,
-                uri
-        );
+        graphElement = relationship.hasProperty(Neo4JUserGraph.URI_PROPERTY_NAME) ?
+                Neo4JGraphElement.withPropertyContainer(relationship) :
+                Neo4JGraphElement.initiateProperties(
+                        relationship,
+                        owner.generateUri()
+                );
     }
 
     @Override
