@@ -7,7 +7,8 @@ import org.neo4j.graphdb.RelationshipType;
 */
 public enum Relationships implements RelationshipType {
     TRIPLE_BRAIN_EDGE,
-    TYPE,
-    LABEL,
+    TYPE, //RDF.TYPE
+    DOMAIN, //RDFS.DOMAIN
+    LABEL, //RDFS.LABEL
     SUGGESTION
 }

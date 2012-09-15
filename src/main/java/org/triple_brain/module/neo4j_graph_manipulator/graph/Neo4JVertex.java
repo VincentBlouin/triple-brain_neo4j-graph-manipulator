@@ -2,10 +2,10 @@ package org.triple_brain.module.neo4j_graph_manipulator.graph;
 
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
-import com.hp.hpl.jena.vocabulary.RDFS;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
+import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.index.ReadableIndex;
 import org.triple_brain.module.common_utils.Uris;
 import org.triple_brain.module.model.FriendlyResource;
@@ -15,7 +15,6 @@ import org.triple_brain.module.model.User;
 import org.triple_brain.module.model.graph.Edge;
 import org.triple_brain.module.model.graph.Vertex;
 
-import javax.inject.Inject;
 import java.net.URI;
 import java.util.HashSet;
 import java.util.List;
@@ -31,22 +30,29 @@ public class Neo4JVertex extends Vertex {
     protected Neo4JGraphElement graphElement;
     private ReadableIndex<Node> nodeIndex;
 
-    @Inject
     protected Neo4JVertexFactory vertexFactory;
 
-    @Inject
     protected Neo4JEdgeFactory edgeFactory;
 
-    @Inject
-    protected SuggestionNeo4JConverter suggestionNeo4JConverter;
+    protected SuggestionNeo4JConverter suggestionConverter;
+
+    protected FriendlyResourceNeo4JUtils friendlyResourceUtils;
 
     @AssistedInject
     protected Neo4JVertex(
             ReadableIndex<Node> nodeIndex,
+            Neo4JVertexFactory vertexFactory,
+            Neo4JEdgeFactory edgeFactory,
+            SuggestionNeo4JConverter suggestionConverter,
+            FriendlyResourceNeo4JUtils friendlyResourceUtils,
             @Assisted Node node,
             @Assisted User owner
     ) {
         this.nodeIndex = nodeIndex;
+        this.vertexFactory = vertexFactory;
+        this.edgeFactory = edgeFactory;
+        this.suggestionConverter = suggestionConverter;
+        this.friendlyResourceUtils = friendlyResourceUtils;
         this.node = node;
         this.owner = owner;
         graphElement = Neo4JGraphElement.withPropertyContainer(node);
@@ -55,11 +61,15 @@ public class Neo4JVertex extends Vertex {
     @AssistedInject
     protected Neo4JVertex(
             ReadableIndex<Node> nodeIndex,
+            Neo4JVertexFactory vertexFactory,
+            Neo4JEdgeFactory edgeFactory,
+            SuggestionNeo4JConverter suggestionConverter,
+            FriendlyResourceNeo4JUtils friendlyResourceUtils,
             @Assisted Node node,
             @Assisted URI uri,
             @Assisted User owner
     ) {
-        this(nodeIndex, node, owner);
+        this(nodeIndex, vertexFactory, edgeFactory, suggestionConverter, friendlyResourceUtils, node, owner);
         this.graphElement = Neo4JGraphElement.initiateProperties(node, uri);
         this.addType(FriendlyResource.withUriAndLabel(
                 Uris.get(TripleBrainUris.TRIPLE_BRAIN_VERTEX),
@@ -148,9 +158,8 @@ public class Neo4JVertex extends Vertex {
         for (Edge edge : connectedEdges()) {
             edge.remove();
         }
-        for (Relationship relationship : node.getRelationships(Direction.OUTGOING, Relationships.TYPE)) {
-            relationship.getEndNode().delete();
-        }
+        removePropertiesWithRelationShipType(Relationships.SUGGESTION);
+        removePropertiesWithRelationShipType(Relationships.TYPE);
         for (Relationship relationship : node.getRelationships()) {
             relationship.delete();
         }
@@ -204,14 +213,28 @@ public class Neo4JVertex extends Vertex {
 
     @Override
     public void suggestions(Set<Suggestion> suggestions) {
+        removePropertiesWithRelationShipType(Relationships.SUGGESTION);
+        for(Suggestion suggestion : suggestions){
+            Node suggestionAsNode = suggestionConverter.createSuggestion(suggestion);
+            node.createRelationshipTo(suggestionAsNode, Relationships.SUGGESTION);
+        }
+    }
 
+    private void removePropertiesWithRelationShipType(RelationshipType relationshipType){
+        for (Relationship relationship : node.getRelationships(Direction.OUTGOING, relationshipType)) {
+            Node toDelete = relationship.getEndNode();
+            Neo4JUtils.removeAllProperties(toDelete);
+            Neo4JUtils.removeAllProperties(relationship);
+            Neo4JUtils.removeOutgoingNodesRecursively(toDelete);
+            relationship.delete();
+        }
     }
 
     @Override
     public Set<Suggestion> suggestions() {
         Set<Suggestion> suggestions = new HashSet<>();
         for (Relationship relationship : node.getRelationships(Relationships.SUGGESTION)) {
-            Suggestion suggestion = suggestionNeo4JConverter.nodeToSuggestion(
+            Suggestion suggestion = suggestionConverter.nodeToSuggestion(
                     relationship.getEndNode()
             );
             suggestions.add(suggestion);
@@ -221,20 +244,12 @@ public class Neo4JVertex extends Vertex {
 
     @Override
     public FriendlyResource friendlyResourceWithUri(URI uri) {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        return friendlyResourceUtils.loadFromUri(uri);
     }
 
     @Override
     public void addType(FriendlyResource type) {
-        Node typeAsNode = node.getGraphDatabase().createNode();
-        typeAsNode.setProperty(
-                Neo4JUserGraph.URI_PROPERTY_NAME,
-                type.uri().toString()
-        );
-        typeAsNode.setProperty(
-                RDFS.label.getURI(),
-                type.label()
-        );
+        Node typeAsNode = friendlyResourceUtils.addInGraph(type);
         node.createRelationshipTo(
                 typeAsNode,
                 Relationships.TYPE
@@ -243,27 +258,15 @@ public class Neo4JVertex extends Vertex {
 
     @Override
     public void removeFriendlyResource(FriendlyResource friendlyResource) {
-        Node node = nodeIndex.get(
-                Neo4JUserGraph.URI_PROPERTY_NAME,
-                friendlyResource.uri().toString()
-        ).getSingle();
-        node.getRelationships()
-                .iterator()
-                .next()
-                .delete();
-        node.removeProperty(RDFS.label.getURI());
-        node.removeProperty(Neo4JUserGraph.URI_PROPERTY_NAME);
-        node.delete();
+        friendlyResourceUtils.remove(friendlyResource);
     }
 
     @Override
     public Set<FriendlyResource> getAdditionalTypes() {
         Set<FriendlyResource> additionalTypes = new HashSet<FriendlyResource>();
         for (Relationship relationship : node.getRelationships(Relationships.TYPE)) {
-            Node node = relationship.getEndNode();
-            FriendlyResource type = FriendlyResource.withUriAndLabel(
-                    Uris.get(node.getProperty(Neo4JUserGraph.URI_PROPERTY_NAME).toString()),
-                    node.getProperty(RDFS.label.getURI()).toString()
+            FriendlyResource type = friendlyResourceUtils.loadFromNode(
+                    relationship.getEndNode()
             );
             if (!type.uri().toString().equals(TripleBrainUris.TRIPLE_BRAIN_VERTEX)) {
                 additionalTypes.add(type);
