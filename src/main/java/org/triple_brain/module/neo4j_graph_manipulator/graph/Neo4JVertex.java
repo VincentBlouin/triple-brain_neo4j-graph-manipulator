@@ -16,9 +16,7 @@ import org.triple_brain.module.model.graph.Edge;
 import org.triple_brain.module.model.graph.Vertex;
 
 import java.net.URI;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /*
 * Copyright Mozilla Public License 1.1
@@ -37,6 +35,11 @@ public class Neo4JVertex extends Vertex {
 
     protected FriendlyResourceNeo4JUtils friendlyResourceUtils;
 
+    protected  Neo4JUtils utils;
+    protected List<String> hiddenEdgesLabel = new ArrayList<String>();
+
+    private static final String HIDDEN_EDGES_LABEL_KEY = "hidden_edges_label";
+
     @AssistedInject
     protected Neo4JVertex(
             ReadableIndex<Node> nodeIndex,
@@ -44,6 +47,7 @@ public class Neo4JVertex extends Vertex {
             Neo4JEdgeFactory edgeFactory,
             SuggestionNeo4JConverter suggestionConverter,
             FriendlyResourceNeo4JUtils friendlyResourceUtils,
+            Neo4JUtils utils,
             @Assisted Node node,
             @Assisted User owner
     ) {
@@ -52,6 +56,7 @@ public class Neo4JVertex extends Vertex {
         this.edgeFactory = edgeFactory;
         this.suggestionConverter = suggestionConverter;
         this.friendlyResourceUtils = friendlyResourceUtils;
+        this.utils = utils;
         this.node = node;
         graphElement = Neo4JGraphElement.withPropertyContainerAndOwner(node, owner);
     }
@@ -63,11 +68,12 @@ public class Neo4JVertex extends Vertex {
             Neo4JEdgeFactory edgeFactory,
             SuggestionNeo4JConverter suggestionConverter,
             FriendlyResourceNeo4JUtils friendlyResourceUtils,
+            Neo4JUtils utils,
             @Assisted Node node,
             @Assisted URI uri,
             @Assisted User owner
     ) {
-        this(nodeIndex, vertexFactory, edgeFactory, suggestionConverter, friendlyResourceUtils, node, owner);
+        this(nodeIndex, vertexFactory, edgeFactory, suggestionConverter, friendlyResourceUtils, utils, node, owner);
         this.graphElement = Neo4JGraphElement.initiatePropertiesAndSetOwner(node, uri, owner);
         this.addType(FriendlyResource.withUriAndLabel(
                 Uris.get(TripleBrainUris.TRIPLE_BRAIN_VERTEX),
@@ -172,7 +178,6 @@ public class Neo4JVertex extends Vertex {
         for (Relationship relationship : node.getRelationships()) {
             relationship.delete();
         }
-
         node.removeProperty(Neo4JUserGraph.URI_PROPERTY_NAME);
         node.delete();
     }
@@ -207,17 +212,12 @@ public class Neo4JVertex extends Vertex {
 
     @Override
     public List<String> hiddenConnectedEdgesLabel() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        return hiddenEdgesLabel;
     }
 
     @Override
-    public void hiddenConnectedEdgesLabel(List<String> hiddenEdgeLabel) {
-        //To change body of implemented methods use File | Settings | File Templates.
-    }
-
-    @Override
-    public boolean hasMinNumberOfEdgesFromCenterVertex() {
-        return false;  //To change body of implemented methods use File | Settings | File Templates.
+    public void hiddenConnectedEdgesLabel(List<String> hiddenEdgesLabel) {
+        this.hiddenEdgesLabel = hiddenEdgesLabel;
     }
 
     @Override
@@ -232,9 +232,9 @@ public class Neo4JVertex extends Vertex {
     private void removePropertiesWithRelationShipType(RelationshipType relationshipType){
         for (Relationship relationship : node.getRelationships(Direction.OUTGOING, relationshipType)) {
             Node toDelete = relationship.getEndNode();
-            Neo4JUtils.removeAllProperties(toDelete);
-            Neo4JUtils.removeAllProperties(relationship);
-            Neo4JUtils.removeOutgoingNodesRecursively(toDelete);
+            utils.removeAllProperties(toDelete);
+            utils.removeAllProperties(relationship);
+            utils.removeOutgoingNodesRecursively(toDelete);
             relationship.delete();
         }
     }
@@ -286,12 +286,25 @@ public class Neo4JVertex extends Vertex {
 
     @Override
     public void addSameAs(FriendlyResource friendlyResource) {
-        //To change body of implemented methods use File | Settings | File Templates.
+        Node sameAsAsNode = friendlyResourceUtils.addInGraph(
+                friendlyResource
+        );
+        node.createRelationshipTo(
+                sameAsAsNode,
+                Relationships.SAME_AS
+        );
     }
 
     @Override
     public Set<FriendlyResource> getSameAs() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        Set<FriendlyResource> sameAsSet = new HashSet<FriendlyResource>();
+        for(Relationship relationship : node.getRelationships(Relationships.SAME_AS)){
+            FriendlyResource sameAs = friendlyResourceUtils.loadFromNode(
+                    relationship.getEndNode()
+                    );
+            sameAsSet.add(sameAs);
+        }
+        return sameAsSet;
     }
 
     @Override

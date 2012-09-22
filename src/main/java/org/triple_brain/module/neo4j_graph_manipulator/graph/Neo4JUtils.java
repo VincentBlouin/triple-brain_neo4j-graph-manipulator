@@ -4,19 +4,26 @@ import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.PropertyContainer;
 import org.neo4j.graphdb.Relationship;
+import org.neo4j.graphdb.index.ReadableIndex;
+import org.triple_brain.module.model.graph.Vertex;
+
+import javax.inject.Inject;
 
 /*
 * Copyright Mozilla Public License 1.1
 */
 public class Neo4JUtils {
 
-    public static void removeAllProperties(PropertyContainer propertyContainer){
+    @Inject
+    private ReadableIndex<Node> nodeIndex;
+
+    public void removeAllProperties(PropertyContainer propertyContainer){
         for(String propertyName : propertyContainer.getPropertyKeys()){
             propertyContainer.removeProperty(propertyName);
         }
     }
 
-    public static void removeOutgoingNodesRecursively(Node node){
+    public void removeOutgoingNodesRecursively(Node node){
         for(Relationship relationship : node.getRelationships(Direction.OUTGOING)){
             Node endNode =  relationship.getEndNode();
             removeAllProperties(endNode);
@@ -24,6 +31,13 @@ public class Neo4JUtils {
             relationship.delete();
             removeOutgoingNodesRecursively(endNode);
         }
-
     }
+
+    public Node nodeOfVertex(Vertex vertex){
+        return nodeIndex.get(
+                Neo4JUserGraph.URI_PROPERTY_NAME,
+                vertex.id()
+        ).getSingle();
+    }
+
 }

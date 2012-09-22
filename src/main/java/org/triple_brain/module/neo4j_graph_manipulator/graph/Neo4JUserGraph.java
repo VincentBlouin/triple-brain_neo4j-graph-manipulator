@@ -7,11 +7,15 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.index.ReadableIndex;
 import org.triple_brain.module.model.User;
+import org.triple_brain.module.model.graph.Edge;
 import org.triple_brain.module.model.graph.SubGraph;
 import org.triple_brain.module.model.graph.UserGraph;
 import org.triple_brain.module.model.graph.Vertex;
 import org.triple_brain.module.model.graph.exceptions.InvalidDepthOfSubVerticesException;
 import org.triple_brain.module.model.graph.exceptions.NonExistingResourceException;
+
+import javax.inject.Singleton;
+import java.net.URI;
 
 /*
 * Copyright Mozilla Public License 1.1
@@ -27,12 +31,13 @@ public class Neo4JUserGraph implements UserGraph {
     private ReadableIndex<Relationship> relationshipIndex;
     private Neo4JVertexFactory vertexFactory;
     private Neo4JSubGraphExtractorFactory subGraphExtractorFactory;
+    private Neo4JEdgeFactory edgeFactory;
 
 
     @AssistedInject
     protected Neo4JUserGraph(
             GraphDatabaseService graphDb,
-            ReadableIndex<Node> nodeIndex,
+            @Singleton ReadableIndex<Node> nodeIndex,
             ReadableIndex<Relationship> relationshipIndex,
             Neo4JVertexFactory vertexFactory,
             Neo4JSubGraphExtractorFactory subGraphExtractorFactory,
@@ -48,13 +53,8 @@ public class Neo4JUserGraph implements UserGraph {
 
     @Override
     public Vertex defaultVertex() {
-        Node node = nodeIndex.get(
-                URI_PROPERTY_NAME,
+        return vertexWithURI(
                 user.defaultVertexUri()
-        ).getSingle();
-        return vertexFactory.loadUsingNodeOfOwner(
-                node,
-                user
         );
     }
 
@@ -64,7 +64,7 @@ public class Neo4JUserGraph implements UserGraph {
     }
 
     @Override
-    public boolean haveElementWithId(String id) {
+    public Boolean haveElementWithId(String id) {
         return nodeIndex.get(
                 URI_PROPERTY_NAME,
                 id
@@ -77,10 +77,21 @@ public class Neo4JUserGraph implements UserGraph {
 
     @Override
     public SubGraph graphWithDepthAndCenterVertexId(Integer depthOfSubVertices, String centerVertexURI) throws NonExistingResourceException {
+        if(depthOfSubVertices < 0){
+            throw new InvalidDepthOfSubVerticesException(
+                    depthOfSubVertices,
+                    centerVertexURI
+            );
+        }
         Node node = nodeIndex.get(
                 URI_PROPERTY_NAME,
                 centerVertexURI
         ).getSingle();
+        if(node == null){
+            throw new NonExistingResourceException(
+                    centerVertexURI
+            );
+        }
         Vertex centerVertex = vertexFactory.loadUsingNodeOfOwner(
                 node,
                 user
@@ -102,5 +113,29 @@ public class Neo4JUserGraph implements UserGraph {
     @Override
     public String toRdfXml() {
         return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public Vertex vertexWithURI(URI uri) {
+        Node node = nodeIndex.get(
+                URI_PROPERTY_NAME,
+                uri.toString()
+                ).getSingle();
+        return vertexFactory.loadUsingNodeOfOwner(
+                node,
+                user
+        );
+    }
+
+    @Override
+    public Edge edgeWithUri(URI uri) {
+        Relationship relationship = relationshipIndex.get(
+                URI_PROPERTY_NAME,
+                uri.toString()
+        ).getSingle();
+        return edgeFactory.loadWithRelationshipOfOwner(
+                relationship,
+                user
+        );
     }
 }

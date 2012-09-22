@@ -12,6 +12,7 @@ import org.triple_brain.module.model.graph.SubGraph;
 import org.triple_brain.module.model.graph.Vertex;
 import scala.collection.immutable.Map;
 
+import javax.inject.Inject;
 import java.util.HashSet;
 import java.util.Iterator;
 
@@ -27,7 +28,13 @@ public class Neo4JSubGraphExtractor {
     ExecutionEngine engine;
     Vertex centerVertex;
     Integer depth;
-    private SubGraph subGraph;
+    private SubGraph subGraph = Neo4JSubGraph.withVerticesAndEdges(
+            new HashSet<Vertex>(),
+            new HashSet<Edge>()
+    );
+
+    @Inject
+    Neo4JUtils neo4JUtils;
 
     @AssistedInject
     protected Neo4JSubGraphExtractor(
@@ -38,7 +45,7 @@ public class Neo4JSubGraphExtractor {
             ExecutionEngine engine,
             @Assisted Vertex centerVertex,
             @Assisted Integer depth
-    ){
+    ) {
         this.graphDb = graphDb;
         this.nodeIndex = nodeIndex;
         this.vertexFactory = vertexFactory;
@@ -46,48 +53,58 @@ public class Neo4JSubGraphExtractor {
         this.engine = engine;
         this.centerVertex = centerVertex;
         this.depth = depth;
-        subGraph = Neo4JSubGraph.withVerticesAndEdges(
-                new HashSet<Vertex>(),
-                new HashSet<Edge>()
-        );
     }
 
-
-
-    public SubGraph load(){
-        engine = new ExecutionEngine(graphDb);
-        Node centerVertexAsNode = nodeIndex.get(
-                Neo4JUserGraph.URI_PROPERTY_NAME,
-                centerVertex.id()
-        ).getSingle();
+    public SubGraph load() {
         ExecutionResult result = engine.execute(
-                "START start_node=node("+centerVertexAsNode.getId()+")"+
-                        "MATCH path=start_node<-[:"+Relationships.TRIPLE_BRAIN_EDGE+"*0.."+depth+"]->in_path_node " +
-                        "RETURN start_node,in_path_node, length(path)"
+                queryToGetGraph()
         );
         while (result.hasNext()) {
             Map<String, Object> row = result.next();
-            Vertex vertex = vertexFactory.loadUsingNodeOfOwner(
+            Neo4JVertex vertex = vertexFactory.loadUsingNodeOfOwner(
                     (Node) row.get("in_path_node").get(),
                     centerVertex.owner()
+            );
+            int distanceFromCenterVertex = (Integer) (
+                    row.get("length(path)").get()
             );
             subGraph.vertices().add(
                     vertex
             );
             subGraph.edges().addAll(vertex.connectedEdges());
         }
-        Iterator<Edge> iterator = subGraph.edges().iterator();
-        while(iterator.hasNext()){
-            Edge edge = iterator.next();
-            boolean shouldRemoveEdge =
-                    !subGraph.vertices().contains(edge.sourceVertex()) ||
-                            !subGraph.vertices().contains(edge.destinationVertex());
-            if(shouldRemoveEdge){
-                iterator.remove();
-            }
-
-        }
+        removeEdgesThatDontHaveAllTheirVerticesInSubGraph();
         return subGraph;
     }
 
+    private String queryToGetGraph() {
+        Node centerVertexAsNode = neo4JUtils.nodeOfVertex(centerVertex);
+        return "START start_node=node(" + centerVertexAsNode.getId() + ")" +
+                "MATCH path=start_node<-[:" + Relationships.TRIPLE_BRAIN_EDGE + "*0.." + depth + "]->in_path_node " +
+                "RETURN start_node,in_path_node, length(path)";
+    }
+
+    private void removeEdgesThatDontHaveAllTheirVerticesInSubGraph() {
+        Iterator<Edge> iterator = subGraph.edges().iterator();
+        while (iterator.hasNext()) {
+            Edge edge = iterator.next();
+            Vertex sourceVertex = edge.sourceVertex();
+
+            Vertex destinationVertex = edge.destinationVertex();
+
+            boolean shouldRemoveEdge =
+                    !subGraph.vertices().contains(sourceVertex) ||
+                            !subGraph.vertices().contains(destinationVertex);
+            if (shouldRemoveEdge) {
+                Vertex frontierVertex = subGraph.vertices().contains(sourceVertex) ?
+                        sourceVertex :
+                        destinationVertex;
+                frontierVertex = subGraph.vertexWithIdentifier(frontierVertex.id());
+                frontierVertex.hiddenConnectedEdgesLabel().add(
+                        edge.label()
+                );
+                iterator.remove();
+            }
+        }
+    }
 }

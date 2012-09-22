@@ -10,5 +10,6 @@ public enum Relationships implements RelationshipType {
     TYPE, //RDF.TYPE
     DOMAIN, //RDFS.DOMAIN
     LABEL, //RDFS.LABEL
+    SAME_AS, //OWL2.sameAs
     SUGGESTION
 }
