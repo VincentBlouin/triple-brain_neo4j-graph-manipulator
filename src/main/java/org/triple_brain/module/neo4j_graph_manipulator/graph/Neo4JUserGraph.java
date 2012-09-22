@@ -14,7 +14,6 @@ import org.triple_brain.module.model.graph.Vertex;
 import org.triple_brain.module.model.graph.exceptions.InvalidDepthOfSubVerticesException;
 import org.triple_brain.module.model.graph.exceptions.NonExistingResourceException;
 
-import javax.inject.Singleton;
 import java.net.URI;
 
 /*
@@ -37,9 +36,10 @@ public class Neo4JUserGraph implements UserGraph {
     @AssistedInject
     protected Neo4JUserGraph(
             GraphDatabaseService graphDb,
-            @Singleton ReadableIndex<Node> nodeIndex,
+            ReadableIndex<Node> nodeIndex,
             ReadableIndex<Relationship> relationshipIndex,
             Neo4JVertexFactory vertexFactory,
+            Neo4JEdgeFactory edgeFactory,
             Neo4JSubGraphExtractorFactory subGraphExtractorFactory,
             @Assisted User user
     ) {
@@ -48,6 +48,7 @@ public class Neo4JUserGraph implements UserGraph {
         this.relationshipIndex = relationshipIndex;
         this.user = user;
         this.vertexFactory = vertexFactory;
+        this.edgeFactory = edgeFactory;
         this.subGraphExtractorFactory = subGraphExtractorFactory;
     }
 

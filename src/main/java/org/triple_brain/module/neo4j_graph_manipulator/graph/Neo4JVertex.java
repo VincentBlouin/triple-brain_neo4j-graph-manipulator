@@ -35,7 +35,7 @@ public class Neo4JVertex extends Vertex {
 
     protected FriendlyResourceNeo4JUtils friendlyResourceUtils;
 
-    protected  Neo4JUtils utils;
+    protected Neo4JUtils utils;
     protected List<String> hiddenEdgesLabel = new ArrayList<String>();
 
     private static final String HIDDEN_EDGES_LABEL_KEY = "hidden_edges_label";
@@ -124,8 +124,17 @@ public class Neo4JVertex extends Vertex {
     }
 
     @Override
-    public boolean hasDestinationVertex(Vertex destinationVertex) {
-        return false;  //To change body of implemented methods use File | Settings | File Templates.
+    public Boolean hasDestinationVertex(Vertex destinationVertex) {
+        for (Relationship relationship : node.getRelationships(Relationships.TRIPLE_BRAIN_EDGE, Direction.OUTGOING)) {
+            Vertex endVertex = vertexFactory.loadUsingNodeOfOwner(
+                    relationship.getEndNode(),
+                    owner()
+            );
+            if(destinationVertex.equals(endVertex)){
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
@@ -223,13 +232,13 @@ public class Neo4JVertex extends Vertex {
     @Override
     public void suggestions(Set<Suggestion> suggestions) {
         removePropertiesWithRelationShipType(Relationships.SUGGESTION);
-        for(Suggestion suggestion : suggestions){
+        for (Suggestion suggestion : suggestions) {
             Node suggestionAsNode = suggestionConverter.createSuggestion(suggestion);
             node.createRelationshipTo(suggestionAsNode, Relationships.SUGGESTION);
         }
     }
 
-    private void removePropertiesWithRelationShipType(RelationshipType relationshipType){
+    private void removePropertiesWithRelationShipType(RelationshipType relationshipType) {
         for (Relationship relationship : node.getRelationships(Direction.OUTGOING, relationshipType)) {
             Node toDelete = relationship.getEndNode();
             utils.removeAllProperties(toDelete);
@@ -298,10 +307,10 @@ public class Neo4JVertex extends Vertex {
     @Override
     public Set<FriendlyResource> getSameAs() {
         Set<FriendlyResource> sameAsSet = new HashSet<FriendlyResource>();
-        for(Relationship relationship : node.getRelationships(Relationships.SAME_AS)){
+        for (Relationship relationship : node.getRelationships(Relationships.SAME_AS)) {
             FriendlyResource sameAs = friendlyResourceUtils.loadFromNode(
                     relationship.getEndNode()
-                    );
+            );
             sameAsSet.add(sameAs);
         }
         return sameAsSet;
