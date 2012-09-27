@@ -2,7 +2,6 @@ package org.triple_brain.module.neo4j_graph_manipulator.graph;
 
 import com.hp.hpl.jena.vocabulary.RDFS;
 import org.neo4j.graphdb.Direction;
-import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.RelationshipType;
 import org.triple_brain.module.common_utils.Uris;
@@ -19,13 +18,13 @@ import java.util.UUID;
 public class SuggestionNeo4JConverter {
 
     @Inject
-    private GraphDatabaseService graphDb;
+    Neo4JExternalResourceUtils externalResourceUtils;
 
     public Node createSuggestion(Suggestion suggestion) {
-        Node node = graphDb.createNode();
-        node.setProperty(
-                Neo4JUserGraph.URI_PROPERTY_NAME,
-                TripleBrainUris.BASE + "suggestion/" + UUID.randomUUID().toString()
+        Node node = externalResourceUtils.create(
+                Uris.get(
+                        TripleBrainUris.BASE + "suggestion/" + UUID.randomUUID().toString()
+                )
         );
         addType(node, suggestion);
         addDomain(node, suggestion);
@@ -34,19 +33,15 @@ public class SuggestionNeo4JConverter {
     }
 
     private void addType(Node suggestionAsNode, Suggestion suggestion) {
-        Node suggestionType = graphDb.createNode();
-        suggestionType.setProperty(
-                Neo4JUserGraph.URI_PROPERTY_NAME,
-                suggestion.typeUri().toString()
+        Node suggestionType = externalResourceUtils.getOrCreateNodeWithUri(
+                suggestion.typeUri()
         );
         suggestionAsNode.createRelationshipTo(suggestionType, Relationships.TYPE);
     }
 
     private void addDomain(Node suggestionAsNode, Suggestion suggestion) {
-        Node suggestionDomain = graphDb.createNode();
-        suggestionDomain.setProperty(
-                Neo4JUserGraph.URI_PROPERTY_NAME,
-                suggestion.domainUri().toString()
+        Node suggestionDomain = externalResourceUtils.getOrCreateNodeWithUri(
+                suggestion.domainUri()
         );
         suggestionAsNode.createRelationshipTo(suggestionDomain, Relationships.DOMAIN);
     }

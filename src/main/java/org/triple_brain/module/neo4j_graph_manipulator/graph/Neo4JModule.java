@@ -92,6 +92,8 @@ public class Neo4JModule extends AbstractModule {
 
         requireBinding(FriendlyResourceNeo4JUtils.class);
 
+        requireBinding(Neo4JExternalResourceUtils.class);
+
         requireBinding(Neo4JUtils.class);
     }
 

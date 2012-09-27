@@ -16,7 +16,10 @@ import org.triple_brain.module.model.graph.Edge;
 import org.triple_brain.module.model.graph.Vertex;
 
 import java.net.URI;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /*
 * Copyright Mozilla Public License 1.1
@@ -40,6 +43,8 @@ public class Neo4JVertex extends Vertex {
 
     private static final String HIDDEN_EDGES_LABEL_KEY = "hidden_edges_label";
 
+    protected Neo4JExternalResourceUtils externalResourceUtils;
+
     @AssistedInject
     protected Neo4JVertex(
             ReadableIndex<Node> nodeIndex,
@@ -48,10 +53,12 @@ public class Neo4JVertex extends Vertex {
             SuggestionNeo4JConverter suggestionConverter,
             FriendlyResourceNeo4JUtils friendlyResourceUtils,
             Neo4JUtils utils,
+            Neo4JExternalResourceUtils externalResourceUtils,
             @Assisted Node node,
             @Assisted User owner
     ) {
         this.nodeIndex = nodeIndex;
+        this.externalResourceUtils = externalResourceUtils;
         this.vertexFactory = vertexFactory;
         this.edgeFactory = edgeFactory;
         this.suggestionConverter = suggestionConverter;
@@ -69,11 +76,12 @@ public class Neo4JVertex extends Vertex {
             SuggestionNeo4JConverter suggestionConverter,
             FriendlyResourceNeo4JUtils friendlyResourceUtils,
             Neo4JUtils utils,
+            Neo4JExternalResourceUtils externalResourceUtils,
             @Assisted Node node,
             @Assisted URI uri,
             @Assisted User owner
     ) {
-        this(nodeIndex, vertexFactory, edgeFactory, suggestionConverter, friendlyResourceUtils, utils, node, owner);
+        this(nodeIndex, vertexFactory, edgeFactory, suggestionConverter, friendlyResourceUtils, utils, externalResourceUtils, node, owner);
         this.graphElement = Neo4JGraphElement.initiatePropertiesAndSetOwner(node, uri, owner);
         this.addType(FriendlyResource.withUriAndLabel(
                 Uris.get(TripleBrainUris.TRIPLE_BRAIN_VERTEX),
@@ -262,12 +270,13 @@ public class Neo4JVertex extends Vertex {
 
     @Override
     public FriendlyResource friendlyResourceWithUri(URI uri) {
-        return friendlyResourceUtils.loadFromUri(uri);
+        return friendlyResourceUtils.getFromUri(uri);
     }
 
     @Override
     public void addType(FriendlyResource type) {
-        Node typeAsNode = friendlyResourceUtils.addInGraph(type);
+        Node typeAsNode = friendlyResourceUtils
+                .getOrCreate(type);
         node.createRelationshipTo(
                 typeAsNode,
                 Relationships.TYPE
@@ -276,7 +285,15 @@ public class Neo4JVertex extends Vertex {
 
     @Override
     public void removeFriendlyResource(FriendlyResource friendlyResource) {
-        friendlyResourceUtils.remove(friendlyResource);
+        Node friendlyResourceAsNode = externalResourceUtils.getFromUri(
+                friendlyResource.uri()
+        );
+        for(Relationship relationship : node.getRelationships(Direction.OUTGOING)){
+            Node endNode = relationship.getEndNode();
+            if(endNode.equals(friendlyResourceAsNode)){
+                relationship.delete();
+            }
+        }
     }
 
     @Override
@@ -295,9 +312,9 @@ public class Neo4JVertex extends Vertex {
 
     @Override
     public void addSameAs(FriendlyResource friendlyResource) {
-        Node sameAsAsNode = friendlyResourceUtils.addInGraph(
-                friendlyResource
-        );
+        Node sameAsAsNode = friendlyResourceUtils
+                .getOrCreate(friendlyResource);
+
         node.createRelationshipTo(
                 sameAsAsNode,
                 Relationships.SAME_AS
