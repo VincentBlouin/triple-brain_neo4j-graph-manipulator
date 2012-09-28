@@ -33,9 +33,16 @@ public class FriendlyResourceNeo4JUtils {
 
     public Node getOrCreate(FriendlyResource friendlyResource) {
         if (externalResourceUtils.alreadyExists(friendlyResource.uri())) {
-            return externalResourceUtils.getFromUri(
+            Node node = externalResourceUtils.getFromUri(
                     friendlyResource.uri()
             );
+            if(!node.hasProperty(RDFS.label.getURI().toString())){
+                node.setProperty(
+                        RDFS.label.getURI().toString(),
+                        friendlyResource.label()
+                );
+            }
+            return node;
         } else {
             return addInGraph(friendlyResource);
         }
