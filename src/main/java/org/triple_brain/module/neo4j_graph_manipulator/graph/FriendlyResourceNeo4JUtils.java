@@ -3,7 +3,7 @@ package org.triple_brain.module.neo4j_graph_manipulator.graph;
 import com.hp.hpl.jena.vocabulary.RDFS;
 import org.neo4j.graphdb.Node;
 import org.triple_brain.module.common_utils.Uris;
-import org.triple_brain.module.model.FriendlyResource;
+import org.triple_brain.module.model.ExternalFriendlyResource;
 
 import javax.inject.Inject;
 import java.net.URI;
@@ -16,22 +16,22 @@ public class FriendlyResourceNeo4JUtils {
     @Inject
     Neo4JExternalResourceUtils externalResourceUtils;
 
-    public FriendlyResource loadFromNode(Node node) {
-        return FriendlyResource.withUriAndLabel(
+    public ExternalFriendlyResource loadFromNode(Node node) {
+        return ExternalFriendlyResource.withUriAndLabel(
                 Uris.get(node.getProperty(Neo4JUserGraph.URI_PROPERTY_NAME).toString()),
                 node.getProperty(RDFS.label.getURI()).toString()
         );
     }
 
-    public FriendlyResource getFromUri(URI uri) {
+    public ExternalFriendlyResource getFromUri(URI uri) {
         Node node = externalResourceUtils.getFromUri(uri);
-        return FriendlyResource.withUriAndLabel(
+        return ExternalFriendlyResource.withUriAndLabel(
                 Uris.get(node.getProperty(Neo4JUserGraph.URI_PROPERTY_NAME).toString()),
                 node.getProperty(RDFS.label.getURI()).toString()
         );
     }
 
-    public Node getOrCreate(FriendlyResource friendlyResource) {
+    public Node getOrCreate(ExternalFriendlyResource friendlyResource) {
         if (externalResourceUtils.alreadyExists(friendlyResource.uri())) {
             Node node = externalResourceUtils.getFromUri(
                     friendlyResource.uri()
@@ -48,7 +48,7 @@ public class FriendlyResourceNeo4JUtils {
         }
     }
 
-    public Node addInGraph(FriendlyResource friendlyResource) {
+    public Node addInGraph(ExternalFriendlyResource friendlyResource) {
         Node friendlyResourceAsNode = externalResourceUtils.create(
                 friendlyResource.uri()
         );

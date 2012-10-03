@@ -26,7 +26,7 @@ import java.io.IOException;
 public class Neo4JModule extends AbstractModule {
 
 
-    final String DB_PATH = "/var/lib/triple_brain/neo4j/db";
+    public static final String DB_PATH = "/var/lib/triple_brain/neo4j/db";
 
     private Boolean isTesting;
 
@@ -115,7 +115,7 @@ public class Neo4JModule extends AbstractModule {
         } );
     }
 
-    private void clearDb(){
+    public static void clearDb(){
         try
         {
             FileUtils.deleteRecursively(new File(DB_PATH));

@@ -8,12 +8,13 @@ import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.index.ReadableIndex;
 import org.triple_brain.module.common_utils.Uris;
-import org.triple_brain.module.model.FriendlyResource;
-import org.triple_brain.module.model.Suggestion;
+import org.triple_brain.module.model.ExternalFriendlyResource;
 import org.triple_brain.module.model.TripleBrainUris;
 import org.triple_brain.module.model.User;
 import org.triple_brain.module.model.graph.Edge;
 import org.triple_brain.module.model.graph.Vertex;
+import org.triple_brain.module.model.suggestion.PersistedSuggestion;
+import org.triple_brain.module.model.suggestion.Suggestion;
 
 import java.net.URI;
 import java.util.ArrayList;
@@ -83,7 +84,7 @@ public class Neo4JVertex extends Vertex {
     ) {
         this(nodeIndex, vertexFactory, edgeFactory, suggestionConverter, friendlyResourceUtils, utils, externalResourceUtils, node, owner);
         this.graphElement = Neo4JGraphElement.initiatePropertiesAndSetOwner(node, uri, owner);
-        this.addType(FriendlyResource.withUriAndLabel(
+        this.addType(ExternalFriendlyResource.withUriAndLabel(
                 Uris.get(TripleBrainUris.TRIPLE_BRAIN_VERTEX),
                 ""
         ));
@@ -238,8 +239,7 @@ public class Neo4JVertex extends Vertex {
     }
 
     @Override
-    public void suggestions(Set<Suggestion> suggestions) {
-        removePropertiesWithRelationShipType(Relationships.SUGGESTION);
+    public void addSuggestions(Suggestion ... suggestions) {
         for (Suggestion suggestion : suggestions) {
             Node suggestionAsNode = suggestionConverter.createSuggestion(suggestion);
             node.createRelationshipTo(suggestionAsNode, Relationships.SUGGESTION);
@@ -257,10 +257,10 @@ public class Neo4JVertex extends Vertex {
     }
 
     @Override
-    public Set<Suggestion> suggestions() {
-        Set<Suggestion> suggestions = new HashSet<>();
+    public Set<PersistedSuggestion> suggestions() {
+        Set<PersistedSuggestion> suggestions = new HashSet<>();
         for (Relationship relationship : node.getRelationships(Relationships.SUGGESTION)) {
-            Suggestion suggestion = suggestionConverter.nodeToSuggestion(
+            PersistedSuggestion suggestion = suggestionConverter.nodeToSuggestion(
                     relationship.getEndNode()
             );
             suggestions.add(suggestion);
@@ -269,12 +269,12 @@ public class Neo4JVertex extends Vertex {
     }
 
     @Override
-    public FriendlyResource friendlyResourceWithUri(URI uri) {
+    public ExternalFriendlyResource friendlyResourceWithUri(URI uri) {
         return friendlyResourceUtils.getFromUri(uri);
     }
 
     @Override
-    public void addType(FriendlyResource type) {
+    public void addType(ExternalFriendlyResource type) {
         Node typeAsNode = friendlyResourceUtils
                 .getOrCreate(type);
         node.createRelationshipTo(
@@ -284,7 +284,8 @@ public class Neo4JVertex extends Vertex {
     }
 
     @Override
-    public void removeFriendlyResource(FriendlyResource friendlyResource) {
+    public void removeFriendlyResource(ExternalFriendlyResource friendlyResource) {
+        removeSuggestionsHavingExternalResourceAsOrigin(friendlyResource);
         Node friendlyResourceAsNode = externalResourceUtils.getFromUri(
                 friendlyResource.uri()
         );
@@ -296,11 +297,24 @@ public class Neo4JVertex extends Vertex {
         }
     }
 
+    private void removeSuggestionsHavingExternalResourceAsOrigin(ExternalFriendlyResource externalResource){
+        for(PersistedSuggestion suggestion : suggestions()){
+            suggestion.get().removeOriginsThatDependOnResource(
+                    externalResource
+            );
+            if(suggestion.get().origins().isEmpty()){
+                suggestionConverter.remove(
+                        suggestion
+                );
+            }
+        }
+    }
+
     @Override
-    public Set<FriendlyResource> getAdditionalTypes() {
-        Set<FriendlyResource> additionalTypes = new HashSet<FriendlyResource>();
+    public Set<ExternalFriendlyResource> getAdditionalTypes() {
+        Set<ExternalFriendlyResource> additionalTypes = new HashSet<ExternalFriendlyResource>();
         for (Relationship relationship : node.getRelationships(Relationships.TYPE)) {
-            FriendlyResource type = friendlyResourceUtils.loadFromNode(
+            ExternalFriendlyResource type = friendlyResourceUtils.loadFromNode(
                     relationship.getEndNode()
             );
             if (!type.uri().toString().equals(TripleBrainUris.TRIPLE_BRAIN_VERTEX)) {
@@ -311,7 +325,7 @@ public class Neo4JVertex extends Vertex {
     }
 
     @Override
-    public void addSameAs(FriendlyResource friendlyResource) {
+    public void addSameAs(ExternalFriendlyResource friendlyResource) {
         Node sameAsAsNode = friendlyResourceUtils
                 .getOrCreate(friendlyResource);
 
@@ -322,10 +336,10 @@ public class Neo4JVertex extends Vertex {
     }
 
     @Override
-    public Set<FriendlyResource> getSameAs() {
-        Set<FriendlyResource> sameAsSet = new HashSet<FriendlyResource>();
+    public Set<ExternalFriendlyResource> getSameAs() {
+        Set<ExternalFriendlyResource> sameAsSet = new HashSet<ExternalFriendlyResource>();
         for (Relationship relationship : node.getRelationships(Relationships.SAME_AS)) {
-            FriendlyResource sameAs = friendlyResourceUtils.loadFromNode(
+            ExternalFriendlyResource sameAs = friendlyResourceUtils.loadFromNode(
                     relationship.getEndNode()
             );
             sameAsSet.add(sameAs);

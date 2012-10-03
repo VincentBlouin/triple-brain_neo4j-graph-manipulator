@@ -1,11 +1,12 @@
 package org.triple_brain.module.neo4j_graph_manipulator.graph;
 
 import com.hp.hpl.jena.vocabulary.RDFS;
-import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
-import org.neo4j.graphdb.RelationshipType;
+import org.triple_brain.module.common_utils.Misc;
 import org.triple_brain.module.common_utils.Uris;
-import org.triple_brain.module.model.Suggestion;
+import org.triple_brain.module.model.suggestion.PersistedSuggestion;
+import org.triple_brain.module.model.suggestion.Suggestion;
+import org.triple_brain.module.model.suggestion.SuggestionOrigin;
 import org.triple_brain.module.model.TripleBrainUris;
 
 import javax.inject.Inject;
@@ -20,23 +21,38 @@ public class SuggestionNeo4JConverter {
     @Inject
     Neo4JExternalResourceUtils externalResourceUtils;
 
+    @Inject
+    Neo4JUtils neo4JUtils;
+
+    private final String ORIGINS_PROPERTY_NAME = "origins";
+
     public Node createSuggestion(Suggestion suggestion) {
         Node node = externalResourceUtils.create(
                 Uris.get(
                         TripleBrainUris.BASE + "suggestion/" + UUID.randomUUID().toString()
                 )
         );
-        addType(node, suggestion);
+        addSameAs(node, suggestion);
         addDomain(node, suggestion);
         addLabel(node, suggestion);
+        addOrigins(node, suggestion);
         return node;
     }
 
-    private void addType(Node suggestionAsNode, Suggestion suggestion) {
-        Node suggestionType = externalResourceUtils.getOrCreateNodeWithUri(
-                suggestion.typeUri()
+    public void remove(PersistedSuggestion suggestion){
+        Node node = neo4JUtils.nodeOfUri(
+                suggestion.id()
         );
-        suggestionAsNode.createRelationshipTo(suggestionType, Relationships.TYPE);
+        neo4JUtils.removeAllRelationships(node);
+        neo4JUtils.removeAllProperties(node);
+        node.delete();
+    }
+
+    private void addSameAs(Node suggestionAsNode, Suggestion suggestion) {
+        Node suggestionType = externalResourceUtils.getOrCreateNodeWithUri(
+                suggestion.sameAsUri()
+        );
+        suggestionAsNode.createRelationshipTo(suggestionType, Relationships.SAME_AS);
     }
 
     private void addDomain(Node suggestionAsNode, Suggestion suggestion) {
@@ -53,34 +69,60 @@ public class SuggestionNeo4JConverter {
         );
     }
 
-    public Suggestion nodeToSuggestion(Node node) {
-        return Suggestion.withTypeDomainAndLabel(
-                getTypeUri(node),
+    private void addOrigins(Node suggestionAsNode, Suggestion suggestion) {
+        suggestionAsNode.setProperty(
+                ORIGINS_PROPERTY_NAME,
+                suggestion.origins().toString()
+        );
+    }
+
+    public PersistedSuggestion nodeToSuggestion(Node node) {
+        Suggestion suggestion = Suggestion.withSameAsDomainLabelAndOrigins(
+                getSameAsUri(node),
                 getDomainUri(node),
-                getLabel(node)
+                getLabel(node),
+                getOrigins(node)
+        );
+        URI id = neo4JUtils.uriOfNode(node);
+        return PersistedSuggestion.withSuggestionAndItsId(
+                suggestion,
+                id
         );
     }
 
     private String getLabel(Node node) {
-        return node.getProperty(RDFS.label.getURI()).toString();
+        return node.getProperty(
+                RDFS.label.getURI()
+        ).toString();
     }
 
-    private URI getTypeUri(Node node) {
-        return getUriOfEndNodeUsingRelationship(node, Relationships.TYPE);
+    private SuggestionOrigin[] getOrigins(Node node) {
+        String setAsString = node.getProperty(
+                ORIGINS_PROPERTY_NAME
+        ).toString();
+
+        String[] suggestionOriginsAsString = Misc.setAsStringToArray(
+                setAsString
+        );
+        SuggestionOrigin[] suggestionOrigins = new SuggestionOrigin
+                [suggestionOriginsAsString.length];
+        for(int i = 0 ; i< suggestionOriginsAsString.length; i++){
+            String suggestionOriginAsString = suggestionOriginsAsString[i];
+            suggestionOrigins[i] = new SuggestionOrigin(suggestionOriginAsString);
+        }
+        return suggestionOrigins;
+    }
+
+    private URI getSameAsUri(Node node) {
+        return neo4JUtils
+                .getUriOfEndNodeUsingRelationship(node, Relationships.SAME_AS);
     }
 
     private URI getDomainUri(Node node) {
-        return getUriOfEndNodeUsingRelationship(node, Relationships.DOMAIN);
+        return neo4JUtils
+                .getUriOfEndNodeUsingRelationship(node, Relationships.DOMAIN);
     }
 
-    private URI getUriOfEndNodeUsingRelationship(Node node, RelationshipType relationshipType){
-        return Uris.get(node
-                .getSingleRelationship(relationshipType, Direction.OUTGOING)
-                .getEndNode()
-                .getProperty(
-                        Neo4JUserGraph.URI_PROPERTY_NAME
-                ).toString()
-        );
-    }
+
 
 }
