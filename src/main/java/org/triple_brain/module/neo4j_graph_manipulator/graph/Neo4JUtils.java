@@ -68,4 +68,13 @@ public class Neo4JUtils {
         );
     }
 
+    public void addPropertyIfMissing(Node node, String key, Object value){
+        if(!node.hasProperty(key)){
+            node.setProperty(
+                    key,
+                    value
+            );
+        }
+    }
+
 }
