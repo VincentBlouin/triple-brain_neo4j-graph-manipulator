@@ -13,6 +13,7 @@ import org.neo4j.graphdb.factory.GraphDatabaseSettings;
 import org.neo4j.graphdb.index.ReadableIndex;
 import org.neo4j.kernel.impl.util.FileUtils;
 import org.triple_brain.module.model.BeforeAfterEachRestCall;
+import org.triple_brain.module.model.ExternalFriendlyResourcePersistenceUtils;
 import org.triple_brain.module.model.graph.GraphFactory;
 
 import javax.inject.Singleton;
@@ -90,7 +91,11 @@ public class Neo4JModule extends AbstractModule {
 
         requireBinding(SuggestionNeo4JConverter.class);
 
-        requireBinding(FriendlyResourceNeo4JUtils.class);
+        bind(ExternalFriendlyResourcePersistenceUtils.class).to(
+                Neo4JExternalFriendlyResourcePersistenceUtils.class
+        );
+
+        requireBinding(Neo4JExternalFriendlyResourcePersistenceUtils.class);
 
         requireBinding(Neo4JExternalResourceUtils.class);
 

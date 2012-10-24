@@ -37,7 +37,7 @@ public class Neo4JVertex extends Vertex {
 
     protected SuggestionNeo4JConverter suggestionConverter;
 
-    protected FriendlyResourceNeo4JUtils friendlyResourceUtils;
+    protected Neo4JExternalFriendlyResourcePersistenceUtils friendlyResourceUtils;
 
     protected Neo4JUtils utils;
     protected List<String> hiddenEdgesLabel = new ArrayList<String>();
@@ -52,7 +52,7 @@ public class Neo4JVertex extends Vertex {
             Neo4JVertexFactory vertexFactory,
             Neo4JEdgeFactory edgeFactory,
             SuggestionNeo4JConverter suggestionConverter,
-            FriendlyResourceNeo4JUtils friendlyResourceUtils,
+            Neo4JExternalFriendlyResourcePersistenceUtils friendlyResourceUtils,
             Neo4JUtils utils,
             Neo4JExternalResourceUtils externalResourceUtils,
             @Assisted Node node,
@@ -75,7 +75,7 @@ public class Neo4JVertex extends Vertex {
             Neo4JVertexFactory vertexFactory,
             Neo4JEdgeFactory edgeFactory,
             SuggestionNeo4JConverter suggestionConverter,
-            FriendlyResourceNeo4JUtils friendlyResourceUtils,
+            Neo4JExternalFriendlyResourcePersistenceUtils friendlyResourceUtils,
             Neo4JUtils utils,
             Neo4JExternalResourceUtils externalResourceUtils,
             @Assisted Node node,
@@ -248,10 +248,7 @@ public class Neo4JVertex extends Vertex {
 
     private void removePropertiesWithRelationShipType(RelationshipType relationshipType) {
         for (Relationship relationship : node.getRelationships(Direction.OUTGOING, relationshipType)) {
-            Node toDelete = relationship.getEndNode();
-            utils.removeAllProperties(toDelete);
             utils.removeAllProperties(relationship);
-            utils.removeOutgoingNodesRecursively(toDelete);
             relationship.delete();
         }
     }
