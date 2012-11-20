@@ -37,7 +37,26 @@ public class Neo4JExternalFriendlyResourcePersistenceUtils implements ExternalFr
                 imageUtils.getImages(node)
         );
 
+        friendlyResource.description(
+                node.hasProperty(RDFS.comment.getURI()) ?
+                node.getProperty(
+                        RDFS.comment.getURI()
+                ).toString() :
+                        ""
+        );
+
         return friendlyResource;
+    }
+
+    @Override
+    public void setDescription(ExternalFriendlyResource externalFriendlyResource, String description){
+        Node node = externalResourceUtils.getFromUri(
+                externalFriendlyResource.uri()
+        );
+        node.setProperty(
+                RDFS.comment.getURI(),
+                description
+        );
     }
 
     @Override
@@ -51,20 +70,18 @@ public class Neo4JExternalFriendlyResourcePersistenceUtils implements ExternalFr
         );
     }
 
+    @Override
+    public ExternalFriendlyResource getUpdated(ExternalFriendlyResource externalFriendlyResource) {
+        return getFromUri(
+                externalFriendlyResource.uri()
+        );
+    }
 
     public ExternalFriendlyResource getFromUri(URI uri) {
         Node node = externalResourceUtils.getFromUri(uri);
-        ExternalFriendlyResource friendlyResource = ExternalFriendlyResource.withUriAndLabel(
-                Uris.get(node.getProperty(Neo4JUserGraph.URI_PROPERTY_NAME).toString()),
-                node.getProperty(RDFS.label.getURI()).toString()
-        );
-
-        friendlyResource.images(
-                imageUtils.getImages(node)
-        );
-
-        return friendlyResource;
+        return loadFromNode(node);
     }
+
 
     public Node getOrCreate(ExternalFriendlyResource friendlyResource) {
         if (externalResourceUtils.alreadyExists(friendlyResource.uri())) {
