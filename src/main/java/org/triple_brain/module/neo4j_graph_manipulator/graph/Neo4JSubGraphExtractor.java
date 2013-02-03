@@ -4,12 +4,8 @@ import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 import org.neo4j.cypher.ExecutionEngine;
 import org.neo4j.cypher.ExecutionResult;
-import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
-import org.neo4j.graphdb.index.ReadableIndex;
-import org.triple_brain.module.model.graph.Edge;
-import org.triple_brain.module.model.graph.SubGraph;
-import org.triple_brain.module.model.graph.Vertex;
+import org.triple_brain.module.model.graph.*;
 import scala.collection.immutable.Map;
 
 import javax.inject.Inject;
@@ -20,16 +16,13 @@ import java.util.Iterator;
 * Copyright Mozilla Public License 1.1
 */
 public class Neo4JSubGraphExtractor {
-
-    private GraphDatabaseService graphDb;
-    private ReadableIndex<Node> nodeIndex;
     Neo4JVertexFactory vertexFactory;
     Neo4JEdgeFactory edgeFactory;
     ExecutionEngine engine;
     Vertex centerVertex;
     Integer depth;
     private SubGraph subGraph = Neo4JSubGraph.withVerticesAndEdges(
-            new HashSet<Vertex>(),
+            new HashSet<VertexInSubGraph>(),
             new HashSet<Edge>()
     );
 
@@ -38,16 +31,12 @@ public class Neo4JSubGraphExtractor {
 
     @AssistedInject
     protected Neo4JSubGraphExtractor(
-            GraphDatabaseService graphDb,
-            ReadableIndex<Node> nodeIndex,
             Neo4JVertexFactory vertexFactory,
             Neo4JEdgeFactory edgeFactory,
             ExecutionEngine engine,
             @Assisted Vertex centerVertex,
             @Assisted Integer depth
     ) {
-        this.graphDb = graphDb;
-        this.nodeIndex = nodeIndex;
         this.vertexFactory = vertexFactory;
         this.edgeFactory = edgeFactory;
         this.engine = engine;
@@ -61,20 +50,31 @@ public class Neo4JSubGraphExtractor {
         );
         while (result.hasNext()) {
             Map<String, Object> row = result.next();
-            Neo4JVertex vertex = vertexFactory.loadUsingNodeOfOwner(
+            Neo4JVertexInSubGraph vertex = vertexFactory.loadUsingNodeOfOwner(
                     (Node) row.get("in_path_node").get(),
                     centerVertex.owner()
             );
-            int distanceFromCenterVertex = (Integer) (
+            Integer distanceFromCenterVertex = (Integer) (
                     row.get("length(path)").get()
             );
             subGraph.vertices().add(
                     vertex
             );
+            setDistanceFromCenterVertexToVertexIfApplicable(
+                    vertex,
+                    distanceFromCenterVertex
+            );
             subGraph.edges().addAll(vertex.connectedEdges());
         }
         removeEdgesThatDontHaveAllTheirVerticesInSubGraph();
         return subGraph;
+    }
+
+    private void setDistanceFromCenterVertexToVertexIfApplicable(Vertex vertex, Integer distance){
+        VertexInSubGraph vertexInSubGraph = subGraph.vertexWithIdentifier(vertex.id());
+        if(vertexInSubGraph.minDistanceFromCenterVertex() == -1 || vertexInSubGraph.minDistanceFromCenterVertex() > distance){
+            vertexInSubGraph.setMinDistanceFromCenterVertex(distance);
+        }
     }
 
     private String queryToGetGraph() {

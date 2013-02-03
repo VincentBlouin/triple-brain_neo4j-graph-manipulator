@@ -10,7 +10,7 @@ import org.triple_brain.module.model.graph.Vertex;
 /*
 * Copyright Mozilla Public License 1.1
 */
-public class Neo4JEdge extends Edge {
+public class Neo4JEdge implements Edge{
 
     private Relationship relationship;
     protected Neo4JGraphElement graphElement;
@@ -94,5 +94,16 @@ public class Neo4JEdge extends Edge {
     @Override
     public User owner() {
         return graphElement.owner();
+    }
+
+    @Override
+    public boolean equals(Object edgeToCompareAsObject) {
+        Edge edgeToCompare = (Edge) edgeToCompareAsObject;
+        return id().equals(edgeToCompare.id());
+    }
+
+    @Override
+    public int hashCode() {
+        return id().hashCode();
     }
 }

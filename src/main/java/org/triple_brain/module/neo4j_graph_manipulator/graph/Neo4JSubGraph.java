@@ -1,8 +1,6 @@
 package org.triple_brain.module.neo4j_graph_manipulator.graph;
 
-import org.triple_brain.module.model.graph.Edge;
-import org.triple_brain.module.model.graph.SubGraph;
-import org.triple_brain.module.model.graph.Vertex;
+import org.triple_brain.module.model.graph.*;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -12,21 +10,21 @@ import java.util.Set;
 */
 public class Neo4JSubGraph implements SubGraph{
 
-    private Set<Vertex> vertices = new HashSet<Vertex>();
+    private Set<VertexInSubGraph> vertices = new HashSet<VertexInSubGraph>();
     private Set<Edge> edges = new HashSet<Edge>();
 
-    public static Neo4JSubGraph withVerticesAndEdges(Set<Vertex> vertices, Set<Edge> edges){
+    public static Neo4JSubGraph withVerticesAndEdges(Set<VertexInSubGraph> vertices, Set<Edge> edges){
         return new Neo4JSubGraph(vertices, edges);
     }
 
-    protected Neo4JSubGraph(Set<Vertex> vertices, Set<Edge> edges){
+    protected Neo4JSubGraph(Set<VertexInSubGraph> vertices, Set<Edge> edges){
         this.vertices = vertices;
         this.edges = edges;
     }
 
     @Override
-    public Vertex vertexWithIdentifier(String identifier) {
-        for(Vertex vertex : vertices()){
+    public VertexInSubGraph vertexWithIdentifier(String identifier) {
+        for(VertexInSubGraph vertex : vertices()){
             if(vertex.id().equals(identifier)){
                 return vertex;
             }
@@ -66,7 +64,7 @@ public class Neo4JSubGraph implements SubGraph{
     }
 
     @Override
-    public Set<Vertex> vertices() {
+    public Set<VertexInSubGraph> vertices() {
         return vertices;
     }
 

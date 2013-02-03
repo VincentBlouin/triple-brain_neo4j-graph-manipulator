@@ -13,6 +13,7 @@ import org.triple_brain.module.model.TripleBrainUris;
 import org.triple_brain.module.model.User;
 import org.triple_brain.module.model.graph.Edge;
 import org.triple_brain.module.model.graph.Vertex;
+import org.triple_brain.module.model.graph.VertexInSubGraph;
 import org.triple_brain.module.model.suggestion.PersistedSuggestion;
 import org.triple_brain.module.model.suggestion.Suggestion;
 
@@ -25,8 +26,9 @@ import java.util.Set;
 /*
 * Copyright Mozilla Public License 1.1
 */
-public class Neo4JVertex extends Vertex {
+public class Neo4JVertexInSubGraph implements VertexInSubGraph{
 
+    private Integer depthInSubGraph = -1;
     protected Node node;
     protected Neo4JGraphElement graphElement;
     private ReadableIndex<Node> nodeIndex;
@@ -47,7 +49,7 @@ public class Neo4JVertex extends Vertex {
     protected Neo4JExternalResourceUtils externalResourceUtils;
 
     @AssistedInject
-    protected Neo4JVertex(
+    protected Neo4JVertexInSubGraph(
             ReadableIndex<Node> nodeIndex,
             Neo4JVertexFactory vertexFactory,
             Neo4JEdgeFactory edgeFactory,
@@ -70,7 +72,7 @@ public class Neo4JVertex extends Vertex {
     }
 
     @AssistedInject
-    protected Neo4JVertex(
+    protected Neo4JVertexInSubGraph(
             ReadableIndex<Node> nodeIndex,
             Neo4JVertexFactory vertexFactory,
             Neo4JEdgeFactory edgeFactory,
@@ -368,4 +370,27 @@ public class Neo4JVertex extends Vertex {
     public User owner() {
         return graphElement.owner();
     }
+
+    @Override
+    public boolean equals(Object vertexToCompareAsObject) {
+        Vertex vertexToCompare = (Vertex) vertexToCompareAsObject;
+        return id().equals(vertexToCompare.id());
+    }
+
+    @Override
+    public int hashCode() {
+        return id().hashCode();
+    }
+
+    @Override
+    public Integer minDistanceFromCenterVertex() {
+        return depthInSubGraph;
+    }
+
+    @Override
+    public VertexInSubGraph setMinDistanceFromCenterVertex(Integer minDistanceFromCenterVertex) {
+        this.depthInSubGraph = minDistanceFromCenterVertex;
+        return this;
+    }
+
 }
