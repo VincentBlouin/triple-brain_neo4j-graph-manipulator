@@ -4,6 +4,7 @@ import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 import org.neo4j.graphdb.Relationship;
 import org.triple_brain.module.model.User;
+import org.triple_brain.module.model.UserUris;
 import org.triple_brain.module.model.graph.Edge;
 import org.triple_brain.module.model.graph.Vertex;
 
@@ -31,7 +32,7 @@ public class Neo4JEdge implements Edge{
                 Neo4JGraphElement.withPropertyContainerAndOwner(relationship, owner) :
                 Neo4JGraphElement.initiatePropertiesAndSetOwner(
                         relationship,
-                        owner.generateUri(),
+                        new UserUris(owner).generateEdgeUri(),
                         owner
                 );
     }

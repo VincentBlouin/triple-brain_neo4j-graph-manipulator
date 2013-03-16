@@ -26,7 +26,6 @@ import java.io.IOException;
 */
 public class Neo4JModule extends AbstractModule {
 
-
     public static final String DB_PATH = "/var/lib/triple_brain/neo4j/db";
 
     private Boolean isTesting;

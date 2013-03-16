@@ -11,6 +11,7 @@ import org.triple_brain.module.common_utils.Uris;
 import org.triple_brain.module.model.ExternalFriendlyResource;
 import org.triple_brain.module.model.TripleBrainUris;
 import org.triple_brain.module.model.User;
+import org.triple_brain.module.model.UserUris;
 import org.triple_brain.module.model.graph.Edge;
 import org.triple_brain.module.model.graph.Vertex;
 import org.triple_brain.module.model.graph.VertexInSubGraph;
@@ -158,7 +159,7 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph{
         Node newVertexNode = node.getGraphDatabase().createNode();
         vertexFactory.createUsingEmptyNodeUriAndOwner(
                 newVertexNode,
-                graphElement.owner().generateUri(),
+                new UserUris(owner()).generateVertexUri(),
                 graphElement.owner()
         );
         Relationship newRelationship = node.createRelationshipTo(

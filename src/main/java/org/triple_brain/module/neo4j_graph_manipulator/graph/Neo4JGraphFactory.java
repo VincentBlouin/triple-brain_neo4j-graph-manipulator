@@ -2,6 +2,7 @@ package org.triple_brain.module.neo4j_graph_manipulator.graph;
 
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.triple_brain.module.model.User;
+import org.triple_brain.module.model.UserUris;
 import org.triple_brain.module.model.graph.GraphFactory;
 import org.triple_brain.module.model.graph.UserGraph;
 import org.triple_brain.module.model.graph.Vertex;
@@ -37,7 +38,7 @@ public class Neo4JGraphFactory implements GraphFactory {
     private Vertex createDefaultVertexForUser(User user) {
         return vertexFactory.createUsingEmptyNodeUriAndOwner(
                 graphDb.createNode(),
-                user.defaultVertexUri(),
+                new UserUris(user).defaultVertexUri(),
                 user
         );
     }
