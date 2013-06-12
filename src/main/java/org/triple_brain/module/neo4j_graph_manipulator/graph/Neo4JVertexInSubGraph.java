@@ -2,6 +2,7 @@ package org.triple_brain.module.neo4j_graph_manipulator.graph;
 
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
+import com.hp.hpl.jena.vocabulary.RDFS;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
@@ -27,7 +28,7 @@ import java.util.Set;
 /*
 * Copyright Mozilla Public License 1.1
 */
-public class Neo4JVertexInSubGraph implements VertexInSubGraph{
+public class Neo4JVertexInSubGraph implements VertexInSubGraph {
 
     private Integer depthInSubGraph = -1;
     protected Node node;
@@ -142,7 +143,7 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph{
                     relationship.getEndNode(),
                     owner()
             );
-            if(destinationVertex.equals(endVertex)){
+            if (destinationVertex.equals(endVertex)) {
                 return true;
             }
         }
@@ -242,7 +243,7 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph{
     }
 
     @Override
-    public void addSuggestions(Suggestion ... suggestions) {
+    public void addSuggestions(Suggestion... suggestions) {
         for (Suggestion suggestion : suggestions) {
             Node suggestionAsNode = suggestionConverter.createSuggestion(suggestion);
             node.createRelationshipTo(suggestionAsNode, Relationships.SUGGESTION);
@@ -289,20 +290,20 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph{
         Node friendlyResourceAsNode = externalResourceUtils.getFromUri(
                 friendlyResource.uri()
         );
-        for(Relationship relationship : node.getRelationships(Direction.OUTGOING)){
+        for (Relationship relationship : node.getRelationships(Direction.OUTGOING)) {
             Node endNode = relationship.getEndNode();
-            if(endNode.equals(friendlyResourceAsNode)){
+            if (endNode.equals(friendlyResourceAsNode)) {
                 relationship.delete();
             }
         }
     }
 
-    private void removeSuggestionsHavingExternalResourceAsOrigin(ExternalFriendlyResource externalResource){
-        for(PersistedSuggestion suggestion : suggestions()){
+    private void removeSuggestionsHavingExternalResourceAsOrigin(ExternalFriendlyResource externalResource) {
+        for (PersistedSuggestion suggestion : suggestions()) {
             suggestion.get().removeOriginsThatDependOnResource(
                     externalResource
             );
-            if(suggestion.get().origins().isEmpty()){
+            if (suggestion.get().origins().isEmpty()) {
                 suggestionConverter.remove(
                         suggestion
                 );
@@ -350,6 +351,24 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph{
     @Override
     public String id() {
         return graphElement.id();
+    }
+
+    @Override
+    public String note() {
+        if(!node.hasProperty(RDFS.comment.getURI())){
+            return "";
+        }
+        return (String) node.getProperty(
+                RDFS.comment.getURI()
+        );
+    }
+
+    @Override
+    public void note(String note) {
+        node.setProperty(
+                RDFS.comment.getURI(),
+                note
+        );
     }
 
     @Override
