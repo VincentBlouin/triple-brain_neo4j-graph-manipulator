@@ -126,7 +126,7 @@ public class Neo4JModule extends AbstractModule {
         try
         {
             FileUtils.deleteRecursively(new File(
-                    isTesting ? DB_PATH_FOR_TESTS : DB_PATH
+                    DB_PATH_FOR_TESTS
             ));
         }
         catch ( IOException e )
