@@ -27,8 +27,9 @@ import java.io.IOException;
 public class Neo4JModule extends AbstractModule {
 
     public static final String DB_PATH = "/var/lib/triple_brain/neo4j/db";
+    public static final String DB_PATH_FOR_TESTS = "/tmp/triple_brain/neo4j/db";
 
-    private Boolean isTesting;
+    private static Boolean isTesting;
 
     @Override
     protected void configure() {
@@ -42,7 +43,9 @@ public class Neo4JModule extends AbstractModule {
         bind(BeforeAfterEachRestCall.class).to(Neo4JBeforeAfterEachRestCall.class)
                 .in(Singleton.class);
 
-        GraphDatabaseService graphDb = new GraphDatabaseFactory().newEmbeddedDatabaseBuilder(DB_PATH)
+        GraphDatabaseService graphDb = new GraphDatabaseFactory().newEmbeddedDatabaseBuilder(
+                isTesting ? DB_PATH_FOR_TESTS : DB_PATH
+        )
                 .setConfig(GraphDatabaseSettings.node_keys_indexable, Neo4JUserGraph.URI_PROPERTY_NAME)
                 .setConfig(GraphDatabaseSettings.node_auto_indexing, GraphDatabaseSetting.TRUE)
                 .setConfig(GraphDatabaseSettings.relationship_keys_indexable, Neo4JUserGraph.URI_PROPERTY_NAME )
@@ -122,11 +125,13 @@ public class Neo4JModule extends AbstractModule {
     public static void clearDb(){
         try
         {
-            FileUtils.deleteRecursively(new File(DB_PATH));
+            FileUtils.deleteRecursively(new File(
+                    isTesting ? DB_PATH_FOR_TESTS : DB_PATH
+            ));
         }
         catch ( IOException e )
         {
-            throw new RuntimeException( e );
+            System.out.println(e.getMessage());
         }
     }
 }
