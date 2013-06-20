@@ -112,6 +112,10 @@ public class Neo4JExternalFriendlyResourcePersistenceUtils implements ExternalFr
                 friendlyResource,
                 friendlyResource.images()
         );
+        setDescription(
+                friendlyResource,
+                friendlyResource.description()
+        );
         return friendlyResourceAsNode;
     }
 }
