@@ -3,6 +3,7 @@ package org.triple_brain.module.neo4j_graph_manipulator.graph;
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 import com.hp.hpl.jena.vocabulary.RDFS;
+import org.joda.time.DateTime;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
@@ -20,10 +21,7 @@ import org.triple_brain.module.model.suggestion.PersistedSuggestion;
 import org.triple_brain.module.model.suggestion.Suggestion;
 
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /*
 * Copyright Mozilla Public License 1.1
@@ -248,6 +246,7 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
             Node suggestionAsNode = suggestionConverter.createSuggestion(suggestion);
             node.createRelationshipTo(suggestionAsNode, Relationships.SUGGESTION);
         }
+        graphElement.updateLastModificationDate();
     }
 
     private void removePropertiesWithRelationShipType(RelationshipType relationshipType) {
@@ -282,6 +281,7 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
                 typeAsNode,
                 Relationships.TYPE
         );
+        graphElement.updateLastModificationDate();
     }
 
     @Override
@@ -296,6 +296,7 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
                 relationship.delete();
             }
         }
+        graphElement.updateLastModificationDate();
     }
 
     private void removeSuggestionsHavingExternalResourceAsOrigin(ExternalFriendlyResource externalResource) {
@@ -334,6 +335,7 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
                 sameAsAsNode,
                 Relationships.SAME_AS
         );
+        graphElement.updateLastModificationDate();
     }
 
     @Override
@@ -346,6 +348,16 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
             sameAsSet.add(sameAs);
         }
         return sameAsSet;
+    }
+
+    @Override
+    public DateTime creationDate() {
+        return graphElement.creationDate();
+    }
+
+    @Override
+    public DateTime lastModificationDate() {
+        return graphElement.lastModificationDate();
     }
 
     @Override
@@ -369,6 +381,7 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
                 RDFS.comment.getURI(),
                 note
         );
+        graphElement.updateLastModificationDate();
     }
 
     @Override

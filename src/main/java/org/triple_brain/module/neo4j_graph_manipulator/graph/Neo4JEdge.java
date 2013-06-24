@@ -2,6 +2,7 @@ package org.triple_brain.module.neo4j_graph_manipulator.graph;
 
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
+import org.joda.time.DateTime;
 import org.neo4j.graphdb.Relationship;
 import org.triple_brain.module.model.User;
 import org.triple_brain.module.model.UserUris;
@@ -70,6 +71,16 @@ public class Neo4JEdge implements Edge{
     public void remove() {
         relationship.removeProperty(Neo4JUserGraph.URI_PROPERTY_NAME);
         relationship.delete();
+    }
+
+    @Override
+    public DateTime creationDate() {
+        return graphElement.creationDate();
+    }
+
+    @Override
+    public DateTime lastModificationDate() {
+        return graphElement.lastModificationDate();
     }
 
     @Override
