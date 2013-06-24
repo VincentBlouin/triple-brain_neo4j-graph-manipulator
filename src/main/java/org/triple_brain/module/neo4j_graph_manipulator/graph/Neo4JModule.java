@@ -12,6 +12,7 @@ import org.neo4j.graphdb.factory.GraphDatabaseSetting;
 import org.neo4j.graphdb.factory.GraphDatabaseSettings;
 import org.neo4j.graphdb.index.ReadableIndex;
 import org.neo4j.kernel.impl.util.FileUtils;
+import org.neo4j.kernel.logging.BufferingLogger;
 import org.triple_brain.module.model.BeforeAfterEachRestCall;
 import org.triple_brain.module.model.ExternalFriendlyResourcePersistenceUtils;
 import org.triple_brain.module.model.graph.GraphFactory;
@@ -58,7 +59,7 @@ public class Neo4JModule extends AbstractModule {
                 graphDb
         );
         bind(ExecutionEngine.class).toInstance(
-                new ExecutionEngine(graphDb)
+                new ExecutionEngine(graphDb, new BufferingLogger())
         );
 
         FactoryModuleBuilder factoryModuleBuilder = new FactoryModuleBuilder();
