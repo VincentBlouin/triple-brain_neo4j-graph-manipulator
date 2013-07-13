@@ -68,7 +68,10 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
         this.friendlyResourceUtils = friendlyResourceUtils;
         this.utils = utils;
         this.node = node;
-        graphElement = Neo4JGraphElement.withPropertyContainerAndOwner(node, owner);
+        graphElement = Neo4JGraphElement.withPropertyContainerAndOwner(
+                node,
+                owner
+        );
     }
 
     @AssistedInject
@@ -85,7 +88,12 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
             @Assisted User owner
     ) {
         this(nodeIndex, vertexFactory, edgeFactory, suggestionConverter, friendlyResourceUtils, utils, externalResourceUtils, node, owner);
-        this.graphElement = Neo4JGraphElement.initiatePropertiesAndSetOwner(node, uri, owner);
+        this.graphElement = Neo4JGraphElement.initiatePropertiesAndSetOwner(
+                node,
+                uri,
+                owner
+        );
+        makePrivate();
         this.addType(ExternalFriendlyResource.withUriAndLabel(
                 Uris.get(TripleBrainUris.TRIPLE_BRAIN_VERTEX),
                 ""
@@ -350,6 +358,33 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
         return sameAsSet;
     }
 
+    private final String IS_PUBLIC_PROPERTY_NAME = "is_public";
+
+    @Override
+    public Boolean isPublic() {
+        return (Boolean) node.getProperty(
+                IS_PUBLIC_PROPERTY_NAME
+        );
+    }
+
+    @Override
+    public void makePublic() {
+        node.setProperty(
+                IS_PUBLIC_PROPERTY_NAME,
+                true
+        );
+        graphElement.updateLastModificationDate();
+    }
+
+    @Override
+    public void makePrivate() {
+        node.setProperty(
+                IS_PUBLIC_PROPERTY_NAME,
+                false
+        );
+        graphElement.updateLastModificationDate();
+    }
+
     @Override
     public DateTime creationDate() {
         return graphElement.creationDate();
@@ -367,7 +402,7 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
 
     @Override
     public String note() {
-        if(!node.hasProperty(RDFS.comment.getURI())){
+        if (!node.hasProperty(RDFS.comment.getURI())) {
             return "";
         }
         return (String) node.getProperty(
