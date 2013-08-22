@@ -34,11 +34,11 @@ public class Neo4JModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        try{
+        try {
             final InitialContext jndiContext = new InitialContext();
             String isTestingStr = (String) jndiContext.lookup("is_testing");
             isTesting = "yes".equals(isTestingStr);
-        }catch(Exception e){
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
         bind(BeforeAfterEachRestCall.class).to(Neo4JBeforeAfterEachRestCall.class)
@@ -47,11 +47,19 @@ public class Neo4JModule extends AbstractModule {
         GraphDatabaseService graphDb = new GraphDatabaseFactory().newEmbeddedDatabaseBuilder(
                 isTesting ? DB_PATH_FOR_TESTS : DB_PATH
         )
-                .setConfig(GraphDatabaseSettings.node_keys_indexable, Neo4JUserGraph.URI_PROPERTY_NAME)
-                .setConfig(GraphDatabaseSettings.node_auto_indexing, GraphDatabaseSetting.TRUE)
-                .setConfig(GraphDatabaseSettings.relationship_keys_indexable, Neo4JUserGraph.URI_PROPERTY_NAME )
-                .setConfig(GraphDatabaseSettings.relationship_auto_indexing, GraphDatabaseSetting.TRUE )
-                .newGraphDatabase();
+                .setConfig(
+                        GraphDatabaseSettings.node_keys_indexable,
+                        Neo4JUserGraph.URI_PROPERTY_NAME
+                ).setConfig(
+                        GraphDatabaseSettings.node_auto_indexing,
+                        GraphDatabaseSetting.TRUE
+                ).setConfig(
+                        GraphDatabaseSettings.relationship_keys_indexable,
+                        Neo4JUserGraph.URI_PROPERTY_NAME
+                ).setConfig(
+                        GraphDatabaseSettings.relationship_auto_indexing,
+                        GraphDatabaseSetting.TRUE
+                ).newGraphDatabase();
 
         registerShutdownHook(graphDb);
 
@@ -75,6 +83,9 @@ public class Neo4JModule extends AbstractModule {
 
         install(factoryModuleBuilder
                 .build(Neo4JSubGraphExtractorFactory.class));
+
+        install(factoryModuleBuilder
+                .build(Neo4JGraphElementFactory.class));
 
         bind(new TypeLiteral<ReadableIndex<Node>>() {
         }).toInstance(
@@ -105,33 +116,27 @@ public class Neo4JModule extends AbstractModule {
         requireBinding(Neo4JUtils.class);
     }
 
-    private void registerShutdownHook( final GraphDatabaseService graphDb )
-    {
+    private void registerShutdownHook(final GraphDatabaseService graphDb) {
         // Registers a shutdown hook for the Neo4j instance so that it
         // shuts down nicely when the VM exits (even if you "Ctrl-C" the
         // running example before it's completed)
-        Runtime.getRuntime().addShutdownHook( new Thread()
-        {
+        Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
-            public void run()
-            {
+            public void run() {
                 graphDb.shutdown();
-                if(isTesting){
+                if (isTesting) {
                     clearDb();
                 }
             }
-        } );
+        });
     }
 
-    public static void clearDb(){
-        try
-        {
+    public static void clearDb() {
+        try {
             FileUtils.deleteRecursively(new File(
                     DB_PATH_FOR_TESTS
             ));
-        }
-        catch ( IOException e )
-        {
+        } catch (IOException e) {
             System.out.println(e.getMessage());
         }
     }

@@ -1,8 +1,8 @@
 package org.triple_brain.module.neo4j_graph_manipulator.graph;
 
 import com.hp.hpl.jena.vocabulary.RDFS;
-import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.index.ReadableIndex;
 import org.triple_brain.module.common_utils.Uris;
 import org.triple_brain.module.model.ExternalFriendlyResource;
 import org.triple_brain.module.model.ExternalFriendlyResourcePersistenceUtils;
@@ -23,15 +23,21 @@ public class Neo4JExternalFriendlyResourcePersistenceUtils implements ExternalFr
     @Inject
     Neo4JUtils utils;
 
-    private GraphDatabaseService graphDb;
-
     @Inject
     private Neo4JImageUtils imageUtils;
 
+    @Inject
+    ReadableIndex<Node> nodeIndex;
+
     public ExternalFriendlyResource loadFromNode(Node node) {
         ExternalFriendlyResource friendlyResource = ExternalFriendlyResource.withUriAndLabel(
-                Uris.get(node.getProperty(Neo4JUserGraph.URI_PROPERTY_NAME).toString()),
-                node.getProperty(RDFS.label.getURI()).toString()
+                Uris.get(
+                        node.getProperty(
+                                Neo4JUserGraph.URI_PROPERTY_NAME).toString()
+                ),
+                node.getProperty(
+                        RDFS.label.getURI()
+                ).toString()
         );
         friendlyResource.images(
                 imageUtils.getImages(node)
@@ -39,17 +45,25 @@ public class Neo4JExternalFriendlyResourcePersistenceUtils implements ExternalFr
 
         friendlyResource.description(
                 node.hasProperty(RDFS.comment.getURI()) ?
-                node.getProperty(
-                        RDFS.comment.getURI()
-                ).toString() :
+                        node.getProperty(
+                                RDFS.comment.getURI()
+                        ).toString() :
                         ""
         );
-
         return friendlyResource;
     }
 
+    public ExternalFriendlyResource loadFromUri(URI uri) {
+        return loadFromNode(
+                nodeIndex.get(
+                        Neo4JUserGraph.URI_PROPERTY_NAME,
+                        uri.toString()
+                ).getSingle()
+        );
+    }
+
     @Override
-    public void setDescription(ExternalFriendlyResource externalFriendlyResource, String description){
+    public void setDescription(ExternalFriendlyResource externalFriendlyResource, String description) {
         Node node = externalResourceUtils.getFromUri(
                 externalFriendlyResource.uri()
         );

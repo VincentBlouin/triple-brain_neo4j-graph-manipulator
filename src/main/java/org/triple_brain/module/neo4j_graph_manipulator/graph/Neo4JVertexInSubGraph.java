@@ -57,6 +57,7 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
             Neo4JExternalFriendlyResourcePersistenceUtils friendlyResourceUtils,
             Neo4JUtils utils,
             Neo4JExternalResourceUtils externalResourceUtils,
+            Neo4JGraphElementFactory neo4JGraphElementFactory,
             @Assisted Node node,
             @Assisted User owner
     ) {
@@ -68,7 +69,7 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
         this.friendlyResourceUtils = friendlyResourceUtils;
         this.utils = utils;
         this.node = node;
-        graphElement = Neo4JGraphElement.withPropertyContainerAndOwner(
+        graphElement = neo4JGraphElementFactory.withPropertyContainerAndOwner(
                 node,
                 owner
         );
@@ -83,12 +84,24 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
             Neo4JExternalFriendlyResourcePersistenceUtils friendlyResourceUtils,
             Neo4JUtils utils,
             Neo4JExternalResourceUtils externalResourceUtils,
+            Neo4JGraphElementFactory neo4JGraphElementFactory,
             @Assisted Node node,
             @Assisted URI uri,
             @Assisted User owner
     ) {
-        this(nodeIndex, vertexFactory, edgeFactory, suggestionConverter, friendlyResourceUtils, utils, externalResourceUtils, node, owner);
-        this.graphElement = Neo4JGraphElement.initiatePropertiesAndSetOwner(
+        this(
+                nodeIndex,
+                vertexFactory,
+                edgeFactory,
+                suggestionConverter,
+                friendlyResourceUtils,
+                utils,
+                externalResourceUtils,
+                neo4JGraphElementFactory,
+                node,
+                owner
+        );
+        this.graphElement = neo4JGraphElementFactory.initiatePropertiesAndSetOwner(
                 node,
                 uri,
                 owner
@@ -278,34 +291,24 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
 
     @Override
     public ExternalFriendlyResource friendlyResourceWithUri(URI uri) {
-        return friendlyResourceUtils.getFromUri(uri);
+        return graphElement.friendlyResourceWithUri(uri);
     }
 
     @Override
     public void addType(ExternalFriendlyResource type) {
-        Node typeAsNode = friendlyResourceUtils
-                .getOrCreate(type);
-        node.createRelationshipTo(
-                typeAsNode,
-                Relationships.TYPE
-        );
-        graphElement.updateLastModificationDate();
+        graphElement.addType(type);
     }
 
     @Override
     public void removeFriendlyResource(ExternalFriendlyResource friendlyResource) {
-        removeSuggestionsHavingExternalResourceAsOrigin(friendlyResource);
-        Node friendlyResourceAsNode = externalResourceUtils.getFromUri(
-                friendlyResource.uri()
+        graphElement.removeFriendlyResource(
+                friendlyResource
         );
-        for (Relationship relationship : node.getRelationships(Direction.OUTGOING)) {
-            Node endNode = relationship.getEndNode();
-            if (endNode.equals(friendlyResourceAsNode)) {
-                relationship.delete();
-            }
-        }
-        graphElement.updateLastModificationDate();
+        removeSuggestionsHavingExternalResourceAsOrigin(
+                friendlyResource
+        );
     }
+
 
     private void removeSuggestionsHavingExternalResourceAsOrigin(ExternalFriendlyResource externalResource) {
         for (PersistedSuggestion suggestion : suggestions()) {
@@ -322,40 +325,17 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
 
     @Override
     public Set<ExternalFriendlyResource> getAdditionalTypes() {
-        Set<ExternalFriendlyResource> additionalTypes = new HashSet<ExternalFriendlyResource>();
-        for (Relationship relationship : node.getRelationships(Relationships.TYPE)) {
-            ExternalFriendlyResource type = friendlyResourceUtils.loadFromNode(
-                    relationship.getEndNode()
-            );
-            if (!type.uri().toString().equals(TripleBrainUris.TRIPLE_BRAIN_VERTEX)) {
-                additionalTypes.add(type);
-            }
-        }
-        return additionalTypes;
+        return graphElement.getAdditionalTypes();
     }
 
     @Override
     public void addSameAs(ExternalFriendlyResource friendlyResource) {
-        Node sameAsAsNode = friendlyResourceUtils
-                .getOrCreate(friendlyResource);
-
-        node.createRelationshipTo(
-                sameAsAsNode,
-                Relationships.SAME_AS
-        );
-        graphElement.updateLastModificationDate();
+        graphElement.addSameAs(friendlyResource);
     }
 
     @Override
     public Set<ExternalFriendlyResource> getSameAs() {
-        Set<ExternalFriendlyResource> sameAsSet = new HashSet<ExternalFriendlyResource>();
-        for (Relationship relationship : node.getRelationships(Relationships.SAME_AS)) {
-            ExternalFriendlyResource sameAs = friendlyResourceUtils.loadFromNode(
-                    relationship.getEndNode()
-            );
-            sameAsSet.add(sameAs);
-        }
-        return sameAsSet;
+        return graphElement.getSameAs();
     }
 
     private final String IS_PUBLIC_PROPERTY_NAME = "is_public";

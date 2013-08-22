@@ -8,10 +8,7 @@ import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.index.ReadableIndex;
 import org.triple_brain.module.model.User;
 import org.triple_brain.module.model.UserUris;
-import org.triple_brain.module.model.graph.Edge;
-import org.triple_brain.module.model.graph.SubGraph;
-import org.triple_brain.module.model.graph.UserGraph;
-import org.triple_brain.module.model.graph.Vertex;
+import org.triple_brain.module.model.graph.*;
 import org.triple_brain.module.model.graph.exceptions.InvalidDepthOfSubVerticesException;
 import org.triple_brain.module.model.graph.exceptions.NonExistingResourceException;
 
@@ -55,7 +52,7 @@ public class Neo4JUserGraph implements UserGraph {
 
     @Override
     public Vertex defaultVertex() {
-        return vertexWithURI(
+        return vertexWithUri(
                 new UserUris(user).defaultVertexUri()
         );
     }
@@ -118,7 +115,7 @@ public class Neo4JUserGraph implements UserGraph {
     }
 
     @Override
-    public Vertex vertexWithURI(URI uri) {
+    public Vertex vertexWithUri(URI uri) {
         Node node = nodeIndex.get(
                 URI_PROPERTY_NAME,
                 uri.toString()

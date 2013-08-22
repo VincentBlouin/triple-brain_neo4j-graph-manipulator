@@ -4,10 +4,14 @@ import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 import org.joda.time.DateTime;
 import org.neo4j.graphdb.Relationship;
+import org.triple_brain.module.model.ExternalFriendlyResource;
 import org.triple_brain.module.model.User;
 import org.triple_brain.module.model.UserUris;
 import org.triple_brain.module.model.graph.Edge;
 import org.triple_brain.module.model.graph.Vertex;
+
+import java.net.URI;
+import java.util.Set;
 
 /*
 * Copyright Mozilla Public License 1.1
@@ -23,6 +27,7 @@ public class Neo4JEdge implements Edge{
     protected Neo4JEdge(
             Neo4JVertexFactory vertexFactory,
             Neo4JEdgeFactory edgeFactory,
+            Neo4JGraphElementFactory neo4JGraphElementFactory,
             @Assisted Relationship relationship,
             @Assisted User owner
     ) {
@@ -30,8 +35,8 @@ public class Neo4JEdge implements Edge{
         this.edgeFactory = edgeFactory;
         this.relationship = relationship;
         graphElement = relationship.hasProperty(Neo4JUserGraph.URI_PROPERTY_NAME) ?
-                Neo4JGraphElement.withPropertyContainerAndOwner(relationship, owner) :
-                Neo4JGraphElement.initiatePropertiesAndSetOwner(
+                neo4JGraphElementFactory.withPropertyContainerAndOwner(relationship, owner) :
+                neo4JGraphElementFactory.initiatePropertiesAndSetOwner(
                         relationship,
                         new UserUris(owner).generateEdgeUri(),
                         owner
@@ -106,6 +111,36 @@ public class Neo4JEdge implements Edge{
     @Override
     public User owner() {
         return graphElement.owner();
+    }
+
+    @Override
+    public void addSameAs(ExternalFriendlyResource friendlyResource) {
+        graphElement.addSameAs(friendlyResource);
+    }
+
+    @Override
+    public Set<ExternalFriendlyResource> getSameAs() {
+        return graphElement.getSameAs();
+    }
+
+    @Override
+    public ExternalFriendlyResource friendlyResourceWithUri(URI uri) {
+        return graphElement.friendlyResourceWithUri(uri);
+    }
+
+    @Override
+    public void addType(ExternalFriendlyResource type) {
+        graphElement.addType(type);
+    }
+
+    @Override
+    public void removeFriendlyResource(ExternalFriendlyResource type) {
+        graphElement.removeFriendlyResource(type);
+    }
+
+    @Override
+    public Set<ExternalFriendlyResource> getAdditionalTypes() {
+        return graphElement.getAdditionalTypes();
     }
 
     @Override
