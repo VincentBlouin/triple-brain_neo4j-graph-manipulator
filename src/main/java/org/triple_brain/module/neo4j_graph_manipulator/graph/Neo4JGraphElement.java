@@ -235,6 +235,9 @@ public class Neo4JGraphElement implements GraphElement {
         urisAsString = removeEnclosingCharsOfListAsString(
                 urisAsString
         );
+        if(urisAsString.isEmpty()){
+            return new ArrayList<String>();
+        }
         return new ArrayList<String>(
                 Arrays.asList(
                         urisAsString.split("\\s*,\\s*")
