@@ -63,19 +63,19 @@ public class Neo4JUserGraph implements UserGraph {
     }
 
     @Override
-    public Boolean haveElementWithId(String id) {
+    public Boolean haveElementWithId(URI id) {
         return nodeIndex.get(
                 URI_PROPERTY_NAME,
-                id
+                id.toString()
         ).hasNext() ||
                 relationshipIndex.get(
                         URI_PROPERTY_NAME,
-                        id
+                        id.toString()
                 ).hasNext();
     }
 
     @Override
-    public SubGraph graphWithDepthAndCenterVertexId(Integer depthOfSubVertices, String centerVertexURI) throws NonExistingResourceException {
+    public SubGraph graphWithDepthAndCenterVertexId(Integer depthOfSubVertices, URI centerVertexURI) throws NonExistingResourceException {
         if(depthOfSubVertices < 0){
             throw new InvalidDepthOfSubVerticesException(
                     depthOfSubVertices,
@@ -105,7 +105,7 @@ public class Neo4JUserGraph implements UserGraph {
     public SubGraph graphWithDefaultVertexAndDepth(Integer depth) throws InvalidDepthOfSubVerticesException {
         return graphWithDepthAndCenterVertexId(
                 depth,
-                defaultVertex().id()
+                defaultVertex().uri()
         );
     }
 

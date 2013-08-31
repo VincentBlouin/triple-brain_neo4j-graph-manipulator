@@ -16,22 +16,25 @@ public class Neo4JUtils {
     @Inject
     private ReadableIndex<Node> nodeIndex;
 
-    public void removeAllProperties(PropertyContainer propertyContainer){
-        for(String propertyName : propertyContainer.getPropertyKeys()){
+    @Inject
+    private GraphDatabaseService graphDb;
+
+    public void removeAllProperties(PropertyContainer propertyContainer) {
+        for (String propertyName : propertyContainer.getPropertyKeys()) {
             propertyContainer.removeProperty(propertyName);
         }
     }
 
-    public void removeAllRelationships(Node node){
-        for(Relationship relationship : node.getRelationships()){
+    public void removeAllRelationships(Node node) {
+        for (Relationship relationship : node.getRelationships()) {
             removeAllProperties(relationship);
             relationship.delete();
         }
     }
 
-    public void removeOutgoingNodesRecursively(Node node){
-        for(Relationship relationship : node.getRelationships(Direction.OUTGOING)){
-            Node endNode =  relationship.getEndNode();
+    public void removeOutgoingNodesRecursively(Node node) {
+        for (Relationship relationship : node.getRelationships(Direction.OUTGOING)) {
+            Node endNode = relationship.getEndNode();
             removeAllProperties(endNode);
             removeAllProperties(relationship);
             relationship.delete();
@@ -39,26 +42,26 @@ public class Neo4JUtils {
         }
     }
 
-    public Node nodeOfVertex(Vertex vertex){
+    public Node nodeOfVertex(Vertex vertex) {
         return nodeOfUri(
-                Uris.get(vertex.id())
+                vertex.uri()
         );
     }
 
-    public Node nodeOfUri(URI uri){
+    public Node nodeOfUri(URI uri) {
         return nodeIndex.get(
                 Neo4JUserGraph.URI_PROPERTY_NAME,
                 uri.toString()
         ).getSingle();
     }
 
-    public URI uriOfNode(Node node){
+    public URI uriOfNode(Node node) {
         return Uris.get(node.getProperty(
                 Neo4JUserGraph.URI_PROPERTY_NAME
         ).toString());
     }
 
-    public URI getUriOfEndNodeUsingRelationship(Node node, RelationshipType relationshipType){
+    public URI getUriOfEndNodeUsingRelationship(Node node, RelationshipType relationshipType) {
         return Uris.get(node
                 .getSingleRelationship(relationshipType, Direction.OUTGOING)
                 .getEndNode()
@@ -68,8 +71,8 @@ public class Neo4JUtils {
         );
     }
 
-    public void addPropertyIfMissing(Node node, String key, Object value){
-        if(!node.hasProperty(key)){
+    public void addPropertyIfMissing(Node node, String key, Object value) {
+        if (!node.hasProperty(key)) {
             node.setProperty(
                     key,
                     value
@@ -77,4 +80,32 @@ public class Neo4JUtils {
         }
     }
 
+    public Node getOrCreate(URI uri) {
+        return alreadyExists(uri) ?
+                getFromUri(uri) :
+                create(uri);
+    }
+
+    public Node create(URI uri) {
+        Node externalResourceAsNode = graphDb.createNode();
+        externalResourceAsNode.setProperty(
+                Neo4JUserGraph.URI_PROPERTY_NAME,
+                uri.toString()
+        );
+        return externalResourceAsNode;
+    }
+
+    public Node getFromUri(URI uri) {
+        return nodeIndex.get(
+                Neo4JUserGraph.URI_PROPERTY_NAME,
+                uri.toString()
+        ).getSingle();
+    }
+
+    public Boolean alreadyExists(URI uri) {
+        return nodeIndex.get(
+                Neo4JUserGraph.URI_PROPERTY_NAME,
+                uri.toString()
+        ).hasNext();
+    }
 }

@@ -4,14 +4,14 @@ import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 import com.hp.hpl.jena.vocabulary.RDFS;
 import org.joda.time.DateTime;
-import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.PropertyContainer;
 import org.triple_brain.module.common_utils.Uris;
-import org.triple_brain.module.model.ExternalFriendlyResource;
+import org.triple_brain.module.model.FriendlyResource;
 import org.triple_brain.module.model.TripleBrainUris;
 import org.triple_brain.module.model.User;
 import org.triple_brain.module.model.graph.GraphElement;
 
+import javax.inject.Inject;
 import java.net.URI;
 import java.util.*;
 
@@ -26,28 +26,25 @@ public class Neo4JGraphElement implements GraphElement {
     private PropertyContainer propertyContainer;
     private User owner;
 
-    Neo4JExternalFriendlyResourcePersistenceUtils friendlyResourceUtils;
+    @Inject
+    private Neo4JFriendlyResourceFactory friendlyResourceFactory;
 
     @AssistedInject
     protected Neo4JGraphElement(
-            Neo4JExternalFriendlyResourcePersistenceUtils friendlyResourceUtils,
             @Assisted PropertyContainer propertyContainer,
             @Assisted User owner
     ) {
-        this.friendlyResourceUtils = friendlyResourceUtils;
         this.propertyContainer = propertyContainer;
         this.owner = owner;
     }
 
     @AssistedInject
     protected Neo4JGraphElement(
-            Neo4JExternalFriendlyResourcePersistenceUtils friendlyResourceUtils,
             @Assisted PropertyContainer propertyContainer,
             @Assisted URI uri,
             @Assisted User owner
     ) {
         this(
-                friendlyResourceUtils,
                 propertyContainer,
                 owner
         );
@@ -89,8 +86,12 @@ public class Neo4JGraphElement implements GraphElement {
     }
 
     @Override
-    public String id() {
-        return propertyContainer.getProperty(Neo4JUserGraph.URI_PROPERTY_NAME).toString();
+    public URI uri() {
+        return Uris.get(
+                propertyContainer.getProperty(
+                        Neo4JUserGraph.URI_PROPERTY_NAME
+                ).toString()
+        );
     }
 
     @Override
@@ -115,47 +116,32 @@ public class Neo4JGraphElement implements GraphElement {
     }
 
     @Override
-    public void addSameAs(ExternalFriendlyResource friendlyResource) {
-        Node node = friendlyResourceUtils.getOrCreate(
-                friendlyResource
-        );
+    public void addSameAs(FriendlyResource friendlyResource) {
         addResourceUriConnectedWithRelationName(
-                (String) node.getProperty(
-                        Neo4JUserGraph.URI_PROPERTY_NAME
-                ),
+                friendlyResource.uri().toString(),
                 Relationships.SAME_AS.name()
         );
         updateLastModificationDate();
     }
 
     @Override
-    public Set<ExternalFriendlyResource> getSameAs() {
+    public Set<FriendlyResource> getSameAs() {
         return getExternalFriendlyResourcesOfRelation(
                 Relationships.SAME_AS.name()
         );
     }
 
     @Override
-    public ExternalFriendlyResource friendlyResourceWithUri(URI uri) {
-        return friendlyResourceUtils.getFromUri(uri);
-    }
-
-    @Override
-    public void addType(ExternalFriendlyResource type) {
-        Node node = friendlyResourceUtils.getOrCreate(
-                type
-        );
+    public void addType(FriendlyResource type) {
         addResourceUriConnectedWithRelationName(
-                (String) node.getProperty(
-                        Neo4JUserGraph.URI_PROPERTY_NAME
-                ),
+                type.uri().toString(),
                 Relationships.TYPE.name()
         );
         updateLastModificationDate();
     }
 
     @Override
-    public void removeFriendlyResource(ExternalFriendlyResource friendlyResource) {
+    public void removeFriendlyResource(FriendlyResource friendlyResource) {
         removeRelationToExternalResource(
                 Relationships.SAME_AS.name(),
                 friendlyResource
@@ -168,14 +154,14 @@ public class Neo4JGraphElement implements GraphElement {
     }
 
     @Override
-    public Set<ExternalFriendlyResource> getAdditionalTypes(){
-        Set<ExternalFriendlyResource> friendlyResources = getExternalFriendlyResourcesOfRelation(
+    public Set<FriendlyResource> getAdditionalTypes() {
+        Set<FriendlyResource> friendlyResourceImpls = getExternalFriendlyResourcesOfRelation(
                 Relationships.TYPE.name()
         );
-        friendlyResources.remove(friendlyResourceUtils.loadFromUri(
+        friendlyResourceImpls.remove(friendlyResourceFactory.createOrLoadFromUri(
                 Uris.get(TripleBrainUris.TRIPLE_BRAIN_VERTEX)
         ));
-        return friendlyResources;
+        return friendlyResourceImpls;
     }
 
     private String removeEnclosingCharsOfListAsString(String listAsString) {
@@ -185,14 +171,14 @@ public class Neo4JGraphElement implements GraphElement {
         );
     }
 
-    private Set<ExternalFriendlyResource> getExternalFriendlyResourcesOfRelation(String relationName) {
-        Set<ExternalFriendlyResource> set = new HashSet<ExternalFriendlyResource>();
+    private Set<FriendlyResource> getExternalFriendlyResourcesOfRelation(String relationName) {
+        Set<FriendlyResource> set = new HashSet<FriendlyResource>();
         List<String> uris = getListOfResourcesUriConnectedWithRelationshipName(
                 relationName
         );
         for (String uri : uris) {
             set.add(
-                    friendlyResourceUtils.loadFromUri(
+                    friendlyResourceFactory.createOrLoadFromUri(
                             Uris.get(uri)
                     )
             );
@@ -235,7 +221,7 @@ public class Neo4JGraphElement implements GraphElement {
         urisAsString = removeEnclosingCharsOfListAsString(
                 urisAsString
         );
-        if(urisAsString.isEmpty()){
+        if (urisAsString.isEmpty()) {
             return new ArrayList<String>();
         }
         return new ArrayList<String>(
@@ -245,7 +231,7 @@ public class Neo4JGraphElement implements GraphElement {
         );
     }
 
-    private void removeRelationToExternalResource(String relationName, ExternalFriendlyResource friendlyResource) {
+    private void removeRelationToExternalResource(String relationName, FriendlyResource friendlyResource) {
         List<String> uris = getListOfResourcesUriConnectedWithRelationshipName(
                 relationName
         );

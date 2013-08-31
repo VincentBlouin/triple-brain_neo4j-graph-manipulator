@@ -14,8 +14,11 @@ import org.neo4j.graphdb.index.ReadableIndex;
 import org.neo4j.kernel.impl.util.FileUtils;
 import org.neo4j.kernel.logging.BufferingLogger;
 import org.triple_brain.module.model.BeforeAfterEachRestCall;
-import org.triple_brain.module.model.ExternalFriendlyResourcePersistenceUtils;
+import org.triple_brain.module.model.FriendlyResource;
+import org.triple_brain.module.model.FriendlyResourceFactory;
 import org.triple_brain.module.model.graph.GraphFactory;
+import org.triple_brain.module.model.suggestion.Suggestion;
+import org.triple_brain.module.model.suggestion.SuggestionFactory;
 
 import javax.inject.Singleton;
 import javax.naming.InitialContext;
@@ -87,6 +90,20 @@ public class Neo4JModule extends AbstractModule {
         install(factoryModuleBuilder
                 .build(Neo4JGraphElementFactory.class));
 
+        install(factoryModuleBuilder
+                .implement(FriendlyResource.class, Neo4JFriendlyResource.class)
+                .build(FriendlyResourceFactory.class)
+        );
+        install(factoryModuleBuilder
+                .build(Neo4JFriendlyResourceFactory.class)
+        );
+        install(factoryModuleBuilder
+                .implement(Suggestion.class, Neo4JSuggestion.class)
+                .build(SuggestionFactory.class)
+        );
+        install(factoryModuleBuilder
+                .build(Neo4JSuggestionFactory.class)
+        );
         bind(new TypeLiteral<ReadableIndex<Node>>() {
         }).toInstance(
                 graphDb.index()
@@ -102,16 +119,6 @@ public class Neo4JModule extends AbstractModule {
         );
 
         bind(GraphFactory.class).to(Neo4JGraphFactory.class).in(Singleton.class);
-
-        requireBinding(SuggestionNeo4JConverter.class);
-
-        bind(ExternalFriendlyResourcePersistenceUtils.class).to(
-                Neo4JExternalFriendlyResourcePersistenceUtils.class
-        );
-
-        requireBinding(Neo4JExternalFriendlyResourcePersistenceUtils.class);
-
-        requireBinding(Neo4JExternalResourceUtils.class);
 
         requireBinding(Neo4JUtils.class);
     }

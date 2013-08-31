@@ -71,7 +71,7 @@ public class Neo4JSubGraphExtractor {
     }
 
     private void setDistanceFromCenterVertexToVertexIfApplicable(Vertex vertex, Integer distance){
-        VertexInSubGraph vertexInSubGraph = subGraph.vertexWithIdentifier(vertex.id());
+        VertexInSubGraph vertexInSubGraph = subGraph.vertexWithIdentifier(vertex.uri());
         if(vertexInSubGraph.minDistanceFromCenterVertex() == -1 || vertexInSubGraph.minDistanceFromCenterVertex() > distance){
             vertexInSubGraph.setMinDistanceFromCenterVertex(distance);
         }
@@ -99,7 +99,7 @@ public class Neo4JSubGraphExtractor {
                 Vertex frontierVertex = subGraph.vertices().contains(sourceVertex) ?
                         sourceVertex :
                         destinationVertex;
-                frontierVertex = subGraph.vertexWithIdentifier(frontierVertex.id());
+                frontierVertex = subGraph.vertexWithIdentifier(frontierVertex.uri());
                 frontierVertex.hiddenConnectedEdgesLabel().add(
                         edge.label()
                 );

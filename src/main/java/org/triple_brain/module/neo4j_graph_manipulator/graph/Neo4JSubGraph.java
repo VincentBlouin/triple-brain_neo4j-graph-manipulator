@@ -1,7 +1,11 @@
 package org.triple_brain.module.neo4j_graph_manipulator.graph;
 
-import org.triple_brain.module.model.graph.*;
+import org.triple_brain.module.model.graph.Edge;
+import org.triple_brain.module.model.graph.SubGraph;
+import org.triple_brain.module.model.graph.Vertex;
+import org.triple_brain.module.model.graph.VertexInSubGraph;
 
+import java.net.URI;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -23,9 +27,9 @@ public class Neo4JSubGraph implements SubGraph{
     }
 
     @Override
-    public VertexInSubGraph vertexWithIdentifier(String identifier) {
+    public VertexInSubGraph vertexWithIdentifier(URI identifier) {
         for(VertexInSubGraph vertex : vertices()){
-            if(vertex.id().equals(identifier)){
+            if(vertex.uri().equals(identifier)){
                 return vertex;
             }
         }
@@ -33,9 +37,9 @@ public class Neo4JSubGraph implements SubGraph{
     }
 
     @Override
-    public Edge edgeWithIdentifier(String identifier) {
+    public Edge edgeWithIdentifier(URI identifier) {
         for(Edge edge : edges()){
-            if(edge.id().equals(identifier)){
+            if(edge.uri().equals(identifier)){
                 return edge;
             }
         }

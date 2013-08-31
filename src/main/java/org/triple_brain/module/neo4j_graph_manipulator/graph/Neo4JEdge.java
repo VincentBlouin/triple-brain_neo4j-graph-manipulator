@@ -4,7 +4,7 @@ import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 import org.joda.time.DateTime;
 import org.neo4j.graphdb.Relationship;
-import org.triple_brain.module.model.ExternalFriendlyResource;
+import org.triple_brain.module.model.FriendlyResource;
 import org.triple_brain.module.model.User;
 import org.triple_brain.module.model.UserUris;
 import org.triple_brain.module.model.graph.Edge;
@@ -89,8 +89,8 @@ public class Neo4JEdge implements Edge{
     }
 
     @Override
-    public String id() {
-        return graphElement.id();
+    public URI uri() {
+        return graphElement.uri();
     }
 
     @Override
@@ -114,43 +114,38 @@ public class Neo4JEdge implements Edge{
     }
 
     @Override
-    public void addSameAs(ExternalFriendlyResource friendlyResource) {
-        graphElement.addSameAs(friendlyResource);
+    public void addSameAs(FriendlyResource friendlyResourceImpl) {
+        graphElement.addSameAs(friendlyResourceImpl);
     }
 
     @Override
-    public Set<ExternalFriendlyResource> getSameAs() {
+    public Set<FriendlyResource> getSameAs() {
         return graphElement.getSameAs();
     }
 
     @Override
-    public ExternalFriendlyResource friendlyResourceWithUri(URI uri) {
-        return graphElement.friendlyResourceWithUri(uri);
-    }
-
-    @Override
-    public void addType(ExternalFriendlyResource type) {
+    public void addType(FriendlyResource type) {
         graphElement.addType(type);
     }
 
     @Override
-    public void removeFriendlyResource(ExternalFriendlyResource type) {
+    public void removeFriendlyResource(FriendlyResource type) {
         graphElement.removeFriendlyResource(type);
     }
 
     @Override
-    public Set<ExternalFriendlyResource> getAdditionalTypes() {
+    public Set<FriendlyResource> getAdditionalTypes() {
         return graphElement.getAdditionalTypes();
     }
 
     @Override
     public boolean equals(Object edgeToCompareAsObject) {
         Edge edgeToCompare = (Edge) edgeToCompareAsObject;
-        return id().equals(edgeToCompare.id());
+        return uri().equals(edgeToCompare.uri());
     }
 
     @Override
     public int hashCode() {
-        return id().hashCode();
+        return uri().hashCode();
     }
 }

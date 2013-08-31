@@ -10,18 +10,17 @@ import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.index.ReadableIndex;
 import org.triple_brain.module.common_utils.Uris;
-import org.triple_brain.module.model.ExternalFriendlyResource;
-import org.triple_brain.module.model.TripleBrainUris;
-import org.triple_brain.module.model.User;
-import org.triple_brain.module.model.UserUris;
+import org.triple_brain.module.model.*;
 import org.triple_brain.module.model.graph.Edge;
 import org.triple_brain.module.model.graph.Vertex;
 import org.triple_brain.module.model.graph.VertexInSubGraph;
-import org.triple_brain.module.model.suggestion.PersistedSuggestion;
 import org.triple_brain.module.model.suggestion.Suggestion;
 
 import java.net.URI;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /*
 * Copyright Mozilla Public License 1.1
@@ -35,43 +34,41 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
 
     protected Neo4JVertexFactory vertexFactory;
 
+    protected FriendlyResource friendlyResource;
+
     protected Neo4JEdgeFactory edgeFactory;
-
-    protected SuggestionNeo4JConverter suggestionConverter;
-
-    protected Neo4JExternalFriendlyResourcePersistenceUtils friendlyResourceUtils;
 
     protected Neo4JUtils utils;
     protected List<String> hiddenEdgesLabel = new ArrayList<String>();
 
     private static final String HIDDEN_EDGES_LABEL_KEY = "hidden_edges_label";
 
-    protected Neo4JExternalResourceUtils externalResourceUtils;
+    protected Neo4JSuggestionFactory suggestionFactory;
 
     @AssistedInject
     protected Neo4JVertexInSubGraph(
             ReadableIndex<Node> nodeIndex,
             Neo4JVertexFactory vertexFactory,
             Neo4JEdgeFactory edgeFactory,
-            SuggestionNeo4JConverter suggestionConverter,
-            Neo4JExternalFriendlyResourcePersistenceUtils friendlyResourceUtils,
             Neo4JUtils utils,
-            Neo4JExternalResourceUtils externalResourceUtils,
             Neo4JGraphElementFactory neo4JGraphElementFactory,
+            Neo4JFriendlyResourceFactory neo4JFriendlyResourceFactory,
+            Neo4JSuggestionFactory suggestionFactory,
             @Assisted Node node,
             @Assisted User owner
     ) {
         this.nodeIndex = nodeIndex;
-        this.externalResourceUtils = externalResourceUtils;
         this.vertexFactory = vertexFactory;
         this.edgeFactory = edgeFactory;
-        this.suggestionConverter = suggestionConverter;
-        this.friendlyResourceUtils = friendlyResourceUtils;
+        this.suggestionFactory = suggestionFactory;
         this.utils = utils;
         this.node = node;
         graphElement = neo4JGraphElementFactory.withPropertyContainerAndOwner(
                 node,
                 owner
+        );
+        this.friendlyResource = neo4JFriendlyResourceFactory.createOrLoadFromNode(
+                node
         );
     }
 
@@ -80,11 +77,10 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
             ReadableIndex<Node> nodeIndex,
             Neo4JVertexFactory vertexFactory,
             Neo4JEdgeFactory edgeFactory,
-            SuggestionNeo4JConverter suggestionConverter,
-            Neo4JExternalFriendlyResourcePersistenceUtils friendlyResourceUtils,
             Neo4JUtils utils,
-            Neo4JExternalResourceUtils externalResourceUtils,
             Neo4JGraphElementFactory neo4JGraphElementFactory,
+            Neo4JFriendlyResourceFactory friendlyResourceFactory,
+            Neo4JSuggestionFactory suggestionFactory,
             @Assisted Node node,
             @Assisted URI uri,
             @Assisted User owner
@@ -93,11 +89,10 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
                 nodeIndex,
                 vertexFactory,
                 edgeFactory,
-                suggestionConverter,
-                friendlyResourceUtils,
                 utils,
-                externalResourceUtils,
                 neo4JGraphElementFactory,
+                friendlyResourceFactory,
+                suggestionFactory,
                 node,
                 owner
         );
@@ -107,7 +102,7 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
                 owner
         );
         makePrivate();
-        this.addType(ExternalFriendlyResource.withUriAndLabel(
+        this.addType(friendlyResourceFactory.createOrLoadUsingUriAndLabel(
                 Uris.get(TripleBrainUris.TRIPLE_BRAIN_VERTEX),
                 ""
         ));
@@ -149,8 +144,8 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
             }
         }
         throw new RuntimeException(
-                "Edge between vertex with " + id() +
-                        " and vertex with id " + destinationVertex.id() +
+                "Edge between vertex with " + uri() +
+                        " and vertex with uri " + destinationVertex.uri() +
                         " was not found"
         );
     }
@@ -196,7 +191,7 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
     public Edge addRelationToVertex(Vertex destinationVertex) {
         Node destinationNode = nodeIndex.get(
                 Neo4JUserGraph.URI_PROPERTY_NAME,
-                destinationVertex.id()
+                destinationVertex.uri()
         ).getSingle();
 
         Relationship relationship = node.createRelationshipTo(
@@ -264,8 +259,11 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
     @Override
     public void addSuggestions(Suggestion... suggestions) {
         for (Suggestion suggestion : suggestions) {
-            Node suggestionAsNode = suggestionConverter.createSuggestion(suggestion);
-            node.createRelationshipTo(suggestionAsNode, Relationships.SUGGESTION);
+            Neo4JSuggestion neo4JSuggestion = (Neo4JSuggestion) suggestion;
+            node.createRelationshipTo(
+                    neo4JSuggestion.getNode(),
+                    Relationships.SUGGESTION
+            );
         }
         graphElement.updateLastModificationDate();
     }
@@ -278,10 +276,10 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
     }
 
     @Override
-    public Set<PersistedSuggestion> suggestions() {
-        Set<PersistedSuggestion> suggestions = new HashSet<>();
+    public Set<Suggestion> suggestions() {
+        Set<Suggestion> suggestions = new HashSet<>();
         for (Relationship relationship : node.getRelationships(Relationships.SUGGESTION)) {
-            PersistedSuggestion suggestion = suggestionConverter.nodeToSuggestion(
+            Suggestion suggestion = suggestionFactory.getFromNode(
                     relationship.getEndNode()
             );
             suggestions.add(suggestion);
@@ -290,17 +288,12 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
     }
 
     @Override
-    public ExternalFriendlyResource friendlyResourceWithUri(URI uri) {
-        return graphElement.friendlyResourceWithUri(uri);
-    }
-
-    @Override
-    public void addType(ExternalFriendlyResource type) {
+    public void addType(FriendlyResource type) {
         graphElement.addType(type);
     }
 
     @Override
-    public void removeFriendlyResource(ExternalFriendlyResource friendlyResource) {
+    public void removeFriendlyResource(FriendlyResource friendlyResource) {
         graphElement.removeFriendlyResource(
                 friendlyResource
         );
@@ -310,31 +303,29 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
     }
 
 
-    private void removeSuggestionsHavingExternalResourceAsOrigin(ExternalFriendlyResource externalResource) {
-        for (PersistedSuggestion suggestion : suggestions()) {
-            suggestion.get().removeOriginsThatDependOnResource(
-                    externalResource
+    private void removeSuggestionsHavingExternalResourceAsOrigin(FriendlyResource resource) {
+        for (Suggestion suggestion : suggestions()) {
+            suggestion.removeOriginsThatDependOnResource(
+                    resource
             );
-            if (suggestion.get().origins().isEmpty()) {
-                suggestionConverter.remove(
-                        suggestion
-                );
+            if (suggestion.origins().isEmpty()) {
+                suggestion.remove();
             }
         }
     }
 
     @Override
-    public Set<ExternalFriendlyResource> getAdditionalTypes() {
+    public Set<FriendlyResource> getAdditionalTypes() {
         return graphElement.getAdditionalTypes();
     }
 
     @Override
-    public void addSameAs(ExternalFriendlyResource friendlyResource) {
-        graphElement.addSameAs(friendlyResource);
+    public void addSameAs(FriendlyResource friendlyResourceImpl) {
+        graphElement.addSameAs(friendlyResourceImpl);
     }
 
     @Override
-    public Set<ExternalFriendlyResource> getSameAs() {
+    public Set<FriendlyResource> getSameAs() {
         return graphElement.getSameAs();
     }
 
@@ -376,8 +367,8 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
     }
 
     @Override
-    public String id() {
-        return graphElement.id();
+    public URI uri() {
+        return graphElement.uri();
     }
 
     @Override
@@ -405,6 +396,40 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
     }
 
     @Override
+    public Set<Image> images() {
+        return friendlyResource.images();
+    }
+
+    @Override
+    public Boolean gotTheImages() {
+        return friendlyResource.gotTheImages();
+    }
+
+    @Override
+    public String description() {
+        return friendlyResource.description();
+    }
+
+    @Override
+    public void description(String description) {
+        friendlyResource.description(
+                description
+        );
+    }
+
+    @Override
+    public Boolean gotADescription() {
+        return friendlyResource.gotADescription();
+    }
+
+    @Override
+    public void addImages(Set<Image> images) {
+        friendlyResource.addImages(
+                images
+        );
+    }
+
+    @Override
     public void label(String label) {
         graphElement.label(label);
     }
@@ -422,12 +447,12 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
     @Override
     public boolean equals(Object vertexToCompareAsObject) {
         Vertex vertexToCompare = (Vertex) vertexToCompareAsObject;
-        return id().equals(vertexToCompare.id());
+        return uri().equals(vertexToCompare.uri());
     }
 
     @Override
     public int hashCode() {
-        return id().hashCode();
+        return uri().hashCode();
     }
 
     @Override
