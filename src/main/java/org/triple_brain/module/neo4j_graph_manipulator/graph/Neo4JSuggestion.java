@@ -54,8 +54,8 @@ public class Neo4JSuggestion implements Suggestion {
                 URI.create(suggestionAsJson.optString(TYPE_URI)),
                 URI.create(suggestionAsJson.optString(DOMAIN_URI)),
                 suggestionAsJson.optString(LABEL),
-                SuggestionOrigin.fromIdentificationWithUri(
-                        URI.create(suggestionAsJson.optString(ORIGIN))
+                SuggestionOrigin.valueOf(
+                        suggestionAsJson.optString(ORIGIN)
                 )
         );
     }
