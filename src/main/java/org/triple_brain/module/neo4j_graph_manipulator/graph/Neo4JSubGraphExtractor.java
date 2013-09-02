@@ -5,8 +5,13 @@ import com.google.inject.assistedinject.AssistedInject;
 import org.neo4j.cypher.ExecutionEngine;
 import org.neo4j.cypher.ExecutionResult;
 import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.Relationship;
+import org.triple_brain.module.model.FriendlyResource;
 import org.triple_brain.module.model.TripleBrainUris;
-import org.triple_brain.module.model.graph.*;
+import org.triple_brain.module.model.graph.Edge;
+import org.triple_brain.module.model.graph.SubGraph;
+import org.triple_brain.module.model.graph.Vertex;
+import org.triple_brain.module.model.graph.VertexInSubGraph;
 import scala.collection.immutable.Map;
 
 import javax.inject.Inject;
@@ -29,6 +34,9 @@ public class Neo4JSubGraphExtractor {
 
     @Inject
     Neo4JUtils neo4JUtils;
+
+    @Inject
+    Neo4JFriendlyResourceFactory neo4JFriendlyResourceFactory;
 
     @AssistedInject
     protected Neo4JSubGraphExtractor(
@@ -76,13 +84,18 @@ public class Neo4JSubGraphExtractor {
     }
 
     private Boolean isNodeVertex(Node node){
-        if(!node.hasProperty(Relationships.TYPE.name())){
+        if(!node.hasRelationship(Relationships.TYPE)){
             return false;
         }
-        String typesListAsString = (String) node.getProperty(
-                Relationships.TYPE.name()
-        );
-        return typesListAsString.contains(TripleBrainUris.TRIPLE_BRAIN_VERTEX);
+        for(Relationship relationship : node.getRelationships(Relationships.TYPE)){
+            FriendlyResource type = neo4JFriendlyResourceFactory.createOrLoadFromNode(
+                    relationship.getEndNode()
+            );
+            if(TripleBrainUris.TRIPLE_BRAIN_VERTEX.equals(type.uri().toString())){
+                return true;
+            }
+        }
+        return false;
     }
 
     private void setDistanceFromCenterVertexToVertexIfApplicable(Vertex vertex, Integer distance){

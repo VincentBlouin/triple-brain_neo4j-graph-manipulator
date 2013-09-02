@@ -4,6 +4,7 @@ import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 import com.hp.hpl.jena.vocabulary.RDFS;
 import org.joda.time.DateTime;
+import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 import org.triple_brain.module.common_utils.Uris;
@@ -30,7 +31,7 @@ public class Neo4JGraphElement implements GraphElement {
     private Neo4JFriendlyResourceFactory friendlyResourceFactory;
 
     @Inject
-    protected Neo4JUtils utils;
+    protected Neo4JUtils neo4JUtils;
 
     @AssistedInject
     protected Neo4JGraphElement(
@@ -120,61 +121,78 @@ public class Neo4JGraphElement implements GraphElement {
 
     @Override
     public void addSameAs(FriendlyResource friendlyResource) {
-        addResourceUriConnectedWithRelationName(
-                friendlyResource.uri().toString(),
-                Relationships.SAME_AS.name()
+        Node sameAsAsNode = neo4JUtils.getFromUri(
+                friendlyResource.uri()
+        );
+        node.createRelationshipTo(
+                sameAsAsNode,
+                Relationships.SAME_AS
         );
         updateLastModificationDate();
     }
 
     @Override
     public Set<FriendlyResource> getSameAs() {
-        return getExternalFriendlyResourcesOfRelation(
-                Relationships.SAME_AS.name()
-        );
+        Set<FriendlyResource> sameAsSet = new HashSet<FriendlyResource>();
+        for (Relationship relationship : node.getRelationships(Relationships.SAME_AS)) {
+            FriendlyResource sameAs = friendlyResourceFactory.createOrLoadFromNode(
+                    relationship.getEndNode()
+            );
+            sameAsSet.add(sameAs);
+        }
+        return sameAsSet;
     }
 
     @Override
     public void addType(FriendlyResource type) {
-        addResourceUriConnectedWithRelationName(
-                type.uri().toString(),
-                Relationships.TYPE.name()
+        Node typeAsNode = neo4JUtils.getFromUri(
+                type.uri()
+        );
+        node.createRelationshipTo(
+                typeAsNode,
+                Relationships.TYPE
         );
         updateLastModificationDate();
     }
 
     @Override
     public void removeFriendlyResource(FriendlyResource friendlyResource) {
-        removeRelationToExternalResource(
-                Relationships.SAME_AS.name(),
-                friendlyResource
+        Node friendlyResourceAsNode = neo4JUtils.getFromUri(
+                friendlyResource.uri()
         );
-        removeRelationToExternalResource(
-                Relationships.TYPE.name(),
-                friendlyResource
-        );
+        for (Relationship relationship : node.getRelationships(Direction.OUTGOING)) {
+            Node endNode = relationship.getEndNode();
+            if (endNode.equals(friendlyResourceAsNode)) {
+                relationship.delete();
+            }
+        }
         updateLastModificationDate();
     }
 
     @Override
     public Set<FriendlyResource> getAdditionalTypes() {
-        Set<FriendlyResource> friendlyResourceImpls = getExternalFriendlyResourcesOfRelation(
-                Relationships.TYPE.name()
-        );
-        friendlyResourceImpls.remove(friendlyResourceFactory.createOrLoadFromUri(
-                Uris.get(TripleBrainUris.TRIPLE_BRAIN_VERTEX)
-        ));
-        return friendlyResourceImpls;
+        Set<FriendlyResource> additionalTypes = new HashSet<FriendlyResource>();
+        for (Relationship relationship : node.getRelationships(Relationships.TYPE)) {
+            FriendlyResource type = friendlyResourceFactory.createOrLoadFromNode(
+                    relationship.getEndNode()
+            );
+            if (!type.uri().toString().equals(TripleBrainUris.TRIPLE_BRAIN_VERTEX)) {
+                additionalTypes.add(type);
+            }
+        }
+        return additionalTypes;
     }
 
+    @Override
     public void remove(){
         for (Relationship relationship : node.getRelationships()) {
-            utils.removeAllProperties(
+            //removing explicitly so node index gets reindexed
+            neo4JUtils.removeAllProperties(
                     relationship
             );
             relationship.delete();
         }
-        //removing explicitly so index
+        //removing explicitly so node index gets reindexed
         node.removeProperty(Neo4JUserGraph.URI_PROPERTY_NAME);
         node.delete();
     }
@@ -184,80 +202,5 @@ public class Neo4JGraphElement implements GraphElement {
                 1,
                 listAsString.length() - 1
         );
-    }
-
-    private Set<FriendlyResource> getExternalFriendlyResourcesOfRelation(String relationName) {
-        Set<FriendlyResource> set = new HashSet<FriendlyResource>();
-        List<String> uris = getListOfResourcesUriConnectedWithRelationshipName(
-                relationName
-        );
-        for (String uri : uris) {
-            set.add(
-                    friendlyResourceFactory.createOrLoadFromUri(
-                            Uris.get(uri)
-                    )
-            );
-        }
-        return set;
-    }
-
-    private void addResourceUriConnectedWithRelationName(String uri, String relationName) {
-        List<String> uris = getListOfResourcesUriConnectedWithRelationshipName(
-                relationName
-        );
-        uris.add(
-                uri
-        );
-        node.setProperty(
-                relationName,
-                uris.toString()
-        );
-    }
-
-    private List<String> getSameAsResourcesUri() {
-        return getListOfResourcesUriConnectedWithRelationshipName(
-                Relationships.SAME_AS.name()
-        );
-    }
-
-    private List<String> getTypeResourcesUri() {
-        return getListOfResourcesUriConnectedWithRelationshipName(
-                Relationships.TYPE.name()
-        );
-    }
-
-    private List<String> getListOfResourcesUriConnectedWithRelationshipName(String propertyName) {
-        if (!node.hasProperty(propertyName)) {
-            return new ArrayList<String>();
-        }
-        String urisAsString = (String) node.getProperty(
-                propertyName
-        );
-        urisAsString = removeEnclosingCharsOfListAsString(
-                urisAsString
-        );
-        if (urisAsString.isEmpty()) {
-            return new ArrayList<String>();
-        }
-        return new ArrayList<String>(
-                Arrays.asList(
-                        urisAsString.split("\\s*,\\s*")
-                )
-        );
-    }
-
-    private void removeRelationToExternalResource(String relationName, FriendlyResource friendlyResource) {
-        List<String> uris = getListOfResourcesUriConnectedWithRelationshipName(
-                relationName
-        );
-        boolean wasUriRemoved = uris.remove(
-                friendlyResource.uri().toString()
-        );
-        if (wasUriRemoved) {
-            node.setProperty(
-                    relationName,
-                    uris.toString()
-            );
-        }
     }
 }
