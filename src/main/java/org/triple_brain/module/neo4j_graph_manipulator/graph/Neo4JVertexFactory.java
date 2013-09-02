@@ -11,4 +11,5 @@ import java.net.URI;
 public interface Neo4JVertexFactory  {
     public Neo4JVertexInSubGraph loadUsingNodeOfOwner(Node node, User owner);
     public Neo4JVertexInSubGraph createUsingEmptyNodeUriAndOwner(Node node, URI uri, User owner);
+    public Neo4JVertexInSubGraph createOrLoadFromUriAndOwner(URI uri, User owner);
 }

@@ -5,6 +5,7 @@ import com.google.inject.assistedinject.AssistedInject;
 import org.neo4j.cypher.ExecutionEngine;
 import org.neo4j.cypher.ExecutionResult;
 import org.neo4j.graphdb.Node;
+import org.triple_brain.module.model.TripleBrainUris;
 import org.triple_brain.module.model.graph.*;
 import scala.collection.immutable.Map;
 
@@ -50,24 +51,38 @@ public class Neo4JSubGraphExtractor {
         );
         while (result.hasNext()) {
             Map<String, Object> row = result.next();
-            Neo4JVertexInSubGraph vertex = vertexFactory.loadUsingNodeOfOwner(
-                    (Node) row.get("in_path_node").get(),
-                    centerVertex.owner()
-            );
-            Integer distanceFromCenterVertex = (Integer) (
-                    row.get("length(path)").get()
-            );
-            subGraph.vertices().add(
-                    vertex
-            );
-            setDistanceFromCenterVertexToVertexIfApplicable(
-                    vertex,
-                    distanceFromCenterVertex
-            );
-            subGraph.edges().addAll(vertex.connectedEdges());
+            Node node = (Node) row.get("in_path_node").get();
+            if(isNodeVertex(node)){
+                Neo4JVertexInSubGraph vertex = vertexFactory.loadUsingNodeOfOwner(
+                        node,
+                        centerVertex.owner()
+                );
+                Integer distanceFromCenterVertex = (Integer) (
+                        row.get("length(path)").get()
+                );
+                subGraph.vertices().add(
+                        vertex
+                );
+                setDistanceFromCenterVertexToVertexIfApplicable(
+                        vertex,
+                        distanceFromCenterVertex / 2
+                );
+                subGraph.edges().addAll(vertex.connectedEdges());
+            }
+
         }
         removeEdgesThatDontHaveAllTheirVerticesInSubGraph();
         return subGraph;
+    }
+
+    private Boolean isNodeVertex(Node node){
+        if(!node.hasProperty(Relationships.TYPE.name())){
+            return false;
+        }
+        String typesListAsString = (String) node.getProperty(
+                Relationships.TYPE.name()
+        );
+        return typesListAsString.contains(TripleBrainUris.TRIPLE_BRAIN_VERTEX);
     }
 
     private void setDistanceFromCenterVertexToVertexIfApplicable(Vertex vertex, Integer distance){
@@ -80,7 +95,10 @@ public class Neo4JSubGraphExtractor {
     private String queryToGetGraph() {
         Node centerVertexAsNode = neo4JUtils.nodeOfVertex(centerVertex);
         return "START start_node=node(" + centerVertexAsNode.getId() + ")" +
-                "MATCH path=start_node<-[:" + Relationships.TRIPLE_BRAIN_EDGE + "*0.." + depth + "]->in_path_node " +
+                "MATCH path=start_node<-[" +
+                ":" + Relationships.SOURCE_VERTEX+
+                "|:" + Relationships.DESTINATION_VERTEX + "*0.." + depth * 2 +
+                "]->in_path_node " +
                 "RETURN start_node,in_path_node, length(path)";
     }
 

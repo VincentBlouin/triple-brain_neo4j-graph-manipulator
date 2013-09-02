@@ -8,7 +8,6 @@ import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
-import org.neo4j.graphdb.index.ReadableIndex;
 import org.triple_brain.module.common_utils.Uris;
 import org.triple_brain.module.model.*;
 import org.triple_brain.module.model.graph.Edge;
@@ -30,8 +29,6 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
     private Integer depthInSubGraph = -1;
     protected Node node;
     protected Neo4JGraphElement graphElement;
-    private ReadableIndex<Node> nodeIndex;
-
     protected Neo4JVertexFactory vertexFactory;
 
     protected FriendlyResource friendlyResource;
@@ -47,7 +44,6 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
 
     @AssistedInject
     protected Neo4JVertexInSubGraph(
-            ReadableIndex<Node> nodeIndex,
             Neo4JVertexFactory vertexFactory,
             Neo4JEdgeFactory edgeFactory,
             Neo4JUtils utils,
@@ -57,13 +53,12 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
             @Assisted Node node,
             @Assisted User owner
     ) {
-        this.nodeIndex = nodeIndex;
         this.vertexFactory = vertexFactory;
         this.edgeFactory = edgeFactory;
         this.suggestionFactory = suggestionFactory;
         this.utils = utils;
         this.node = node;
-        graphElement = neo4JGraphElementFactory.withPropertyContainerAndOwner(
+        graphElement = neo4JGraphElementFactory.withNodeAndOwner(
                 node,
                 owner
         );
@@ -74,7 +69,6 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
 
     @AssistedInject
     protected Neo4JVertexInSubGraph(
-            ReadableIndex<Node> nodeIndex,
             Neo4JVertexFactory vertexFactory,
             Neo4JEdgeFactory edgeFactory,
             Neo4JUtils utils,
@@ -86,7 +80,6 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
             @Assisted User owner
     ) {
         this(
-                nodeIndex,
                 vertexFactory,
                 edgeFactory,
                 utils,
@@ -108,11 +101,34 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
         ));
     }
 
+    @AssistedInject
+    protected Neo4JVertexInSubGraph(
+            Neo4JVertexFactory vertexFactory,
+            Neo4JEdgeFactory edgeFactory,
+            Neo4JUtils utils,
+            Neo4JGraphElementFactory neo4JGraphElementFactory,
+            Neo4JFriendlyResourceFactory friendlyResourceFactory,
+            Neo4JSuggestionFactory suggestionFactory,
+            @Assisted URI uri,
+            @Assisted User owner
+    ){
+        this(
+                vertexFactory,
+                edgeFactory,
+                utils,
+                neo4JGraphElementFactory,
+                friendlyResourceFactory,
+                suggestionFactory,
+                utils.getOrCreate(uri),
+                owner
+        );
+    }
+
     @Override
     public boolean hasEdge(Edge edge) {
-        for (Relationship relationship : connectedEdgesAsRelationships()) {
-            Edge edgeToCompare = edgeFactory.loadWithRelationshipOfOwner(
-                    relationship,
+        for (Relationship relationship : relationshipsToEdges()) {
+            Edge edgeToCompare = edgeFactory.loadWithNodeOfOwner(
+                    relationship.getStartNode(),
                     graphElement.owner()
             );
             if (edge.equals(edgeToCompare)) {
@@ -134,9 +150,9 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
 
     @Override
     public Edge edgeThatLinksToDestinationVertex(Vertex destinationVertex) {
-        for (Relationship relationship : connectedEdgesAsRelationships()) {
-            Edge edge = edgeFactory.loadWithRelationshipOfOwner(
-                    relationship,
+        for (Relationship relationship : relationshipsToEdges()) {
+            Edge edge = edgeFactory.loadWithNodeOfOwner(
+                    relationship.getStartNode(),
                     graphElement.owner()
             );
             if (edge.hasVertex(destinationVertex)) {
@@ -152,12 +168,15 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
 
     @Override
     public Boolean hasDestinationVertex(Vertex destinationVertex) {
-        for (Relationship relationship : node.getRelationships(Relationships.TRIPLE_BRAIN_EDGE, Direction.OUTGOING)) {
-            Vertex endVertex = vertexFactory.loadUsingNodeOfOwner(
-                    relationship.getEndNode(),
+        Iterable<Relationship> relationshipsIt = node.getRelationships(
+                Relationships.SOURCE_VERTEX
+        );
+        for (Relationship relationship : relationshipsIt){
+            Edge edge = edgeFactory.loadWithNodeOfOwner(
+                    relationship.getStartNode(),
                     owner()
             );
-            if (destinationVertex.equals(endVertex)) {
+            if (edge.destinationVertex().equals(destinationVertex)){
                 return true;
             }
         }
@@ -172,35 +191,19 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
     @Override
     public Edge addVertexAndRelation() {
         Node newVertexNode = node.getGraphDatabase().createNode();
-        vertexFactory.createUsingEmptyNodeUriAndOwner(
+        Neo4JVertexInSubGraph newVertex = vertexFactory.createUsingEmptyNodeUriAndOwner(
                 newVertexNode,
                 new UserUris(owner()).generateVertexUri(),
                 graphElement.owner()
         );
-        Relationship newRelationship = node.createRelationshipTo(
-                newVertexNode,
-                Relationships.TRIPLE_BRAIN_EDGE
-        );
-        return edgeFactory.createWithRelationshipAndOwner(
-                newRelationship,
-                graphElement.owner()
-        );
+        return addRelationToVertex(newVertex);
     }
 
     @Override
     public Edge addRelationToVertex(Vertex destinationVertex) {
-        Node destinationNode = nodeIndex.get(
-                Neo4JUserGraph.URI_PROPERTY_NAME,
-                destinationVertex.uri()
-        ).getSingle();
-
-        Relationship relationship = node.createRelationshipTo(
-                destinationNode,
-                Relationships.TRIPLE_BRAIN_EDGE
-        );
-        return edgeFactory.createWithRelationshipAndOwner(
-                relationship,
-                graphElement.owner()
+        return edgeFactory.createForSourceAndDestinationVertex(
+                this,
+                (Neo4JVertexInSubGraph) destinationVertex
         );
     }
 
@@ -209,13 +212,7 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
         for (Edge edge : connectedEdges()) {
             edge.remove();
         }
-        removePropertiesWithRelationShipType(Relationships.SUGGESTION);
-        removePropertiesWithRelationShipType(Relationships.TYPE);
-        for (Relationship relationship : node.getRelationships()) {
-            relationship.delete();
-        }
-        node.removeProperty(Neo4JUserGraph.URI_PROPERTY_NAME);
-        node.delete();
+        graphElement.remove();
     }
 
     @Override
@@ -231,10 +228,10 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
     @Override
     public Set<Edge> connectedEdges() {
         Set<Edge> edges = new HashSet<Edge>();
-        for (Relationship relationship : connectedEdgesAsRelationships()) {
+        for (Relationship relationship : relationshipsToEdges()) {
             edges.add(
-                    edgeFactory.loadWithRelationshipOfOwner(
-                            relationship,
+                    edgeFactory.loadWithNodeOfOwner(
+                            relationship.getStartNode(),
                             graphElement.owner()
                     )
             );
@@ -242,8 +239,11 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
         return edges;
     }
 
-    private Iterable<Relationship> connectedEdgesAsRelationships() {
-        return node.getRelationships(Relationships.TRIPLE_BRAIN_EDGE);
+    private Iterable<Relationship> relationshipsToEdges() {
+        return node.getRelationships(
+                Relationships.SOURCE_VERTEX,
+                Relationships.DESTINATION_VERTEX
+        );
     }
 
     @Override
@@ -465,5 +465,4 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
         this.depthInSubGraph = minDistanceFromCenterVertex;
         return this;
     }
-
 }

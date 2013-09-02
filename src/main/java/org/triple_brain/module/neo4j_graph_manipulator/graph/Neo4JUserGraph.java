@@ -22,8 +22,6 @@ public class Neo4JUserGraph implements UserGraph {
     public static final String URI_PROPERTY_NAME = "uri";
 
     private User user;
-
-    private GraphDatabaseService graphDb;
     private ReadableIndex<Node> nodeIndex;
     private ReadableIndex<Relationship> relationshipIndex;
     private Neo4JVertexFactory vertexFactory;
@@ -41,7 +39,6 @@ public class Neo4JUserGraph implements UserGraph {
             Neo4JSubGraphExtractorFactory subGraphExtractorFactory,
             @Assisted User user
     ) {
-        this.graphDb = graphDb;
         this.nodeIndex = nodeIndex;
         this.relationshipIndex = relationshipIndex;
         this.user = user;
@@ -128,13 +125,14 @@ public class Neo4JUserGraph implements UserGraph {
 
     @Override
     public Edge edgeWithUri(URI uri) {
-        Relationship relationship = relationshipIndex.get(
+        Node node = nodeIndex.get(
                 URI_PROPERTY_NAME,
                 uri.toString()
         ).getSingle();
-        return edgeFactory.loadWithRelationshipOfOwner(
-                relationship,
+        return edgeFactory.loadWithNodeOfOwner(
+                node,
                 user
         );
     }
+
 }

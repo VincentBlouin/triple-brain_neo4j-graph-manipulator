@@ -4,7 +4,8 @@ import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 import com.hp.hpl.jena.vocabulary.RDFS;
 import org.joda.time.DateTime;
-import org.neo4j.graphdb.PropertyContainer;
+import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.Relationship;
 import org.triple_brain.module.common_utils.Uris;
 import org.triple_brain.module.model.FriendlyResource;
 import org.triple_brain.module.model.TripleBrainUris;
@@ -22,43 +23,45 @@ public class Neo4JGraphElement implements GraphElement {
 
     public static final String CREATION_DATE_PROPERTY_NAME = "creation_date";
     public static final String LAST_MODIFICATION_DATE_PROPERTY_NAME = "last_modification_date";
-
-    private PropertyContainer propertyContainer;
+    private Node node;
     private User owner;
 
     @Inject
     private Neo4JFriendlyResourceFactory friendlyResourceFactory;
 
+    @Inject
+    protected Neo4JUtils utils;
+
     @AssistedInject
     protected Neo4JGraphElement(
-            @Assisted PropertyContainer propertyContainer,
+            @Assisted Node node,
             @Assisted User owner
     ) {
-        this.propertyContainer = propertyContainer;
+        this.node = node;
         this.owner = owner;
     }
 
     @AssistedInject
     protected Neo4JGraphElement(
-            @Assisted PropertyContainer propertyContainer,
+            @Assisted Node node,
             @Assisted URI uri,
             @Assisted User owner
     ) {
         this(
-                propertyContainer,
+                node,
                 owner
         );
-        propertyContainer.setProperty(
+        node.setProperty(
                 Neo4JUserGraph.URI_PROPERTY_NAME,
                 uri.toString()
         );
         this.label("");
         Long creationDate = new Date().getTime();
-        propertyContainer.setProperty(
+        node.setProperty(
                 CREATION_DATE_PROPERTY_NAME,
                 creationDate
         );
-        propertyContainer.setProperty(
+        node.setProperty(
                 LAST_MODIFICATION_DATE_PROPERTY_NAME,
                 creationDate
         );
@@ -66,20 +69,20 @@ public class Neo4JGraphElement implements GraphElement {
 
     @Override
     public DateTime creationDate() {
-        return new DateTime((Long) propertyContainer.getProperty(
+        return new DateTime((Long) node.getProperty(
                 CREATION_DATE_PROPERTY_NAME
         ));
     }
 
     @Override
     public DateTime lastModificationDate() {
-        return new DateTime((Long) propertyContainer.getProperty(
+        return new DateTime((Long) node.getProperty(
                 LAST_MODIFICATION_DATE_PROPERTY_NAME
         ));
     }
 
     public void updateLastModificationDate() {
-        propertyContainer.setProperty(
+        node.setProperty(
                 LAST_MODIFICATION_DATE_PROPERTY_NAME,
                 new Date().getTime()
         );
@@ -88,7 +91,7 @@ public class Neo4JGraphElement implements GraphElement {
     @Override
     public URI uri() {
         return Uris.get(
-                propertyContainer.getProperty(
+                node.getProperty(
                         Neo4JUserGraph.URI_PROPERTY_NAME
                 ).toString()
         );
@@ -96,18 +99,18 @@ public class Neo4JGraphElement implements GraphElement {
 
     @Override
     public String label() {
-        return propertyContainer.getProperty(RDFS.label.getURI()).toString();
+        return node.getProperty(RDFS.label.getURI()).toString();
     }
 
     @Override
     public void label(String label) {
-        propertyContainer.setProperty(RDFS.label.getURI(), label);
+        node.setProperty(RDFS.label.getURI(), label);
         updateLastModificationDate();
     }
 
     @Override
     public boolean hasLabel() {
-        return propertyContainer.hasProperty(RDFS.label.getURI());
+        return node.hasProperty(RDFS.label.getURI());
     }
 
     @Override
@@ -164,6 +167,18 @@ public class Neo4JGraphElement implements GraphElement {
         return friendlyResourceImpls;
     }
 
+    public void remove(){
+        for (Relationship relationship : node.getRelationships()) {
+            utils.removeAllProperties(
+                    relationship
+            );
+            relationship.delete();
+        }
+        //removing explicitly so index
+        node.removeProperty(Neo4JUserGraph.URI_PROPERTY_NAME);
+        node.delete();
+    }
+
     private String removeEnclosingCharsOfListAsString(String listAsString) {
         return listAsString.substring(
                 1,
@@ -193,7 +208,7 @@ public class Neo4JGraphElement implements GraphElement {
         uris.add(
                 uri
         );
-        propertyContainer.setProperty(
+        node.setProperty(
                 relationName,
                 uris.toString()
         );
@@ -212,10 +227,10 @@ public class Neo4JGraphElement implements GraphElement {
     }
 
     private List<String> getListOfResourcesUriConnectedWithRelationshipName(String propertyName) {
-        if (!propertyContainer.hasProperty(propertyName)) {
+        if (!node.hasProperty(propertyName)) {
             return new ArrayList<String>();
         }
-        String urisAsString = (String) propertyContainer.getProperty(
+        String urisAsString = (String) node.getProperty(
                 propertyName
         );
         urisAsString = removeEnclosingCharsOfListAsString(
@@ -239,7 +254,7 @@ public class Neo4JGraphElement implements GraphElement {
                 friendlyResource.uri().toString()
         );
         if (wasUriRemoved) {
-            propertyContainer.setProperty(
+            node.setProperty(
                     relationName,
                     uris.toString()
             );

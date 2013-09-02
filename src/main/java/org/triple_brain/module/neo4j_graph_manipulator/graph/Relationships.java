@@ -6,7 +6,8 @@ import org.neo4j.graphdb.RelationshipType;
 * Copyright Mozilla Public License 1.1
 */
 public enum Relationships implements RelationshipType {
-    TRIPLE_BRAIN_EDGE,
+    SOURCE_VERTEX,
+    DESTINATION_VERTEX,
     TYPE, //RDF.TYPE
     DOMAIN, //RDFS.DOMAIN
     LABEL, //RDFS.LABEL
