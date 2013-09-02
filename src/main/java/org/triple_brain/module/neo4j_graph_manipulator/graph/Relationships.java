@@ -13,5 +13,6 @@ public enum Relationships implements RelationshipType {
     LABEL, //RDFS.LABEL
     SAME_AS, //OWL2.sameAs
     HAS_IMAGE, //todo find common rdf property for image
-    SUGGESTION
+    SUGGESTION,
+    SUGGESTION_ORIGIN
 }

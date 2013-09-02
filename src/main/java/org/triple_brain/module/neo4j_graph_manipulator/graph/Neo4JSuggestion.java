@@ -4,7 +4,7 @@ import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 import org.codehaus.jettison.json.JSONObject;
 import org.neo4j.graphdb.Node;
-import org.triple_brain.module.common_utils.Misc;
+import org.neo4j.graphdb.Relationship;
 import org.triple_brain.module.common_utils.Uris;
 import org.triple_brain.module.model.FriendlyResource;
 import org.triple_brain.module.model.Image;
@@ -162,16 +162,12 @@ public class Neo4JSuggestion implements Suggestion {
 
     @Override
     public Set<SuggestionOrigin> origins() {
-        String setAsString = node.getProperty(
-                ORIGINS_PROPERTY_NAME
-        ).toString();
-        String[] suggestionOriginsAsString = Misc.setAsStringToArray(
-                setAsString
-        );
         Set<SuggestionOrigin> suggestionOrigins = new HashSet<SuggestionOrigin>();
-        for(String suggestionOriginAsString : suggestionOriginsAsString){
+        for(Relationship relationship : node.getRelationships(Relationships.SUGGESTION_ORIGIN)){
             suggestionOrigins.add(
-                    new SuggestionOrigin(suggestionOriginAsString)
+                    suggestionOriginFromNode(
+                            relationship.getEndNode()
+                    )
             );
         }
         return suggestionOrigins;
@@ -179,17 +175,20 @@ public class Neo4JSuggestion implements Suggestion {
 
     @Override
     public void removeOriginsThatDependOnResource(FriendlyResource resource) {
-        Set<SuggestionOrigin> suggestionOrigins = new HashSet<>();
-        for(SuggestionOrigin suggestionOrigin : origins()){
-            if(!suggestionOrigin.isTheIdentificationWithUri(
+        Iterable<Relationship> relationshipIt = node.getRelationships(Relationships.SUGGESTION_ORIGIN);
+        while(relationshipIt.iterator().hasNext()){
+            Relationship relationship = relationshipIt.iterator().next();
+            Node suggestionOriginAsNode = relationship.getEndNode();
+            SuggestionOrigin suggestionOrigin = suggestionOriginFromNode(
+                    suggestionOriginAsNode
+            );
+            if(suggestionOrigin.isTheIdentificationWithUri(
                     resource.uri()
             )){
-                suggestionOrigins.add(
-                        suggestionOrigin
-                );
+                relationship.delete();
+                suggestionOriginAsNode.delete();
             }
         }
-        setOrigins(suggestionOrigins);
     }
 
     @Override
@@ -225,11 +224,11 @@ public class Neo4JSuggestion implements Suggestion {
     }
 
     private void addOrigin(SuggestionOrigin suggestionOrigin) {
-        Set<SuggestionOrigin> suggestionOrigins = new HashSet<>();
-        suggestionOrigins.add(suggestionOrigin);
-        node.setProperty(
-                ORIGINS_PROPERTY_NAME,
-                suggestionOrigins.toString()
+        node.createRelationshipTo(
+                createNodeFromSuggestionOrigin(
+                        suggestionOrigin
+                ),
+                Relationships.SUGGESTION_ORIGIN
         );
     }
     private void setOrigins(Set<SuggestionOrigin> origins) {
@@ -237,5 +236,22 @@ public class Neo4JSuggestion implements Suggestion {
                 ORIGINS_PROPERTY_NAME,
                 origins.toString()
         );
+    }
+
+    private SuggestionOrigin suggestionOriginFromNode(Node node){
+        return SuggestionOrigin.valueOf(
+                node.getProperty(
+                        SuggestionOrigin.ORIGIN_PROPERTY
+                ).toString()
+        );
+    }
+
+    private Node createNodeFromSuggestionOrigin(SuggestionOrigin suggestionOrigin){
+        Node suggestionOriginAsNode = node.getGraphDatabase().createNode();
+        suggestionOriginAsNode.setProperty(
+                SuggestionOrigin.ORIGIN_PROPERTY,
+                suggestionOrigin.toString()
+        );
+        return suggestionOriginAsNode;
     }
 }
