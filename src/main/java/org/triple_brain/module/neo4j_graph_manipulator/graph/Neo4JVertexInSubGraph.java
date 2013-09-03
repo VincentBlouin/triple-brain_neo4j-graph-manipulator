@@ -2,7 +2,6 @@ package org.triple_brain.module.neo4j_graph_manipulator.graph;
 
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
-import com.hp.hpl.jena.vocabulary.RDFS;
 import org.joda.time.DateTime;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
@@ -293,8 +292,8 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
     }
 
     @Override
-    public void removeFriendlyResource(FriendlyResource friendlyResource) {
-        graphElement.removeFriendlyResource(
+    public void removeIdentification(FriendlyResource friendlyResource) {
+        graphElement.removeIdentification(
                 friendlyResource
         );
         removeSuggestionsHavingExternalResourceAsOrigin(
@@ -372,25 +371,6 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
     }
 
     @Override
-    public String note() {
-        if (!node.hasProperty(RDFS.comment.getURI())) {
-            return "";
-        }
-        return (String) node.getProperty(
-                RDFS.comment.getURI()
-        );
-    }
-
-    @Override
-    public void note(String note) {
-        node.setProperty(
-                RDFS.comment.getURI(),
-                note
-        );
-        graphElement.updateLastModificationDate();
-    }
-
-    @Override
     public String label() {
         return graphElement.label();
     }
@@ -406,20 +386,20 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
     }
 
     @Override
-    public String description() {
-        return friendlyResource.description();
+    public String comment() {
+        return friendlyResource.comment();
     }
 
     @Override
-    public void description(String description) {
-        friendlyResource.description(
-                description
+    public void comment(String comment) {
+        friendlyResource.comment(
+                comment
         );
     }
 
     @Override
-    public Boolean gotADescription() {
-        return friendlyResource.gotADescription();
+    public Boolean gotComments() {
+        return friendlyResource.gotComments();
     }
 
     @Override

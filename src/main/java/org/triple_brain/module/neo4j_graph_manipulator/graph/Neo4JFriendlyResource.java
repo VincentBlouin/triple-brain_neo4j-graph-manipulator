@@ -5,20 +5,26 @@ import com.google.inject.assistedinject.AssistedInject;
 import com.hp.hpl.jena.vocabulary.RDFS;
 import org.apache.commons.lang.StringUtils;
 import org.codehaus.jettison.json.JSONObject;
+import org.joda.time.DateTime;
 import org.neo4j.graphdb.Node;
 import org.triple_brain.module.common_utils.Uris;
 import org.triple_brain.module.model.FriendlyResource;
 import org.triple_brain.module.model.Image;
-import org.triple_brain.module.model.json.ExternalResourceJson;
+import org.triple_brain.module.model.json.FriendlyResourceJson;
 
 import javax.inject.Inject;
 import java.net.URI;
+import java.util.Date;
 import java.util.Set;
 
 /*
 * Copyright Mozilla Public License 1.1
 */
 public class Neo4JFriendlyResource implements FriendlyResource {
+
+    public static final String CREATION_DATE_PROPERTY_NAME = "creation_date";
+    public static final String LAST_MODIFICATION_DATE_PROPERTY_NAME = "last_modification_date";
+
     @Inject
     Neo4JImageUtils imageUtils;
 
@@ -32,6 +38,9 @@ public class Neo4JFriendlyResource implements FriendlyResource {
             @Assisted Node node
     ) {
         this.node = node;
+        if(!hasCreationDate()){
+            initCreationAndLastModificationDate();
+        }
     }
 
     @AssistedInject
@@ -64,19 +73,19 @@ public class Neo4JFriendlyResource implements FriendlyResource {
         this(
                 neo4JUtils.getOrCreate(
                         Uris.get(json.optString(
-                                ExternalResourceJson.URI
+                                FriendlyResourceJson.URI
                         )
                         )
                 )
         );
         label(
                 json.optString(
-                        ExternalResourceJson.LABEL
+                        FriendlyResourceJson.LABEL
                 )
         );
-        description(
+        comment(
                 json.optString(
-                        ExternalResourceJson.DESCRIPTION
+                        FriendlyResourceJson.COMMENT
                 )
         );
     }
@@ -105,6 +114,7 @@ public class Neo4JFriendlyResource implements FriendlyResource {
                 RDFS.label.getURI(),
                 label
         );
+        updateLastModificationDate();
     }
 
     @Override
@@ -118,7 +128,7 @@ public class Neo4JFriendlyResource implements FriendlyResource {
     }
 
     @Override
-    public String description() {
+    public String comment() {
         return node.hasProperty(
                 RDFS.comment.getURI()
         ) ?
@@ -129,17 +139,18 @@ public class Neo4JFriendlyResource implements FriendlyResource {
     }
 
     @Override
-    public void description(String description) {
+    public void comment(String comment) {
         node.setProperty(
                 RDFS.comment.getURI(),
-                description
+                comment
         );
+        updateLastModificationDate();
     }
 
     @Override
-    public Boolean gotADescription() {
+    public Boolean gotComments() {
         return !StringUtils.isEmpty(
-                description()
+                comment()
         );
     }
 
@@ -148,6 +159,27 @@ public class Neo4JFriendlyResource implements FriendlyResource {
         imageUtils.addImages(
                 node,
                 images
+        );
+    }
+
+    @Override
+    public DateTime creationDate() {
+        return new DateTime((Long) node.getProperty(
+                CREATION_DATE_PROPERTY_NAME
+        ));
+    }
+
+    @Override
+    public DateTime lastModificationDate() {
+        return new DateTime((Long) node.getProperty(
+                LAST_MODIFICATION_DATE_PROPERTY_NAME
+        ));
+    }
+
+    public void updateLastModificationDate(){
+        node.setProperty(
+                LAST_MODIFICATION_DATE_PROPERTY_NAME,
+                new Date().getTime()
         );
     }
 
@@ -164,5 +196,23 @@ public class Neo4JFriendlyResource implements FriendlyResource {
     @Override
     public int hashCode() {
         return uri().hashCode();
+    }
+
+    private boolean hasCreationDate(){
+        return node.hasProperty(
+                CREATION_DATE_PROPERTY_NAME
+        );
+    }
+
+    private void initCreationAndLastModificationDate(){
+        Long creationDate = new Date().getTime();
+        node.setProperty(
+                CREATION_DATE_PROPERTY_NAME,
+                creationDate
+        );
+        node.setProperty(
+                LAST_MODIFICATION_DATE_PROPERTY_NAME,
+                creationDate
+        );
     }
 }

@@ -3,6 +3,7 @@ package org.triple_brain.module.neo4j_graph_manipulator.graph;
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 import org.codehaus.jettison.json.JSONObject;
+import org.joda.time.DateTime;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 import org.triple_brain.module.common_utils.Uris;
@@ -25,54 +26,65 @@ import static org.triple_brain.module.model.json.SuggestionJsonFields.*;
 */
 public class Neo4JSuggestion implements Suggestion {
 
-    private final String ORIGINS_PROPERTY_NAME = "origins";
-
     @Inject
     Neo4JUtils neo4JUtils;
 
     @Inject
     Neo4JFriendlyResourceFactory neo4JFriendlyResourceFactory;
 
-    private Node node;
+    @Inject
+    Neo4JSuggestionOriginFactory suggestionOriginFactory;
+
+    protected Node node;
+
+    private FriendlyResource friendlyResource;
 
     @AssistedInject
     protected Neo4JSuggestion(
+            Neo4JFriendlyResourceFactory neo4JFriendlyResourceFactory,
             @Assisted Node node
     ) {
         this.node = node;
+        this.friendlyResource = neo4JFriendlyResourceFactory.createOrLoadFromNode(
+                node
+        );
     }
 
     @AssistedInject
     protected Neo4JSuggestion(
             Neo4JUtils neo4JUtils,
             Neo4JFriendlyResourceFactory neo4JFriendlyResourceFactory,
+            Neo4JSuggestionOriginFactory suggestionOriginFactory,
             @Assisted JSONObject suggestionAsJson
     ) {
         this(
                 neo4JUtils,
                 neo4JFriendlyResourceFactory,
+                suggestionOriginFactory,
                 URI.create(suggestionAsJson.optString(TYPE_URI)),
                 URI.create(suggestionAsJson.optString(DOMAIN_URI)),
                 suggestionAsJson.optString(LABEL),
-                SuggestionOrigin.valueOf(
-                        suggestionAsJson.optString(ORIGIN)
-                )
+                suggestionAsJson.optString(ORIGIN)
         );
     }
 
     protected Neo4JSuggestion(
             Neo4JUtils neo4JUtils,
             Neo4JFriendlyResourceFactory neo4JFriendlyResourceFactory,
+            Neo4JSuggestionOriginFactory suggestionOriginFactory,
             URI sameAsUri,
             URI domainUri,
             String label,
-            SuggestionOrigin origin
+            String origin
     ) {
-        this.node = neo4JUtils.create(
-                Uris.get(
-                        TripleBrainUris.BASE +
-                                "suggestion/" +
-                                UUID.randomUUID().toString()
+        this(
+                neo4JFriendlyResourceFactory,
+                neo4JUtils.create(
+                    Uris.get(
+                            TripleBrainUris.BASE +
+                                    "suggestion/" +
+                                    UUID.randomUUID().toString()
+                    )
                 )
         );
         this.neo4JUtils = neo4JUtils;
@@ -84,8 +96,9 @@ public class Neo4JSuggestion implements Suggestion {
         addDomain(
                 domainUri
         );
-        addOrigin(
-                origin
+        suggestionOriginFactory.createFromStringAndSuggestion(
+                origin,
+                this
         );
     }
 
@@ -137,20 +150,20 @@ public class Neo4JSuggestion implements Suggestion {
     }
 
     @Override
-    public String description() {
-        return sameAs().description();
+    public String comment() {
+        return sameAs().comment();
     }
 
     @Override
-    public void description(String description) {
-        sameAs().description(
-                description
+    public void comment(String comment) {
+        sameAs().comment(
+                comment
         );
     }
 
     @Override
-    public Boolean gotADescription() {
-        return sameAs().gotADescription();
+    public Boolean gotComments() {
+        return sameAs().gotComments();
     }
 
     @Override
@@ -161,11 +174,21 @@ public class Neo4JSuggestion implements Suggestion {
     }
 
     @Override
+    public DateTime creationDate() {
+        return friendlyResource.creationDate();
+    }
+
+    @Override
+    public DateTime lastModificationDate() {
+        return friendlyResource.lastModificationDate();
+    }
+
+    @Override
     public Set<SuggestionOrigin> origins() {
         Set<SuggestionOrigin> suggestionOrigins = new HashSet<SuggestionOrigin>();
         for(Relationship relationship : node.getRelationships(Relationships.SUGGESTION_ORIGIN)){
             suggestionOrigins.add(
-                    suggestionOriginFromNode(
+                    suggestionOriginFactory.loadFromNode(
                             relationship.getEndNode()
                     )
             );
@@ -175,18 +198,19 @@ public class Neo4JSuggestion implements Suggestion {
 
     @Override
     public void removeOriginsThatDependOnResource(FriendlyResource resource) {
-        Iterable<Relationship> relationshipIt = node.getRelationships(Relationships.SUGGESTION_ORIGIN);
+        Iterable<Relationship> relationshipIt = node.getRelationships(
+                Relationships.SUGGESTION_ORIGIN
+        );
         while(relationshipIt.iterator().hasNext()){
             Relationship relationship = relationshipIt.iterator().next();
-            Node suggestionOriginAsNode = relationship.getEndNode();
-            SuggestionOrigin suggestionOrigin = suggestionOriginFromNode(
-                    suggestionOriginAsNode
+            SuggestionOrigin suggestionOrigin = suggestionOriginFactory.loadFromNode(
+                    relationship.getEndNode()
             );
-            if(suggestionOrigin.isTheIdentificationWithUri(
-                    resource.uri()
+            if(suggestionOrigin.isRelatedToFriendlyResource(
+                    resource
             )){
                 relationship.delete();
-                suggestionOriginAsNode.delete();
+                suggestionOrigin.remove();
             }
         }
     }
@@ -221,37 +245,5 @@ public class Neo4JSuggestion implements Suggestion {
                 domain.getNode(),
                 Relationships.DOMAIN
         );
-    }
-
-    private void addOrigin(SuggestionOrigin suggestionOrigin) {
-        node.createRelationshipTo(
-                createNodeFromSuggestionOrigin(
-                        suggestionOrigin
-                ),
-                Relationships.SUGGESTION_ORIGIN
-        );
-    }
-    private void setOrigins(Set<SuggestionOrigin> origins) {
-        node.setProperty(
-                ORIGINS_PROPERTY_NAME,
-                origins.toString()
-        );
-    }
-
-    private SuggestionOrigin suggestionOriginFromNode(Node node){
-        return SuggestionOrigin.valueOf(
-                node.getProperty(
-                        SuggestionOrigin.ORIGIN_PROPERTY
-                ).toString()
-        );
-    }
-
-    private Node createNodeFromSuggestionOrigin(SuggestionOrigin suggestionOrigin){
-        Node suggestionOriginAsNode = node.getGraphDatabase().createNode();
-        suggestionOriginAsNode.setProperty(
-                SuggestionOrigin.ORIGIN_PROPERTY,
-                suggestionOrigin.toString()
-        );
-        return suggestionOriginAsNode;
     }
 }

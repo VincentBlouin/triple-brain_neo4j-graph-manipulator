@@ -7,6 +7,7 @@ import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 import org.triple_brain.module.model.FriendlyResource;
+import org.triple_brain.module.model.Image;
 import org.triple_brain.module.model.User;
 import org.triple_brain.module.model.UserUris;
 import org.triple_brain.module.model.graph.Edge;
@@ -165,6 +166,38 @@ public class Neo4JEdge implements Edge{
     }
 
     @Override
+    public Set<Image> images() {
+        return graphElement.images();
+    }
+
+    @Override
+    public Boolean gotTheImages() {
+        return graphElement.gotTheImages();
+    }
+
+    @Override
+    public String comment() {
+        return graphElement.comment();
+    }
+
+    @Override
+    public void comment(String comment) {
+        graphElement.comment(
+                comment
+        );
+    }
+
+    @Override
+    public Boolean gotComments() {
+        return graphElement.gotComments();
+    }
+
+    @Override
+    public void addImages(Set<Image> images) {
+        graphElement.addImages(images);
+    }
+
+    @Override
     public boolean hasLabel() {
         return graphElement.hasLabel();
     }
@@ -190,8 +223,8 @@ public class Neo4JEdge implements Edge{
     }
 
     @Override
-    public void removeFriendlyResource(FriendlyResource type) {
-        graphElement.removeFriendlyResource(type);
+    public void removeIdentification(FriendlyResource type) {
+        graphElement.removeIdentification(type);
     }
 
     @Override

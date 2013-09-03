@@ -2,32 +2,30 @@ package org.triple_brain.module.neo4j_graph_manipulator.graph;
 
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
-import com.hp.hpl.jena.vocabulary.RDFS;
 import org.joda.time.DateTime;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 import org.triple_brain.module.common_utils.Uris;
 import org.triple_brain.module.model.FriendlyResource;
+import org.triple_brain.module.model.Image;
 import org.triple_brain.module.model.TripleBrainUris;
 import org.triple_brain.module.model.User;
 import org.triple_brain.module.model.graph.GraphElement;
 
 import javax.inject.Inject;
 import java.net.URI;
-import java.util.*;
+import java.util.HashSet;
+import java.util.Set;
 
 /*
 * Copyright Mozilla Public License 1.1
 */
 public class Neo4JGraphElement implements GraphElement {
 
-    public static final String CREATION_DATE_PROPERTY_NAME = "creation_date";
-    public static final String LAST_MODIFICATION_DATE_PROPERTY_NAME = "last_modification_date";
     private Node node;
     private User owner;
-
-    @Inject
+    private Neo4JFriendlyResource friendlyResource;
     private Neo4JFriendlyResourceFactory friendlyResourceFactory;
 
     @Inject
@@ -35,20 +33,27 @@ public class Neo4JGraphElement implements GraphElement {
 
     @AssistedInject
     protected Neo4JGraphElement(
+            Neo4JFriendlyResourceFactory friendlyResourceFactory,
             @Assisted Node node,
             @Assisted User owner
     ) {
+        friendlyResource = friendlyResourceFactory.createOrLoadFromNode(
+                node
+        );
+        this.friendlyResourceFactory = friendlyResourceFactory;
         this.node = node;
         this.owner = owner;
     }
 
     @AssistedInject
     protected Neo4JGraphElement(
+            Neo4JFriendlyResourceFactory friendlyResourceFactory,
             @Assisted Node node,
             @Assisted URI uri,
             @Assisted User owner
     ) {
         this(
+                friendlyResourceFactory,
                 node,
                 owner
         );
@@ -57,36 +62,20 @@ public class Neo4JGraphElement implements GraphElement {
                 uri.toString()
         );
         this.label("");
-        Long creationDate = new Date().getTime();
-        node.setProperty(
-                CREATION_DATE_PROPERTY_NAME,
-                creationDate
-        );
-        node.setProperty(
-                LAST_MODIFICATION_DATE_PROPERTY_NAME,
-                creationDate
-        );
     }
 
     @Override
     public DateTime creationDate() {
-        return new DateTime((Long) node.getProperty(
-                CREATION_DATE_PROPERTY_NAME
-        ));
+        return friendlyResource.creationDate();
     }
 
     @Override
     public DateTime lastModificationDate() {
-        return new DateTime((Long) node.getProperty(
-                LAST_MODIFICATION_DATE_PROPERTY_NAME
-        ));
+        return friendlyResource.lastModificationDate();
     }
 
     public void updateLastModificationDate() {
-        node.setProperty(
-                LAST_MODIFICATION_DATE_PROPERTY_NAME,
-                new Date().getTime()
-        );
+        friendlyResource.updateLastModificationDate();
     }
 
     @Override
@@ -100,18 +89,53 @@ public class Neo4JGraphElement implements GraphElement {
 
     @Override
     public String label() {
-        return node.getProperty(RDFS.label.getURI()).toString();
+        return friendlyResource.label();
     }
 
     @Override
     public void label(String label) {
-        node.setProperty(RDFS.label.getURI(), label);
-        updateLastModificationDate();
+        friendlyResource.label(
+                label
+        );
+    }
+
+    @Override
+    public Set<Image> images() {
+        return friendlyResource.images();
+    }
+
+    @Override
+    public Boolean gotTheImages() {
+        return friendlyResource.gotTheImages();
+    }
+
+    @Override
+    public String comment() {
+        return friendlyResource.comment();
+    }
+
+    @Override
+    public void comment(String comment) {
+        friendlyResource.comment(
+                comment
+        );
+    }
+
+    @Override
+    public Boolean gotComments() {
+        return friendlyResource.gotComments();
+    }
+
+    @Override
+    public void addImages(Set<Image> images) {
+        friendlyResource.addImages(
+                images
+        );
     }
 
     @Override
     public boolean hasLabel() {
-        return node.hasProperty(RDFS.label.getURI());
+        return !friendlyResource.label().isEmpty();
     }
 
     @Override
@@ -156,7 +180,7 @@ public class Neo4JGraphElement implements GraphElement {
     }
 
     @Override
-    public void removeFriendlyResource(FriendlyResource friendlyResource) {
+    public void removeIdentification(FriendlyResource friendlyResource) {
         Node friendlyResourceAsNode = neo4JUtils.getFromUri(
                 friendlyResource.uri()
         );
@@ -195,12 +219,5 @@ public class Neo4JGraphElement implements GraphElement {
         //removing explicitly so node index gets reindexed
         node.removeProperty(Neo4JUserGraph.URI_PROPERTY_NAME);
         node.delete();
-    }
-
-    private String removeEnclosingCharsOfListAsString(String listAsString) {
-        return listAsString.substring(
-                1,
-                listAsString.length() - 1
-        );
     }
 }

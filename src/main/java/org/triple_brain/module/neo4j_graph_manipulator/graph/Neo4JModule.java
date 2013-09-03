@@ -104,6 +104,9 @@ public class Neo4JModule extends AbstractModule {
         install(factoryModuleBuilder
                 .build(Neo4JSuggestionFactory.class)
         );
+        install(factoryModuleBuilder
+                .build(Neo4JSuggestionOriginFactory.class)
+        );
         bind(new TypeLiteral<ReadableIndex<Node>>() {
         }).toInstance(
                 graphDb.index()
