@@ -208,6 +208,13 @@ public class Neo4JGraphElement implements GraphElement {
     }
 
     @Override
+    public Set<FriendlyResource> getIdentifications() {
+        Set<FriendlyResource> identifications = getSameAs();
+        identifications.addAll(getAdditionalTypes());
+        return identifications;
+    }
+
+    @Override
     public void remove(){
         for (Relationship relationship : node.getRelationships()) {
             //removing explicitly so node index gets reindexed

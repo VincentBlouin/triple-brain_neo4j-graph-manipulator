@@ -233,6 +233,11 @@ public class Neo4JEdge implements Edge{
     }
 
     @Override
+    public Set<FriendlyResource> getIdentifications() {
+        return graphElement.getIdentifications();
+    }
+
+    @Override
     public boolean equals(Object edgeToCompareAsObject) {
         Edge edgeToCompare = (Edge) edgeToCompareAsObject;
         return uri().equals(edgeToCompare.uri());

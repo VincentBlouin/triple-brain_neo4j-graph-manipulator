@@ -319,6 +319,11 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
     }
 
     @Override
+    public Set<FriendlyResource> getIdentifications() {
+        return graphElement.getIdentifications();
+    }
+
+    @Override
     public void addSameAs(FriendlyResource friendlyResourceImpl) {
         graphElement.addSameAs(friendlyResourceImpl);
     }
