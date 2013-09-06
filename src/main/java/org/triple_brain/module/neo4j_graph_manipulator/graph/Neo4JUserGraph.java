@@ -88,7 +88,7 @@ public class Neo4JUserGraph implements UserGraph {
                     centerVertexURI
             );
         }
-        Vertex centerVertex = vertexFactory.loadUsingNodeOfOwner(
+        Vertex centerVertex = vertexFactory.createOrLoadUsingNodeOfOwner(
                 node,
                 user
         );
@@ -117,7 +117,7 @@ public class Neo4JUserGraph implements UserGraph {
                 URI_PROPERTY_NAME,
                 uri.toString()
                 ).getSingle();
-        return vertexFactory.loadUsingNodeOfOwner(
+        return vertexFactory.createOrLoadUsingNodeOfOwner(
                 node,
                 user
         );
@@ -133,6 +133,11 @@ public class Neo4JUserGraph implements UserGraph {
                 node,
                 user
         );
+    }
+
+    @Override
+    public Vertex createVertex() {
+        return vertexFactory.create(user);
     }
 
 }

@@ -14,6 +14,7 @@ import org.triple_brain.module.model.graph.Vertex;
 import org.triple_brain.module.model.graph.VertexInSubGraph;
 import org.triple_brain.module.model.suggestion.Suggestion;
 
+import javax.inject.Inject;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -41,6 +42,9 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
 
     protected Neo4JSuggestionFactory suggestionFactory;
 
+    @Inject
+    Neo4JFriendlyResourceFactory friendlyResourceFactory;
+
     @AssistedInject
     protected Neo4JVertexInSubGraph(
             Neo4JVertexFactory vertexFactory,
@@ -56,6 +60,7 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
         this.edgeFactory = edgeFactory;
         this.suggestionFactory = suggestionFactory;
         this.utils = utils;
+        this.friendlyResourceFactory = neo4JFriendlyResourceFactory;
         this.node = node;
         graphElement = neo4JGraphElementFactory.withNodeAndOwner(
                 node,
@@ -64,40 +69,12 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
         this.friendlyResource = neo4JFriendlyResourceFactory.createOrLoadFromNode(
                 node
         );
-    }
-
-    @AssistedInject
-    protected Neo4JVertexInSubGraph(
-            Neo4JVertexFactory vertexFactory,
-            Neo4JEdgeFactory edgeFactory,
-            Neo4JUtils utils,
-            Neo4JGraphElementFactory neo4JGraphElementFactory,
-            Neo4JFriendlyResourceFactory friendlyResourceFactory,
-            Neo4JSuggestionFactory suggestionFactory,
-            @Assisted Node node,
-            @Assisted URI uri,
-            @Assisted User owner
-    ) {
-        this(
-                vertexFactory,
-                edgeFactory,
-                utils,
-                neo4JGraphElementFactory,
-                friendlyResourceFactory,
-                suggestionFactory,
-                node,
-                owner
-        );
-        this.graphElement = neo4JGraphElementFactory.initiatePropertiesAndSetOwner(
-                node,
-                uri,
-                owner
-        );
-        makePrivate();
-        this.addType(friendlyResourceFactory.createOrLoadUsingUriAndLabel(
-                Uris.get(TripleBrainUris.TRIPLE_BRAIN_VERTEX),
-                ""
-        ));
+        if(!node.hasProperty(IS_PUBLIC_PROPERTY_NAME)){
+            makePrivate();
+        }
+        if(!hasVertexType()){
+            addVertexType();
+        }
     }
 
     @AssistedInject
@@ -123,6 +100,27 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
         );
     }
 
+    @AssistedInject
+    protected Neo4JVertexInSubGraph(
+            Neo4JVertexFactory vertexFactory,
+            Neo4JEdgeFactory edgeFactory,
+            Neo4JUtils utils,
+            Neo4JGraphElementFactory neo4JGraphElementFactory,
+            Neo4JFriendlyResourceFactory friendlyResourceFactory,
+            Neo4JSuggestionFactory suggestionFactory,
+            @Assisted User owner
+    ){
+        this(
+                vertexFactory,
+                edgeFactory,
+                utils,
+                neo4JGraphElementFactory,
+                friendlyResourceFactory,
+                suggestionFactory,
+                new UserUris(owner).generateVertexUri(),
+                owner
+        );
+    }
     @Override
     public boolean hasEdge(Edge edge) {
         for (Relationship relationship : relationshipsToEdges()) {
@@ -189,10 +187,7 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
 
     @Override
     public Edge addVertexAndRelation() {
-        Node newVertexNode = node.getGraphDatabase().createNode();
-        Neo4JVertexInSubGraph newVertex = vertexFactory.createUsingEmptyNodeUriAndOwner(
-                newVertexNode,
-                new UserUris(owner()).generateVertexUri(),
+        Neo4JVertexInSubGraph newVertex = vertexFactory.create(
                 graphElement.owner()
         );
         return addRelationToVertex(newVertex);
@@ -449,5 +444,24 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
     public VertexInSubGraph setMinDistanceFromCenterVertex(Integer minDistanceFromCenterVertex) {
         this.depthInSubGraph = minDistanceFromCenterVertex;
         return this;
+    }
+
+    private void addVertexType(){
+        addType(friendlyResourceFactory.createOrLoadUsingUriAndLabel(
+                Uris.get(TripleBrainUris.TRIPLE_BRAIN_VERTEX),
+                ""
+        ));
+    }
+
+    private boolean hasVertexType(){
+        for (Relationship relationship : node.getRelationships(Relationships.TYPE)) {
+            FriendlyResource type = friendlyResourceFactory.createOrLoadFromNode(
+                    relationship.getEndNode()
+            );
+            if (!type.uri().toString().equals(TripleBrainUris.TRIPLE_BRAIN_VERTEX)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

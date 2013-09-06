@@ -108,7 +108,7 @@ public class Neo4JEdge implements Edge{
 
     @Override
     public Vertex sourceVertex() {
-        return vertexFactory.loadUsingNodeOfOwner(
+        return vertexFactory.createOrLoadUsingNodeOfOwner(
                 relationshipWithSourceVertex().getEndNode(),
                 graphElement.owner()
         );
@@ -116,7 +116,7 @@ public class Neo4JEdge implements Edge{
 
     @Override
     public Vertex destinationVertex() {
-        return vertexFactory.loadUsingNodeOfOwner(
+        return vertexFactory.createOrLoadUsingNodeOfOwner(
                 relationshipWithDestinationVertex().getEndNode(),
                 graphElement.owner()
         );

@@ -227,4 +227,5 @@ public class Neo4JGraphElement implements GraphElement {
         node.removeProperty(Neo4JUserGraph.URI_PROPERTY_NAME);
         node.delete();
     }
+
 }
