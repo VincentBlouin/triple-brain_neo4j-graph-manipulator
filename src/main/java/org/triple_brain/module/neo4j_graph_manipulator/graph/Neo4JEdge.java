@@ -208,6 +208,18 @@ public class Neo4JEdge implements Edge{
     }
 
     @Override
+    public void addGenericIdentification(FriendlyResource friendlyResource) {
+        graphElement.addGenericIdentification(
+                friendlyResource
+        );
+    }
+
+    @Override
+    public Set<FriendlyResource> getGenericIdentifications() {
+        return graphElement.getGenericIdentifications();
+    }
+
+    @Override
     public void addSameAs(FriendlyResource friendlyResourceImpl) {
         graphElement.addSameAs(friendlyResourceImpl);
     }

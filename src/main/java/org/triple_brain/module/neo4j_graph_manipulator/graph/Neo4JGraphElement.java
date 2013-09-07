@@ -144,6 +144,30 @@ public class Neo4JGraphElement implements GraphElement {
     }
 
     @Override
+    public void addGenericIdentification(FriendlyResource friendlyResource) {
+        Node identificationAsNode = neo4JUtils.getFromUri(
+                friendlyResource.uri()
+        );
+        node.createRelationshipTo(
+                identificationAsNode,
+                Relationships.IDENTIFIED_TO
+        );
+        updateLastModificationDate();
+    }
+
+    @Override
+    public Set<FriendlyResource> getGenericIdentifications() {
+        Set<FriendlyResource> genericIdentifications = new HashSet<FriendlyResource>();
+        for (Relationship relationship : node.getRelationships(Relationships.IDENTIFIED_TO)) {
+            FriendlyResource genericIdentification = friendlyResourceFactory.createOrLoadFromNode(
+                    relationship.getEndNode()
+            );
+            genericIdentifications.add(genericIdentification);
+        }
+        return genericIdentifications;
+    }
+
+    @Override
     public void addSameAs(FriendlyResource friendlyResource) {
         Node sameAsAsNode = neo4JUtils.getFromUri(
                 friendlyResource.uri()
@@ -211,6 +235,7 @@ public class Neo4JGraphElement implements GraphElement {
     public Set<FriendlyResource> getIdentifications() {
         Set<FriendlyResource> identifications = getSameAs();
         identifications.addAll(getAdditionalTypes());
+        identifications.addAll(getGenericIdentifications());
         return identifications;
     }
 

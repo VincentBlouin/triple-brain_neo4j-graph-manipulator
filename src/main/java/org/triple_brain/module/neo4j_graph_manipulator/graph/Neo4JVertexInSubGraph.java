@@ -425,6 +425,16 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
     }
 
     @Override
+    public void addGenericIdentification(FriendlyResource friendlyResource) {
+        graphElement.addGenericIdentification(friendlyResource);
+    }
+
+    @Override
+    public Set<FriendlyResource> getGenericIdentifications() {
+        return graphElement.getGenericIdentifications();
+    }
+
+    @Override
     public boolean equals(Object vertexToCompareAsObject) {
         Vertex vertexToCompare = (Vertex) vertexToCompareAsObject;
         return uri().equals(vertexToCompare.uri());
