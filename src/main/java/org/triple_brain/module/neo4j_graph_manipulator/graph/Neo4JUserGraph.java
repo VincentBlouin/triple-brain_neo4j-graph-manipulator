@@ -88,9 +88,8 @@ public class Neo4JUserGraph implements UserGraph {
                     centerVertexURI
             );
         }
-        Vertex centerVertex = vertexFactory.createOrLoadUsingNodeOfOwner(
-                node,
-                user
+        Vertex centerVertex = vertexFactory.createOrLoadUsingNode(
+                node
         );
         return subGraphExtractorFactory.withCenterVertexAndDepth(
                 centerVertex,
@@ -113,31 +112,23 @@ public class Neo4JUserGraph implements UserGraph {
 
     @Override
     public Vertex vertexWithUri(URI uri) {
-        Node node = nodeIndex.get(
-                URI_PROPERTY_NAME,
-                uri.toString()
-                ).getSingle();
-        return vertexFactory.createOrLoadUsingNodeOfOwner(
-                node,
-                user
+        return vertexFactory.createOrLoadUsingUri(
+                uri
         );
     }
 
     @Override
     public Edge edgeWithUri(URI uri) {
-        Node node = nodeIndex.get(
-                URI_PROPERTY_NAME,
-                uri.toString()
-        ).getSingle();
-        return edgeFactory.loadWithNodeOfOwner(
-                node,
-                user
+        return edgeFactory.createOrLoadFromUri(
+                uri
         );
     }
 
     @Override
     public Vertex createVertex() {
-        return vertexFactory.create(user);
+        return vertexFactory.createForOwnerUsername(
+                user.username()
+        );
     }
 
 }

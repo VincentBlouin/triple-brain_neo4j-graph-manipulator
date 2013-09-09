@@ -16,6 +16,7 @@ import org.neo4j.kernel.logging.BufferingLogger;
 import org.triple_brain.module.model.BeforeAfterEachRestCall;
 import org.triple_brain.module.model.FriendlyResource;
 import org.triple_brain.module.model.FriendlyResourceFactory;
+import org.triple_brain.module.model.WholeGraph;
 import org.triple_brain.module.model.graph.GraphFactory;
 import org.triple_brain.module.model.suggestion.Suggestion;
 import org.triple_brain.module.model.suggestion.SuggestionFactory;
@@ -46,6 +47,8 @@ public class Neo4JModule extends AbstractModule {
         }
         bind(BeforeAfterEachRestCall.class).to(Neo4JBeforeAfterEachRestCall.class)
                 .in(Singleton.class);
+
+        bind(WholeGraph.class).to(Neo4JWholeGraph.class);
 
         GraphDatabaseService graphDb = new GraphDatabaseFactory().newEmbeddedDatabaseBuilder(
                 isTesting ? DB_PATH_FOR_TESTS : DB_PATH

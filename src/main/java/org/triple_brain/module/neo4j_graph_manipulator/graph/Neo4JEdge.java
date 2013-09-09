@@ -8,7 +8,6 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 import org.triple_brain.module.model.FriendlyResource;
 import org.triple_brain.module.model.Image;
-import org.triple_brain.module.model.User;
 import org.triple_brain.module.model.UserUris;
 import org.triple_brain.module.model.graph.Edge;
 import org.triple_brain.module.model.graph.Vertex;
@@ -31,19 +30,12 @@ public class Neo4JEdge implements Edge{
             Neo4JVertexFactory vertexFactory,
             Neo4JEdgeFactory edgeFactory,
             Neo4JGraphElementFactory neo4JGraphElementFactory,
-            @Assisted Node node,
-            @Assisted User owner
+            @Assisted Node node
     ) {
         this.vertexFactory = vertexFactory;
         this.edgeFactory = edgeFactory;
         this.node = node;
-        graphElement = node.hasProperty(Neo4JUserGraph.URI_PROPERTY_NAME) ?
-                neo4JGraphElementFactory.withNodeAndOwner(node, owner) :
-                neo4JGraphElementFactory.initiatePropertiesAndSetOwner(
-                        node,
-                        new UserUris(owner).generateEdgeUri(),
-                        owner
-                );
+        graphElement = neo4JGraphElementFactory.withNode(node);
     }
 
     @AssistedInject
@@ -52,15 +44,13 @@ public class Neo4JEdge implements Edge{
             Neo4JEdgeFactory edgeFactory,
             Neo4JGraphElementFactory neo4JGraphElementFactory,
             Neo4JUtils neo4JUtils,
-            @Assisted URI uri,
-            @Assisted User owner
+            @Assisted URI uri
     ){
         this(
                 vertexFactory,
                 edgeFactory,
                 neo4JGraphElementFactory,
-                neo4JUtils.getOrCreate(uri),
-                owner
+                neo4JUtils.getOrCreate(uri)
         );
     }
 
@@ -70,12 +60,12 @@ public class Neo4JEdge implements Edge{
             Neo4JEdgeFactory edgeFactory,
             Neo4JGraphElementFactory neo4JGraphElementFactory,
             GraphDatabaseService graphDb,
+            Neo4JUtils neo4JUtils,
             @Assisted("source") Neo4JVertexInSubGraph sourceVertex,
             @Assisted("destination") Neo4JVertexInSubGraph destinationVertex
     ){
         this.vertexFactory = vertexFactory;
         this.edgeFactory = edgeFactory;
-        User owner = sourceVertex.owner();
         if(sourceVertex.hasDestinationVertex(destinationVertex)){
             for(Edge edge : sourceVertex.connectedEdges()){
                 if(edge.destinationVertex().equals(destinationVertex)){
@@ -83,12 +73,16 @@ public class Neo4JEdge implements Edge{
                     this.node = neo4JEdge.node;
                 }
             }
-            this.graphElement = neo4JGraphElementFactory.withNodeAndOwner(
-                    node,
-                    owner
+            this.graphElement = neo4JGraphElementFactory.withNode(
+                    node
             );
         }else{
-            Node newEdgeNode = graphDb.createNode();
+            UserUris userUris = new UserUris(
+                    sourceVertex.ownerUsername()
+            );
+            Node newEdgeNode = neo4JUtils.create(
+                    userUris.generateEdgeUri()
+            );
             newEdgeNode.createRelationshipTo(
                     sourceVertex.node,
                     Relationships.SOURCE_VERTEX
@@ -98,27 +92,23 @@ public class Neo4JEdge implements Edge{
                     Relationships.DESTINATION_VERTEX
             );
             this.node = newEdgeNode;
-            this.graphElement = neo4JGraphElementFactory.initiatePropertiesAndSetOwner(
-                    node,
-                    new UserUris(owner).generateEdgeUri(),
-                    owner
+            this.graphElement = neo4JGraphElementFactory.withNode(
+                    node
             );
         }
     }
 
     @Override
     public Vertex sourceVertex() {
-        return vertexFactory.createOrLoadUsingNodeOfOwner(
-                relationshipWithSourceVertex().getEndNode(),
-                graphElement.owner()
+        return vertexFactory.createOrLoadUsingNode(
+                relationshipWithSourceVertex().getEndNode()
         );
     }
 
     @Override
     public Vertex destinationVertex() {
-        return vertexFactory.createOrLoadUsingNodeOfOwner(
-                relationshipWithDestinationVertex().getEndNode(),
-                graphElement.owner()
+        return vertexFactory.createOrLoadUsingNode(
+                relationshipWithDestinationVertex().getEndNode()
         );
     }
 
@@ -138,6 +128,11 @@ public class Neo4JEdge implements Edge{
     @Override
     public void remove() {
         graphElement.remove();
+    }
+
+    @Override
+    public String ownerUsername() {
+        return graphElement.ownerUsername();
     }
 
     @Override
@@ -200,11 +195,6 @@ public class Neo4JEdge implements Edge{
     @Override
     public boolean hasLabel() {
         return graphElement.hasLabel();
-    }
-
-    @Override
-    public User owner() {
-        return graphElement.owner();
     }
 
     @Override

@@ -61,9 +61,8 @@ public class Neo4JSubGraphExtractor {
             Map<String, Object> row = result.next();
             Node node = (Node) row.get("in_path_node").get();
             if(isNodeVertex(node)){
-                Neo4JVertexInSubGraph vertex = vertexFactory.createOrLoadUsingNodeOfOwner(
-                        node,
-                        centerVertex.owner()
+                Neo4JVertexInSubGraph vertex = vertexFactory.createOrLoadUsingNode(
+                        node
                 );
                 Integer distanceFromCenterVertex = (Integer) (
                         row.get("length(path)").get()

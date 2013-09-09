@@ -36,9 +36,8 @@ public class Neo4JGraphFactory implements GraphFactory {
     }
 
     private Vertex createDefaultVertexForUser(User user) {
-        return vertexFactory.createOrLoadUsingUriOfOwner(
-                new UserUris(user).defaultVertexUri(),
-                user
+        return vertexFactory.createOrLoadUsingUri(
+                new UserUris(user).defaultVertexUri()
         );
     }
 }

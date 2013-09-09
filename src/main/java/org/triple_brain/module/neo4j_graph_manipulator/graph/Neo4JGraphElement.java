@@ -10,7 +10,7 @@ import org.triple_brain.module.common_utils.Uris;
 import org.triple_brain.module.model.FriendlyResource;
 import org.triple_brain.module.model.Image;
 import org.triple_brain.module.model.TripleBrainUris;
-import org.triple_brain.module.model.User;
+import org.triple_brain.module.model.UserUris;
 import org.triple_brain.module.model.graph.GraphElement;
 
 import javax.inject.Inject;
@@ -24,7 +24,6 @@ import java.util.Set;
 public class Neo4JGraphElement implements GraphElement {
 
     private Node node;
-    private User owner;
     private Neo4JFriendlyResource friendlyResource;
     private Neo4JFriendlyResourceFactory friendlyResourceFactory;
 
@@ -34,34 +33,13 @@ public class Neo4JGraphElement implements GraphElement {
     @AssistedInject
     protected Neo4JGraphElement(
             Neo4JFriendlyResourceFactory friendlyResourceFactory,
-            @Assisted Node node,
-            @Assisted User owner
+            @Assisted Node node
     ) {
         friendlyResource = friendlyResourceFactory.createOrLoadFromNode(
                 node
         );
         this.friendlyResourceFactory = friendlyResourceFactory;
         this.node = node;
-        this.owner = owner;
-    }
-
-    @AssistedInject
-    protected Neo4JGraphElement(
-            Neo4JFriendlyResourceFactory friendlyResourceFactory,
-            @Assisted Node node,
-            @Assisted URI uri,
-            @Assisted User owner
-    ) {
-        this(
-                friendlyResourceFactory,
-                node,
-                owner
-        );
-        node.setProperty(
-                Neo4JUserGraph.URI_PROPERTY_NAME,
-                uri.toString()
-        );
-        this.label("");
     }
 
     @Override
@@ -136,11 +114,6 @@ public class Neo4JGraphElement implements GraphElement {
     @Override
     public boolean hasLabel() {
         return !friendlyResource.label().isEmpty();
-    }
-
-    @Override
-    public User owner() {
-        return owner;
     }
 
     @Override
@@ -251,6 +224,13 @@ public class Neo4JGraphElement implements GraphElement {
         //removing explicitly so node index gets reindexed
         node.removeProperty(Neo4JUserGraph.URI_PROPERTY_NAME);
         node.delete();
+    }
+
+    @Override
+    public String ownerUsername() {
+        return UserUris.ownerUserNameFromUri(
+                uri()
+        );
     }
 
 }
