@@ -459,7 +459,7 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
             FriendlyResource type = friendlyResourceFactory.createOrLoadFromNode(
                     relationship.getEndNode()
             );
-            if (!type.uri().toString().equals(TripleBrainUris.TRIPLE_BRAIN_VERTEX)) {
+            if (type.uri().toString().equals(TripleBrainUris.TRIPLE_BRAIN_VERTEX)) {
                 return true;
             }
         }
