@@ -13,6 +13,7 @@ import org.neo4j.graphdb.factory.GraphDatabaseSettings;
 import org.neo4j.graphdb.index.ReadableIndex;
 import org.neo4j.kernel.impl.util.FileUtils;
 import org.neo4j.kernel.logging.BufferingLogger;
+import org.neo4j.rest.graphdb.RestGraphDatabase;
 import org.triple_brain.module.model.BeforeAfterEachRestCall;
 import org.triple_brain.module.model.FriendlyResource;
 import org.triple_brain.module.model.FriendlyResourceFactory;
@@ -31,7 +32,6 @@ import java.io.IOException;
 */
 public class Neo4JModule extends AbstractModule {
 
-    public static final String DB_PATH = "/var/lib/triple_brain/neo4j/db";
     public static final String DB_PATH_FOR_TESTS = "/tmp/triple_brain/neo4j/db";
 
     private static Boolean isTesting;
@@ -50,23 +50,28 @@ public class Neo4JModule extends AbstractModule {
 
         bind(WholeGraph.class).to(Neo4JWholeGraph.class);
 
-        GraphDatabaseService graphDb = new GraphDatabaseFactory().newEmbeddedDatabaseBuilder(
-                isTesting ? DB_PATH_FOR_TESTS : DB_PATH
-        )
-                .setConfig(
-                        GraphDatabaseSettings.node_keys_indexable,
-                        Neo4JUserGraph.URI_PROPERTY_NAME
-                ).setConfig(
-                        GraphDatabaseSettings.node_auto_indexing,
-                        GraphDatabaseSetting.TRUE
-                ).setConfig(
-                        GraphDatabaseSettings.relationship_keys_indexable,
-                        Neo4JUserGraph.URI_PROPERTY_NAME
-                ).setConfig(
-                        GraphDatabaseSettings.relationship_auto_indexing,
-                        GraphDatabaseSetting.TRUE
-                ).newGraphDatabase();
-
+        GraphDatabaseService graphDb;
+        if(isTesting){
+            graphDb = new GraphDatabaseFactory().newEmbeddedDatabaseBuilder(
+                    DB_PATH_FOR_TESTS
+            ).setConfig(
+                    GraphDatabaseSettings.node_keys_indexable,
+                    Neo4JUserGraph.URI_PROPERTY_NAME
+            ).setConfig(
+                    GraphDatabaseSettings.node_auto_indexing,
+                    GraphDatabaseSetting.TRUE
+            ).setConfig(
+                    GraphDatabaseSettings.relationship_keys_indexable,
+                    Neo4JUserGraph.URI_PROPERTY_NAME
+            ).setConfig(
+                    GraphDatabaseSettings.relationship_auto_indexing,
+                    GraphDatabaseSetting.TRUE
+            ).newGraphDatabase();
+        }else{
+            graphDb = new RestGraphDatabase(
+                    "http://localhost:7474/db"
+            );
+        }
         registerShutdownHook(graphDb);
 
         bind(GraphDatabaseService.class).toInstance(
