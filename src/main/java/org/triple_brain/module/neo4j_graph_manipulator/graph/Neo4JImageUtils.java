@@ -4,9 +4,9 @@ import com.google.inject.Inject;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
-import org.triple_brain.module.common_utils.Urls;
 import org.triple_brain.module.model.Image;
 
+import java.net.URI;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -57,13 +57,13 @@ public class Neo4JImageUtils {
     }
 
     public Image getImage(Node imageAsNode){
-        return Image.withUrlForSmallAndBigger(
-                Urls.get(
+        return Image.withUriForSmallAndBigger(
+                URI.create(
                         imageAsNode.getProperty(
                                 URL_FOR_SMALL_KEY
                         ).toString()
                 ),
-                Urls.get(
+                URI.create(
                         imageAsNode.getProperty(
                                 URL_FOR_BIGGER_KEY
                         ).toString()
