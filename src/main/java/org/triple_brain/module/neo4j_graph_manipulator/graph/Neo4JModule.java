@@ -11,8 +11,10 @@ import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 import org.neo4j.graphdb.factory.GraphDatabaseSetting;
 import org.neo4j.graphdb.factory.GraphDatabaseSettings;
 import org.neo4j.graphdb.index.ReadableIndex;
+import org.neo4j.kernel.GraphDatabaseAPI;
 import org.neo4j.kernel.impl.util.FileUtils;
 import org.neo4j.kernel.logging.BufferingLogger;
+import org.neo4j.server.WrappingNeoServerBootstrapper;
 import org.triple_brain.module.model.BeforeAfterEachRestCall;
 import org.triple_brain.module.model.FriendlyResource;
 import org.triple_brain.module.model.FriendlyResourceFactory;
@@ -67,7 +69,15 @@ public class Neo4JModule extends AbstractModule {
                         GraphDatabaseSetting.TRUE
                 ).newGraphDatabase();
 
-        registerShutdownHook(graphDb);
+        if(isTesting){
+            registerShutdownHook(graphDb);
+        }else{
+            WrappingNeoServerBootstrapper srv = new WrappingNeoServerBootstrapper((GraphDatabaseAPI) graphDb);
+            srv.start();
+            registerShutdownHook(graphDb, srv);
+        }
+
+
 
         bind(GraphDatabaseService.class).toInstance(
                 graphDb
@@ -130,6 +140,10 @@ public class Neo4JModule extends AbstractModule {
     }
 
     private void registerShutdownHook(final GraphDatabaseService graphDb) {
+        registerShutdownHook(graphDb, null);
+    }
+
+    private void registerShutdownHook(final GraphDatabaseService graphDb, final WrappingNeoServerBootstrapper server) {
         // Registers a shutdown hook for the Neo4j instance so that it
         // shuts down nicely when the VM exits (even if you "Ctrl-C" the
         // running example before it's completed)
@@ -137,6 +151,9 @@ public class Neo4JModule extends AbstractModule {
             @Override
             public void run() {
                 graphDb.shutdown();
+                if(server != null){
+                    server.stop();
+                }
                 if (isTesting) {
                     clearDb();
                 }
