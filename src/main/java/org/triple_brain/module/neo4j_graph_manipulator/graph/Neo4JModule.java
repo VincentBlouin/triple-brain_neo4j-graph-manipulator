@@ -11,7 +11,6 @@ import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 import org.neo4j.graphdb.factory.GraphDatabaseSetting;
 import org.neo4j.graphdb.factory.GraphDatabaseSettings;
 import org.neo4j.graphdb.index.ReadableIndex;
-import org.neo4j.kernel.GraphDatabaseAPI;
 import org.neo4j.kernel.impl.util.FileUtils;
 import org.neo4j.kernel.logging.BufferingLogger;
 import org.neo4j.server.WrappingNeoServerBootstrapper;
@@ -69,15 +68,7 @@ public class Neo4JModule extends AbstractModule {
                         GraphDatabaseSetting.TRUE
                 ).newGraphDatabase();
 
-        if(isTesting){
-            registerShutdownHook(graphDb);
-        }else{
-            WrappingNeoServerBootstrapper srv = new WrappingNeoServerBootstrapper((GraphDatabaseAPI) graphDb);
-            srv.start();
-            registerShutdownHook(graphDb, srv);
-        }
-
-
+        registerShutdownHook(graphDb);
 
         bind(GraphDatabaseService.class).toInstance(
                 graphDb
