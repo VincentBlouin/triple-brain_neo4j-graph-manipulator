@@ -117,7 +117,11 @@ public class Neo4JGraphElement implements GraphElement {
     }
 
     @Override
-    public void addGenericIdentification(FriendlyResource friendlyResource) {
+    public void addGenericIdentification(FriendlyResource friendlyResource) throws IllegalArgumentException{
+        ifIdentificationIsGraphElementThrowException(friendlyResource);
+        if(getGenericIdentifications().contains(friendlyResource)){
+            throw duplicateIdentificationError();
+        }
         Node identificationAsNode = neo4JUtils.getFromUri(
                 friendlyResource.uri()
         );
@@ -141,7 +145,11 @@ public class Neo4JGraphElement implements GraphElement {
     }
 
     @Override
-    public void addSameAs(FriendlyResource friendlyResource) {
+    public void addSameAs(FriendlyResource friendlyResource)throws IllegalArgumentException{
+        ifIdentificationIsGraphElementThrowException(friendlyResource);
+        if(getSameAs().contains(friendlyResource)){
+            throw duplicateIdentificationError();
+        }
         Node sameAsAsNode = neo4JUtils.getFromUri(
                 friendlyResource.uri()
         );
@@ -165,7 +173,11 @@ public class Neo4JGraphElement implements GraphElement {
     }
 
     @Override
-    public void addType(FriendlyResource type) {
+    public void addType(FriendlyResource type) throws IllegalArgumentException{
+        ifIdentificationIsGraphElementThrowException(type);
+        if(getAdditionalTypes().contains(type)){
+            throw duplicateIdentificationError();
+        }
         Node typeAsNode = neo4JUtils.getFromUri(
                 type.uri()
         );
@@ -233,4 +245,26 @@ public class Neo4JGraphElement implements GraphElement {
         );
     }
 
+    public void ifIdentificationIsGraphElementThrowException(FriendlyResource identification)throws IllegalArgumentException{
+        if(identification.equals(this)){
+            throw new IllegalArgumentException(
+                    "identification cannot be the same"
+            );
+        }
+    }
+    public IllegalArgumentException duplicateIdentificationError(){
+        return new IllegalArgumentException(
+                "cannot have duplicate identifications"
+        );
+    }
+
+    @Override
+    public boolean equals(Object graphElementToCompare) {
+        return friendlyResource.equals(graphElementToCompare);
+    }
+
+    @Override
+    public int hashCode() {
+        return friendlyResource.hashCode();
+    }
 }

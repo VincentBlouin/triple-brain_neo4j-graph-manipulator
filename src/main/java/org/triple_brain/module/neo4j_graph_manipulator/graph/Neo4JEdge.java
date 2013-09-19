@@ -241,13 +241,12 @@ public class Neo4JEdge implements Edge{
 
     @Override
     public boolean equals(Object edgeToCompareAsObject) {
-        Edge edgeToCompare = (Edge) edgeToCompareAsObject;
-        return uri().equals(edgeToCompare.uri());
+        return graphElement.equals(edgeToCompareAsObject);
     }
 
     @Override
     public int hashCode() {
-        return uri().hashCode();
+        return graphElement.hashCode();
     }
 
     private Relationship relationshipWithSourceVertex(){

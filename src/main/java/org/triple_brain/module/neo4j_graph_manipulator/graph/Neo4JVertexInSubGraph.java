@@ -427,13 +427,12 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
 
     @Override
     public boolean equals(Object vertexToCompareAsObject) {
-        Vertex vertexToCompare = (Vertex) vertexToCompareAsObject;
-        return uri().equals(vertexToCompare.uri());
+        return graphElement.equals(vertexToCompareAsObject);
     }
 
     @Override
     public int hashCode() {
-        return uri().hashCode();
+        return graphElement.hashCode();
     }
 
     @Override
