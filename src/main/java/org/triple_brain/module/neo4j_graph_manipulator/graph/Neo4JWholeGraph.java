@@ -7,6 +7,7 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.kernel.logging.BufferingLogger;
 import org.triple_brain.module.model.TripleBrainUris;
 import org.triple_brain.module.model.WholeGraph;
+import org.triple_brain.module.model.graph.Edge;
 import org.triple_brain.module.model.graph.Vertex;
 
 import javax.inject.Inject;
@@ -22,6 +23,9 @@ public class Neo4JWholeGraph implements WholeGraph {
 
     @Inject
     protected Neo4JVertexFactory neo4JVertexFactory;
+
+    @Inject
+    protected Neo4JEdgeFactory neo4JEdgeFactory;
 
     @Override
     public Iterator<Vertex> getAllVertices() {
@@ -45,6 +49,36 @@ public class Neo4JWholeGraph implements WholeGraph {
             public Vertex next() {
                 return neo4JVertexFactory.createOrLoadUsingNode(
                         (Node) result.next().get("n").get()
+                );
+            }
+
+            @Override
+            public void remove() {
+                //To change body of implemented methods use File | Settings | File Templates.
+            }
+        };
+    }
+
+    @Override
+    public Iterator<Edge> getAllEdges() {
+        return new Iterator<Edge>() {
+            ExecutionEngine engine = new ExecutionEngine(graphDb, new BufferingLogger());
+            ExecutionResult result = engine.execute(
+                    "START relation=node(*) " +
+                            "MATCH relation-[:" +
+                            Relationships.SOURCE_VERTEX +
+                            "]->vertex " +
+                            "RETURN relation"
+            );
+            @Override
+            public boolean hasNext() {
+                return result.hasNext();
+            }
+
+            @Override
+            public Edge next() {
+                return neo4JEdgeFactory.createOrLoadWithNode(
+                        (Node) result.next().get("relation").get()
                 );
             }
 
