@@ -399,7 +399,7 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
     @Override
     public Set<Vertex> getIncludedVertices() {
         Set<Vertex> includedVertices = new HashSet<>();
-        for(Relationship relationship : node.getRelationships(Relationships.HAS_INCLUDED_VERTEX)){
+        for(Relationship relationship : node.getRelationships(Relationships.HAS_INCLUDED_VERTEX, Direction.OUTGOING)){
             includedVertices.add(
                     vertexFactory.createOrLoadUsingNode(
                             relationship.getEndNode()
