@@ -1,5 +1,6 @@
 package org.triple_brain.module.neo4j_graph_manipulator.graph;
 
+import org.apache.commons.lang.StringUtils;
 import org.neo4j.graphdb.*;
 import org.neo4j.graphdb.index.ReadableIndex;
 import org.triple_brain.module.common_utils.Uris;
@@ -87,6 +88,11 @@ public class Neo4JUtils {
     }
 
     public Node create(URI uri) {
+        if(StringUtils.isEmpty(uri.toString())){
+            throw new IllegalArgumentException(
+                    "uri cannot be empty"
+            );
+        }
         Node externalResourceAsNode = graphDb.createNode();
         externalResourceAsNode.setProperty(
                 Neo4JUserGraph.URI_PROPERTY_NAME,

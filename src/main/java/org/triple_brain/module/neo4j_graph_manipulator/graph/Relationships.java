@@ -15,5 +15,6 @@ public enum Relationships implements RelationshipType {
     IDENTIFIED_TO,
     HAS_IMAGE, //todo find common rdf property for image
     SUGGESTION,
-    SUGGESTION_ORIGIN
+    SUGGESTION_ORIGIN,
+    HAS_INCLUDED_VERTEX
 }

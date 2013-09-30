@@ -8,7 +8,10 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
 import org.triple_brain.module.common_utils.Uris;
-import org.triple_brain.module.model.*;
+import org.triple_brain.module.model.FriendlyResource;
+import org.triple_brain.module.model.Image;
+import org.triple_brain.module.model.TripleBrainUris;
+import org.triple_brain.module.model.UserUris;
 import org.triple_brain.module.model.graph.Edge;
 import org.triple_brain.module.model.graph.Vertex;
 import org.triple_brain.module.model.graph.VertexInSubGraph;
@@ -116,6 +119,38 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
                 new UserUris(ownerUserName).generateVertexUri()
         );
     }
+
+    @AssistedInject
+    protected Neo4JVertexInSubGraph(
+            Neo4JVertexFactory vertexFactory,
+            Neo4JEdgeFactory edgeFactory,
+            Neo4JUtils utils,
+            Neo4JGraphElementFactory neo4JGraphElementFactory,
+            Neo4JFriendlyResourceFactory friendlyResourceFactory,
+            Neo4JSuggestionFactory suggestionFactory,
+            @Assisted Set<Vertex> includedVertices
+    )throws IllegalArgumentException{
+        this(
+                vertexFactory,
+                edgeFactory,
+                utils,
+                neo4JGraphElementFactory,
+                friendlyResourceFactory,
+                suggestionFactory,
+                new UserUris(
+                        includedVertices.iterator().next().ownerUsername()
+                ).generateVertexUri()
+        );
+        if(includedVertices.size() <= 1){
+            throw new IllegalArgumentException(
+                    "A minimum number of 2 vertices is required to create a vertex from included vertices"
+            );
+        }
+        setIncludedVertices(
+                includedVertices
+        );
+    }
+
     @Override
     public boolean hasEdge(Edge edge) {
         for (Relationship relationship : relationshipsToEdges()) {
@@ -179,7 +214,7 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
 
     @Override
     public Edge addVertexAndRelation() {
-        Neo4JVertexInSubGraph newVertex = vertexFactory.createForOwnerUsername(
+        Vertex newVertex = vertexFactory.createForOwnerUsername(
                 ownerUsername()
         );
         return addRelationToVertex(newVertex);
@@ -349,6 +384,29 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
                 false
         );
         graphElement.updateLastModificationDate();
+    }
+
+    public void setIncludedVertices(Set<Vertex> includedVertices){
+        for(Vertex vertex : includedVertices){
+            Neo4JVertexInSubGraph neo4JVertex = (Neo4JVertexInSubGraph) vertex;
+            node.createRelationshipTo(
+                    neo4JVertex.node,
+                    Relationships.HAS_INCLUDED_VERTEX
+            );
+        }
+    }
+
+    @Override
+    public Set<Vertex> getIncludedVertices() {
+        Set<Vertex> includedVertices = new HashSet<>();
+        for(Relationship relationship : node.getRelationships(Relationships.HAS_INCLUDED_VERTEX)){
+            includedVertices.add(
+                    vertexFactory.createOrLoadUsingNode(
+                            relationship.getEndNode()
+                    )
+            );
+        }
+        return includedVertices;
     }
 
     @Override

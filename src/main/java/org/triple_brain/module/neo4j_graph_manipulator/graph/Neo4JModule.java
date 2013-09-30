@@ -13,11 +13,13 @@ import org.neo4j.graphdb.factory.GraphDatabaseSettings;
 import org.neo4j.graphdb.index.ReadableIndex;
 import org.neo4j.kernel.impl.util.FileUtils;
 import org.neo4j.kernel.logging.BufferingLogger;
-import org.triple_brain.module.model.BeforeAfterEachRestCall;
 import org.triple_brain.module.model.FriendlyResource;
 import org.triple_brain.module.model.FriendlyResourceFactory;
+import org.triple_brain.module.model.GraphTransaction;
 import org.triple_brain.module.model.WholeGraph;
 import org.triple_brain.module.model.graph.GraphFactory;
+import org.triple_brain.module.model.graph.VertexFactory;
+import org.triple_brain.module.model.graph.VertexInSubGraph;
 import org.triple_brain.module.model.suggestion.Suggestion;
 import org.triple_brain.module.model.suggestion.SuggestionFactory;
 
@@ -45,7 +47,7 @@ public class Neo4JModule extends AbstractModule {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        bind(BeforeAfterEachRestCall.class).to(Neo4JBeforeAfterEachRestCall.class)
+        bind(GraphTransaction.class).to(Neo4JGraphTransaction.class)
                 .in(Singleton.class);
 
         bind(WholeGraph.class).to(Neo4JWholeGraph.class);
@@ -83,6 +85,10 @@ public class Neo4JModule extends AbstractModule {
 
         install(factoryModuleBuilder
                 .build(Neo4JUserGraphFactory.class));
+
+        install(factoryModuleBuilder
+                .implement(VertexInSubGraph.class, Neo4JVertexInSubGraph.class)
+                .build(VertexFactory.class));
 
         install(factoryModuleBuilder
                 .build(Neo4JVertexFactory.class));

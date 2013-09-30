@@ -6,7 +6,6 @@ import org.joda.time.DateTime;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
-import org.triple_brain.module.common_utils.Uris;
 import org.triple_brain.module.model.FriendlyResource;
 import org.triple_brain.module.model.Image;
 import org.triple_brain.module.model.TripleBrainUris;
@@ -58,11 +57,7 @@ public class Neo4JGraphElement implements GraphElement {
 
     @Override
     public URI uri() {
-        return Uris.get(
-                node.getProperty(
-                        Neo4JUserGraph.URI_PROPERTY_NAME
-                ).toString()
-        );
+        return friendlyResource.uri();
     }
 
     @Override
