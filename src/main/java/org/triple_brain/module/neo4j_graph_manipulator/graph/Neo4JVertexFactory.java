@@ -7,5 +7,7 @@ import org.triple_brain.module.model.graph.VertexFactory;
 * Copyright Mozilla Public License 1.1
 */
 public interface Neo4JVertexFactory extends VertexFactory{
-    public Neo4JVertexInSubGraph createOrLoadUsingNode(Node node);
+    Neo4JVertexInSubGraph createOrLoadUsingNode(Node node);
+    @Override
+    Neo4JVertexInSubGraph createForOwnerUsername(String username);
 }

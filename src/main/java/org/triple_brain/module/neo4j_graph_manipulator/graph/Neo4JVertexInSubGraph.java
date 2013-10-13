@@ -29,6 +29,8 @@ import java.util.Set;
 */
 public class Neo4JVertexInSubGraph implements VertexInSubGraph {
 
+    public static final String NUMBER_OF_CONNECTED_EDGES_PROPERTY_NAME = "number_of_connected_edges_property_name";
+
     private Integer depthInSubGraph = -1;
     protected Node node;
     protected Neo4JGraphElement graphElement;
@@ -40,8 +42,6 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
 
     protected Neo4JUtils utils;
     protected List<String> hiddenEdgesLabel = new ArrayList<String>();
-
-    private static final String HIDDEN_EDGES_LABEL_KEY = "hidden_edges_label";
 
     protected Neo4JSuggestionFactory suggestionFactory;
 
@@ -73,8 +73,8 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
         if(!node.hasProperty(IS_PUBLIC_PROPERTY_NAME)){
             makePrivate();
         }
-        if(!hasVertexType()){
-            addVertexType();
+        if(!isInitialized()){
+            initialize();
         }
     }
 
@@ -214,9 +214,11 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
 
     @Override
     public Edge addVertexAndRelation() {
-        Vertex newVertex = vertexFactory.createForOwnerUsername(
+        Neo4JVertexInSubGraph newVertex = vertexFactory.createForOwnerUsername(
                 ownerUsername()
         );
+        newVertex.incrementNumberOfConnectedEdges();
+        incrementNumberOfConnectedEdges();
         return addRelationToVertex(newVertex);
     }
 
@@ -231,6 +233,8 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
     @Override
     public void remove() {
         for (Edge edge : connectedEdges()) {
+            Neo4JVertexInSubGraph otherVertex = (Neo4JVertexInSubGraph) edge.otherVertex(this);
+            otherVertex.decrementNumberOfConnectedEdges();
             edge.remove();
         }
         graphElement.remove();
@@ -262,6 +266,35 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
             );
         }
         return edges;
+    }
+
+    @Override
+    public Integer getNumberOfConnectedEdges() {
+        return Integer.valueOf(node.getProperty(
+                NUMBER_OF_CONNECTED_EDGES_PROPERTY_NAME
+        ).toString());
+    }
+
+    @Override
+    public void setNumberOfConnectedEdges(Integer numberOfConnectedEdges) {
+        node.setProperty(
+                NUMBER_OF_CONNECTED_EDGES_PROPERTY_NAME,
+                numberOfConnectedEdges
+        );
+    }
+
+    protected void incrementNumberOfConnectedEdges(){
+        node.setProperty(
+                NUMBER_OF_CONNECTED_EDGES_PROPERTY_NAME,
+                getNumberOfConnectedEdges() + 1
+        );
+    }
+
+    protected void decrementNumberOfConnectedEdges() {
+        node.setProperty(
+                NUMBER_OF_CONNECTED_EDGES_PROPERTY_NAME,
+                getNumberOfConnectedEdges() - 1
+        );
     }
 
     private Iterable<Relationship> relationshipsToEdges() {
@@ -509,6 +542,22 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
                 Uris.get(TripleBrainUris.TRIPLE_BRAIN_VERTEX),
                 ""
         ));
+    }
+
+    private boolean isInitialized(){
+        return hasVertexType();
+    }
+
+    private void initialize(){
+        addVertexType();
+        initNumberOfConnectedEdges();
+    }
+
+    private void initNumberOfConnectedEdges(){
+        node.setProperty(
+                NUMBER_OF_CONNECTED_EDGES_PROPERTY_NAME,
+                0
+        );
     }
 
     private boolean hasVertexType(){
