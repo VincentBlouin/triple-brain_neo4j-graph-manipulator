@@ -16,7 +16,6 @@ import scala.collection.immutable.Map;
 
 import javax.inject.Inject;
 import java.util.HashSet;
-import java.util.Iterator;
 
 /*
 * Copyright Mozilla Public License 1.1
@@ -74,11 +73,14 @@ public class Neo4JSubGraphExtractor {
                         vertex,
                         distanceFromCenterVertex / 2
                 );
-                subGraph.edges().addAll(vertex.connectedEdges());
+            }else{
+                subGraph.edges().add(
+                        edgeFactory.createOrLoadWithNode(
+                                node
+                        )
+                );
             }
-
         }
-        removeEdgesThatDontHaveAllTheirVerticesInSubGraph();
         return subGraph;
     }
 
@@ -107,34 +109,10 @@ public class Neo4JSubGraphExtractor {
     private String queryToGetGraph() {
         Node centerVertexAsNode = neo4JUtils.nodeOfVertex(centerVertex);
         return "START start_node=node(" + centerVertexAsNode.getId() + ")" +
-                "MATCH path=start_node<-[" +
-                ":" + Relationships.SOURCE_VERTEX+
-                "|:" + Relationships.DESTINATION_VERTEX + "*0.." + depth * 2 +
+                "MATCH path=start_node<-[:" +
+                    Relationships.SOURCE_VERTEX+
+                "|" + Relationships.DESTINATION_VERTEX + "*0.." + depth * 2 +
                 "]->in_path_node " +
                 "RETURN start_node,in_path_node, length(path)";
-    }
-
-    private void removeEdgesThatDontHaveAllTheirVerticesInSubGraph() {
-        Iterator<Edge> iterator = subGraph.edges().iterator();
-        while (iterator.hasNext()) {
-            Edge edge = iterator.next();
-            Vertex sourceVertex = edge.sourceVertex();
-
-            Vertex destinationVertex = edge.destinationVertex();
-
-            boolean shouldRemoveEdge =
-                    !subGraph.vertices().contains(sourceVertex) ||
-                            !subGraph.vertices().contains(destinationVertex);
-            if (shouldRemoveEdge) {
-                Vertex frontierVertex = subGraph.vertices().contains(sourceVertex) ?
-                        sourceVertex :
-                        destinationVertex;
-                frontierVertex = subGraph.vertexWithIdentifier(frontierVertex.uri());
-                frontierVertex.hiddenConnectedEdgesLabel().add(
-                        edge.label()
-                );
-                iterator.remove();
-            }
-        }
     }
 }

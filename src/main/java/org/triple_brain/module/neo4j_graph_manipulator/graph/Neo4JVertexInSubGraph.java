@@ -19,9 +19,7 @@ import org.triple_brain.module.model.suggestion.Suggestion;
 
 import javax.inject.Inject;
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 /*
@@ -41,7 +39,6 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
     protected Neo4JEdgeFactory edgeFactory;
 
     protected Neo4JUtils utils;
-    protected List<String> hiddenEdgesLabel = new ArrayList<String>();
 
     protected Neo4JSuggestionFactory suggestionFactory;
 
@@ -302,16 +299,6 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
                 Relationships.SOURCE_VERTEX,
                 Relationships.DESTINATION_VERTEX
         );
-    }
-
-    @Override
-    public List<String> hiddenConnectedEdgesLabel() {
-        return hiddenEdgesLabel;
-    }
-
-    @Override
-    public void hiddenConnectedEdgesLabel(List<String> hiddenEdgesLabel) {
-        this.hiddenEdgesLabel = hiddenEdgesLabel;
     }
 
     @Override
