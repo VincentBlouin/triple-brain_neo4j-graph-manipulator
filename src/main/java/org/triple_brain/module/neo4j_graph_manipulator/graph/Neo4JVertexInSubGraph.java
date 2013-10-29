@@ -214,13 +214,13 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
         Neo4JVertexInSubGraph newVertex = vertexFactory.createForOwnerUsername(
                 ownerUsername()
         );
-        newVertex.incrementNumberOfConnectedEdges();
-        incrementNumberOfConnectedEdges();
         return addRelationToVertex(newVertex);
     }
 
     @Override
     public Edge addRelationToVertex(Vertex destinationVertex) {
+        incrementNumberOfConnectedEdges();
+        ((Neo4JVertexInSubGraph) destinationVertex).incrementNumberOfConnectedEdges();
         return edgeFactory.createForSourceAndDestinationVertex(
                 this,
                 (Neo4JVertexInSubGraph) destinationVertex
