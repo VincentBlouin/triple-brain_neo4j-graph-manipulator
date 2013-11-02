@@ -126,6 +126,24 @@ public class Neo4JEdge implements Edge{
     }
 
     @Override
+    public void inverse() {
+        Relationship destinationRelation = relationshipWithDestinationVertex();
+        Node destinationNode = destinationRelation.getEndNode();
+        Relationship sourceRelation = relationshipWithSourceVertex();
+        Node sourceNode = sourceRelation.getEndNode();
+        destinationRelation.delete();
+        sourceRelation.delete();
+        node.createRelationshipTo(
+                destinationNode,
+                Relationships.SOURCE_VERTEX
+        );
+        node.createRelationshipTo(
+                sourceNode,
+                Relationships.DESTINATION_VERTEX
+        );
+    }
+
+    @Override
     public void remove() {
         graphElement.remove();
     }
