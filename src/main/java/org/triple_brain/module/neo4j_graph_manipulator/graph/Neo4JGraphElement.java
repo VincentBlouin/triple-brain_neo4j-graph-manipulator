@@ -22,9 +22,9 @@ import java.util.Set;
 */
 public class Neo4JGraphElement implements GraphElement {
 
-    private Node node;
-    private Neo4JFriendlyResource friendlyResource;
-    private Neo4JFriendlyResourceFactory friendlyResourceFactory;
+    protected Node node;
+    protected Neo4JFriendlyResource friendlyResource;
+    protected Neo4JFriendlyResourceFactory friendlyResourceFactory;
 
     @Inject
     protected Neo4JUtils neo4JUtils;
@@ -34,6 +34,20 @@ public class Neo4JGraphElement implements GraphElement {
             Neo4JFriendlyResourceFactory friendlyResourceFactory,
             @Assisted Node node
     ) {
+        friendlyResource = friendlyResourceFactory.createOrLoadFromNode(
+                node
+        );
+        this.friendlyResourceFactory = friendlyResourceFactory;
+        this.node = node;
+    }
+
+    @AssistedInject
+    protected Neo4JGraphElement(
+            Neo4JUtils utils,
+            Neo4JFriendlyResourceFactory friendlyResourceFactory,
+            @Assisted URI uri
+    ) {
+        Node node = utils.getFromUri(uri);
         friendlyResource = friendlyResourceFactory.createOrLoadFromNode(
                 node
         );

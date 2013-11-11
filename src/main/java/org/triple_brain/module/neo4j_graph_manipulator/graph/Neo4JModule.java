@@ -17,9 +17,7 @@ import org.triple_brain.module.model.FriendlyResource;
 import org.triple_brain.module.model.FriendlyResourceFactory;
 import org.triple_brain.module.model.GraphTransaction;
 import org.triple_brain.module.model.WholeGraph;
-import org.triple_brain.module.model.graph.GraphFactory;
-import org.triple_brain.module.model.graph.VertexFactory;
-import org.triple_brain.module.model.graph.VertexInSubGraph;
+import org.triple_brain.module.model.graph.*;
 import org.triple_brain.module.model.suggestion.Suggestion;
 import org.triple_brain.module.model.suggestion.SuggestionFactory;
 
@@ -95,6 +93,10 @@ public class Neo4JModule extends AbstractModule {
 
         install(factoryModuleBuilder
                 .build(Neo4JSubGraphExtractorFactory.class));
+
+        install(factoryModuleBuilder
+                .implement(Edge.class, Neo4JEdge.class)
+                .build(EdgeFactory.class));
 
         install(factoryModuleBuilder
                 .build(Neo4JGraphElementFactory.class));

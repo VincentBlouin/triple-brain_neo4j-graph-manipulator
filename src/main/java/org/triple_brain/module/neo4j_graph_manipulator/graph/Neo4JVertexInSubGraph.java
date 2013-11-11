@@ -42,6 +42,8 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
 
     protected Neo4JSuggestionFactory suggestionFactory;
 
+    protected Neo4JGraphElementFactory neo4JGraphElementFactory;
+
     @Inject
     Neo4JFriendlyResourceFactory friendlyResourceFactory;
 
@@ -61,16 +63,17 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
         this.utils = utils;
         this.friendlyResourceFactory = neo4JFriendlyResourceFactory;
         this.node = node;
+        this.neo4JGraphElementFactory = neo4JGraphElementFactory;
         graphElement = neo4JGraphElementFactory.withNode(
                 node
         );
         this.friendlyResource = neo4JFriendlyResourceFactory.createOrLoadFromNode(
                 node
         );
-        if(!node.hasProperty(IS_PUBLIC_PROPERTY_NAME)){
+        if (!node.hasProperty(IS_PUBLIC_PROPERTY_NAME)) {
             makePrivate();
         }
-        if(!isInitialized()){
+        if (!isInitialized()) {
             initialize();
         }
     }
@@ -84,7 +87,7 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
             Neo4JFriendlyResourceFactory friendlyResourceFactory,
             Neo4JSuggestionFactory suggestionFactory,
             @Assisted URI uri
-    ){
+    ) {
         this(
                 vertexFactory,
                 edgeFactory,
@@ -105,7 +108,7 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
             Neo4JFriendlyResourceFactory friendlyResourceFactory,
             Neo4JSuggestionFactory suggestionFactory,
             @Assisted String ownerUserName
-    ){
+    ) {
         this(
                 vertexFactory,
                 edgeFactory,
@@ -125,8 +128,9 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
             Neo4JGraphElementFactory neo4JGraphElementFactory,
             Neo4JFriendlyResourceFactory friendlyResourceFactory,
             Neo4JSuggestionFactory suggestionFactory,
-            @Assisted Set<Vertex> includedVertices
-    )throws IllegalArgumentException{
+            @Assisted Set<Vertex> includedVertices,
+            @Assisted Set<Edge> includedEdges
+    ) throws IllegalArgumentException {
         this(
                 vertexFactory,
                 edgeFactory,
@@ -138,13 +142,16 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
                         includedVertices.iterator().next().ownerUsername()
                 ).generateVertexUri()
         );
-        if(includedVertices.size() <= 1){
+        if (includedVertices.size() <= 1) {
             throw new IllegalArgumentException(
                     "A minimum number of 2 vertices is required to create a vertex from included vertices"
             );
         }
         setIncludedVertices(
                 includedVertices
+        );
+        setIncludedEdges(
+                includedEdges
         );
     }
 
@@ -193,11 +200,11 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
         Iterable<Relationship> relationshipsIt = node.getRelationships(
                 Relationships.SOURCE_VERTEX
         );
-        for (Relationship relationship : relationshipsIt){
+        for (Relationship relationship : relationshipsIt) {
             Edge edge = edgeFactory.createOrLoadWithNode(
                     relationship.getStartNode()
             );
-            if (edge.destinationVertex().equals(destinationVertex)){
+            if (edge.destinationVertex().equals(destinationVertex)) {
                 return true;
             }
         }
@@ -280,7 +287,7 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
         );
     }
 
-    protected void incrementNumberOfConnectedEdges(){
+    protected void incrementNumberOfConnectedEdges() {
         node.setProperty(
                 NUMBER_OF_CONNECTED_EDGES_PROPERTY_NAME,
                 getNumberOfConnectedEdges() + 1
@@ -406,27 +413,48 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
         graphElement.updateLastModificationDate();
     }
 
-    public void setIncludedVertices(Set<Vertex> includedVertices){
-        for(Vertex vertex : includedVertices){
-            Neo4JVertexInSubGraph neo4JVertex = (Neo4JVertexInSubGraph) vertex;
-            node.createRelationshipTo(
-                    neo4JVertex.node,
-                    Relationships.HAS_INCLUDED_VERTEX
-            );
-        }
-    }
-
     @Override
     public Set<Vertex> getIncludedVertices() {
-        Set<Vertex> includedVertices = new HashSet<>();
-        for(Relationship relationship : node.getRelationships(Relationships.HAS_INCLUDED_VERTEX, Direction.OUTGOING)){
-            includedVertices.add(
+        Set<Vertex> includedGraphElements = new HashSet<>();
+        for (Relationship relationship : node.getRelationships(Relationships.HAS_INCLUDED_VERTEX, Direction.OUTGOING)) {
+            includedGraphElements.add(
                     vertexFactory.createOrLoadUsingNode(
                             relationship.getEndNode()
                     )
             );
         }
-        return includedVertices;
+        return includedGraphElements;
+    }
+
+    @Override
+    public Set<Edge> getIncludedEdges() {
+        Set<Edge> includedGraphElements = new HashSet<>();
+        for (Relationship relationship : node.getRelationships(Relationships.HAS_INCLUDED_EDGE, Direction.OUTGOING)) {
+            includedGraphElements.add(
+                    edgeFactory.createOrLoadWithNode(
+                            relationship.getEndNode()
+                    )
+            );
+        }
+        return includedGraphElements;
+    }
+
+    public void setIncludedVertices(Set<Vertex> includedVertices) {
+        for (Vertex vertex: includedVertices) {
+            node.createRelationshipTo(
+                    utils.getFromUri(vertex.uri()),
+                    Relationships.HAS_INCLUDED_VERTEX
+            );
+        }
+    }
+
+    public void setIncludedEdges(Set<Edge> includedEdges) {
+        for (Edge edge: includedEdges) {
+            node.createRelationshipTo(
+                    utils.getFromUri(edge.uri()),
+                    Relationships.HAS_INCLUDED_EDGE
+            );
+        }
     }
 
     @Override
@@ -524,30 +552,30 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
         return this;
     }
 
-    private void addVertexType(){
+    private void addVertexType() {
         addType(friendlyResourceFactory.createOrLoadUsingUriAndLabel(
                 Uris.get(TripleBrainUris.TRIPLE_BRAIN_VERTEX),
                 ""
         ));
     }
 
-    private boolean isInitialized(){
+    private boolean isInitialized() {
         return hasVertexType();
     }
 
-    private void initialize(){
+    private void initialize() {
         addVertexType();
         initNumberOfConnectedEdges();
     }
 
-    private void initNumberOfConnectedEdges(){
+    private void initNumberOfConnectedEdges() {
         node.setProperty(
                 NUMBER_OF_CONNECTED_EDGES_PROPERTY_NAME,
                 0
         );
     }
 
-    private boolean hasVertexType(){
+    private boolean hasVertexType() {
         for (Relationship relationship : node.getRelationships(Relationships.TYPE)) {
             FriendlyResource type = friendlyResourceFactory.createOrLoadFromNode(
                     relationship.getEndNode()

@@ -31,7 +31,7 @@ public class Neo4JFriendlyResource implements FriendlyResource {
     @Inject
     Neo4JUtils neo4JUtils;
 
-    private Node node;
+    protected Node node;
 
     @AssistedInject
     protected Neo4JFriendlyResource(
