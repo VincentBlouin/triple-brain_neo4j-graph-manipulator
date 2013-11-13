@@ -145,6 +145,14 @@ public class Neo4JEdge implements Edge{
 
     @Override
     public void remove() {
+        Vertex sourceVertex = sourceVertex();
+        sourceVertex.setNumberOfConnectedEdges(
+                sourceVertex.getNumberOfConnectedEdges() - 1
+        );
+        Vertex destinationVertex = destinationVertex();
+        destinationVertex.setNumberOfConnectedEdges(
+                destinationVertex.getNumberOfConnectedEdges() - 1
+        );
         graphElement.remove();
     }
 
