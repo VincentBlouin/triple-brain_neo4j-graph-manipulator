@@ -237,8 +237,6 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
     @Override
     public void remove() {
         for (Edge edge : connectedEdges()) {
-            Neo4JVertexInSubGraph otherVertex = (Neo4JVertexInSubGraph) edge.otherVertex(this);
-            otherVertex.decrementNumberOfConnectedEdges();
             edge.remove();
         }
         graphElement.remove();
