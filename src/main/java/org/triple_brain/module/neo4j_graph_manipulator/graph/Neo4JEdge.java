@@ -3,7 +3,6 @@ package org.triple_brain.module.neo4j_graph_manipulator.graph;
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 import org.joda.time.DateTime;
-import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 import org.triple_brain.module.model.FriendlyResource;
@@ -18,7 +17,7 @@ import java.util.Set;
 /*
 * Copyright Mozilla Public License 1.1
 */
-public class Neo4JEdge implements Edge{
+public class Neo4JEdge implements Edge {
 
     protected Node node;
     protected Neo4JGraphElement graphElement;
@@ -45,7 +44,7 @@ public class Neo4JEdge implements Edge{
             Neo4JGraphElementFactory neo4JGraphElementFactory,
             Neo4JUtils neo4JUtils,
             @Assisted URI uri
-    ){
+    ) {
         this(
                 vertexFactory,
                 edgeFactory,
@@ -59,43 +58,30 @@ public class Neo4JEdge implements Edge{
             Neo4JVertexFactory vertexFactory,
             Neo4JEdgeFactory edgeFactory,
             Neo4JGraphElementFactory neo4JGraphElementFactory,
-            GraphDatabaseService graphDb,
             Neo4JUtils neo4JUtils,
             @Assisted("source") Neo4JVertexInSubGraph sourceVertex,
             @Assisted("destination") Neo4JVertexInSubGraph destinationVertex
-    ){
+    ) {
         this.vertexFactory = vertexFactory;
         this.edgeFactory = edgeFactory;
-        if(sourceVertex.hasDestinationVertex(destinationVertex)){
-            for(Edge edge : sourceVertex.connectedEdges()){
-                if(edge.destinationVertex().equals(destinationVertex)){
-                    Neo4JEdge neo4JEdge = (Neo4JEdge) edge;
-                    this.node = neo4JEdge.node;
-                }
-            }
-            this.graphElement = neo4JGraphElementFactory.withNode(
-                    node
-            );
-        }else{
-            UserUris userUris = new UserUris(
-                    sourceVertex.ownerUsername()
-            );
-            Node newEdgeNode = neo4JUtils.create(
-                    userUris.generateEdgeUri()
-            );
-            newEdgeNode.createRelationshipTo(
-                    sourceVertex.node,
-                    Relationships.SOURCE_VERTEX
-            );
-            newEdgeNode.createRelationshipTo(
-                    destinationVertex.node,
-                    Relationships.DESTINATION_VERTEX
-            );
-            this.node = newEdgeNode;
-            this.graphElement = neo4JGraphElementFactory.withNode(
-                    node
-            );
-        }
+        UserUris userUris = new UserUris(
+                sourceVertex.ownerUsername()
+        );
+        Node newEdgeNode = neo4JUtils.create(
+                userUris.generateEdgeUri()
+        );
+        newEdgeNode.createRelationshipTo(
+                sourceVertex.node,
+                Relationships.SOURCE_VERTEX
+        );
+        newEdgeNode.createRelationshipTo(
+                destinationVertex.node,
+                Relationships.DESTINATION_VERTEX
+        );
+        this.node = newEdgeNode;
+        this.graphElement = neo4JGraphElementFactory.withNode(
+                node
+        );
     }
 
     @Override
@@ -275,13 +261,13 @@ public class Neo4JEdge implements Edge{
         return graphElement.hashCode();
     }
 
-    private Relationship relationshipWithSourceVertex(){
+    private Relationship relationshipWithSourceVertex() {
         return node.getRelationships(
                 Relationships.SOURCE_VERTEX
         ).iterator().next();
     }
 
-    private Relationship relationshipWithDestinationVertex(){
+    private Relationship relationshipWithDestinationVertex() {
         return node.getRelationships(
                 Relationships.DESTINATION_VERTEX
         ).iterator().next();
