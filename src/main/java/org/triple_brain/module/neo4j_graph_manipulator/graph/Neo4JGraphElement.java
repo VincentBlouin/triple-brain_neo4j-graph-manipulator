@@ -144,7 +144,7 @@ public class Neo4JGraphElement implements GraphElement {
     @Override
     public Set<FriendlyResource> getGenericIdentifications() {
         Set<FriendlyResource> genericIdentifications = new HashSet<FriendlyResource>();
-        for (Relationship relationship : node.getRelationships(Relationships.IDENTIFIED_TO)) {
+        for (Relationship relationship : node.getRelationships(Relationships.IDENTIFIED_TO, Direction.OUTGOING)) {
             FriendlyResource genericIdentification = friendlyResourceFactory.createOrLoadFromNode(
                     relationship.getEndNode()
             );
@@ -172,7 +172,7 @@ public class Neo4JGraphElement implements GraphElement {
     @Override
     public Set<FriendlyResource> getSameAs() {
         Set<FriendlyResource> sameAsSet = new HashSet<FriendlyResource>();
-        for (Relationship relationship : node.getRelationships(Relationships.SAME_AS)) {
+        for (Relationship relationship : node.getRelationships(Relationships.SAME_AS, Direction.OUTGOING)) {
             FriendlyResource sameAs = friendlyResourceFactory.createOrLoadFromNode(
                     relationship.getEndNode()
             );
@@ -214,7 +214,7 @@ public class Neo4JGraphElement implements GraphElement {
     @Override
     public Set<FriendlyResource> getAdditionalTypes() {
         Set<FriendlyResource> additionalTypes = new HashSet<FriendlyResource>();
-        for (Relationship relationship : node.getRelationships(Relationships.TYPE)) {
+        for (Relationship relationship : node.getRelationships(Relationships.TYPE, Direction.OUTGOING)) {
             FriendlyResource type = friendlyResourceFactory.createOrLoadFromNode(
                     relationship.getEndNode()
             );
