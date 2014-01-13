@@ -169,16 +169,6 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
     }
 
     @Override
-    public void addOutgoingEdge(Edge edge) {
-        //To change body of implemented methods use File | Settings | File Templates.
-    }
-
-    @Override
-    public void removeOutgoingEdge(Edge edge) {
-        //To change body of implemented methods use File | Settings | File Templates.
-    }
-
-    @Override
     public Edge edgeThatLinksToDestinationVertex(Vertex destinationVertex) {
         for (Relationship relationship : relationshipsToEdges()) {
             Edge edge = edgeFactory.createOrLoadWithNode(
@@ -212,11 +202,6 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
     }
 
     @Override
-    public void addNeighbor(Vertex neighbor) {
-        //To change body of implemented methods use File | Settings | File Templates.
-    }
-
-    @Override
     public Edge addVertexAndRelation() {
         Neo4JVertexInSubGraph newVertex = vertexFactory.createForOwnerUsername(
                 ownerUsername()
@@ -245,16 +230,6 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
     @Override
     public String ownerUsername() {
         return graphElement.ownerUsername();
-    }
-
-    @Override
-    public void removeNeighbor(Vertex neighbor) {
-        //To change body of implemented methods use File | Settings | File Templates.
-    }
-
-    @Override
-    public Set<Edge> outGoingEdges() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
     @Override
