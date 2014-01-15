@@ -5,7 +5,7 @@ import org.triple_brain.module.model.User;
 import org.triple_brain.module.model.UserUris;
 import org.triple_brain.module.model.graph.GraphFactory;
 import org.triple_brain.module.model.graph.UserGraph;
-import org.triple_brain.module.model.graph.Vertex;
+import org.triple_brain.module.model.graph.vertex.Vertex;
 
 import javax.inject.Inject;
 

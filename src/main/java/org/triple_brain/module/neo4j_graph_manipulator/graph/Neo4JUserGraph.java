@@ -8,9 +8,13 @@ import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.index.ReadableIndex;
 import org.triple_brain.module.model.User;
 import org.triple_brain.module.model.UserUris;
-import org.triple_brain.module.model.graph.*;
+import org.triple_brain.module.model.graph.SubGraph;
+import org.triple_brain.module.model.graph.UserGraph;
+import org.triple_brain.module.model.graph.edge.EdgeOperator;
 import org.triple_brain.module.model.graph.exceptions.InvalidDepthOfSubVerticesException;
 import org.triple_brain.module.model.graph.exceptions.NonExistingResourceException;
+import org.triple_brain.module.model.graph.vertex.Vertex;
+import org.triple_brain.module.model.graph.vertex.VertexOperator;
 
 import java.net.URI;
 
@@ -48,7 +52,7 @@ public class Neo4JUserGraph implements UserGraph {
     }
 
     @Override
-    public Vertex defaultVertex() {
+    public VertexOperator defaultVertex() {
         return vertexWithUri(
                 new UserUris(user).defaultVertexUri()
         );
@@ -111,21 +115,21 @@ public class Neo4JUserGraph implements UserGraph {
     }
 
     @Override
-    public Vertex vertexWithUri(URI uri) {
+    public VertexOperator vertexWithUri(URI uri) {
         return vertexFactory.createOrLoadUsingUri(
                 uri
         );
     }
 
     @Override
-    public Edge edgeWithUri(URI uri) {
+    public EdgeOperator edgeWithUri(URI uri) {
         return edgeFactory.createOrLoadFromUri(
                 uri
         );
     }
 
     @Override
-    public Vertex createVertex() {
+    public VertexOperator createVertex() {
         return vertexFactory.createForOwnerUsername(
                 user.username()
         );

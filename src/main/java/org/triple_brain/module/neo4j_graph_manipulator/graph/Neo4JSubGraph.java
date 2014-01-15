@@ -1,9 +1,10 @@
 package org.triple_brain.module.neo4j_graph_manipulator.graph;
 
-import org.triple_brain.module.model.graph.Edge;
 import org.triple_brain.module.model.graph.SubGraph;
-import org.triple_brain.module.model.graph.Vertex;
-import org.triple_brain.module.model.graph.VertexInSubGraph;
+import org.triple_brain.module.model.graph.edge.Edge;
+import org.triple_brain.module.model.graph.edge.EdgeOperator;
+import org.triple_brain.module.model.graph.vertex.Vertex;
+import org.triple_brain.module.model.graph.vertex.VertexInSubGraphOperator;
 
 import java.net.URI;
 import java.util.HashSet;
@@ -14,21 +15,21 @@ import java.util.Set;
 */
 public class Neo4JSubGraph implements SubGraph{
 
-    private Set<VertexInSubGraph> vertices = new HashSet<VertexInSubGraph>();
-    private Set<Edge> edges = new HashSet<Edge>();
+    private Set<VertexInSubGraphOperator> vertices = new HashSet<VertexInSubGraphOperator>();
+    private Set<EdgeOperator> edges = new HashSet<EdgeOperator>();
 
-    public static Neo4JSubGraph withVerticesAndEdges(Set<VertexInSubGraph> vertices, Set<Edge> edges){
+    public static Neo4JSubGraph withVerticesAndEdges(Set<VertexInSubGraphOperator> vertices, Set<EdgeOperator> edges){
         return new Neo4JSubGraph(vertices, edges);
     }
 
-    protected Neo4JSubGraph(Set<VertexInSubGraph> vertices, Set<Edge> edges){
+    protected Neo4JSubGraph(Set<VertexInSubGraphOperator> vertices, Set<EdgeOperator> edges){
         this.vertices = vertices;
         this.edges = edges;
     }
 
     @Override
-    public VertexInSubGraph vertexWithIdentifier(URI identifier) {
-        for(VertexInSubGraph vertex : vertices()){
+    public VertexInSubGraphOperator vertexWithIdentifier(URI identifier) {
+        for(VertexInSubGraphOperator vertex : vertices()){
             if(vertex.uri().equals(identifier)){
                 return vertex;
             }
@@ -68,12 +69,12 @@ public class Neo4JSubGraph implements SubGraph{
     }
 
     @Override
-    public Set<VertexInSubGraph> vertices() {
+    public Set<VertexInSubGraphOperator> vertices() {
         return vertices;
     }
 
     @Override
-    public Set<Edge> edges() {
+    public Set<EdgeOperator> edges() {
         return edges;
     }
 }

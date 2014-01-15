@@ -10,7 +10,7 @@ import org.triple_brain.module.model.FriendlyResource;
 import org.triple_brain.module.model.Image;
 import org.triple_brain.module.model.TripleBrainUris;
 import org.triple_brain.module.model.UserUris;
-import org.triple_brain.module.model.graph.GraphElement;
+import org.triple_brain.module.model.graph.GraphElementOperator;
 
 import javax.inject.Inject;
 import java.net.URI;
@@ -20,7 +20,7 @@ import java.util.Set;
 /*
 * Copyright Mozilla Public License 1.1
 */
-public class Neo4JGraphElement implements GraphElement {
+public class Neo4JGraphElementOperator implements GraphElementOperator {
 
     protected Node node;
     protected Neo4JFriendlyResource friendlyResource;
@@ -30,7 +30,7 @@ public class Neo4JGraphElement implements GraphElement {
     protected Neo4JUtils neo4JUtils;
 
     @AssistedInject
-    protected Neo4JGraphElement(
+    protected Neo4JGraphElementOperator(
             Neo4JFriendlyResourceFactory friendlyResourceFactory,
             @Assisted Node node
     ) {
@@ -42,7 +42,7 @@ public class Neo4JGraphElement implements GraphElement {
     }
 
     @AssistedInject
-    protected Neo4JGraphElement(
+    protected Neo4JGraphElementOperator(
             Neo4JUtils utils,
             Neo4JFriendlyResourceFactory friendlyResourceFactory,
             @Assisted URI uri

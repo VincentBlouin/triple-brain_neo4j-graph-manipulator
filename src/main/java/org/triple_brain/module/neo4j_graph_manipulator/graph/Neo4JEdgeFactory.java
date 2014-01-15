@@ -10,12 +10,12 @@ import java.net.URI;
 */
 public interface Neo4JEdgeFactory {
 
-    public Neo4JEdge createOrLoadWithNode(Node node);
-    public Neo4JEdge createForSourceAndDestinationVertex(
-            @Assisted("source") Neo4JVertexInSubGraph sourceVertex,
-            @Assisted("destination") Neo4JVertexInSubGraph destinationVertex
+    public Neo4JEdgeOperator createOrLoadWithNode(Node node);
+    public Neo4JEdgeOperator createForSourceAndDestinationVertex(
+            @Assisted("source") Neo4JVertexInSubGraphOperator sourceVertexOperator,
+            @Assisted("destination") Neo4JVertexInSubGraphOperator destinationVertexOperator
     );
-    public Neo4JEdge createOrLoadFromUri(
+    public Neo4JEdgeOperator createOrLoadFromUri(
             URI uri
     );
 }

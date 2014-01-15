@@ -6,7 +6,7 @@ import org.neo4j.graphdb.Node;
 * Copyright Mozilla Public License 1.1
 */
 public interface Neo4JGraphElementFactory {
-    Neo4JGraphElement withNode(
+    Neo4JGraphElementOperator withNode(
             Node node
     );
 }

@@ -4,7 +4,7 @@ import org.apache.commons.lang.StringUtils;
 import org.neo4j.graphdb.*;
 import org.neo4j.graphdb.index.ReadableIndex;
 import org.triple_brain.module.common_utils.Uris;
-import org.triple_brain.module.model.graph.Vertex;
+import org.triple_brain.module.model.graph.vertex.Vertex;
 
 import javax.inject.Inject;
 import java.net.URI;

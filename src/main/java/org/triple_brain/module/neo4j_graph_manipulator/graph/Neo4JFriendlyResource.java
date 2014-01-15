@@ -10,6 +10,7 @@ import org.neo4j.graphdb.Node;
 import org.triple_brain.module.common_utils.Uris;
 import org.triple_brain.module.model.FriendlyResource;
 import org.triple_brain.module.model.Image;
+import org.triple_brain.module.model.graph.FriendlyResourceOperator;
 import org.triple_brain.module.model.json.FriendlyResourceJson;
 
 import javax.inject.Inject;
@@ -20,7 +21,7 @@ import java.util.Set;
 /*
 * Copyright Mozilla Public License 1.1
 */
-public class Neo4JFriendlyResource implements FriendlyResource {
+public class Neo4JFriendlyResource implements FriendlyResourceOperator{
 
     public static final String CREATION_DATE_PROPERTY_NAME = "creation_date";
     public static final String LAST_MODIFICATION_DATE_PROPERTY_NAME = "last_modification_date";

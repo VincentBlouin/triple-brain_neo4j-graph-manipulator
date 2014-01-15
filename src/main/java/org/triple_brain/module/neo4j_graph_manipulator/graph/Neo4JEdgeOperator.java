@@ -8,8 +8,9 @@ import org.neo4j.graphdb.Relationship;
 import org.triple_brain.module.model.FriendlyResource;
 import org.triple_brain.module.model.Image;
 import org.triple_brain.module.model.UserUris;
-import org.triple_brain.module.model.graph.Edge;
-import org.triple_brain.module.model.graph.Vertex;
+import org.triple_brain.module.model.graph.edge.EdgeOperator;
+import org.triple_brain.module.model.graph.vertex.Vertex;
+import org.triple_brain.module.model.graph.vertex.VertexOperator;
 
 import java.net.URI;
 import java.util.Set;
@@ -17,15 +18,15 @@ import java.util.Set;
 /*
 * Copyright Mozilla Public License 1.1
 */
-public class Neo4JEdge implements Edge {
+public class Neo4JEdgeOperator implements EdgeOperator {
 
     protected Node node;
-    protected Neo4JGraphElement graphElement;
+    protected Neo4JGraphElementOperator graphElementOperator;
     protected Neo4JVertexFactory vertexFactory;
     protected Neo4JEdgeFactory edgeFactory;
 
     @AssistedInject
-    protected Neo4JEdge(
+    protected Neo4JEdgeOperator(
             Neo4JVertexFactory vertexFactory,
             Neo4JEdgeFactory edgeFactory,
             Neo4JGraphElementFactory neo4JGraphElementFactory,
@@ -34,11 +35,11 @@ public class Neo4JEdge implements Edge {
         this.vertexFactory = vertexFactory;
         this.edgeFactory = edgeFactory;
         this.node = node;
-        graphElement = neo4JGraphElementFactory.withNode(node);
+        graphElementOperator = neo4JGraphElementFactory.withNode(node);
     }
 
     @AssistedInject
-    protected Neo4JEdge(
+    protected Neo4JEdgeOperator(
             Neo4JVertexFactory vertexFactory,
             Neo4JEdgeFactory edgeFactory,
             Neo4JGraphElementFactory neo4JGraphElementFactory,
@@ -54,52 +55,64 @@ public class Neo4JEdge implements Edge {
     }
 
     @AssistedInject
-    protected Neo4JEdge(
+    protected Neo4JEdgeOperator(
             Neo4JVertexFactory vertexFactory,
             Neo4JEdgeFactory edgeFactory,
             Neo4JGraphElementFactory neo4JGraphElementFactory,
             Neo4JUtils neo4JUtils,
-            @Assisted("source") Neo4JVertexInSubGraph sourceVertex,
-            @Assisted("destination") Neo4JVertexInSubGraph destinationVertex
+            @Assisted("source") Neo4JVertexInSubGraphOperator sourceVertexOperator,
+            @Assisted("destination") Neo4JVertexInSubGraphOperator destinationVertexOperator
     ) {
         this.vertexFactory = vertexFactory;
         this.edgeFactory = edgeFactory;
         UserUris userUris = new UserUris(
-                sourceVertex.ownerUsername()
+                sourceVertexOperator.ownerUsername()
         );
         Node newEdgeNode = neo4JUtils.create(
                 userUris.generateEdgeUri()
         );
         newEdgeNode.createRelationshipTo(
-                sourceVertex.node,
+                sourceVertexOperator.node,
                 Relationships.SOURCE_VERTEX
         );
         newEdgeNode.createRelationshipTo(
-                destinationVertex.node,
+                destinationVertexOperator.node,
                 Relationships.DESTINATION_VERTEX
         );
         this.node = newEdgeNode;
-        this.graphElement = neo4JGraphElementFactory.withNode(
+        this.graphElementOperator = neo4JGraphElementFactory.withNode(
                 node
         );
     }
 
     @Override
-    public Vertex sourceVertex() {
+    public VertexOperator sourceVertex() {
+        return vertexFactory.createOrLoadUsingNode(
+                relationshipWithSourceVertex().getEndNode()
+        );
+    }
+
+    private VertexOperator sourceVertexOperator(){
         return vertexFactory.createOrLoadUsingNode(
                 relationshipWithSourceVertex().getEndNode()
         );
     }
 
     @Override
-    public Vertex destinationVertex() {
+    public VertexOperator destinationVertex() {
+        return vertexFactory.createOrLoadUsingNode(
+                relationshipWithDestinationVertex().getEndNode()
+        );
+    }
+
+    private VertexOperator destinationVertexOperator(){
         return vertexFactory.createOrLoadUsingNode(
                 relationshipWithDestinationVertex().getEndNode()
         );
     }
 
     @Override
-    public Vertex otherVertex(Vertex vertex) {
+    public VertexOperator otherVertex(Vertex vertex) {
         return sourceVertex().equals(vertex) ?
                 destinationVertex() :
                 sourceVertex();
@@ -131,134 +144,134 @@ public class Neo4JEdge implements Edge {
 
     @Override
     public void remove() {
-        Vertex sourceVertex = sourceVertex();
+        VertexOperator sourceVertex = sourceVertexOperator();
         sourceVertex.setNumberOfConnectedEdges(
                 sourceVertex.getNumberOfConnectedEdges() - 1
         );
-        Vertex destinationVertex = destinationVertex();
+        VertexOperator destinationVertex = destinationVertexOperator();
         destinationVertex.setNumberOfConnectedEdges(
                 destinationVertex.getNumberOfConnectedEdges() - 1
         );
-        graphElement.remove();
+        graphElementOperator.remove();
     }
 
     @Override
     public String ownerUsername() {
-        return graphElement.ownerUsername();
+        return graphElementOperator.ownerUsername();
     }
 
     @Override
     public DateTime creationDate() {
-        return graphElement.creationDate();
+        return graphElementOperator.creationDate();
     }
 
     @Override
     public DateTime lastModificationDate() {
-        return graphElement.lastModificationDate();
+        return graphElementOperator.lastModificationDate();
     }
 
     @Override
     public URI uri() {
-        return graphElement.uri();
+        return graphElementOperator.uri();
     }
 
     @Override
     public String label() {
-        return graphElement.label();
+        return graphElementOperator.label();
     }
 
     @Override
     public void label(String label) {
-        graphElement.label(label);
+        graphElementOperator.label(label);
     }
 
     @Override
     public Set<Image> images() {
-        return graphElement.images();
+        return graphElementOperator.images();
     }
 
     @Override
     public Boolean gotTheImages() {
-        return graphElement.gotTheImages();
+        return graphElementOperator.gotTheImages();
     }
 
     @Override
     public String comment() {
-        return graphElement.comment();
+        return graphElementOperator.comment();
     }
 
     @Override
     public void comment(String comment) {
-        graphElement.comment(
+        graphElementOperator.comment(
                 comment
         );
     }
 
     @Override
     public Boolean gotComments() {
-        return graphElement.gotComments();
+        return graphElementOperator.gotComments();
     }
 
     @Override
     public void addImages(Set<Image> images) {
-        graphElement.addImages(images);
+        graphElementOperator.addImages(images);
     }
 
     @Override
     public boolean hasLabel() {
-        return graphElement.hasLabel();
+        return graphElementOperator.hasLabel();
     }
 
     @Override
     public void addGenericIdentification(FriendlyResource friendlyResource) {
-        graphElement.addGenericIdentification(
+        graphElementOperator.addGenericIdentification(
                 friendlyResource
         );
     }
 
     @Override
     public Set<FriendlyResource> getGenericIdentifications() {
-        return graphElement.getGenericIdentifications();
+        return graphElementOperator.getGenericIdentifications();
     }
 
     @Override
     public void addSameAs(FriendlyResource friendlyResourceImpl) {
-        graphElement.addSameAs(friendlyResourceImpl);
+        graphElementOperator.addSameAs(friendlyResourceImpl);
     }
 
     @Override
     public Set<FriendlyResource> getSameAs() {
-        return graphElement.getSameAs();
+        return graphElementOperator.getSameAs();
     }
 
     @Override
     public void addType(FriendlyResource type) {
-        graphElement.addType(type);
+        graphElementOperator.addType(type);
     }
 
     @Override
     public void removeIdentification(FriendlyResource type) {
-        graphElement.removeIdentification(type);
+        graphElementOperator.removeIdentification(type);
     }
 
     @Override
     public Set<FriendlyResource> getAdditionalTypes() {
-        return graphElement.getAdditionalTypes();
+        return graphElementOperator.getAdditionalTypes();
     }
 
     @Override
     public Set<FriendlyResource> getIdentifications() {
-        return graphElement.getIdentifications();
+        return graphElementOperator.getIdentifications();
     }
 
     @Override
     public boolean equals(Object edgeToCompareAsObject) {
-        return graphElement.equals(edgeToCompareAsObject);
+        return graphElementOperator.equals(edgeToCompareAsObject);
     }
 
     @Override
     public int hashCode() {
-        return graphElement.hashCode();
+        return graphElementOperator.hashCode();
     }
 
     private Relationship relationshipWithSourceVertex() {

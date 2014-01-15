@@ -8,10 +8,11 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 import org.triple_brain.module.model.FriendlyResource;
 import org.triple_brain.module.model.TripleBrainUris;
-import org.triple_brain.module.model.graph.Edge;
 import org.triple_brain.module.model.graph.SubGraph;
-import org.triple_brain.module.model.graph.Vertex;
-import org.triple_brain.module.model.graph.VertexInSubGraph;
+import org.triple_brain.module.model.graph.edge.EdgeOperator;
+import org.triple_brain.module.model.graph.vertex.Vertex;
+import org.triple_brain.module.model.graph.vertex.VertexInSubGraph;
+import org.triple_brain.module.model.graph.vertex.VertexInSubGraphOperator;
 import scala.collection.immutable.Map;
 
 import javax.inject.Inject;
@@ -27,8 +28,8 @@ public class Neo4JSubGraphExtractor {
     Vertex centerVertex;
     Integer depth;
     private SubGraph subGraph = Neo4JSubGraph.withVerticesAndEdges(
-            new HashSet<VertexInSubGraph>(),
-            new HashSet<Edge>()
+            new HashSet<VertexInSubGraphOperator>(),
+            new HashSet<EdgeOperator>()
     );
 
     @Inject
@@ -60,17 +61,17 @@ public class Neo4JSubGraphExtractor {
             Map<String, Object> row = result.next();
             Node node = (Node) row.get("in_path_node").get();
             if(isNodeVertex(node)){
-                Neo4JVertexInSubGraph vertex = vertexFactory.createOrLoadUsingNode(
+                Neo4JVertexInSubGraphOperator vertexOperator = vertexFactory.createOrLoadUsingNode(
                         node
                 );
                 Integer distanceFromCenterVertex = (Integer) (
                         row.get("length(path)").get()
                 );
                 subGraph.vertices().add(
-                        vertex
+                        vertexOperator
                 );
                 setDistanceFromCenterVertexToVertexIfApplicable(
-                        vertex,
+                        vertexOperator,
                         distanceFromCenterVertex / 2
                 );
             }else{

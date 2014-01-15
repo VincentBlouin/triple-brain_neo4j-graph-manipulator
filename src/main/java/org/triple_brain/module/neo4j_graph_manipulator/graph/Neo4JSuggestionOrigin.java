@@ -7,6 +7,7 @@ import org.neo4j.graphdb.Node;
 import org.triple_brain.module.model.FriendlyResource;
 import org.triple_brain.module.model.Image;
 import org.triple_brain.module.model.suggestion.SuggestionOrigin;
+import org.triple_brain.module.model.suggestion.SuggestionOriginOperator;
 
 import java.net.URI;
 import java.util.Set;
@@ -15,7 +16,7 @@ import java.util.UUID;
 /*
 * Copyright Mozilla Public License 1.1
 */
-public class Neo4JSuggestionOrigin implements SuggestionOrigin{
+public class Neo4JSuggestionOrigin implements SuggestionOriginOperator{
 
     public static final String ORIGIN_PROPERTY = "origin";
 

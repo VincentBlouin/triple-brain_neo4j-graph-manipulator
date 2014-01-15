@@ -12,10 +12,14 @@ import org.triple_brain.module.model.FriendlyResource;
 import org.triple_brain.module.model.Image;
 import org.triple_brain.module.model.TripleBrainUris;
 import org.triple_brain.module.model.UserUris;
-import org.triple_brain.module.model.graph.Edge;
-import org.triple_brain.module.model.graph.Vertex;
-import org.triple_brain.module.model.graph.VertexInSubGraph;
+import org.triple_brain.module.model.graph.FriendlyResourceOperator;
+import org.triple_brain.module.model.graph.edge.Edge;
+import org.triple_brain.module.model.graph.edge.EdgeOperator;
+import org.triple_brain.module.model.graph.vertex.Vertex;
+import org.triple_brain.module.model.graph.vertex.VertexInSubGraph;
+import org.triple_brain.module.model.graph.vertex.VertexInSubGraphOperator;
 import org.triple_brain.module.model.suggestion.Suggestion;
+import org.triple_brain.module.model.suggestion.SuggestionOperator;
 
 import javax.inject.Inject;
 import java.net.URI;
@@ -25,16 +29,16 @@ import java.util.Set;
 /*
 * Copyright Mozilla Public License 1.1
 */
-public class Neo4JVertexInSubGraph implements VertexInSubGraph {
+public class Neo4JVertexInSubGraphOperator implements VertexInSubGraphOperator {
 
     public static final String NUMBER_OF_CONNECTED_EDGES_PROPERTY_NAME = "number_of_connected_edges_property_name";
 
     private Integer depthInSubGraph = -1;
     protected Node node;
-    protected Neo4JGraphElement graphElement;
+    protected Neo4JGraphElementOperator graphElementOperator;
     protected Neo4JVertexFactory vertexFactory;
 
-    protected FriendlyResource friendlyResource;
+    protected FriendlyResourceOperator friendlyResource;
 
     protected Neo4JEdgeFactory edgeFactory;
 
@@ -48,7 +52,7 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
     Neo4JFriendlyResourceFactory friendlyResourceFactory;
 
     @AssistedInject
-    protected Neo4JVertexInSubGraph(
+    protected Neo4JVertexInSubGraphOperator(
             Neo4JVertexFactory vertexFactory,
             Neo4JEdgeFactory edgeFactory,
             Neo4JUtils utils,
@@ -64,7 +68,7 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
         this.friendlyResourceFactory = neo4JFriendlyResourceFactory;
         this.node = node;
         this.neo4JGraphElementFactory = neo4JGraphElementFactory;
-        graphElement = neo4JGraphElementFactory.withNode(
+        graphElementOperator = neo4JGraphElementFactory.withNode(
                 node
         );
         this.friendlyResource = neo4JFriendlyResourceFactory.createOrLoadFromNode(
@@ -79,7 +83,7 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
     }
 
     @AssistedInject
-    protected Neo4JVertexInSubGraph(
+    protected Neo4JVertexInSubGraphOperator(
             Neo4JVertexFactory vertexFactory,
             Neo4JEdgeFactory edgeFactory,
             Neo4JUtils utils,
@@ -100,7 +104,7 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
     }
 
     @AssistedInject
-    protected Neo4JVertexInSubGraph(
+    protected Neo4JVertexInSubGraphOperator(
             Neo4JVertexFactory vertexFactory,
             Neo4JEdgeFactory edgeFactory,
             Neo4JUtils utils,
@@ -121,7 +125,7 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
     }
 
     @AssistedInject
-    protected Neo4JVertexInSubGraph(
+    protected Neo4JVertexInSubGraphOperator(
             Neo4JVertexFactory vertexFactory,
             Neo4JEdgeFactory edgeFactory,
             Neo4JUtils utils,
@@ -169,9 +173,9 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
     }
 
     @Override
-    public Edge edgeThatLinksToDestinationVertex(Vertex destinationVertex) {
+    public EdgeOperator edgeThatLinksToDestinationVertex(Vertex destinationVertex) {
         for (Relationship relationship : relationshipsToEdges()) {
-            Edge edge = edgeFactory.createOrLoadWithNode(
+            EdgeOperator edge = edgeFactory.createOrLoadWithNode(
                     relationship.getStartNode()
             );
             if (edge.hasVertex(destinationVertex)) {
@@ -202,39 +206,40 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
     }
 
     @Override
-    public Edge addVertexAndRelation() {
-        Neo4JVertexInSubGraph newVertex = vertexFactory.createForOwnerUsername(
+    public EdgeOperator addVertexAndRelation() {
+        Neo4JVertexInSubGraphOperator newVertexOperator = vertexFactory.createForOwnerUsername(
                 ownerUsername()
         );
-        return addRelationToVertex(newVertex);
+        return addRelationToVertex(newVertexOperator);
     }
 
     @Override
-    public Edge addRelationToVertex(Vertex destinationVertex) {
+    public EdgeOperator addRelationToVertex(Vertex destinationVertex) {
         incrementNumberOfConnectedEdges();
-        ((Neo4JVertexInSubGraph) destinationVertex).incrementNumberOfConnectedEdges();
+        ((Neo4JVertexInSubGraphOperator) destinationVertex).incrementNumberOfConnectedEdges();
         return edgeFactory.createForSourceAndDestinationVertex(
                 this,
-                (Neo4JVertexInSubGraph) destinationVertex
+                (Neo4JVertexInSubGraphOperator) destinationVertex
         );
     }
 
     @Override
     public void remove() {
         for (Edge edge : connectedEdges()) {
-            edge.remove();
+            EdgeOperator edgeOperator = (EdgeOperator) edge;
+            edgeOperator.remove();
         }
-        graphElement.remove();
+        graphElementOperator.remove();
     }
 
     @Override
     public String ownerUsername() {
-        return graphElement.ownerUsername();
+        return graphElementOperator.ownerUsername();
     }
 
     @Override
-    public Set<Edge> connectedEdges() {
-        Set<Edge> edges = new HashSet<Edge>();
+    public Set<EdgeOperator> connectedEdges() {
+        Set<EdgeOperator> edges = new HashSet<EdgeOperator>();
         for (Relationship relationship : relationshipsToEdges()) {
             edges.add(
                     edgeFactory.createOrLoadWithNode(
@@ -290,7 +295,7 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
                     Relationships.SUGGESTION
             );
         }
-        graphElement.updateLastModificationDate();
+        graphElementOperator.updateLastModificationDate();
     }
 
     private void removePropertiesWithRelationShipType(RelationshipType relationshipType) {
@@ -314,12 +319,12 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
 
     @Override
     public void addType(FriendlyResource type) {
-        graphElement.addType(type);
+        graphElementOperator.addType(type);
     }
 
     @Override
     public void removeIdentification(FriendlyResource friendlyResource) {
-        graphElement.removeIdentification(
+        graphElementOperator.removeIdentification(
                 friendlyResource
         );
         removeSuggestionsHavingExternalResourceAsOrigin(
@@ -330,33 +335,34 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
 
     private void removeSuggestionsHavingExternalResourceAsOrigin(FriendlyResource resource) {
         for (Suggestion suggestion : suggestions()) {
-            suggestion.removeOriginsThatDependOnResource(
+            SuggestionOperator suggestionOperator = (SuggestionOperator) suggestion;
+            suggestionOperator.removeOriginsThatDependOnResource(
                     resource
             );
             if (suggestion.origins().isEmpty()) {
-                suggestion.remove();
+                suggestionOperator.remove();
             }
         }
     }
 
     @Override
     public Set<FriendlyResource> getAdditionalTypes() {
-        return graphElement.getAdditionalTypes();
+        return graphElementOperator.getAdditionalTypes();
     }
 
     @Override
     public Set<FriendlyResource> getIdentifications() {
-        return graphElement.getIdentifications();
+        return graphElementOperator.getIdentifications();
     }
 
     @Override
     public void addSameAs(FriendlyResource friendlyResourceImpl) {
-        graphElement.addSameAs(friendlyResourceImpl);
+        graphElementOperator.addSameAs(friendlyResourceImpl);
     }
 
     @Override
     public Set<FriendlyResource> getSameAs() {
-        return graphElement.getSameAs();
+        return graphElementOperator.getSameAs();
     }
 
     private final String IS_PUBLIC_PROPERTY_NAME = "is_public";
@@ -374,7 +380,7 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
                 IS_PUBLIC_PROPERTY_NAME,
                 true
         );
-        graphElement.updateLastModificationDate();
+        graphElementOperator.updateLastModificationDate();
     }
 
     @Override
@@ -383,7 +389,7 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
                 IS_PUBLIC_PROPERTY_NAME,
                 false
         );
-        graphElement.updateLastModificationDate();
+        graphElementOperator.updateLastModificationDate();
     }
 
     @Override
@@ -432,22 +438,22 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
 
     @Override
     public DateTime creationDate() {
-        return graphElement.creationDate();
+        return graphElementOperator.creationDate();
     }
 
     @Override
     public DateTime lastModificationDate() {
-        return graphElement.lastModificationDate();
+        return graphElementOperator.lastModificationDate();
     }
 
     @Override
     public URI uri() {
-        return graphElement.uri();
+        return graphElementOperator.uri();
     }
 
     @Override
     public String label() {
-        return graphElement.label();
+        return graphElementOperator.label();
     }
 
     @Override
@@ -486,32 +492,32 @@ public class Neo4JVertexInSubGraph implements VertexInSubGraph {
 
     @Override
     public void label(String label) {
-        graphElement.label(label);
+        graphElementOperator.label(label);
     }
 
     @Override
     public boolean hasLabel() {
-        return graphElement.hasLabel();
+        return graphElementOperator.hasLabel();
     }
 
     @Override
     public void addGenericIdentification(FriendlyResource friendlyResource) {
-        graphElement.addGenericIdentification(friendlyResource);
+        graphElementOperator.addGenericIdentification(friendlyResource);
     }
 
     @Override
     public Set<FriendlyResource> getGenericIdentifications() {
-        return graphElement.getGenericIdentifications();
+        return graphElementOperator.getGenericIdentifications();
     }
 
     @Override
     public boolean equals(Object vertexToCompareAsObject) {
-        return graphElement.equals(vertexToCompareAsObject);
+        return graphElementOperator.equals(vertexToCompareAsObject);
     }
 
     @Override
     public int hashCode() {
-        return graphElement.hashCode();
+        return graphElementOperator.hashCode();
     }
 
     @Override

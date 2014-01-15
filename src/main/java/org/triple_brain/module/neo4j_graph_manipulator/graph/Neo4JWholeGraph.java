@@ -7,8 +7,8 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.kernel.logging.BufferingLogger;
 import org.triple_brain.module.model.TripleBrainUris;
 import org.triple_brain.module.model.WholeGraph;
-import org.triple_brain.module.model.graph.Edge;
-import org.triple_brain.module.model.graph.Vertex;
+import org.triple_brain.module.model.graph.edge.EdgeOperator;
+import org.triple_brain.module.model.graph.vertex.VertexOperator;
 
 import javax.inject.Inject;
 import java.util.Iterator;
@@ -28,8 +28,8 @@ public class Neo4JWholeGraph implements WholeGraph {
     protected Neo4JEdgeFactory neo4JEdgeFactory;
 
     @Override
-    public Iterator<Vertex> getAllVertices() {
-        return new Iterator<Vertex>() {
+    public Iterator<VertexOperator> getAllVertices() {
+        return new Iterator<VertexOperator>() {
             ExecutionEngine engine = new ExecutionEngine(graphDb, new BufferingLogger());
             ExecutionResult result = engine.execute(
                     "START n = node(*) " +
@@ -46,7 +46,7 @@ public class Neo4JWholeGraph implements WholeGraph {
             }
 
             @Override
-            public Vertex next() {
+            public VertexOperator next() {
                 return neo4JVertexFactory.createOrLoadUsingNode(
                         (Node) result.next().get("n").get()
                 );
@@ -60,8 +60,8 @@ public class Neo4JWholeGraph implements WholeGraph {
     }
 
     @Override
-    public Iterator<Edge> getAllEdges() {
-        return new Iterator<Edge>() {
+    public Iterator<EdgeOperator> getAllEdges() {
+        return new Iterator<EdgeOperator>() {
             ExecutionEngine engine = new ExecutionEngine(graphDb, new BufferingLogger());
             ExecutionResult result = engine.execute(
                     "START relation=node(*) " +
@@ -76,7 +76,7 @@ public class Neo4JWholeGraph implements WholeGraph {
             }
 
             @Override
-            public Edge next() {
+            public EdgeOperator next() {
                 return neo4JEdgeFactory.createOrLoadWithNode(
                         (Node) result.next().get("relation").get()
                 );

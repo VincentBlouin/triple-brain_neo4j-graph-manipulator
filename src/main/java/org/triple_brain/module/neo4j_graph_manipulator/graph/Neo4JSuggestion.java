@@ -10,8 +10,10 @@ import org.triple_brain.module.common_utils.Uris;
 import org.triple_brain.module.model.FriendlyResource;
 import org.triple_brain.module.model.Image;
 import org.triple_brain.module.model.TripleBrainUris;
-import org.triple_brain.module.model.suggestion.Suggestion;
+import org.triple_brain.module.model.graph.FriendlyResourceOperator;
+import org.triple_brain.module.model.suggestion.SuggestionOperator;
 import org.triple_brain.module.model.suggestion.SuggestionOrigin;
+import org.triple_brain.module.model.suggestion.SuggestionOriginOperator;
 
 import javax.inject.Inject;
 import java.net.URI;
@@ -24,7 +26,7 @@ import static org.triple_brain.module.model.json.SuggestionJsonFields.*;
 /*
 * Copyright Mozilla Public License 1.1
 */
-public class Neo4JSuggestion implements Suggestion {
+public class Neo4JSuggestion implements SuggestionOperator{
 
     @Inject
     Neo4JUtils neo4JUtils;
@@ -168,7 +170,8 @@ public class Neo4JSuggestion implements Suggestion {
 
     @Override
     public void addImages(Set<Image> images) {
-        sameAs().addImages(
+        FriendlyResourceOperator sameAsOperator = (FriendlyResourceOperator) sameAs();
+        sameAsOperator.addImages(
                 images
         );
     }
@@ -203,7 +206,7 @@ public class Neo4JSuggestion implements Suggestion {
         );
         while(relationshipIt.iterator().hasNext()){
             Relationship relationship = relationshipIt.iterator().next();
-            SuggestionOrigin suggestionOrigin = suggestionOriginFactory.loadFromNode(
+            SuggestionOriginOperator suggestionOrigin = suggestionOriginFactory.loadFromNode(
                     relationship.getEndNode()
             );
             if(suggestionOrigin.isRelatedToFriendlyResource(
