@@ -7,10 +7,8 @@ import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
-import org.triple_brain.module.common_utils.Uris;
 import org.triple_brain.module.model.FriendlyResource;
 import org.triple_brain.module.model.Image;
-import org.triple_brain.module.model.TripleBrainUris;
 import org.triple_brain.module.model.UserUris;
 import org.triple_brain.module.model.graph.FriendlyResourceOperator;
 import org.triple_brain.module.model.graph.edge.Edge;
@@ -532,10 +530,9 @@ public class Neo4JVertexInSubGraphOperator implements VertexInSubGraphOperator {
     }
 
     private void addVertexType() {
-        addType(friendlyResourceFactory.createOrLoadUsingUriAndLabel(
-                Uris.get(TripleBrainUris.TRIPLE_BRAIN_VERTEX),
-                ""
-        ));
+        node.addLabel(
+                Neo4JAppLabels.vertex
+        );
     }
 
     private boolean isInitialized() {
@@ -555,14 +552,8 @@ public class Neo4JVertexInSubGraphOperator implements VertexInSubGraphOperator {
     }
 
     private boolean hasVertexType() {
-        for (Relationship relationship : node.getRelationships(Relationships.TYPE)) {
-            FriendlyResource type = friendlyResourceFactory.createOrLoadFromNode(
-                    relationship.getEndNode()
-            );
-            if (type.uri().toString().equals(TripleBrainUris.TRIPLE_BRAIN_VERTEX)) {
-                return true;
-            }
-        }
-        return false;
+        return node.hasLabel(
+                Neo4JAppLabels.vertex
+        );
     }
 }

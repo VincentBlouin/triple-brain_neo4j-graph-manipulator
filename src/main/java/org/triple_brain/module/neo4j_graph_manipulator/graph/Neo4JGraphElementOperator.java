@@ -8,7 +8,6 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 import org.triple_brain.module.model.FriendlyResource;
 import org.triple_brain.module.model.Image;
-import org.triple_brain.module.model.TripleBrainUris;
 import org.triple_brain.module.model.UserUris;
 import org.triple_brain.module.model.graph.GraphElementOperator;
 
@@ -127,7 +126,7 @@ public class Neo4JGraphElementOperator implements GraphElementOperator {
 
     @Override
     public void addGenericIdentification(FriendlyResource friendlyResource) throws IllegalArgumentException{
-        ifIdentificationIsGraphElementThrowException(friendlyResource);
+        ifIdentificationIsSelfThrowException(friendlyResource);
         if(getGenericIdentifications().contains(friendlyResource)){
             throw duplicateIdentificationError();
         }
@@ -155,7 +154,7 @@ public class Neo4JGraphElementOperator implements GraphElementOperator {
 
     @Override
     public void addSameAs(FriendlyResource friendlyResource)throws IllegalArgumentException{
-        ifIdentificationIsGraphElementThrowException(friendlyResource);
+        ifIdentificationIsSelfThrowException(friendlyResource);
         if(getSameAs().contains(friendlyResource)){
             throw duplicateIdentificationError();
         }
@@ -183,7 +182,7 @@ public class Neo4JGraphElementOperator implements GraphElementOperator {
 
     @Override
     public void addType(FriendlyResource type) throws IllegalArgumentException{
-        ifIdentificationIsGraphElementThrowException(type);
+        ifIdentificationIsSelfThrowException(type);
         if(getAdditionalTypes().contains(type)){
             throw duplicateIdentificationError();
         }
@@ -218,9 +217,7 @@ public class Neo4JGraphElementOperator implements GraphElementOperator {
             FriendlyResource type = friendlyResourceFactory.createOrLoadFromNode(
                     relationship.getEndNode()
             );
-            if (!type.uri().toString().equals(TripleBrainUris.TRIPLE_BRAIN_VERTEX)) {
-                additionalTypes.add(type);
-            }
+            additionalTypes.add(type);
         }
         return additionalTypes;
     }
@@ -254,14 +251,14 @@ public class Neo4JGraphElementOperator implements GraphElementOperator {
         );
     }
 
-    public void ifIdentificationIsGraphElementThrowException(FriendlyResource identification)throws IllegalArgumentException{
+    private void ifIdentificationIsSelfThrowException(FriendlyResource identification)throws IllegalArgumentException{
         if(identification.equals(this)){
             throw new IllegalArgumentException(
                     "identification cannot be the same"
             );
         }
     }
-    public IllegalArgumentException duplicateIdentificationError(){
+    private IllegalArgumentException duplicateIdentificationError(){
         return new IllegalArgumentException(
                 "cannot have duplicate identifications"
         );

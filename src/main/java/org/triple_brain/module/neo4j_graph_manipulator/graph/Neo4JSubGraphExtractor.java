@@ -5,9 +5,6 @@ import com.google.inject.assistedinject.AssistedInject;
 import org.neo4j.cypher.ExecutionEngine;
 import org.neo4j.cypher.ExecutionResult;
 import org.neo4j.graphdb.Node;
-import org.neo4j.graphdb.Relationship;
-import org.triple_brain.module.model.FriendlyResource;
-import org.triple_brain.module.model.TripleBrainUris;
 import org.triple_brain.module.model.graph.SubGraph;
 import org.triple_brain.module.model.graph.edge.EdgeOperator;
 import org.triple_brain.module.model.graph.vertex.Vertex;
@@ -86,18 +83,7 @@ public class Neo4JSubGraphExtractor {
     }
 
     private Boolean isNodeVertex(Node node){
-        if(!node.hasRelationship(Relationships.TYPE)){
-            return false;
-        }
-        for(Relationship relationship : node.getRelationships(Relationships.TYPE)){
-            FriendlyResource type = neo4JFriendlyResourceFactory.createOrLoadFromNode(
-                    relationship.getEndNode()
-            );
-            if(TripleBrainUris.TRIPLE_BRAIN_VERTEX.equals(type.uri().toString())){
-                return true;
-            }
-        }
-        return false;
+        return node.hasLabel(Neo4JAppLabels.vertex);
     }
 
     private void setDistanceFromCenterVertexToVertexIfApplicable(Vertex vertex, Integer distance){

@@ -5,7 +5,6 @@ import org.neo4j.cypher.ExecutionResult;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.kernel.logging.BufferingLogger;
-import org.triple_brain.module.model.TripleBrainUris;
 import org.triple_brain.module.model.WholeGraph;
 import org.triple_brain.module.model.graph.edge.EdgeOperator;
 import org.triple_brain.module.model.graph.vertex.VertexOperator;
@@ -33,13 +32,10 @@ public class Neo4JWholeGraph implements WholeGraph {
             ExecutionEngine engine = new ExecutionEngine(graphDb, new BufferingLogger());
             ExecutionResult result = engine.execute(
                     "START n = node(*) " +
-                            "MATCH n-[:" +
-                            Relationships.TYPE +
-                            "]-type " +
-                            "WHERE type." + Neo4JUserGraph.URI_PROPERTY_NAME + " " +
-                            "= '" + TripleBrainUris.TRIPLE_BRAIN_VERTEX + "' " +
+                            "MATCH n:vertex " +
                             "RETURN n"
             );
+
             @Override
             public boolean hasNext() {
                 return result.hasNext();
@@ -70,6 +66,7 @@ public class Neo4JWholeGraph implements WholeGraph {
                             "]->vertex " +
                             "RETURN relation"
             );
+
             @Override
             public boolean hasNext() {
                 return result.hasNext();
