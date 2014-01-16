@@ -18,57 +18,57 @@ import java.util.Set;
 /*
 * Copyright Mozilla Public License 1.1
 */
-public class Neo4JEdgeOperator implements EdgeOperator {
+public class Neo4jEdgeOperator implements EdgeOperator {
 
     protected Node node;
-    protected Neo4JGraphElementOperator graphElementOperator;
-    protected Neo4JVertexFactory vertexFactory;
-    protected Neo4JEdgeFactory edgeFactory;
+    protected Neo4jGraphElementOperator graphElementOperator;
+    protected Neo4jVertexFactory vertexFactory;
+    protected Neo4jEdgeFactory edgeFactory;
 
     @AssistedInject
-    protected Neo4JEdgeOperator(
-            Neo4JVertexFactory vertexFactory,
-            Neo4JEdgeFactory edgeFactory,
-            Neo4JGraphElementFactory neo4JGraphElementFactory,
+    protected Neo4jEdgeOperator(
+            Neo4jVertexFactory vertexFactory,
+            Neo4jEdgeFactory edgeFactory,
+            Neo4jGraphElementFactory neo4jGraphElementFactory,
             @Assisted Node node
     ) {
         this.vertexFactory = vertexFactory;
         this.edgeFactory = edgeFactory;
         this.node = node;
-        graphElementOperator = neo4JGraphElementFactory.withNode(node);
+        graphElementOperator = neo4jGraphElementFactory.withNode(node);
     }
 
     @AssistedInject
-    protected Neo4JEdgeOperator(
-            Neo4JVertexFactory vertexFactory,
-            Neo4JEdgeFactory edgeFactory,
-            Neo4JGraphElementFactory neo4JGraphElementFactory,
-            Neo4JUtils neo4JUtils,
+    protected Neo4jEdgeOperator(
+            Neo4jVertexFactory vertexFactory,
+            Neo4jEdgeFactory edgeFactory,
+            Neo4jGraphElementFactory neo4jGraphElementFactory,
+            Neo4jUtils neo4jUtils,
             @Assisted URI uri
     ) {
         this(
                 vertexFactory,
                 edgeFactory,
-                neo4JGraphElementFactory,
-                neo4JUtils.getOrCreate(uri)
+                neo4jGraphElementFactory,
+                neo4jUtils.getOrCreate(uri)
         );
     }
 
     @AssistedInject
-    protected Neo4JEdgeOperator(
-            Neo4JVertexFactory vertexFactory,
-            Neo4JEdgeFactory edgeFactory,
-            Neo4JGraphElementFactory neo4JGraphElementFactory,
-            Neo4JUtils neo4JUtils,
-            @Assisted("source") Neo4JVertexInSubGraphOperator sourceVertexOperator,
-            @Assisted("destination") Neo4JVertexInSubGraphOperator destinationVertexOperator
+    protected Neo4jEdgeOperator(
+            Neo4jVertexFactory vertexFactory,
+            Neo4jEdgeFactory edgeFactory,
+            Neo4jGraphElementFactory neo4jGraphElementFactory,
+            Neo4jUtils neo4jUtils,
+            @Assisted("source") Neo4jVertexInSubGraphOperator sourceVertexOperator,
+            @Assisted("destination") Neo4jVertexInSubGraphOperator destinationVertexOperator
     ) {
         this.vertexFactory = vertexFactory;
         this.edgeFactory = edgeFactory;
         UserUris userUris = new UserUris(
                 sourceVertexOperator.ownerUsername()
         );
-        Node newEdgeNode = neo4JUtils.create(
+        Node newEdgeNode = neo4jUtils.create(
                 userUris.generateEdgeUri()
         );
         newEdgeNode.createRelationshipTo(
@@ -80,7 +80,7 @@ public class Neo4JEdgeOperator implements EdgeOperator {
                 Relationships.DESTINATION_VERTEX
         );
         this.node = newEdgeNode;
-        this.graphElementOperator = neo4JGraphElementFactory.withNode(
+        this.graphElementOperator = neo4jGraphElementFactory.withNode(
                 node
         );
     }

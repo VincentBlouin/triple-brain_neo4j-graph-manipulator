@@ -18,27 +18,27 @@ import java.util.HashSet;
 /*
 * Copyright Mozilla Public License 1.1
 */
-public class Neo4JSubGraphExtractor {
-    Neo4JVertexFactory vertexFactory;
-    Neo4JEdgeFactory edgeFactory;
+public class Neo4jSubGraphExtractor {
+    Neo4jVertexFactory vertexFactory;
+    Neo4jEdgeFactory edgeFactory;
     ExecutionEngine engine;
     Vertex centerVertex;
     Integer depth;
-    private SubGraph subGraph = Neo4JSubGraph.withVerticesAndEdges(
+    private SubGraph subGraph = Neo4jSubGraph.withVerticesAndEdges(
             new HashSet<VertexInSubGraphOperator>(),
             new HashSet<EdgeOperator>()
     );
 
     @Inject
-    Neo4JUtils neo4JUtils;
+    Neo4jUtils neo4jUtils;
 
     @Inject
-    Neo4JFriendlyResourceFactory neo4JFriendlyResourceFactory;
+    Neo4jFriendlyResourceFactory neo4jFriendlyResourceFactory;
 
     @AssistedInject
-    protected Neo4JSubGraphExtractor(
-            Neo4JVertexFactory vertexFactory,
-            Neo4JEdgeFactory edgeFactory,
+    protected Neo4jSubGraphExtractor(
+            Neo4jVertexFactory vertexFactory,
+            Neo4jEdgeFactory edgeFactory,
             ExecutionEngine engine,
             @Assisted Vertex centerVertex,
             @Assisted Integer depth
@@ -58,7 +58,7 @@ public class Neo4JSubGraphExtractor {
             Map<String, Object> row = result.next();
             Node node = (Node) row.get("in_path_node").get();
             if(isNodeVertex(node)){
-                Neo4JVertexInSubGraphOperator vertexOperator = vertexFactory.createOrLoadUsingNode(
+                Neo4jVertexInSubGraphOperator vertexOperator = vertexFactory.createOrLoadUsingNode(
                         node
                 );
                 Integer distanceFromCenterVertex = (Integer) (
@@ -83,7 +83,7 @@ public class Neo4JSubGraphExtractor {
     }
 
     private Boolean isNodeVertex(Node node){
-        return node.hasLabel(Neo4JAppLabels.vertex);
+        return node.hasLabel(Neo4jAppLabels.vertex);
     }
 
     private void setDistanceFromCenterVertexToVertexIfApplicable(Vertex vertex, Integer distance){
@@ -94,7 +94,7 @@ public class Neo4JSubGraphExtractor {
     }
 
     private String queryToGetGraph() {
-        Node centerVertexAsNode = neo4JUtils.nodeOfVertex(centerVertex);
+        Node centerVertexAsNode = neo4jUtils.nodeOfVertex(centerVertex);
         return "START start_node=node(" + centerVertexAsNode.getId() + ")" +
                 "MATCH path=start_node<-[:" +
                     Relationships.SOURCE_VERTEX+

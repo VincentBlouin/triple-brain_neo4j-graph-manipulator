@@ -19,18 +19,18 @@ import java.util.Set;
 /*
 * Copyright Mozilla Public License 1.1
 */
-public class Neo4JGraphElementOperator implements GraphElementOperator {
+public class Neo4jGraphElementOperator implements GraphElementOperator {
 
     protected Node node;
-    protected Neo4JFriendlyResource friendlyResource;
-    protected Neo4JFriendlyResourceFactory friendlyResourceFactory;
+    protected Neo4jFriendlyResource friendlyResource;
+    protected Neo4jFriendlyResourceFactory friendlyResourceFactory;
 
     @Inject
-    protected Neo4JUtils neo4JUtils;
+    protected Neo4jUtils neo4jUtils;
 
     @AssistedInject
-    protected Neo4JGraphElementOperator(
-            Neo4JFriendlyResourceFactory friendlyResourceFactory,
+    protected Neo4jGraphElementOperator(
+            Neo4jFriendlyResourceFactory friendlyResourceFactory,
             @Assisted Node node
     ) {
         friendlyResource = friendlyResourceFactory.createOrLoadFromNode(
@@ -41,9 +41,9 @@ public class Neo4JGraphElementOperator implements GraphElementOperator {
     }
 
     @AssistedInject
-    protected Neo4JGraphElementOperator(
-            Neo4JUtils utils,
-            Neo4JFriendlyResourceFactory friendlyResourceFactory,
+    protected Neo4jGraphElementOperator(
+            Neo4jUtils utils,
+            Neo4jFriendlyResourceFactory friendlyResourceFactory,
             @Assisted URI uri
     ) {
         Node node = utils.getFromUri(uri);
@@ -130,7 +130,7 @@ public class Neo4JGraphElementOperator implements GraphElementOperator {
         if(getGenericIdentifications().contains(friendlyResource)){
             throw duplicateIdentificationError();
         }
-        Node identificationAsNode = neo4JUtils.getFromUri(
+        Node identificationAsNode = neo4jUtils.getFromUri(
                 friendlyResource.uri()
         );
         node.createRelationshipTo(
@@ -158,7 +158,7 @@ public class Neo4JGraphElementOperator implements GraphElementOperator {
         if(getSameAs().contains(friendlyResource)){
             throw duplicateIdentificationError();
         }
-        Node sameAsAsNode = neo4JUtils.getFromUri(
+        Node sameAsAsNode = neo4jUtils.getFromUri(
                 friendlyResource.uri()
         );
         node.createRelationshipTo(
@@ -186,7 +186,7 @@ public class Neo4JGraphElementOperator implements GraphElementOperator {
         if(getAdditionalTypes().contains(type)){
             throw duplicateIdentificationError();
         }
-        Node typeAsNode = neo4JUtils.getFromUri(
+        Node typeAsNode = neo4jUtils.getFromUri(
                 type.uri()
         );
         node.createRelationshipTo(
@@ -198,7 +198,7 @@ public class Neo4JGraphElementOperator implements GraphElementOperator {
 
     @Override
     public void removeIdentification(FriendlyResource friendlyResource) {
-        Node friendlyResourceAsNode = neo4JUtils.getFromUri(
+        Node friendlyResourceAsNode = neo4jUtils.getFromUri(
                 friendlyResource.uri()
         );
         for (Relationship relationship : node.getRelationships(Direction.OUTGOING)) {
@@ -234,13 +234,13 @@ public class Neo4JGraphElementOperator implements GraphElementOperator {
     public void remove(){
         for (Relationship relationship : node.getRelationships()) {
             //removing explicitly so node index gets reindexed
-            neo4JUtils.removeAllProperties(
+            neo4jUtils.removeAllProperties(
                     relationship
             );
             relationship.delete();
         }
         //removing explicitly so node index gets reindexed
-        node.removeProperty(Neo4JUserGraph.URI_PROPERTY_NAME);
+        node.removeProperty(Neo4jUserGraph.URI_PROPERTY_NAME);
         node.delete();
     }
 

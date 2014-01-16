@@ -16,29 +16,29 @@ import java.util.UUID;
 /*
 * Copyright Mozilla Public License 1.1
 */
-public class Neo4JSuggestionOrigin implements SuggestionOriginOperator{
+public class Neo4jSuggestionOrigin implements SuggestionOriginOperator{
 
     public static final String ORIGIN_PROPERTY = "origin";
 
-    protected Neo4JFriendlyResource friendlyResource;
+    protected Neo4jFriendlyResource friendlyResource;
 
     @AssistedInject
-    protected Neo4JSuggestionOrigin(
-            Neo4JFriendlyResourceFactory neo4JFriendlyResourceFactory,
+    protected Neo4jSuggestionOrigin(
+            Neo4jFriendlyResourceFactory neo4jFriendlyResourceFactory,
             @Assisted Node node
     ){
-        this.friendlyResource = neo4JFriendlyResourceFactory.createOrLoadFromNode(
+        this.friendlyResource = neo4jFriendlyResourceFactory.createOrLoadFromNode(
                 node
         );
     }
 
     @AssistedInject
-    protected Neo4JSuggestionOrigin(
-            Neo4JFriendlyResourceFactory neo4JFriendlyResourceFactory,
+    protected Neo4jSuggestionOrigin(
+            Neo4jFriendlyResourceFactory neo4jFriendlyResourceFactory,
             @Assisted String origin,
-            @Assisted Neo4JSuggestion suggestion
+            @Assisted Neo4jSuggestion suggestion
     ){
-        this.friendlyResource = neo4JFriendlyResourceFactory.createOrLoadFromUri(
+        this.friendlyResource = neo4jFriendlyResourceFactory.createOrLoadFromUri(
                 URI.create(
                         suggestion.uri() + "/origin/" +
                                 UUID.randomUUID().toString()

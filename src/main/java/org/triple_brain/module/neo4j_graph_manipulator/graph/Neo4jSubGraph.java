@@ -13,16 +13,16 @@ import java.util.Set;
 /*
 * Copyright Mozilla Public License 1.1
 */
-public class Neo4JSubGraph implements SubGraph{
+public class Neo4jSubGraph implements SubGraph{
 
     private Set<VertexInSubGraphOperator> vertices = new HashSet<VertexInSubGraphOperator>();
     private Set<EdgeOperator> edges = new HashSet<EdgeOperator>();
 
-    public static Neo4JSubGraph withVerticesAndEdges(Set<VertexInSubGraphOperator> vertices, Set<EdgeOperator> edges){
-        return new Neo4JSubGraph(vertices, edges);
+    public static Neo4jSubGraph withVerticesAndEdges(Set<VertexInSubGraphOperator> vertices, Set<EdgeOperator> edges){
+        return new Neo4jSubGraph(vertices, edges);
     }
 
-    protected Neo4JSubGraph(Set<VertexInSubGraphOperator> vertices, Set<EdgeOperator> edges){
+    protected Neo4jSubGraph(Set<VertexInSubGraphOperator> vertices, Set<EdgeOperator> edges){
         this.vertices = vertices;
         this.edges = edges;
     }

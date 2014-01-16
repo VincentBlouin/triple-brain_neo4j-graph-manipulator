@@ -12,7 +12,7 @@ import java.net.URI;
 /*
 * Copyright Mozilla Public License 1.1
 */
-public class Neo4JUtils {
+public class Neo4jUtils {
 
     @Inject
     private ReadableIndex<Node> nodeIndex;
@@ -51,14 +51,14 @@ public class Neo4JUtils {
 
     public Node nodeOfUri(URI uri) {
         return nodeIndex.get(
-                Neo4JUserGraph.URI_PROPERTY_NAME,
+                Neo4jUserGraph.URI_PROPERTY_NAME,
                 uri.toString()
         ).getSingle();
     }
 
     public URI uriOfNode(Node node) {
         return Uris.get(node.getProperty(
-                Neo4JUserGraph.URI_PROPERTY_NAME
+                Neo4jUserGraph.URI_PROPERTY_NAME
         ).toString());
     }
 
@@ -67,7 +67,7 @@ public class Neo4JUtils {
                 .getSingleRelationship(relationshipType, Direction.OUTGOING)
                 .getEndNode()
                 .getProperty(
-                        Neo4JUserGraph.URI_PROPERTY_NAME
+                        Neo4jUserGraph.URI_PROPERTY_NAME
                 ).toString()
         );
     }
@@ -95,7 +95,7 @@ public class Neo4JUtils {
         }
         Node externalResourceAsNode = graphDb.createNode();
         externalResourceAsNode.setProperty(
-                Neo4JUserGraph.URI_PROPERTY_NAME,
+                Neo4jUserGraph.URI_PROPERTY_NAME,
                 uri.toString()
         );
         return externalResourceAsNode;
@@ -103,14 +103,14 @@ public class Neo4JUtils {
 
     public Node getFromUri(URI uri) {
         return nodeIndex.get(
-                Neo4JUserGraph.URI_PROPERTY_NAME,
+                Neo4jUserGraph.URI_PROPERTY_NAME,
                 uri.toString()
         ).getSingle();
     }
 
     public Boolean alreadyExists(URI uri) {
         return nodeIndex.get(
-                Neo4JUserGraph.URI_PROPERTY_NAME,
+                Neo4jUserGraph.URI_PROPERTY_NAME,
                 uri.toString()
         ).hasNext();
     }

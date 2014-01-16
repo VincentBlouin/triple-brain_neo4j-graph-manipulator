@@ -21,21 +21,21 @@ import java.util.Set;
 /*
 * Copyright Mozilla Public License 1.1
 */
-public class Neo4JFriendlyResource implements FriendlyResourceOperator{
+public class Neo4jFriendlyResource implements FriendlyResourceOperator{
 
     public static final String CREATION_DATE_PROPERTY_NAME = "creation_date";
     public static final String LAST_MODIFICATION_DATE_PROPERTY_NAME = "last_modification_date";
 
     @Inject
-    Neo4JImageUtils imageUtils;
+    Neo4jImageUtils imageUtils;
 
     @Inject
-    Neo4JUtils neo4JUtils;
+    Neo4jUtils neo4jUtils;
 
     protected Node node;
 
     @AssistedInject
-    protected Neo4JFriendlyResource(
+    protected Neo4jFriendlyResource(
             @Assisted Node node
     ) {
         this.node = node;
@@ -45,34 +45,34 @@ public class Neo4JFriendlyResource implements FriendlyResourceOperator{
     }
 
     @AssistedInject
-    protected Neo4JFriendlyResource(
-            Neo4JUtils neo4JUtils,
+    protected Neo4jFriendlyResource(
+            Neo4jUtils neo4jUtils,
             @Assisted URI uri
     ) {
         this(
-                neo4JUtils.getOrCreate(uri)
+                neo4jUtils.getOrCreate(uri)
         );
     }
 
     @AssistedInject
-    protected Neo4JFriendlyResource(
-            Neo4JUtils neo4JUtils,
+    protected Neo4jFriendlyResource(
+            Neo4jUtils neo4jUtils,
             @Assisted URI uri,
             @Assisted String label
     ) {
         this(
-                neo4JUtils.getOrCreate(uri)
+                neo4jUtils.getOrCreate(uri)
         );
         label(label);
     }
 
     @AssistedInject
-    protected Neo4JFriendlyResource(
-            Neo4JUtils neo4JUtils,
+    protected Neo4jFriendlyResource(
+            Neo4jUtils neo4jUtils,
             @Assisted JSONObject json
     ) {
         this(
-                neo4JUtils.getOrCreate(
+                neo4jUtils.getOrCreate(
                         Uris.get(json.optString(
                                 FriendlyResourceJson.URI
                         )
@@ -95,7 +95,7 @@ public class Neo4JFriendlyResource implements FriendlyResourceOperator{
     public URI uri() {
         return Uris.get(
                 node.getProperty(
-                        Neo4JUserGraph.URI_PROPERTY_NAME).toString()
+                        Neo4jUserGraph.URI_PROPERTY_NAME).toString()
         );
     }
 

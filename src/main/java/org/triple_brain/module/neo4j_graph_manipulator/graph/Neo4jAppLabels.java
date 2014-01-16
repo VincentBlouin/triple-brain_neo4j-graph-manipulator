@@ -5,6 +5,6 @@ import org.neo4j.graphdb.Label;
 /*
 * Copyright Mozilla Public License 1.1
 */
-public enum Neo4JAppLabels implements Label {
+public enum Neo4jAppLabels implements Label {
     vertex
 }

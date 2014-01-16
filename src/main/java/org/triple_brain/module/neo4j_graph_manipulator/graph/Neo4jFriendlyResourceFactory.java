@@ -8,8 +8,8 @@ import java.net.URI;
 /*
 * Copyright Mozilla Public License 1.1
 */
-public interface Neo4JFriendlyResourceFactory extends FriendlyResourceFactory{
-    public Neo4JFriendlyResource createOrLoadFromNode(Node node);
+public interface Neo4jFriendlyResourceFactory extends FriendlyResourceFactory{
+    public Neo4jFriendlyResource createOrLoadFromNode(Node node);
     @Override
-    Neo4JFriendlyResource createOrLoadFromUri(URI uri);
+    Neo4jFriendlyResource createOrLoadFromUri(URI uri);
 }

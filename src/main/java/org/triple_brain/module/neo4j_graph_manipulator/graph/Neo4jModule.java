@@ -33,7 +33,7 @@ import java.io.IOException;
 /*
 * Copyright Mozilla Public License 1.1
 */
-public class Neo4JModule extends AbstractModule {
+public class Neo4jModule extends AbstractModule {
 
     public static final String DB_PATH = "/var/lib/triple_brain/neo4j/db";
     public static final String DB_PATH_FOR_TESTS = "/tmp/triple_brain/neo4j/db";
@@ -49,23 +49,23 @@ public class Neo4JModule extends AbstractModule {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        bind(GraphTransaction.class).to(Neo4JGraphTransaction.class)
+        bind(GraphTransaction.class).to(Neo4jGraphTransaction.class)
                 .in(Singleton.class);
 
-        bind(WholeGraph.class).to(Neo4JWholeGraph.class);
+        bind(WholeGraph.class).to(Neo4jWholeGraph.class);
 
         GraphDatabaseService graphDb = new GraphDatabaseFactory().newEmbeddedDatabaseBuilder(
                 isTesting ? DB_PATH_FOR_TESTS : DB_PATH
         )
                 .setConfig(
                         GraphDatabaseSettings.node_keys_indexable,
-                        Neo4JUserGraph.URI_PROPERTY_NAME
+                        Neo4jUserGraph.URI_PROPERTY_NAME
                 ).setConfig(
                         GraphDatabaseSettings.node_auto_indexing,
                         GraphDatabaseSetting.TRUE
                 ).setConfig(
                         GraphDatabaseSettings.relationship_keys_indexable,
-                        Neo4JUserGraph.URI_PROPERTY_NAME
+                        Neo4jUserGraph.URI_PROPERTY_NAME
                 ).setConfig(
                         GraphDatabaseSettings.relationship_auto_indexing,
                         GraphDatabaseSetting.TRUE
@@ -83,44 +83,44 @@ public class Neo4JModule extends AbstractModule {
         FactoryModuleBuilder factoryModuleBuilder = new FactoryModuleBuilder();
 
         install(factoryModuleBuilder
-                .build(Neo4JEdgeFactory.class));
+                .build(Neo4jEdgeFactory.class));
 
         install(factoryModuleBuilder
-                .build(Neo4JUserGraphFactory.class));
+                .build(Neo4jUserGraphFactory.class));
 
         install(factoryModuleBuilder
-                .implement(VertexInSubGraphOperator.class, Neo4JVertexInSubGraphOperator.class)
+                .implement(VertexInSubGraphOperator.class, Neo4jVertexInSubGraphOperator.class)
                 .build(VertexFactory.class));
 
         install(factoryModuleBuilder
-                .build(Neo4JVertexFactory.class));
+                .build(Neo4jVertexFactory.class));
 
         install(factoryModuleBuilder
-                .build(Neo4JSubGraphExtractorFactory.class));
+                .build(Neo4jSubGraphExtractorFactory.class));
 
         install(factoryModuleBuilder
-                .implement(Edge.class, Neo4JEdgeOperator.class)
+                .implement(Edge.class, Neo4jEdgeOperator.class)
                 .build(EdgeFactory.class));
 
         install(factoryModuleBuilder
-                .build(Neo4JGraphElementFactory.class));
+                .build(Neo4jGraphElementFactory.class));
 
         install(factoryModuleBuilder
-                .implement(FriendlyResource.class, Neo4JFriendlyResource.class)
+                .implement(FriendlyResource.class, Neo4jFriendlyResource.class)
                 .build(FriendlyResourceFactory.class)
         );
         install(factoryModuleBuilder
-                .build(Neo4JFriendlyResourceFactory.class)
+                .build(Neo4jFriendlyResourceFactory.class)
         );
         install(factoryModuleBuilder
-                .implement(Suggestion.class, Neo4JSuggestion.class)
+                .implement(Suggestion.class, Neo4jSuggestion.class)
                 .build(SuggestionFactory.class)
         );
         install(factoryModuleBuilder
-                .build(Neo4JSuggestionFactory.class)
+                .build(Neo4jSuggestionFactory.class)
         );
         install(factoryModuleBuilder
-                .build(Neo4JSuggestionOriginFactory.class)
+                .build(Neo4jSuggestionOriginFactory.class)
         );
         bind(new TypeLiteral<ReadableIndex<Node>>() {
         }).toInstance(
@@ -136,9 +136,9 @@ public class Neo4JModule extends AbstractModule {
                         .getAutoIndex()
         );
 
-        bind(GraphFactory.class).to(Neo4JGraphFactory.class).in(Singleton.class);
+        bind(GraphFactory.class).to(Neo4jGraphFactory.class).in(Singleton.class);
 
-        requireBinding(Neo4JUtils.class);
+        requireBinding(Neo4jUtils.class);
     }
 
     private void registerShutdownHook(final GraphDatabaseService graphDb) {

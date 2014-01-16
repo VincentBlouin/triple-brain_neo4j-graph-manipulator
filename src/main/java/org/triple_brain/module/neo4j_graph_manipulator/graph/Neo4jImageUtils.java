@@ -13,7 +13,7 @@ import java.util.Set;
 /*
 * Copyright Mozilla Public License 1.1
 */
-public class Neo4JImageUtils {
+public class Neo4jImageUtils {
 
     @Inject
     private GraphDatabaseService graphDb;

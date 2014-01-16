@@ -21,26 +21,26 @@ import java.net.URI;
 /*
 * Copyright Mozilla Public License 1.1
 */
-public class Neo4JUserGraph implements UserGraph {
+public class Neo4jUserGraph implements UserGraph {
 
     public static final String URI_PROPERTY_NAME = "uri";
 
     private User user;
     private ReadableIndex<Node> nodeIndex;
     private ReadableIndex<Relationship> relationshipIndex;
-    private Neo4JVertexFactory vertexFactory;
-    private Neo4JSubGraphExtractorFactory subGraphExtractorFactory;
-    private Neo4JEdgeFactory edgeFactory;
+    private Neo4jVertexFactory vertexFactory;
+    private Neo4jSubGraphExtractorFactory subGraphExtractorFactory;
+    private Neo4jEdgeFactory edgeFactory;
 
 
     @AssistedInject
-    protected Neo4JUserGraph(
+    protected Neo4jUserGraph(
             GraphDatabaseService graphDb,
             ReadableIndex<Node> nodeIndex,
             ReadableIndex<Relationship> relationshipIndex,
-            Neo4JVertexFactory vertexFactory,
-            Neo4JEdgeFactory edgeFactory,
-            Neo4JSubGraphExtractorFactory subGraphExtractorFactory,
+            Neo4jVertexFactory vertexFactory,
+            Neo4jEdgeFactory edgeFactory,
+            Neo4jSubGraphExtractorFactory subGraphExtractorFactory,
             @Assisted User user
     ) {
         this.nodeIndex = nodeIndex;

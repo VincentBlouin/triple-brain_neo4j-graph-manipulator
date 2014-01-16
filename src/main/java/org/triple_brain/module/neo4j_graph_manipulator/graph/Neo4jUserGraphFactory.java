@@ -5,6 +5,6 @@ import org.triple_brain.module.model.User;
 /*
 * Copyright Mozilla Public License 1.1
 */
-public interface Neo4JUserGraphFactory {
-    public Neo4JUserGraph withUser(User user);
+public interface Neo4jUserGraphFactory {
+    public Neo4jUserGraph withUser(User user);
 }

@@ -27,49 +27,49 @@ import java.util.Set;
 /*
 * Copyright Mozilla Public License 1.1
 */
-public class Neo4JVertexInSubGraphOperator implements VertexInSubGraphOperator {
+public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator {
 
     public static final String NUMBER_OF_CONNECTED_EDGES_PROPERTY_NAME = "number_of_connected_edges_property_name";
 
     private Integer depthInSubGraph = -1;
     protected Node node;
-    protected Neo4JGraphElementOperator graphElementOperator;
-    protected Neo4JVertexFactory vertexFactory;
+    protected Neo4jGraphElementOperator graphElementOperator;
+    protected Neo4jVertexFactory vertexFactory;
 
     protected FriendlyResourceOperator friendlyResource;
 
-    protected Neo4JEdgeFactory edgeFactory;
+    protected Neo4jEdgeFactory edgeFactory;
 
-    protected Neo4JUtils utils;
+    protected Neo4jUtils utils;
 
-    protected Neo4JSuggestionFactory suggestionFactory;
+    protected Neo4jSuggestionFactory suggestionFactory;
 
-    protected Neo4JGraphElementFactory neo4JGraphElementFactory;
+    protected Neo4jGraphElementFactory neo4jGraphElementFactory;
 
     @Inject
-    Neo4JFriendlyResourceFactory friendlyResourceFactory;
+    Neo4jFriendlyResourceFactory friendlyResourceFactory;
 
     @AssistedInject
-    protected Neo4JVertexInSubGraphOperator(
-            Neo4JVertexFactory vertexFactory,
-            Neo4JEdgeFactory edgeFactory,
-            Neo4JUtils utils,
-            Neo4JGraphElementFactory neo4JGraphElementFactory,
-            Neo4JFriendlyResourceFactory neo4JFriendlyResourceFactory,
-            Neo4JSuggestionFactory suggestionFactory,
+    protected Neo4jVertexInSubGraphOperator(
+            Neo4jVertexFactory vertexFactory,
+            Neo4jEdgeFactory edgeFactory,
+            Neo4jUtils utils,
+            Neo4jGraphElementFactory neo4jGraphElementFactory,
+            Neo4jFriendlyResourceFactory neo4jFriendlyResourceFactory,
+            Neo4jSuggestionFactory suggestionFactory,
             @Assisted Node node
     ) {
         this.vertexFactory = vertexFactory;
         this.edgeFactory = edgeFactory;
         this.suggestionFactory = suggestionFactory;
         this.utils = utils;
-        this.friendlyResourceFactory = neo4JFriendlyResourceFactory;
+        this.friendlyResourceFactory = neo4jFriendlyResourceFactory;
         this.node = node;
-        this.neo4JGraphElementFactory = neo4JGraphElementFactory;
-        graphElementOperator = neo4JGraphElementFactory.withNode(
+        this.neo4jGraphElementFactory = neo4jGraphElementFactory;
+        graphElementOperator = neo4jGraphElementFactory.withNode(
                 node
         );
-        this.friendlyResource = neo4JFriendlyResourceFactory.createOrLoadFromNode(
+        this.friendlyResource = neo4jFriendlyResourceFactory.createOrLoadFromNode(
                 node
         );
         if (!node.hasProperty(IS_PUBLIC_PROPERTY_NAME)) {
@@ -81,20 +81,20 @@ public class Neo4JVertexInSubGraphOperator implements VertexInSubGraphOperator {
     }
 
     @AssistedInject
-    protected Neo4JVertexInSubGraphOperator(
-            Neo4JVertexFactory vertexFactory,
-            Neo4JEdgeFactory edgeFactory,
-            Neo4JUtils utils,
-            Neo4JGraphElementFactory neo4JGraphElementFactory,
-            Neo4JFriendlyResourceFactory friendlyResourceFactory,
-            Neo4JSuggestionFactory suggestionFactory,
+    protected Neo4jVertexInSubGraphOperator(
+            Neo4jVertexFactory vertexFactory,
+            Neo4jEdgeFactory edgeFactory,
+            Neo4jUtils utils,
+            Neo4jGraphElementFactory neo4jGraphElementFactory,
+            Neo4jFriendlyResourceFactory friendlyResourceFactory,
+            Neo4jSuggestionFactory suggestionFactory,
             @Assisted URI uri
     ) {
         this(
                 vertexFactory,
                 edgeFactory,
                 utils,
-                neo4JGraphElementFactory,
+                neo4jGraphElementFactory,
                 friendlyResourceFactory,
                 suggestionFactory,
                 utils.getOrCreate(uri)
@@ -102,20 +102,20 @@ public class Neo4JVertexInSubGraphOperator implements VertexInSubGraphOperator {
     }
 
     @AssistedInject
-    protected Neo4JVertexInSubGraphOperator(
-            Neo4JVertexFactory vertexFactory,
-            Neo4JEdgeFactory edgeFactory,
-            Neo4JUtils utils,
-            Neo4JGraphElementFactory neo4JGraphElementFactory,
-            Neo4JFriendlyResourceFactory friendlyResourceFactory,
-            Neo4JSuggestionFactory suggestionFactory,
+    protected Neo4jVertexInSubGraphOperator(
+            Neo4jVertexFactory vertexFactory,
+            Neo4jEdgeFactory edgeFactory,
+            Neo4jUtils utils,
+            Neo4jGraphElementFactory neo4jGraphElementFactory,
+            Neo4jFriendlyResourceFactory friendlyResourceFactory,
+            Neo4jSuggestionFactory suggestionFactory,
             @Assisted String ownerUserName
     ) {
         this(
                 vertexFactory,
                 edgeFactory,
                 utils,
-                neo4JGraphElementFactory,
+                neo4jGraphElementFactory,
                 friendlyResourceFactory,
                 suggestionFactory,
                 new UserUris(ownerUserName).generateVertexUri()
@@ -123,13 +123,13 @@ public class Neo4JVertexInSubGraphOperator implements VertexInSubGraphOperator {
     }
 
     @AssistedInject
-    protected Neo4JVertexInSubGraphOperator(
-            Neo4JVertexFactory vertexFactory,
-            Neo4JEdgeFactory edgeFactory,
-            Neo4JUtils utils,
-            Neo4JGraphElementFactory neo4JGraphElementFactory,
-            Neo4JFriendlyResourceFactory friendlyResourceFactory,
-            Neo4JSuggestionFactory suggestionFactory,
+    protected Neo4jVertexInSubGraphOperator(
+            Neo4jVertexFactory vertexFactory,
+            Neo4jEdgeFactory edgeFactory,
+            Neo4jUtils utils,
+            Neo4jGraphElementFactory neo4jGraphElementFactory,
+            Neo4jFriendlyResourceFactory friendlyResourceFactory,
+            Neo4jSuggestionFactory suggestionFactory,
             @Assisted Set<Vertex> includedVertices,
             @Assisted Set<Edge> includedEdges
     ) throws IllegalArgumentException {
@@ -137,7 +137,7 @@ public class Neo4JVertexInSubGraphOperator implements VertexInSubGraphOperator {
                 vertexFactory,
                 edgeFactory,
                 utils,
-                neo4JGraphElementFactory,
+                neo4jGraphElementFactory,
                 friendlyResourceFactory,
                 suggestionFactory,
                 new UserUris(
@@ -205,7 +205,7 @@ public class Neo4JVertexInSubGraphOperator implements VertexInSubGraphOperator {
 
     @Override
     public EdgeOperator addVertexAndRelation() {
-        Neo4JVertexInSubGraphOperator newVertexOperator = vertexFactory.createForOwnerUsername(
+        Neo4jVertexInSubGraphOperator newVertexOperator = vertexFactory.createForOwnerUsername(
                 ownerUsername()
         );
         return addRelationToVertex(newVertexOperator);
@@ -214,10 +214,10 @@ public class Neo4JVertexInSubGraphOperator implements VertexInSubGraphOperator {
     @Override
     public EdgeOperator addRelationToVertex(Vertex destinationVertex) {
         incrementNumberOfConnectedEdges();
-        ((Neo4JVertexInSubGraphOperator) destinationVertex).incrementNumberOfConnectedEdges();
+        ((Neo4jVertexInSubGraphOperator) destinationVertex).incrementNumberOfConnectedEdges();
         return edgeFactory.createForSourceAndDestinationVertex(
                 this,
-                (Neo4JVertexInSubGraphOperator) destinationVertex
+                (Neo4jVertexInSubGraphOperator) destinationVertex
         );
     }
 
@@ -287,9 +287,9 @@ public class Neo4JVertexInSubGraphOperator implements VertexInSubGraphOperator {
     @Override
     public void addSuggestions(Suggestion... suggestions) {
         for (Suggestion suggestion : suggestions) {
-            Neo4JSuggestion neo4JSuggestion = (Neo4JSuggestion) suggestion;
+            Neo4jSuggestion neo4jSuggestion = (Neo4jSuggestion) suggestion;
             node.createRelationshipTo(
-                    neo4JSuggestion.getNode(),
+                    neo4jSuggestion.getNode(),
                     Relationships.SUGGESTION
             );
         }
@@ -531,7 +531,7 @@ public class Neo4JVertexInSubGraphOperator implements VertexInSubGraphOperator {
 
     private void addVertexType() {
         node.addLabel(
-                Neo4JAppLabels.vertex
+                Neo4jAppLabels.vertex
         );
     }
 
@@ -553,7 +553,7 @@ public class Neo4JVertexInSubGraphOperator implements VertexInSubGraphOperator {
 
     private boolean hasVertexType() {
         return node.hasLabel(
-                Neo4JAppLabels.vertex
+                Neo4jAppLabels.vertex
         );
     }
 }

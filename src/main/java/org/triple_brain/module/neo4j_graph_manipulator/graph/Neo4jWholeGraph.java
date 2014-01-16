@@ -15,16 +15,16 @@ import java.util.Iterator;
 /*
 * Copyright Mozilla Public License 1.1
 */
-public class Neo4JWholeGraph implements WholeGraph {
+public class Neo4jWholeGraph implements WholeGraph {
 
     @Inject
     protected GraphDatabaseService graphDb;
 
     @Inject
-    protected Neo4JVertexFactory neo4JVertexFactory;
+    protected Neo4jVertexFactory neo4jVertexFactory;
 
     @Inject
-    protected Neo4JEdgeFactory neo4JEdgeFactory;
+    protected Neo4jEdgeFactory neo4jEdgeFactory;
 
     @Override
     public Iterator<VertexOperator> getAllVertices() {
@@ -43,7 +43,7 @@ public class Neo4JWholeGraph implements WholeGraph {
 
             @Override
             public VertexOperator next() {
-                return neo4JVertexFactory.createOrLoadUsingNode(
+                return neo4jVertexFactory.createOrLoadUsingNode(
                         (Node) result.next().get("n").get()
                 );
             }
@@ -74,7 +74,7 @@ public class Neo4JWholeGraph implements WholeGraph {
 
             @Override
             public EdgeOperator next() {
-                return neo4JEdgeFactory.createOrLoadWithNode(
+                return neo4jEdgeFactory.createOrLoadWithNode(
                         (Node) result.next().get("relation").get()
                 );
             }

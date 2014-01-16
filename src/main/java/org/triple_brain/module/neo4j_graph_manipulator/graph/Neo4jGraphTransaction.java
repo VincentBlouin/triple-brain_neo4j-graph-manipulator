@@ -9,7 +9,7 @@ import javax.inject.Inject;
 /*
 * Copyright Mozilla Public License 1.1
 */
-public class Neo4JGraphTransaction implements GraphTransaction {
+public class Neo4jGraphTransaction implements GraphTransaction {
 
     @Inject
     GraphDatabaseService graphDb;

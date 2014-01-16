@@ -26,42 +26,42 @@ import static org.triple_brain.module.model.json.SuggestionJsonFields.*;
 /*
 * Copyright Mozilla Public License 1.1
 */
-public class Neo4JSuggestion implements SuggestionOperator{
+public class Neo4jSuggestion implements SuggestionOperator{
 
     @Inject
-    Neo4JUtils neo4JUtils;
+    Neo4jUtils neo4jUtils;
 
     @Inject
-    Neo4JFriendlyResourceFactory neo4JFriendlyResourceFactory;
+    Neo4jFriendlyResourceFactory neo4jFriendlyResourceFactory;
 
     @Inject
-    Neo4JSuggestionOriginFactory suggestionOriginFactory;
+    Neo4jSuggestionOriginFactory suggestionOriginFactory;
 
     protected Node node;
 
     private FriendlyResource friendlyResource;
 
     @AssistedInject
-    protected Neo4JSuggestion(
-            Neo4JFriendlyResourceFactory neo4JFriendlyResourceFactory,
+    protected Neo4jSuggestion(
+            Neo4jFriendlyResourceFactory neo4jFriendlyResourceFactory,
             @Assisted Node node
     ) {
         this.node = node;
-        this.friendlyResource = neo4JFriendlyResourceFactory.createOrLoadFromNode(
+        this.friendlyResource = neo4jFriendlyResourceFactory.createOrLoadFromNode(
                 node
         );
     }
 
     @AssistedInject
-    protected Neo4JSuggestion(
-            Neo4JUtils neo4JUtils,
-            Neo4JFriendlyResourceFactory neo4JFriendlyResourceFactory,
-            Neo4JSuggestionOriginFactory suggestionOriginFactory,
+    protected Neo4jSuggestion(
+            Neo4jUtils neo4jUtils,
+            Neo4jFriendlyResourceFactory neo4jFriendlyResourceFactory,
+            Neo4jSuggestionOriginFactory suggestionOriginFactory,
             @Assisted JSONObject suggestionAsJson
     ) {
         this(
-                neo4JUtils,
-                neo4JFriendlyResourceFactory,
+                neo4jUtils,
+                neo4jFriendlyResourceFactory,
                 suggestionOriginFactory,
                 URI.create(suggestionAsJson.optString(TYPE_URI)),
                 URI.create(suggestionAsJson.optString(DOMAIN_URI)),
@@ -70,18 +70,18 @@ public class Neo4JSuggestion implements SuggestionOperator{
         );
     }
 
-    protected Neo4JSuggestion(
-            Neo4JUtils neo4JUtils,
-            Neo4JFriendlyResourceFactory neo4JFriendlyResourceFactory,
-            Neo4JSuggestionOriginFactory suggestionOriginFactory,
+    protected Neo4jSuggestion(
+            Neo4jUtils neo4jUtils,
+            Neo4jFriendlyResourceFactory neo4jFriendlyResourceFactory,
+            Neo4jSuggestionOriginFactory suggestionOriginFactory,
             URI sameAsUri,
             URI domainUri,
             String label,
             String origin
     ) {
         this(
-                neo4JFriendlyResourceFactory,
-                neo4JUtils.create(
+                neo4jFriendlyResourceFactory,
+                neo4jUtils.create(
                     Uris.get(
                             TripleBrainUris.BASE +
                                     "suggestion/" +
@@ -89,8 +89,8 @@ public class Neo4JSuggestion implements SuggestionOperator{
                     )
                 )
         );
-        this.neo4JUtils = neo4JUtils;
-        this.neo4JFriendlyResourceFactory = neo4JFriendlyResourceFactory;
+        this.neo4jUtils = neo4jUtils;
+        this.neo4jFriendlyResourceFactory = neo4jFriendlyResourceFactory;
         addSameAs(
                 sameAsUri,
                 label
@@ -106,7 +106,7 @@ public class Neo4JSuggestion implements SuggestionOperator{
 
     @Override
     public FriendlyResource sameAs() {
-        return neo4JFriendlyResourceFactory.createOrLoadFromNode(
+        return neo4jFriendlyResourceFactory.createOrLoadFromNode(
                 node.getRelationships(
                         Relationships.SAME_AS
                 ).iterator().next().getEndNode()
@@ -115,7 +115,7 @@ public class Neo4JSuggestion implements SuggestionOperator{
 
     @Override
     public FriendlyResource domain() {
-        return neo4JFriendlyResourceFactory.createOrLoadFromNode(
+        return neo4jFriendlyResourceFactory.createOrLoadFromNode(
                 node.getRelationships(
                         Relationships.DOMAIN
                 ).iterator().next().getEndNode()
@@ -124,7 +124,7 @@ public class Neo4JSuggestion implements SuggestionOperator{
 
     @Override
     public URI uri() {
-        return neo4JFriendlyResourceFactory.createOrLoadFromNode(
+        return neo4jFriendlyResourceFactory.createOrLoadFromNode(
                 node
         ).uri();
     }
@@ -220,14 +220,14 @@ public class Neo4JSuggestion implements SuggestionOperator{
 
     @Override
     public void remove() {
-        neo4JUtils.removeAllRelationships(node);
-        neo4JUtils.removeAllProperties(node);
+        neo4jUtils.removeAllRelationships(node);
+        neo4jUtils.removeAllProperties(node);
         node.delete();
     }
 
     private void addSameAs(URI sameAsUri, String label) {
-        Neo4JFriendlyResource sameAs = neo4JFriendlyResourceFactory.createOrLoadFromNode(
-                neo4JUtils.getOrCreate(sameAsUri)
+        Neo4jFriendlyResource sameAs = neo4jFriendlyResourceFactory.createOrLoadFromNode(
+                neo4jUtils.getOrCreate(sameAsUri)
         );
         sameAs.label(label);
         node.createRelationshipTo(
@@ -241,8 +241,8 @@ public class Neo4JSuggestion implements SuggestionOperator{
     }
 
     private void addDomain(URI domainUri) {
-        Neo4JFriendlyResource domain = neo4JFriendlyResourceFactory.createOrLoadFromNode(
-                neo4JUtils.getOrCreate(domainUri)
+        Neo4jFriendlyResource domain = neo4jFriendlyResourceFactory.createOrLoadFromNode(
+                neo4jUtils.getOrCreate(domainUri)
         );
         node.createRelationshipTo(
                 domain.getNode(),
