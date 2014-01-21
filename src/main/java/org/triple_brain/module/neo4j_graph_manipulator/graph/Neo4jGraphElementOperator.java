@@ -91,8 +91,8 @@ public class Neo4jGraphElementOperator implements GraphElementOperator {
     }
 
     @Override
-    public Boolean gotTheImages() {
-        return friendlyResource.gotTheImages();
+    public Boolean gotImages() {
+        return friendlyResource.gotImages();
     }
 
     @Override
@@ -121,7 +121,7 @@ public class Neo4jGraphElementOperator implements GraphElementOperator {
 
     @Override
     public boolean hasLabel() {
-        return !friendlyResource.label().isEmpty();
+        return friendlyResource.hasLabel();
     }
 
     @Override

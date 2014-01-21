@@ -191,8 +191,8 @@ public class Neo4jEdgeOperator implements EdgeOperator {
     }
 
     @Override
-    public Boolean gotTheImages() {
-        return graphElementOperator.gotTheImages();
+    public Boolean gotImages() {
+        return graphElementOperator.gotImages();
     }
 
     @Override

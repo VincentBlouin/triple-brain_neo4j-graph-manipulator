@@ -5,7 +5,7 @@ import org.triple_brain.module.model.User;
 import org.triple_brain.module.model.UserUris;
 import org.triple_brain.module.model.graph.GraphFactory;
 import org.triple_brain.module.model.graph.UserGraph;
-import org.triple_brain.module.model.graph.vertex.Vertex;
+import org.triple_brain.module.model.graph.vertex.VertexOperator;
 
 import javax.inject.Inject;
 
@@ -25,7 +25,7 @@ public class Neo4jGraphFactory implements GraphFactory {
 
     @Override
     public UserGraph createForUser(User user) {
-        Vertex vertex = createDefaultVertexForUser(user);
+        VertexOperator vertex = createDefaultVertexForUser(user);
         vertex.label("me");
         return neo4jUserGraphFactory.withUser(user);
     }
@@ -35,7 +35,7 @@ public class Neo4jGraphFactory implements GraphFactory {
         return neo4jUserGraphFactory.withUser(user);
     }
 
-    private Vertex createDefaultVertexForUser(User user) {
+    private VertexOperator createDefaultVertexForUser(User user) {
         return vertexFactory.createOrLoadUsingUri(
                 new UserUris(user).defaultVertexUri()
         );

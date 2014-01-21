@@ -105,7 +105,7 @@ public class Neo4jSuggestion implements SuggestionOperator{
     }
 
     @Override
-    public FriendlyResource sameAs() {
+    public FriendlyResourceOperator sameAs() {
         return neo4jFriendlyResourceFactory.createOrLoadFromNode(
                 node.getRelationships(
                         Relationships.SAME_AS
@@ -114,7 +114,7 @@ public class Neo4jSuggestion implements SuggestionOperator{
     }
 
     @Override
-    public FriendlyResource domain() {
+    public FriendlyResourceOperator domain() {
         return neo4jFriendlyResourceFactory.createOrLoadFromNode(
                 node.getRelationships(
                         Relationships.DOMAIN
@@ -127,6 +127,11 @@ public class Neo4jSuggestion implements SuggestionOperator{
         return neo4jFriendlyResourceFactory.createOrLoadFromNode(
                 node
         ).uri();
+    }
+
+    @Override
+    public boolean hasLabel() {
+        return friendlyResource.hasLabel();
     }
 
     @Override
@@ -147,8 +152,8 @@ public class Neo4jSuggestion implements SuggestionOperator{
     }
 
     @Override
-    public Boolean gotTheImages() {
-        return sameAs().gotTheImages();
+    public Boolean gotImages() {
+        return sameAs().gotImages();
     }
 
     @Override

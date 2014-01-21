@@ -460,8 +460,8 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator {
     }
 
     @Override
-    public Boolean gotTheImages() {
-        return friendlyResource.gotTheImages();
+    public Boolean gotImages() {
+        return friendlyResource.gotImages();
     }
 
     @Override

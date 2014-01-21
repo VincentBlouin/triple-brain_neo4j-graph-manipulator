@@ -98,6 +98,11 @@ public class Neo4jSuggestionOrigin implements SuggestionOriginOperator{
     }
 
     @Override
+    public boolean hasLabel() {
+        return friendlyResource.hasLabel();
+    }
+
+    @Override
     public String label() {
         return friendlyResource.label();
     }
@@ -115,8 +120,8 @@ public class Neo4jSuggestionOrigin implements SuggestionOriginOperator{
     }
 
     @Override
-    public Boolean gotTheImages() {
-        return friendlyResource.gotTheImages();
+    public Boolean gotImages() {
+        return friendlyResource.gotImages();
     }
 
     @Override

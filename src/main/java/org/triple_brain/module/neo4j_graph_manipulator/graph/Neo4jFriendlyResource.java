@@ -99,6 +99,11 @@ public class Neo4jFriendlyResource implements FriendlyResourceOperator{
         );
     }
 
+    @Override
+    public boolean hasLabel() {
+        return !label().isEmpty();
+    }
+
     public String label() {
         return node.hasProperty(
                 RDFS.label.getURI()
@@ -124,7 +129,7 @@ public class Neo4jFriendlyResource implements FriendlyResourceOperator{
     }
 
     @Override
-    public Boolean gotTheImages() {
+    public Boolean gotImages() {
         return images().size() > 0;
     }
 
