@@ -2,7 +2,6 @@ package org.triple_brain.module.neo4j_graph_manipulator.graph;
 
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
-import org.joda.time.DateTime;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
@@ -21,6 +20,7 @@ import org.triple_brain.module.model.suggestion.SuggestionOperator;
 
 import javax.inject.Inject;
 import java.net.URI;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -285,7 +285,7 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator {
     }
 
     @Override
-    public void addSuggestions(Suggestion... suggestions) {
+    public void addSuggestions(Set<SuggestionOperator> suggestions) {
         for (Suggestion suggestion : suggestions) {
             Neo4jSuggestion neo4jSuggestion = (Neo4jSuggestion) suggestion;
             node.createRelationshipTo(
@@ -435,12 +435,12 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator {
     }
 
     @Override
-    public DateTime creationDate() {
+    public Date creationDate() {
         return graphElementOperator.creationDate();
     }
 
     @Override
-    public DateTime lastModificationDate() {
+    public Date lastModificationDate() {
         return graphElementOperator.lastModificationDate();
     }
 

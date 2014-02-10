@@ -5,18 +5,19 @@ import com.google.inject.assistedinject.AssistedInject;
 import org.neo4j.cypher.ExecutionEngine;
 import org.neo4j.cypher.ExecutionResult;
 import org.neo4j.graphdb.Node;
-import org.triple_brain.module.model.FriendlyResource;
-import org.triple_brain.module.model.graph.*;
+import org.triple_brain.module.model.graph.SubGraphPojo;
 import org.triple_brain.module.model.graph.edge.Edge;
 import org.triple_brain.module.model.graph.edge.EdgeOperator;
 import org.triple_brain.module.model.graph.edge.EdgePojo;
 import org.triple_brain.module.model.graph.vertex.Vertex;
 import org.triple_brain.module.model.graph.vertex.VertexInSubGraph;
-import org.triple_brain.module.model.graph.vertex.VertexInSubGraphPojo;
 import org.triple_brain.module.model.graph.vertex.VertexInSubGraphOperator;
+import org.triple_brain.module.model.graph.vertex.VertexInSubGraphPojo;
 import scala.collection.immutable.Map;
 
 import javax.inject.Inject;
+import java.net.URI;
+import java.util.HashMap;
 import java.util.HashSet;
 
 /*
@@ -28,9 +29,9 @@ public class Neo4jSubGraphExtractor {
     ExecutionEngine engine;
     Vertex centerVertex;
     Integer depth;
-    private SubGraph subGraph = SubGraphImpl.withVerticesAndEdges(
-            new HashSet<VertexInSubGraph>(),
-            new HashSet<Edge>()
+    private SubGraphPojo subGraph = SubGraphPojo.withVerticesAndEdges(
+            new HashMap<URI, VertexInSubGraphPojo>(),
+            new HashSet<EdgePojo>()
     );
 
     @Inject
@@ -54,7 +55,7 @@ public class Neo4jSubGraphExtractor {
         this.depth = depth;
     }
 
-    public SubGraph load() {
+    public SubGraphPojo load() {
         ExecutionResult result = engine.execute(
                 queryToGetGraph()
         );
@@ -113,12 +114,10 @@ public class Neo4jSubGraphExtractor {
         if(subGraph.edges().contains(edgeOperator)){
             return subGraph.edgeWithIdentifier(edgeOperator.uri());
         }
-        Edge edge = new EdgePojo(
-                graphElementFromOperator(edgeOperator),
-                edgeOperator.sourceVertex(),
-                edgeOperator.destinationVertex()
+        EdgePojo edge = new EdgePojo(
+                edgeOperator
         );
-        subGraph.edges().add(edge);
+        subGraph.addEdge(edge);
         return edge;
     }
 
@@ -126,35 +125,10 @@ public class Neo4jSubGraphExtractor {
         if(subGraph.vertices().contains(vertexOperator)){
             return subGraph.vertexWithIdentifier(vertexOperator.uri());
         }
-        VertexInSubGraph vertex = new VertexInSubGraphPojo(
-                graphElementFromOperator(vertexOperator),
-                vertexOperator.getNumberOfConnectedEdges(),
-                vertexOperator.getIncludedVertices(),
-                vertexOperator.getIncludedEdges(),
-                vertexOperator.suggestions(),
-                vertexOperator.isPublic()
+        VertexInSubGraphPojo vertex = new VertexInSubGraphPojo(
+                vertexOperator
         );
-        subGraph.vertices().add(vertex);
+        subGraph.addVertex(vertex);
         return vertex;
-    }
-
-    private GraphElement graphElementFromOperator(GraphElementOperator graphElementOperator){
-        return new GraphElementPojo(
-                friendlyResourceFromOperator(graphElementOperator),
-                graphElementOperator.getGenericIdentifications(),
-                graphElementOperator.getSameAs(),
-                graphElementOperator.getAdditionalTypes()
-        );
-    }
-
-    private FriendlyResource friendlyResourceFromOperator(FriendlyResourceOperator friendlyResourceOperator){
-        return new FriendlyResourcePojo(
-                friendlyResourceOperator.uri(),
-                friendlyResourceOperator.label(),
-                friendlyResourceOperator.images(),
-                friendlyResourceOperator.comment(),
-                friendlyResourceOperator.creationDate(),
-                friendlyResourceOperator.lastModificationDate()
-        );
     }
 }

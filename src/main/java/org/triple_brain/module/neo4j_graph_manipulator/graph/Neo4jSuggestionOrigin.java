@@ -2,7 +2,6 @@ package org.triple_brain.module.neo4j_graph_manipulator.graph;
 
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
-import org.joda.time.DateTime;
 import org.neo4j.graphdb.Node;
 import org.triple_brain.module.model.FriendlyResource;
 import org.triple_brain.module.model.Image;
@@ -10,6 +9,7 @@ import org.triple_brain.module.model.suggestion.SuggestionOrigin;
 import org.triple_brain.module.model.suggestion.SuggestionOriginOperator;
 
 import java.net.URI;
+import java.util.Date;
 import java.util.Set;
 import java.util.UUID;
 
@@ -147,12 +147,12 @@ public class Neo4jSuggestionOrigin implements SuggestionOriginOperator{
     }
 
     @Override
-    public DateTime creationDate() {
+    public Date creationDate() {
         return friendlyResource.creationDate();
     }
 
     @Override
-    public DateTime lastModificationDate() {
+    public Date lastModificationDate() {
         return friendlyResource.lastModificationDate();
     }
 }

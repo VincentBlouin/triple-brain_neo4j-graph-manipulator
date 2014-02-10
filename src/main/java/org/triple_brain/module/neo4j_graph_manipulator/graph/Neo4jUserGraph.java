@@ -8,7 +8,7 @@ import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.index.ReadableIndex;
 import org.triple_brain.module.model.User;
 import org.triple_brain.module.model.UserUris;
-import org.triple_brain.module.model.graph.SubGraph;
+import org.triple_brain.module.model.graph.SubGraphPojo;
 import org.triple_brain.module.model.graph.UserGraph;
 import org.triple_brain.module.model.graph.edge.EdgeOperator;
 import org.triple_brain.module.model.graph.exceptions.InvalidDepthOfSubVerticesException;
@@ -76,7 +76,7 @@ public class Neo4jUserGraph implements UserGraph {
     }
 
     @Override
-    public SubGraph graphWithDepthAndCenterVertexId(Integer depthOfSubVertices, URI centerVertexURI) throws NonExistingResourceException {
+    public SubGraphPojo graphWithDepthAndCenterVertexId(Integer depthOfSubVertices, URI centerVertexURI) throws NonExistingResourceException {
         if(depthOfSubVertices < 0){
             throw new InvalidDepthOfSubVerticesException(
                     depthOfSubVertices,
@@ -102,7 +102,7 @@ public class Neo4jUserGraph implements UserGraph {
     }
 
     @Override
-    public SubGraph graphWithDefaultVertexAndDepth(Integer depth) throws InvalidDepthOfSubVerticesException {
+    public SubGraphPojo graphWithDefaultVertexAndDepth(Integer depth) throws InvalidDepthOfSubVerticesException {
         return graphWithDepthAndCenterVertexId(
                 depth,
                 defaultVertex().uri()

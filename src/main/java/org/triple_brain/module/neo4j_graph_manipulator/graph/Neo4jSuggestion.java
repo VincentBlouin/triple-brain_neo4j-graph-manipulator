@@ -2,8 +2,6 @@ package org.triple_brain.module.neo4j_graph_manipulator.graph;
 
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
-import org.codehaus.jettison.json.JSONObject;
-import org.joda.time.DateTime;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 import org.triple_brain.module.common_utils.Uris;
@@ -14,14 +12,14 @@ import org.triple_brain.module.model.graph.FriendlyResourceOperator;
 import org.triple_brain.module.model.suggestion.SuggestionOperator;
 import org.triple_brain.module.model.suggestion.SuggestionOrigin;
 import org.triple_brain.module.model.suggestion.SuggestionOriginOperator;
+import org.triple_brain.module.model.suggestion.SuggestionPojo;
 
 import javax.inject.Inject;
 import java.net.URI;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
-
-import static org.triple_brain.module.model.json.SuggestionJsonFields.*;
 
 /*
 * Copyright Mozilla Public License 1.1
@@ -57,16 +55,16 @@ public class Neo4jSuggestion implements SuggestionOperator{
             Neo4jUtils neo4jUtils,
             Neo4jFriendlyResourceFactory neo4jFriendlyResourceFactory,
             Neo4jSuggestionOriginFactory suggestionOriginFactory,
-            @Assisted JSONObject suggestionAsJson
+            @Assisted SuggestionPojo suggestionPojo
     ) {
         this(
                 neo4jUtils,
                 neo4jFriendlyResourceFactory,
                 suggestionOriginFactory,
-                URI.create(suggestionAsJson.optString(TYPE_URI)),
-                URI.create(suggestionAsJson.optString(DOMAIN_URI)),
-                suggestionAsJson.optString(LABEL),
-                suggestionAsJson.optString(ORIGIN)
+                suggestionPojo.sameAs().uri(),
+                suggestionPojo.domain().uri(),
+                suggestionPojo.label(),
+                suggestionPojo.origins().iterator().next().toString()
         );
     }
 
@@ -124,14 +122,12 @@ public class Neo4jSuggestion implements SuggestionOperator{
 
     @Override
     public URI uri() {
-        return neo4jFriendlyResourceFactory.createOrLoadFromNode(
-                node
-        ).uri();
+        return friendlyResource.uri();
     }
 
     @Override
     public boolean hasLabel() {
-        return friendlyResource.hasLabel();
+        return sameAs().hasLabel();
     }
 
     @Override
@@ -182,12 +178,12 @@ public class Neo4jSuggestion implements SuggestionOperator{
     }
 
     @Override
-    public DateTime creationDate() {
+    public Date creationDate() {
         return friendlyResource.creationDate();
     }
 
     @Override
-    public DateTime lastModificationDate() {
+    public Date lastModificationDate() {
         return friendlyResource.lastModificationDate();
     }
 

@@ -4,14 +4,12 @@ import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 import com.hp.hpl.jena.vocabulary.RDFS;
 import org.apache.commons.lang.StringUtils;
-import org.codehaus.jettison.json.JSONObject;
-import org.joda.time.DateTime;
 import org.neo4j.graphdb.Node;
 import org.triple_brain.module.common_utils.Uris;
 import org.triple_brain.module.model.FriendlyResource;
 import org.triple_brain.module.model.Image;
 import org.triple_brain.module.model.graph.FriendlyResourceOperator;
-import org.triple_brain.module.model.json.FriendlyResourceJson;
+import org.triple_brain.module.model.graph.FriendlyResourcePojo;
 
 import javax.inject.Inject;
 import java.net.URI;
@@ -21,7 +19,7 @@ import java.util.Set;
 /*
 * Copyright Mozilla Public License 1.1
 */
-public class Neo4jFriendlyResource implements FriendlyResourceOperator{
+public class Neo4jFriendlyResource implements FriendlyResourceOperator {
 
     public static final String CREATION_DATE_PROPERTY_NAME = "creation_date";
     public static final String LAST_MODIFICATION_DATE_PROPERTY_NAME = "last_modification_date";
@@ -39,7 +37,7 @@ public class Neo4jFriendlyResource implements FriendlyResourceOperator{
             @Assisted Node node
     ) {
         this.node = node;
-        if(!hasCreationDate()){
+        if (!hasCreationDate()) {
             initCreationAndLastModificationDate();
         }
     }
@@ -69,25 +67,20 @@ public class Neo4jFriendlyResource implements FriendlyResourceOperator{
     @AssistedInject
     protected Neo4jFriendlyResource(
             Neo4jUtils neo4jUtils,
-            @Assisted JSONObject json
+            @Assisted FriendlyResourcePojo pojo
     ) {
         this(
                 neo4jUtils.getOrCreate(
-                        Uris.get(json.optString(
-                                FriendlyResourceJson.URI
-                        )
-                        )
+                        pojo.uri()
                 )
         );
+        String label = pojo.label();
         label(
-                json.optString(
-                        FriendlyResourceJson.LABEL
-                )
+                null == label ? "" : label
         );
+        String comment = pojo.comment();
         comment(
-                json.optString(
-                        FriendlyResourceJson.COMMENT
-                )
+                null == comment ? "" : comment
         );
     }
 
@@ -169,27 +162,27 @@ public class Neo4jFriendlyResource implements FriendlyResourceOperator{
     }
 
     @Override
-    public DateTime creationDate() {
-        return new DateTime((Long) node.getProperty(
+    public Date creationDate() {
+        return new Date((Long) node.getProperty(
                 CREATION_DATE_PROPERTY_NAME
         ));
     }
 
     @Override
-    public DateTime lastModificationDate() {
-        return new DateTime((Long) node.getProperty(
+    public Date lastModificationDate() {
+        return new Date((Long) node.getProperty(
                 LAST_MODIFICATION_DATE_PROPERTY_NAME
         ));
     }
 
-    public void updateLastModificationDate(){
+    public void updateLastModificationDate() {
         node.setProperty(
                 LAST_MODIFICATION_DATE_PROPERTY_NAME,
                 new Date().getTime()
         );
     }
 
-    public Node getNode(){
+    public Node getNode() {
         return node;
     }
 
@@ -204,13 +197,13 @@ public class Neo4jFriendlyResource implements FriendlyResourceOperator{
         return uri().hashCode();
     }
 
-    private boolean hasCreationDate(){
+    private boolean hasCreationDate() {
         return node.hasProperty(
                 CREATION_DATE_PROPERTY_NAME
         );
     }
 
-    private void initCreationAndLastModificationDate(){
+    private void initCreationAndLastModificationDate() {
         Long creationDate = new Date().getTime();
         node.setProperty(
                 CREATION_DATE_PROPERTY_NAME,

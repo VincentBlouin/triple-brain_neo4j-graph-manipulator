@@ -22,8 +22,8 @@ import org.triple_brain.module.model.graph.edge.EdgeFactory;
 import org.triple_brain.module.model.graph.edge.EdgeOperator;
 import org.triple_brain.module.model.graph.vertex.VertexFactory;
 import org.triple_brain.module.model.graph.vertex.VertexInSubGraphOperator;
-import org.triple_brain.module.model.suggestion.Suggestion;
 import org.triple_brain.module.model.suggestion.SuggestionFactory;
+import org.triple_brain.module.model.suggestion.SuggestionOperator;
 
 import javax.inject.Singleton;
 import javax.naming.InitialContext;
@@ -113,7 +113,7 @@ public class Neo4jModule extends AbstractModule {
                 .build(Neo4jFriendlyResourceFactory.class)
         );
         install(factoryModuleBuilder
-                .implement(Suggestion.class, Neo4jSuggestion.class)
+                .implement(SuggestionOperator.class, Neo4jSuggestion.class)
                 .build(SuggestionFactory.class)
         );
         install(factoryModuleBuilder
