@@ -1,14 +1,16 @@
 package org.triple_brain.module.neo4j_graph_manipulator.graph;
 
 import com.google.inject.Inject;
-import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
+import org.triple_brain.module.common_utils.Uris;
 import org.triple_brain.module.model.Image;
+import org.triple_brain.module.model.TripleBrainUris;
 
 import java.net.URI;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 /*
 * Copyright Mozilla Public License 1.1
@@ -16,7 +18,7 @@ import java.util.Set;
 public class Neo4jImageUtils {
 
     @Inject
-    private GraphDatabaseService graphDb;
+    private Neo4jUtils utils;
 
     public static final String URL_FOR_SMALL_KEY = "url_for_small";
     public static final String URL_FOR_BIGGER_KEY = "url_for_bigger";
@@ -34,7 +36,13 @@ public class Neo4jImageUtils {
     }
 
     public void addImage(Node node, Image image){
-        Node nodeAsImage = graphDb.createNode();
+        Node nodeAsImage = utils.create(
+                Uris.get(
+                        TripleBrainUris.BASE +
+                                "image/" +
+                                UUID.randomUUID().toString()
+                )
+        );
         nodeAsImage.setProperty(
                 URL_FOR_SMALL_KEY,
                 image.urlForSmall().toString()

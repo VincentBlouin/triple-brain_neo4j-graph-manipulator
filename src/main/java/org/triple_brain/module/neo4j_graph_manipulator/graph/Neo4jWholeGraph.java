@@ -2,9 +2,7 @@ package org.triple_brain.module.neo4j_graph_manipulator.graph;
 
 import org.neo4j.cypher.ExecutionEngine;
 import org.neo4j.cypher.ExecutionResult;
-import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
-import org.neo4j.kernel.logging.BufferingLogger;
 import org.triple_brain.module.model.WholeGraph;
 import org.triple_brain.module.model.graph.edge.EdgeOperator;
 import org.triple_brain.module.model.graph.vertex.VertexOperator;
@@ -18,7 +16,7 @@ import java.util.Iterator;
 public class Neo4jWholeGraph implements WholeGraph {
 
     @Inject
-    protected GraphDatabaseService graphDb;
+    protected ExecutionEngine engine;
 
     @Inject
     protected Neo4jVertexFactory neo4jVertexFactory;
@@ -29,7 +27,6 @@ public class Neo4jWholeGraph implements WholeGraph {
     @Override
     public Iterator<VertexOperator> getAllVertices() {
         return new Iterator<VertexOperator>() {
-            ExecutionEngine engine = new ExecutionEngine(graphDb, new BufferingLogger());
             ExecutionResult result = engine.execute(
                     "START n = node(*) " +
                             "MATCH n:vertex " +
@@ -58,7 +55,6 @@ public class Neo4jWholeGraph implements WholeGraph {
     @Override
     public Iterator<EdgeOperator> getAllEdges() {
         return new Iterator<EdgeOperator>() {
-            ExecutionEngine engine = new ExecutionEngine(graphDb, new BufferingLogger());
             ExecutionResult result = engine.execute(
                     "START relation=node(*) " +
                             "MATCH relation-[:" +
