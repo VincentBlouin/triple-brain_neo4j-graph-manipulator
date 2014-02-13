@@ -5,7 +5,6 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 import org.triple_brain.module.common_utils.Uris;
 import org.triple_brain.module.model.Image;
-import org.triple_brain.module.model.TripleBrainUris;
 
 import java.net.URI;
 import java.util.HashSet;
@@ -23,10 +22,10 @@ public class Neo4jImageUtils {
     public static final String URL_FOR_SMALL_KEY = "url_for_small";
     public static final String URL_FOR_BIGGER_KEY = "url_for_bigger";
 
-    public void addImages(Node node, Set<Image> imagesToAdd){
+    public void addImages(Node node, Set<Image> imagesToAdd) {
         Set<Image> existingImages = getImages(node);
-        for(Image image: imagesToAdd){
-            if(!existingImages.contains(image)){
+        for (Image image : imagesToAdd) {
+            if (!existingImages.contains(image)) {
                 addImage(
                         node,
                         image
@@ -35,12 +34,10 @@ public class Neo4jImageUtils {
         }
     }
 
-    public void addImage(Node node, Image image){
+    public void addImage(Node node, Image image) {
         Node nodeAsImage = utils.create(
                 Uris.get(
-                        TripleBrainUris.BASE +
-                                "image/" +
-                                UUID.randomUUID().toString()
+                        "/image/" + UUID.randomUUID().toString()
                 )
         );
         nodeAsImage.setProperty(
@@ -54,9 +51,9 @@ public class Neo4jImageUtils {
         node.createRelationshipTo(nodeAsImage, Relationships.HAS_IMAGE);
     }
 
-    public Set<Image> getImages(Node nodeWithImages){
+    public Set<Image> getImages(Node nodeWithImages) {
         Set<Image> images = new HashSet<>();
-        for(Relationship relationship : nodeWithImages.getRelationships(Relationships.HAS_IMAGE)){
+        for (Relationship relationship : nodeWithImages.getRelationships(Relationships.HAS_IMAGE)) {
             images.add(
                     getImage(relationship.getEndNode())
             );
@@ -64,7 +61,7 @@ public class Neo4jImageUtils {
         return images;
     }
 
-    public Image getImage(Node imageAsNode){
+    public Image getImage(Node imageAsNode) {
         return Image.withUriForSmallAndBigger(
                 URI.create(
                         imageAsNode.getProperty(
