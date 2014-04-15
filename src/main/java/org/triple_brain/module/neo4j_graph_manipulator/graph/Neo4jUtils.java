@@ -3,11 +3,14 @@ package org.triple_brain.module.neo4j_graph_manipulator.graph;
 import org.apache.commons.lang.StringUtils;
 import org.neo4j.graphdb.*;
 import org.neo4j.graphdb.index.ReadableIndex;
+import org.neo4j.rest.graphdb.RestAPI;
 import org.triple_brain.module.common_utils.Uris;
 import org.triple_brain.module.model.graph.vertex.Vertex;
+import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.Neo4jUserGraph;
 
 import javax.inject.Inject;
 import java.net.URI;
+import java.util.Collections;
 
 /*
 * Copyright Mozilla Public License 1.1
@@ -15,10 +18,10 @@ import java.net.URI;
 public class Neo4jUtils {
 
     @Inject
-    private ReadableIndex<Node> nodeIndex;
+    RestAPI restAPI;
 
     @Inject
-    private GraphDatabaseService graphDb;
+    private ReadableIndex<Node> nodeIndex;
 
     public void removeAllProperties(PropertyContainer propertyContainer) {
         for (String propertyName : propertyContainer.getPropertyKeys()) {
@@ -93,7 +96,9 @@ public class Neo4jUtils {
                     "uri cannot be empty"
             );
         }
-        Node externalResourceAsNode = graphDb.createNode();
+        Node externalResourceAsNode = restAPI.createNode(
+                Collections.EMPTY_MAP
+        );
         externalResourceAsNode.setProperty(
                 Neo4jUserGraph.URI_PROPERTY_NAME,
                 uri.toString()

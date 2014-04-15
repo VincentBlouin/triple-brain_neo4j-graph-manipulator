@@ -9,7 +9,7 @@ import java.net.URI;
 * Copyright Mozilla Public License 1.1
 */
 public interface Neo4jFriendlyResourceFactory extends FriendlyResourceFactory{
-    public Neo4jFriendlyResource createOrLoadFromNode(Node node);
+    public Neo4jFriendlyResource withNode(Node node);
     @Override
-    Neo4jFriendlyResource createOrLoadFromUri(URI uri);
+    Neo4jFriendlyResource withUri(URI uri);
 }

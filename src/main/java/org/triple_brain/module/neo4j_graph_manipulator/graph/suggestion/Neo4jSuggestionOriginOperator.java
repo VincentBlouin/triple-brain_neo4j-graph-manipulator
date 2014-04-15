@@ -1,50 +1,65 @@
-package org.triple_brain.module.neo4j_graph_manipulator.graph;
+package org.triple_brain.module.neo4j_graph_manipulator.graph.suggestion;
 
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 import org.neo4j.graphdb.Node;
 import org.triple_brain.module.model.FriendlyResource;
 import org.triple_brain.module.model.Image;
+import org.triple_brain.module.model.suggestion.Suggestion;
 import org.triple_brain.module.model.suggestion.SuggestionOrigin;
 import org.triple_brain.module.model.suggestion.SuggestionOriginOperator;
+import org.triple_brain.module.neo4j_graph_manipulator.graph.Neo4jFriendlyResource;
+import org.triple_brain.module.neo4j_graph_manipulator.graph.Neo4jFriendlyResourceFactory;
+import org.triple_brain.module.neo4j_graph_manipulator.graph.Neo4jOperator;
+import org.triple_brain.module.neo4j_graph_manipulator.graph.Relationships;
 
 import java.net.URI;
 import java.util.Date;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+
+import static org.triple_brain.module.neo4j_graph_manipulator.graph.Neo4jRestApiUtils.map;
 
 /*
 * Copyright Mozilla Public License 1.1
 */
-public class Neo4jSuggestionOrigin implements SuggestionOriginOperator{
+public class Neo4jSuggestionOriginOperator implements SuggestionOriginOperator, Neo4jOperator{
 
     public static final String ORIGIN_PROPERTY = "origin";
+
+    public static URI generateUriBasedOnSuggestion(Suggestion suggestion){
+        return URI.create(
+                suggestion.uri() + "/origin/" +
+                        UUID.randomUUID().toString()
+        );
+    }
 
     protected Neo4jFriendlyResource friendlyResource;
 
     @AssistedInject
-    protected Neo4jSuggestionOrigin(
+    protected Neo4jSuggestionOriginOperator(
             Neo4jFriendlyResourceFactory neo4jFriendlyResourceFactory,
             @Assisted Node node
     ){
-        this.friendlyResource = neo4jFriendlyResourceFactory.createOrLoadFromNode(
+        this.friendlyResource = neo4jFriendlyResourceFactory.withNode(
                 node
         );
     }
 
     @AssistedInject
-    protected Neo4jSuggestionOrigin(
+    protected Neo4jSuggestionOriginOperator(
             Neo4jFriendlyResourceFactory neo4jFriendlyResourceFactory,
             @Assisted String origin,
-            @Assisted Neo4jSuggestion suggestion
+            @Assisted Neo4jSuggestionOperator suggestion
     ){
-        this.friendlyResource = neo4jFriendlyResourceFactory.createOrLoadFromUri(
-                URI.create(
-                        suggestion.uri() + "/origin/" +
-                                UUID.randomUUID().toString()
+        this.friendlyResource = neo4jFriendlyResourceFactory.withUri(
+                generateUriBasedOnSuggestion(
+                        suggestion
                 )
         );
-        suggestion.node.createRelationshipTo(
+        friendlyResource.create();
+        suggestion.getNode().createRelationshipTo(
                 friendlyResource.getNode(),
                 Relationships.SUGGESTION_ORIGIN
         );
@@ -147,6 +162,18 @@ public class Neo4jSuggestionOrigin implements SuggestionOriginOperator{
     }
 
     @Override
+    public void create() {
+        createUsingInitialValues(
+                map()
+        );
+    }
+
+    @Override
+    public void createUsingInitialValues(Map<String, Object> values) {
+        friendlyResource.createUsingInitialValues(values);
+    }
+
+    @Override
     public Date creationDate() {
         return friendlyResource.creationDate();
     }
@@ -155,4 +182,20 @@ public class Neo4jSuggestionOrigin implements SuggestionOriginOperator{
     public Date lastModificationDate() {
         return friendlyResource.lastModificationDate();
     }
+
+    @Override
+    public String queryPrefix() {
+        return friendlyResource.queryPrefix();
+    }
+
+    @Override
+    public Node getNode() {
+        return friendlyResource.getNode();
+    }
+
+    @Override
+    public Map<String, Object> addCreationProperties(Map<String, Object> map) {
+        return friendlyResource.addCreationProperties(map);
+    }
+
 }

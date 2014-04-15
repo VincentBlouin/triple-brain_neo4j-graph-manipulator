@@ -1,11 +1,11 @@
-package org.triple_brain.module.neo4j_graph_manipulator.graph;
+package org.triple_brain.module.neo4j_graph_manipulator.graph.graph;
 
-import org.neo4j.graphdb.GraphDatabaseService;
 import org.triple_brain.module.model.User;
 import org.triple_brain.module.model.UserUris;
 import org.triple_brain.module.model.graph.GraphFactory;
 import org.triple_brain.module.model.graph.UserGraph;
 import org.triple_brain.module.model.graph.vertex.VertexOperator;
+import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.vertex.Neo4jVertexFactory;
 
 import javax.inject.Inject;
 
@@ -13,9 +13,6 @@ import javax.inject.Inject;
 * Copyright Mozilla Public License 1.1
 */
 public class Neo4jGraphFactory implements GraphFactory {
-
-    @Inject
-    protected GraphDatabaseService graphDb;
 
     @Inject
     protected Neo4jUserGraphFactory neo4jUserGraphFactory;
@@ -36,8 +33,10 @@ public class Neo4jGraphFactory implements GraphFactory {
     }
 
     private VertexOperator createDefaultVertexForUser(User user) {
-        return vertexFactory.createOrLoadUsingUri(
+        VertexOperator operator = vertexFactory.withUri(
                 new UserUris(user).defaultVertexUri()
         );
+        operator.create();
+        return operator;
     }
 }

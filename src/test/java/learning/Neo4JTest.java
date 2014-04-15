@@ -1,5 +1,6 @@
 package learning;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.neo4j.graphdb.*;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
@@ -14,6 +15,7 @@ import static org.junit.Assert.assertThat;
 /*
 * Copyright Mozilla Public License 1.1
 */
+@Ignore("I want to prevent starting another noe4j server here to prevent memory overload")
 public class Neo4JTest {
 
     private static enum RelTypes implements RelationshipType
