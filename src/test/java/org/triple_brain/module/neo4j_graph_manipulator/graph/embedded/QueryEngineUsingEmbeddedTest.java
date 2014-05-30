@@ -1,5 +1,6 @@
 package org.triple_brain.module.neo4j_graph_manipulator.graph.embedded;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
@@ -15,6 +16,7 @@ import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 import static org.triple_brain.module.neo4j_graph_manipulator.graph.Neo4jRestApiUtils.map;
 
+@Ignore("for manual test only")
 public class QueryEngineUsingEmbeddedTest {
 
     GraphDatabaseService graphDb = new GraphDatabaseFactory().newEmbeddedDatabaseBuilder(

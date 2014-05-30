@@ -17,8 +17,6 @@ import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.vertex.Neo4jV
 import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.vertex.Neo4jVertexInSubGraphOperator;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.image.Neo4jImages;
 
-import javax.inject.Inject;
-import javax.management.relation.Relation;
 import java.net.URI;
 import java.util.*;
 
@@ -199,7 +197,7 @@ public class Neo4jSubGraphExtractor {
         String key = prefix + "_image";
         return getPropertyUsingContainerNameQueryPart(
                 key,
-                Neo4jImages.props.url_for_small.toString()
+                Neo4jImages.props.base64_for_small.toString()
         ) +
                 getPropertyUsingContainerNameQueryPart(
                         key,

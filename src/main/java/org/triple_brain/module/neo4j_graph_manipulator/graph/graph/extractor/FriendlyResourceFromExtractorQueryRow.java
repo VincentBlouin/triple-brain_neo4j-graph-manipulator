@@ -62,18 +62,18 @@ public class FriendlyResourceFromExtractorQueryRow {
 
     private Boolean hasImageInRow(){
         return row.get(
-                imageKey + "." + Neo4jImages.props.url_for_small
+                imageKey + "." + Neo4jImages.props.base64_for_small
         ) != null;
     }
 
     private Image imageInRow(){
-        return Image.withUriForSmallAndBigger(
-            URI.create(row.get(
-                    imageKey + "." + Neo4jImages.props.url_for_small
-            ).toString()),
-            URI.create(row.get(
-                    imageKey + "." + Neo4jImages.props.url_for_bigger
-            ).toString())
+        return Image.withBase64ForSmallAndUriForBigger(
+                row.get(
+                        imageKey + "." + Neo4jImages.props.base64_for_small
+                ).toString(),
+                URI.create(row.get(
+                        imageKey + "." + Neo4jImages.props.url_for_bigger
+                ).toString())
         );
     }
 

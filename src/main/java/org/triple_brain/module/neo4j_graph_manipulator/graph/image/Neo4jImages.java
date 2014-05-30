@@ -21,7 +21,7 @@ import static org.triple_brain.module.neo4j_graph_manipulator.graph.Neo4jRestApi
 public class Neo4jImages {
 
     public enum props {
-        url_for_small,
+        base64_for_small,
         url_for_bigger
     }
 
@@ -59,19 +59,17 @@ public class Neo4jImages {
                 friendlyResource.queryPrefix() +
                         "MATCH n-[:"+ Relationships.HAS_IMAGE+"]->image " +
                         "RETURN " +
-                        "image." + props.url_for_small + " as uri_for_small, " +
+                        "image." + props.base64_for_small + " as base_64_for_small, " +
                         "image." + props.url_for_bigger + " as uri_for_bigger ",
                 map()
         );
         Set<Image> images = new HashSet<Image>();
         for(Map<String,Object> result : results){
             images.add(
-                    Image.withUriForSmallAndBigger(
-                            URI.create(
-                                    result.get(
-                                            "uri_for_small"
-                                    ).toString()
-                            ),
+                    Image.withBase64ForSmallAndUriForBigger(
+                            result.get(
+                                    "base_64_for_small"
+                            ).toString(),
                             URI.create(
                                     result.get(
                                             "uri_for_bigger"
@@ -87,15 +85,15 @@ public class Neo4jImages {
         queryEngine.query(
                 friendlyResource.queryPrefix() +
                         "MERGE (image {" +
-                        props.url_for_small + ": {uri_for_small}, " +
                         props.url_for_bigger + ": {uri_for_bigger} " +
                         "}) " +
                         "ON CREATE SET " +
+                        "image."+ props.base64_for_small + "={base64_for_small}, " +
                         "image.uri={image_uri}" +
                         "CREATE UNIQUE " +
                         "n-[:" + Relationships.HAS_IMAGE + "]->image ",
                 map(
-                        "uri_for_small", image.urlForSmall().toString(),
+                        "base64_for_small", image.base64ForSmall(),
                         "uri_for_bigger", image.urlForBigger().toString(),
                         "image_uri", "/image/" + UUID.randomUUID().toString()
                 )
