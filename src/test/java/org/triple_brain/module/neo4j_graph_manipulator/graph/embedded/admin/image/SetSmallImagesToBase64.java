@@ -45,7 +45,7 @@ public class SetSmallImagesToBase64 extends AdminOperationsOnDatabase {
                 String base64 = Base64.encodeBase64String(
                         DataFetcher.downloadImageAtUrl(url)
                 );
-                node.setProperty("base_64_for_small", base64);
+                node.setProperty("base64_for_small", base64);
             }catch(Exception e){
                 e.printStackTrace();
             }
