@@ -47,7 +47,8 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
 
     public enum props {
         number_of_connected_edges_property_name,
-        is_public
+        is_public,
+        suggestions
     }
 
     private Integer depthInSubGraph = -1;
