@@ -3,8 +3,8 @@ package org.triple_brain.module.neo4j_graph_manipulator.graph.graph.extractor;
 import org.triple_brain.module.model.graph.edge.EdgePojo;
 import org.triple_brain.module.model.graph.vertex.VertexInSubGraph;
 import org.triple_brain.module.model.graph.vertex.VertexInSubGraphPojo;
+import org.triple_brain.module.model.json.SuggestionJson;
 import org.triple_brain.module.model.suggestion.SuggestionPojo;
-import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.Neo4jUserGraph;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.vertex.Neo4jVertexInSubGraphOperator;
 
 import java.net.URI;
@@ -43,11 +43,10 @@ public class VertexFromExtractorQueryRow {
                 getNumberOfConnectedEdges(),
                 new HashMap<URI, VertexInSubGraphPojo>(),
                 new HashMap<URI, EdgePojo>(),
-                new HashMap<URI, SuggestionPojo>(),
+                getSuggestions(),
                 getIsPublic()
         );
     }
-
     public void update(VertexInSubGraphPojo vertex) {
         GraphElementFromExtractorQueryRow.usingRowAndKey(
                 row,
@@ -55,21 +54,18 @@ public class VertexFromExtractorQueryRow {
         ).update(
                 vertex.getGraphElement()
         );
-        addOrUpdateSuggestionIfApplicable(
-                vertex
-        );
         updateIncludedVertices(vertex);
         updateIncludedEdges(vertex);
     }
 
-    private void updateIncludedVertices(VertexInSubGraphPojo vertex){
+    private void updateIncludedVertices(VertexInSubGraphPojo vertex) {
         IncludedGraphElementFromExtractorQueryRow includedVertexExtractor = new IncludedGraphElementFromExtractorQueryRow(
                 row,
                 keyPrefix + "_included_vertex"
         );
-        if(includedVertexExtractor.isInRow()){
+        if (includedVertexExtractor.isInRow()) {
             URI uri = includedVertexExtractor.getUri();
-            if(!vertex.getIncludedVertices().containsKey(uri)){
+            if (!vertex.getIncludedVertices().containsKey(uri)) {
                 vertex.getIncludedVertices().put(
                         uri,
                         new VertexInSubGraphPojo(
@@ -81,15 +77,15 @@ public class VertexFromExtractorQueryRow {
         }
     }
 
-    private void updateIncludedEdges(VertexInSubGraphPojo vertex){
+    private void updateIncludedEdges(VertexInSubGraphPojo vertex) {
         String key = keyPrefix + "_included_edge";
         IncludedGraphElementFromExtractorQueryRow includedEdgeExtractor = new IncludedGraphElementFromExtractorQueryRow(
                 row,
                 key
         );
-        if(includedEdgeExtractor.isInRow()){
+        if (includedEdgeExtractor.isInRow()) {
             URI uri = includedEdgeExtractor.getUri();
-            if(!vertex.getIncludedEdges().containsKey(uri)){
+            if (!vertex.getIncludedEdges().containsKey(uri)) {
                 EdgePojo edge = new EdgePojo(
                         uri,
                         includedEdgeExtractor.getLabel()
@@ -122,28 +118,6 @@ public class VertexFromExtractorQueryRow {
         }
     }
 
-    public void addOrUpdateSuggestionIfApplicable(VertexInSubGraphPojo vertex) {
-        if (!hasSuggestionInRow()) {
-            return;
-        }
-        SuggestionExtractorQueryRow suggestionExtractorQueryRow = new SuggestionExtractorQueryRow(
-                row,
-                keyPrefix
-        );
-        URI suggestionUri = suggestionUriInRow();
-        if (vertex.suggestions().containsKey(suggestionUri)) {
-            suggestionExtractorQueryRow.update(
-                    vertex.suggestions().get(
-                            suggestionUri
-                    )
-            );
-        } else {
-            vertex.addSuggestion(
-                    suggestionExtractorQueryRow.build()
-            );
-        }
-    }
-
     private Integer getNumberOfConnectedEdges() {
         return Integer.valueOf(
                 row.get(
@@ -160,17 +134,15 @@ public class VertexFromExtractorQueryRow {
         );
     }
 
-    private Boolean hasSuggestionInRow() {
-        return row.get(
-                keyPrefix + "_suggestion.uri"
-        ) != null;
-    }
-
-
-    private URI suggestionUriInRow() {
-        return URI.create(
-                row.get(
-                        keyPrefix + "_suggestion." + Neo4jUserGraph.URI_PROPERTY_NAME
-                ).toString());
+    private HashMap<URI, SuggestionPojo> getSuggestions() {
+        Object suggestionValue = row.get(
+                keyPrefix + "." + Neo4jVertexInSubGraphOperator.props.suggestions
+        );
+        if(suggestionValue == null){
+            return new HashMap<>();
+        }
+        return SuggestionJson.fromJsonArrayToMap(
+                suggestionValue.toString()
+        );
     }
 }

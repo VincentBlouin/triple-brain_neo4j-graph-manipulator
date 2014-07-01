@@ -140,10 +140,6 @@ public class Neo4jSubGraphExtractor {
                 "OPTIONAL MATCH (in_path_node)-[:" + Relationships.SAME_AS + "]->(in_path_node_same_as) " +
                 "OPTIONAL MATCH (in_path_node_same_as)-[:" + Relationships.HAS_IMAGE + "]->(in_path_node_same_as_image) " +
                 "OPTIONAL MATCH (in_path_node)-[:" + Relationships.HAS_IMAGE + "]->(in_path_node_image) " +
-                "OPTIONAL MATCH (in_path_node)-[:SUGGESTION]->(in_path_node_suggestion), " +
-                "(in_path_node_suggestion)-[:SUGGESTION_ORIGIN]->(in_path_node_suggestion_origin), " +
-                "(in_path_node_suggestion)-[:DOMAIN]->(in_path_node_suggestion_domain), " +
-                "(in_path_node_suggestion)-[:SAME_AS]->(in_path_node_suggestion_same_as) " +
                 "RETURN " +
                 vertexReturnQueryPart("in_path_node") +
                 edgeReturnQueryPart("in_path_node") +
@@ -166,7 +162,6 @@ public class Neo4jSubGraphExtractor {
                 includedElementQueryPart(prefix + "_included_vertex") +
                 includedEdgeQueryPart(prefix) +
                 imageReturnQueryPart(prefix) +
-                suggestionReturnQueryPart(prefix) +
                 identificationReturnQueryPart(prefix) +
                 typeReturnQueryPart(prefix) +
                 sameAsReturnQueryPart(prefix);
@@ -265,6 +260,10 @@ public class Neo4jSubGraphExtractor {
                 getPropertyUsingContainerNameQueryPart(
                         prefix,
                         Neo4jVertexInSubGraphOperator.props.is_public.name()
+                ) +
+                getPropertyUsingContainerNameQueryPart(
+                        prefix,
+                        Neo4jVertexInSubGraphOperator.props.suggestions.name()
                 );
     }
 

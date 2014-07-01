@@ -12,7 +12,7 @@ import org.neo4j.rest.graphdb.query.RestCypherQueryEngine;
 public class AdminOperationsOnDatabase {
 
     @BeforeClass
-    public void before(){
+    public static void before(){
         System.setProperty(
                 "org.neo4j.rest.logging_filter",
                 "true"

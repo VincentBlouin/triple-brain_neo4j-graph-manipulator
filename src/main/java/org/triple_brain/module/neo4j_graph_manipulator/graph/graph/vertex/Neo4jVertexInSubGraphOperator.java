@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 import com.hp.hpl.jena.vocabulary.RDFS;
+import org.codehaus.jettison.json.JSONArray;
 import org.neo4j.graphdb.*;
 import org.neo4j.rest.graphdb.RestAPI;
 import org.neo4j.rest.graphdb.batch.BatchCallback;
@@ -17,6 +18,7 @@ import org.triple_brain.module.model.graph.edge.Edge;
 import org.triple_brain.module.model.graph.edge.EdgeOperator;
 import org.triple_brain.module.model.graph.edge.EdgePojo;
 import org.triple_brain.module.model.graph.vertex.*;
+import org.triple_brain.module.model.json.SuggestionJson;
 import org.triple_brain.module.model.suggestion.Suggestion;
 import org.triple_brain.module.model.suggestion.SuggestionOriginPojo;
 import org.triple_brain.module.model.suggestion.SuggestionPojo;
@@ -380,6 +382,33 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
                         "SET n.number_of_connected_edges_property_name = " +
                         "n.number_of_connected_edges_property_name + 1",
                 map()
+        );
+    }
+
+    @Override
+    public void setSuggestions(Set<SuggestionPojo> suggestions){
+        queryEngine.query(
+                queryPrefix() +
+                        "SET n." + props.suggestions + "= { " + props.suggestions + "} ",
+                map(
+                        props.suggestions.name(), SuggestionJson.multipleToJson(suggestions).toString()
+                )
+        );
+    }
+
+    @Override
+    public Map<URI, SuggestionPojo>  getSuggestions() {
+        QueryResult<Map<String, Object>> result = queryEngine.query(
+                queryPrefix() +
+                        "return n.`" + props.suggestions + "` as suggestions",
+                map()
+        );
+        Object suggestionsValue = result.iterator().next().get("suggestions");
+        if(suggestionsValue == null){
+            return new HashMap<>();
+        }
+        return SuggestionJson.fromJsonArrayToMap(
+                suggestionsValue.toString()
         );
     }
 
