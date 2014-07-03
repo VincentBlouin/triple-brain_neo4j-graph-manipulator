@@ -33,7 +33,7 @@ public class ConvertSuggestionsToJson extends AdminOperationsOnDatabase {
         while(vertexIt.hasNext()){
             VertexOperator vertex = vertexIt.next();
             Set<SuggestionPojo> suggestions = new HashSet<>();
-            Map<URI, SuggestionPojo> suggestionsMap = (Map<URI, SuggestionPojo>) vertex.suggestions();
+            Map<URI, SuggestionPojo> suggestionsMap = (Map<URI, SuggestionPojo>) vertex.getSuggestions();
             suggestions.addAll(suggestionsMap.values());
             vertex.setSuggestions(suggestions);
         }

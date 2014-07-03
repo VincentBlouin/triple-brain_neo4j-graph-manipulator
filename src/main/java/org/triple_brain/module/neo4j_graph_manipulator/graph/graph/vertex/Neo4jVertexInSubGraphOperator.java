@@ -397,7 +397,14 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
     }
 
     @Override
-    public Map<URI, SuggestionPojo>  getSuggestions() {
+    public void addSuggestions(final Set<SuggestionPojo> suggestions) {
+        Set<SuggestionPojo> current = getSuggestions();
+        current.addAll(suggestions);
+        setSuggestions(current);
+    }
+
+    @Override
+    public Set<SuggestionPojo> getSuggestions() {
         QueryResult<Map<String, Object>> result = queryEngine.query(
                 queryPrefix() +
                         "return n.`" + props.suggestions + "` as suggestions",
@@ -405,127 +412,11 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
         );
         Object suggestionsValue = result.iterator().next().get("suggestions");
         if(suggestionsValue == null){
-            return new HashMap<>();
+            return new HashSet<>();
         }
-        return SuggestionJson.fromJsonArrayToMap(
+        return SuggestionJson.fromJsonArray(
                 suggestionsValue.toString()
         );
-    }
-
-    @Override
-    public void addSuggestions(final Set<SuggestionPojo> suggestions) {
-        restApi.executeBatch(new BatchCallback<Object>() {
-            @Override
-            public Object recordBatch(RestAPI restApi) {
-                for (SuggestionPojo suggestion : suggestions) {
-                    suggestion.setUri(
-                            Neo4jSuggestionOperator.generateUri()
-                    );
-                    SuggestionOriginPojo origin = suggestion.origins().iterator().next();
-                    origin.setUri(
-                            Neo4jSuggestionOriginOperator.generateUriBasedOnSuggestion(
-                                    suggestion
-                            )
-                    );
-                    queryEngine.query(
-                            queryPrefix() +
-                            "MERGE (suggestion {" +
-                                    "uri: {suggestion_uri} " +
-                                    "}) " +
-                                    "ON CREATE SET " +
-                                    "suggestion." + Neo4jFriendlyResource.props.creation_date + "=timestamp(), " +
-                                    "suggestion." + Neo4jFriendlyResource.props.last_modification_date + "=timestamp() " +
-                                    "MERGE (same_as {" +
-                                    "uri: {same_as_uri} " +
-                                    "}) " +
-                                    "ON CREATE SET " +
-                                    "same_as.`" + RDFS.label.getURI() + "`={same_as_label}, " +
-                                    "same_as.`" + RDFS.comment.getURI() + "`={same_as_comment}, " +
-                                    "same_as." + Neo4jFriendlyResource.props.creation_date + "=timestamp(), " +
-                                    "same_as." + Neo4jFriendlyResource.props.last_modification_date + "=timestamp() " +
-                                    "MERGE (domain {" +
-                                    "uri: {domain_uri} " +
-                                    "}) " +
-                                    "ON CREATE SET " +
-                                    "domain.`" + RDFS.label.getURI() + "`={domain_label}, " +
-                                    "domain.`" + RDFS.comment.getURI() + "`={domain_comment}, " +
-                                    "domain." + Neo4jFriendlyResource.props.creation_date + "=timestamp(), " +
-                                    "domain." + Neo4jFriendlyResource.props.last_modification_date + "=timestamp() " +
-                                    "MERGE (origin {" +
-                                    "uri: {origin_uri} " +
-                                    "}) " +
-                                    "ON CREATE SET " +
-                                    "origin." + Neo4jSuggestionOriginOperator.ORIGIN_PROPERTY + "={origin_origin}, " +
-                                    "origin.`" + RDFS.label.getURI() + "`={origin_label}, " +
-                                    "origin.`" + RDFS.comment.getURI() + "`={origin_comment}, " +
-                                    "origin." + Neo4jFriendlyResource.props.creation_date + "=timestamp(), " +
-                                    "origin." + Neo4jFriendlyResource.props.last_modification_date + "=timestamp() " +
-                                    "CREATE UNIQUE " +
-                                    "n-[:" + Relationships.SUGGESTION + "]->suggestion, " +
-                                    "suggestion-[:" + Relationships.SAME_AS + "]->same_as, " +
-                                    "suggestion-[:" + Relationships.DOMAIN + "]->domain, " +
-                                    "suggestion-[:" + Relationships.SUGGESTION_ORIGIN + "]->origin ",
-                            map(
-                                    "suggestion_uri", suggestion.uri().toString(),
-                                    "same_as_uri", suggestion.sameAs().uri().toString(),
-                                    "same_as_label", suggestion.sameAs().label(),
-                                    "same_as_comment", suggestion.sameAs().comment(),
-                                    "domain_uri", suggestion.domain().uri().toString(),
-                                    "domain_label", suggestion.domain().label(),
-                                    "domain_comment", suggestion.domain().comment(),
-                                    "origin_uri", origin.uri().toString(),
-                                    "origin_origin", origin.toString(),
-                                    "origin_label", origin.label(),
-                                    "origin_comment", origin.comment()
-                            )
-                    );
-                }
-                graphElementOperator.updateLastModificationDate();
-                return null;
-            }
-        });
-    }
-
-    @Override
-    public Map<URI, Suggestion> suggestions() {
-        QueryResult<Map<String, Object>> result = queryEngine.query(
-                queryPrefix() +
-                        "MATCH " +
-                        "n-[:" + Relationships.SUGGESTION + "]->n_suggestion, " +
-                        "(n_suggestion)-[:SUGGESTION_ORIGIN]->(n_suggestion_origin), " +
-                        "(n_suggestion)-[:DOMAIN]->(n_suggestion_domain), " +
-                        "(n_suggestion)-[:SAME_AS]->(n_suggestion_same_as) " +
-                        "RETURN " +
-                        Neo4jSubGraphExtractor.suggestionReturnQueryPart("n") +
-                        "'dummy_return'",
-                map()
-        );
-        Map<URI, Suggestion> suggestions = new HashMap<>();
-        SuggestionExtractorQueryRow suggestionExtractorQueryRow;
-        for (Map<String, Object> row : result) {
-            suggestionExtractorQueryRow = new SuggestionExtractorQueryRow(
-                    row,
-                    "n"
-            );
-            URI suggestionUri = URI.create(
-                    row.get(
-                            "n_suggestion." + Neo4jUserGraph.URI_PROPERTY_NAME
-                    ).toString()
-            );
-            if(suggestions.containsKey(suggestionUri)){
-                suggestionExtractorQueryRow.update(
-                        (SuggestionPojo) suggestions.get(
-                                suggestionUri
-                        )
-                );
-            }else{
-                suggestions.put(
-                        suggestionUri,
-                        suggestionExtractorQueryRow.build()
-                );
-            }
-        }
-        return suggestions;
     }
 
     @Override
@@ -545,23 +436,10 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
                 String friendlyResourceSelect = friendlyResourceOperator.addToSelectUsingVariableName(
                         "f"
                 );
-                queryEngine.query(queryPrefix() + ", " + friendlyResourceSelect + " MATCH (n)-[r]->(f) " +
+                return queryEngine.query(queryPrefix() + ", " + friendlyResourceSelect + " MATCH (n)-[r]->(f) " +
                         "DELETE r " +
                         "SET " + Neo4jFriendlyResource.LAST_MODIFICATION_QUERY_PART,
                         addUpdatedLastModificationDate(map())
-                );
-                return queryEngine.query(
-                        queryPrefix() +
-                                "MATCH (n)-[r:SUGGESTION]->(s), " +
-                                "(s)-[r2:SUGGESTION_ORIGIN]->(o) " +
-                                "WHERE o.origin={identification_uri} " +
-                                "DELETE r2, o " +
-                                "RETURN count(DISTINCT r2) as number_of_origins, " +
-                                "s.uri as uri",
-                        map(
-                                "identification_uri",
-                                friendlyResourceUri.toString()
-                        )
                 );
             }
         });

@@ -9,7 +9,9 @@ import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.vertex.Neo4jV
 
 import java.net.URI;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 /*
 * Copyright Mozilla Public License 1.1
@@ -134,14 +136,14 @@ public class VertexFromExtractorQueryRow {
         );
     }
 
-    private HashMap<URI, SuggestionPojo> getSuggestions() {
+    private Set<SuggestionPojo> getSuggestions() {
         Object suggestionValue = row.get(
                 keyPrefix + "." + Neo4jVertexInSubGraphOperator.props.suggestions
         );
         if(suggestionValue == null){
-            return new HashMap<>();
+            return new HashSet<>();
         }
-        return SuggestionJson.fromJsonArrayToMap(
+        return SuggestionJson.fromJsonArray(
                 suggestionValue.toString()
         );
     }
