@@ -36,14 +36,14 @@ public class Neo4jImages {
         this.friendlyResource = friendlyResource;
     }
 
-    public void addAll(final Set<Image> images){
+    public void addAll(Set<Image> images){
         Set<Image> current = get();
         current.addAll(images);
         queryEngine.query(
                 friendlyResource.queryPrefix() +
                         "SET n." + props.images + "= { " + props.images + "} ",
                 map(
-                        props.images.name(), ImageJson.toJsonArray(images).toString()
+                        props.images.name(), ImageJson.toJsonArray(current).toString()
                 )
         );
     }
