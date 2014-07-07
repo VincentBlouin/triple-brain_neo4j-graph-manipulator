@@ -123,7 +123,6 @@ public class Neo4jSubGraphExtractor {
     }
 
     private String queryToGetGraph() {
-        //START start_node=node(12440) MATCH path=start_node<-[:SOURCE_VERTEX|DESTINATION_VERTEX*0..20]->in_path_node MATCH in_path_node-[:DESTINATION_VERTEX]->(destination_vertex), in_path_node-[:SOURCE_VERTEX]->(source_vertex) OPTIONAL MATCH (:vertex)-[:SUGGESTION]->(suggestion), (suggestion)-[:SUGGESTION_ORIGIN]->(suggestion_origin), (suggestion)-[:DOMAIN]->(suggestion_domain), (suggestion)-[:SAME_AS]->(suggestion_same_as) RETURN in_path_node, destination_vertex, source_vertex, suggestion
         return "START start_node=node:node_auto_index(uri='" + centerVertexUri + "') " +
                 "MATCH path=start_node<-[:" +
                 Relationships.SOURCE_VERTEX +
@@ -134,12 +133,8 @@ public class Neo4jSubGraphExtractor {
                 "OPTIONAL MATCH (in_path_node_included_edge)-[:" + Relationships.SOURCE_VERTEX + "]->(in_path_node_included_edge_source_vertex) " +
                 "OPTIONAL MATCH (in_path_node_included_edge)-[:" + Relationships.DESTINATION_VERTEX + "]->(in_path_node_included_edge_destination_vertex) " +
                 "OPTIONAL MATCH (in_path_node)-[:" + Relationships.IDENTIFIED_TO + "]->(in_path_node_generic_identification) " +
-                "OPTIONAL MATCH (in_path_node_generic_identification)-[:" + Relationships.HAS_IMAGE + "]->(in_path_node_generic_identification_image) " +
                 "OPTIONAL MATCH (in_path_node)-[:" + Relationships.TYPE + "]->(in_path_node_type) " +
-                "OPTIONAL MATCH (in_path_node_type)-[:" + Relationships.HAS_IMAGE + "]->(in_path_node_type_image) " +
                 "OPTIONAL MATCH (in_path_node)-[:" + Relationships.SAME_AS + "]->(in_path_node_same_as) " +
-                "OPTIONAL MATCH (in_path_node_same_as)-[:" + Relationships.HAS_IMAGE + "]->(in_path_node_same_as_image) " +
-                "OPTIONAL MATCH (in_path_node)-[:" + Relationships.HAS_IMAGE + "]->(in_path_node_image) " +
                 "RETURN " +
                 vertexReturnQueryPart("in_path_node") +
                 edgeReturnQueryPart("in_path_node") +
@@ -189,33 +184,10 @@ public class Neo4jSubGraphExtractor {
     }
 
     private static String imageReturnQueryPart(String prefix) {
-        String key = prefix + "_image";
         return getPropertyUsingContainerNameQueryPart(
-                key,
-                Neo4jImages.props.base64_for_small.toString()
-        ) +
-                getPropertyUsingContainerNameQueryPart(
-                        key,
-                        Neo4jImages.props.url_for_bigger.toString()
-                );
-    }
-
-    public static String suggestionReturnQueryPart(String prefix) {
-        return friendlyResourceReturnQueryPartUsingPrefix(
-                prefix + "_suggestion"
-        ) +
-                suggestionOriginSpecificPropertiesReturnQueryPartUsingPrefix(
-                        prefix + "_suggestion_origin"
-                ) +
-                friendlyResourceReturnQueryPartUsingPrefix(
-                        prefix + "_suggestion_origin"
-                ) +
-                friendlyResourceReturnQueryPartUsingPrefix(
-                        prefix + "_suggestion_domain"
-                ) +
-                friendlyResourceReturnQueryPartUsingPrefix(
-                        prefix + "_suggestion_same_as"
-                );
+                prefix,
+                Neo4jImages.props.images.name()
+        );
     }
 
     private String typeReturnQueryPart(String prefix) {
@@ -265,13 +237,6 @@ public class Neo4jSubGraphExtractor {
                         prefix,
                         Neo4jVertexInSubGraphOperator.props.suggestions.name()
                 );
-    }
-
-    private static String suggestionOriginSpecificPropertiesReturnQueryPartUsingPrefix(String prefix) {
-        return getPropertyUsingContainerNameQueryPart(
-                prefix,
-                "origin"
-        );
     }
 
     public static String friendlyResourceReturnQueryPartUsingPrefix(String prefix) {

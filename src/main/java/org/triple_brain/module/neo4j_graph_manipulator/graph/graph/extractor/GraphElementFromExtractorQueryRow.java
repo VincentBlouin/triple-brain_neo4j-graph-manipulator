@@ -1,13 +1,13 @@
 package org.triple_brain.module.neo4j_graph_manipulator.graph.graph.extractor;
 
-import org.triple_brain.module.model.FriendlyResource;
 import org.triple_brain.module.model.graph.FriendlyResourcePojo;
 import org.triple_brain.module.model.graph.GraphElement;
 import org.triple_brain.module.model.graph.GraphElementPojo;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.Neo4jUserGraph;
 
 import java.net.URI;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 
 /*
 * Copyright Mozilla Public License 1.1
@@ -43,28 +43,21 @@ public class GraphElementFromExtractorQueryRow {
 
     public void update(GraphElement graphElement) {
         GraphElementPojo pojo = (GraphElementPojo) graphElement;
-        FriendlyResourceFromExtractorQueryRow.usingRowAndNodeKey(
-                row,
-                key
-        ).update(graphElement);
         updateIdentifications(
                 pojo
         );
     }
 
-    private void updateIdentifications(GraphElementPojo graphElement){
+    private void updateIdentifications(GraphElementPojo graphElement) {
         updateIdentificationsUsingKeyAndCollection(
-                graphElement,
                 genericIdentificationKey,
                 graphElement.getGenericIdentifications()
         );
         updateIdentificationsUsingKeyAndCollection(
-                graphElement,
                 typeKey,
                 graphElement.getAdditionalTypes()
         );
         updateIdentificationsUsingKeyAndCollection(
-                graphElement,
                 sameAsKey,
                 graphElement.getSameAs()
         );
@@ -72,10 +65,9 @@ public class GraphElementFromExtractorQueryRow {
 
 
     private void updateIdentificationsUsingKeyAndCollection(
-            GraphElementPojo graphElement,
             String key,
             Map<URI, FriendlyResourcePojo> collection
-            ){
+    ) {
         if (hasIdentificationInRow(key)) {
             URI uri = URI.create(
                     uriKey(key)
@@ -83,19 +75,10 @@ public class GraphElementFromExtractorQueryRow {
             FriendlyResourceFromExtractorQueryRow extractor = identificationExtractorUsingKey(
                     key
             );
-            Boolean exists = collection.containsKey(uri);
-            if (exists) {
-                extractor.update(
-                        collection.get(
-                                uri
-                        )
-                );
-            }else{
-                collection.put(
-                        uri,
-                        extractor.build()
-                );
-            }
+            collection.put(
+                    uri,
+                    extractor.build()
+            );
         }
     }
 
