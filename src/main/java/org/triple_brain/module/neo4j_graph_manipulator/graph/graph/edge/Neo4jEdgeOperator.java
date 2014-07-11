@@ -11,6 +11,8 @@ import org.triple_brain.module.model.FriendlyResource;
 import org.triple_brain.module.model.Image;
 import org.triple_brain.module.model.UserUris;
 import org.triple_brain.module.model.graph.FriendlyResourcePojo;
+import org.triple_brain.module.model.graph.Identification;
+import org.triple_brain.module.model.graph.IdentificationPojo;
 import org.triple_brain.module.model.graph.edge.EdgeOperator;
 import org.triple_brain.module.model.graph.vertex.Vertex;
 import org.triple_brain.module.model.graph.vertex.VertexOperator;
@@ -214,6 +216,11 @@ public class Neo4jEdgeOperator implements EdgeOperator, Neo4jOperator {
     }
 
     @Override
+    public String getOwner() {
+        return graphElementOperator.getOwner();
+    }
+
+    @Override
     public URI uri() {
         return graphElementOperator.uri();
     }
@@ -266,7 +273,7 @@ public class Neo4jEdgeOperator implements EdgeOperator, Neo4jOperator {
     }
 
     @Override
-    public FriendlyResourcePojo addGenericIdentification(FriendlyResource friendlyResource) {
+    public IdentificationPojo addGenericIdentification(Identification friendlyResource) {
         return graphElementOperator.addGenericIdentification(
                 friendlyResource
         );
@@ -295,37 +302,37 @@ public class Neo4jEdgeOperator implements EdgeOperator, Neo4jOperator {
     }
 
     @Override
-    public Map<URI,FriendlyResource> getGenericIdentifications() {
+    public Map<URI,Identification> getGenericIdentifications() {
         return graphElementOperator.getGenericIdentifications();
     }
 
     @Override
-    public FriendlyResourcePojo addSameAs(FriendlyResource friendlyResourceImpl) {
+    public IdentificationPojo addSameAs(Identification friendlyResourceImpl) {
         return graphElementOperator.addSameAs(friendlyResourceImpl);
     }
 
     @Override
-    public Map<URI,FriendlyResource> getSameAs() {
+    public Map<URI,Identification> getSameAs() {
         return graphElementOperator.getSameAs();
     }
 
     @Override
-    public FriendlyResourcePojo addType(FriendlyResource type) {
+    public IdentificationPojo addType(Identification type) {
         return graphElementOperator.addType(type);
     }
 
     @Override
-    public void removeIdentification(FriendlyResource type) {
+    public void removeIdentification(Identification type) {
         graphElementOperator.removeIdentification(type);
     }
 
     @Override
-    public Map<URI,FriendlyResource> getAdditionalTypes() {
+    public Map<URI,Identification> getAdditionalTypes() {
         return graphElementOperator.getAdditionalTypes();
     }
 
     @Override
-    public Map<URI,FriendlyResource> getIdentifications() {
+    public Map<URI,Identification> getIdentifications() {
         return graphElementOperator.getIdentifications();
     }
 
@@ -365,5 +372,10 @@ public class Neo4jEdgeOperator implements EdgeOperator, Neo4jOperator {
                 newMap
         );
         return newMap;
+    }
+
+    @Override
+    public URI getExternalResourceUri() {
+        return graphElementOperator.getExternalResourceUri();
     }
 }

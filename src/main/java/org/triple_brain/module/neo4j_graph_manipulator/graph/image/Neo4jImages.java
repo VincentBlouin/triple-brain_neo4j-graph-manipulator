@@ -54,6 +54,9 @@ public class Neo4jImages {
                         "return n.`" + props.images + "` as images",
                 map()
         );
+        if(!result.iterator().hasNext()){
+            return new HashSet<>();
+        }
         Object imagesValue = result.iterator().next().get("images");
         if(imagesValue == null){
             return new HashSet<>();

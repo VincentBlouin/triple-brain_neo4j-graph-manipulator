@@ -7,22 +7,23 @@ import org.apache.commons.lang.StringUtils;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.rest.graphdb.RestAPI;
-import org.neo4j.rest.graphdb.batch.BatchCallback;
 import org.neo4j.rest.graphdb.query.QueryEngine;
 import org.neo4j.rest.graphdb.util.QueryResult;
 import org.triple_brain.module.common_utils.Uris;
 import org.triple_brain.module.model.FriendlyResource;
 import org.triple_brain.module.model.Image;
+import org.triple_brain.module.model.UserUris;
 import org.triple_brain.module.model.graph.FriendlyResourceOperator;
 import org.triple_brain.module.model.graph.FriendlyResourcePojo;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.Neo4jUserGraph;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.image.Neo4jImageFactory;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.image.Neo4jImages;
-import org.triple_brain.module.neo4j_graph_manipulator.graph.suggestion.Neo4jSuggestionOriginOperator;
 
-import javax.inject.Inject;
 import java.net.URI;
-import java.util.*;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
 
 import static org.triple_brain.module.neo4j_graph_manipulator.graph.Neo4jRestApiUtils.map;
 import static org.triple_brain.module.neo4j_graph_manipulator.graph.Neo4jRestApiUtils.wrap;
@@ -33,9 +34,11 @@ import static org.triple_brain.module.neo4j_graph_manipulator.graph.Neo4jRestApi
 public class Neo4jFriendlyResource implements FriendlyResourceOperator, Neo4jOperator {
 
     public enum props {
+        uri,
         label,
         creation_date,
-        last_modification_date
+        last_modification_date,
+        owner
     }
 
     public static final String LAST_MODIFICATION_QUERY_PART = " n." + props.last_modification_date + "= { " + props.last_modification_date + "} ";
@@ -260,6 +263,11 @@ public class Neo4jFriendlyResource implements FriendlyResourceOperator, Neo4jOpe
         ));
     }
 
+    @Override
+    public String getOwner() {
+        return UserUris.ownerUserNameFromUri(uri);
+    }
+
     public void updateLastModificationDate() {
         String query = queryPrefix() +
                 " SET " +
@@ -287,6 +295,7 @@ public class Neo4jFriendlyResource implements FriendlyResourceOperator, Neo4jOpe
         Long now = new Date().getTime();
         Map<String, Object> newMap = map(
                 Neo4jUserGraph.URI_PROPERTY_NAME, uri().toString(),
+                props.owner.name(), UserUris.ownerUserNameFromUri(uri()),
                 props.creation_date.name(), now,
                 props.last_modification_date.name(), now
         );
@@ -305,12 +314,6 @@ public class Neo4jFriendlyResource implements FriendlyResourceOperator, Neo4jOpe
     @Override
     public int hashCode() {
         return uri().hashCode();
-    }
-
-    private boolean hasCreationDate() {
-        return node.hasProperty(
-                props.creation_date.name()
-        );
     }
 
     @Override

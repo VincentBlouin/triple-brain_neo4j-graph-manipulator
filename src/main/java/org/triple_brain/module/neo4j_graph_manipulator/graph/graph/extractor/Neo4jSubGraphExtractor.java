@@ -10,6 +10,7 @@ import org.triple_brain.module.model.graph.edge.Edge;
 import org.triple_brain.module.model.graph.edge.EdgePojo;
 import org.triple_brain.module.model.graph.vertex.*;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.*;
+import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.Neo4jIdentification;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.Neo4jUserGraph;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.edge.Neo4jEdgeFactory;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.edge.Neo4jEdgeOperator;
@@ -146,7 +147,7 @@ public class Neo4jSubGraphExtractor {
     private String edgeReturnQueryPart(String prefix) {
         return edgeSpecificPropertiesQueryPartUsingPrefix(prefix) +
                 friendlyResourceReturnQueryPartUsingPrefix(prefix) +
-                identificationReturnQueryPart(prefix) +
+                genericIdentificationReturnQueryPart(prefix) +
                 typeReturnQueryPart(prefix) +
                 sameAsReturnQueryPart(prefix);
     }
@@ -157,7 +158,7 @@ public class Neo4jSubGraphExtractor {
                 includedElementQueryPart(prefix + "_included_vertex") +
                 includedEdgeQueryPart(prefix) +
                 imageReturnQueryPart(prefix) +
-                identificationReturnQueryPart(prefix) +
+                genericIdentificationReturnQueryPart(prefix) +
                 typeReturnQueryPart(prefix) +
                 sameAsReturnQueryPart(prefix);
     }
@@ -191,26 +192,31 @@ public class Neo4jSubGraphExtractor {
     }
 
     private String typeReturnQueryPart(String prefix) {
-        String newPrefix = prefix + "_type";
-        return imageReturnQueryPart(newPrefix) +
-                friendlyResourceReturnQueryPartUsingPrefix(
-                        newPrefix
-                );
+        return identificationReturnQueryPart(
+                prefix + "_type"
+        );
     }
 
     private String sameAsReturnQueryPart(String prefix) {
-        String newPrefix = prefix + "_same_as";
-        return imageReturnQueryPart(newPrefix) +
-                friendlyResourceReturnQueryPartUsingPrefix(
-                        newPrefix
-                );
+        return identificationReturnQueryPart(
+                prefix + "_same_as"
+        );
     }
 
+    private String genericIdentificationReturnQueryPart(String prefix) {
+        return identificationReturnQueryPart(
+                prefix + "_generic_identification"
+        );
+    }
+
+
     private String identificationReturnQueryPart(String prefix) {
-        String newPrefix = prefix + "_generic_identification";
-        return friendlyResourceReturnQueryPartUsingPrefix(
-                newPrefix
-        ) + imageReturnQueryPart(newPrefix);
+        return getPropertyUsingContainerNameQueryPart(
+                prefix, Neo4jIdentification.props.external_uri.name()
+        ) +
+                friendlyResourceReturnQueryPartUsingPrefix(
+                        prefix
+                ) + imageReturnQueryPart(prefix);
     }
 
     private String edgeSpecificPropertiesQueryPartUsingPrefix(String prefix) {

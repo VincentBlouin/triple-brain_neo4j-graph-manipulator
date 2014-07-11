@@ -1,6 +1,5 @@
 package org.triple_brain.module.neo4j_graph_manipulator.graph.graph;
 
-import com.google.api.client.util.DateTime;
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 import com.hp.hpl.jena.vocabulary.RDFS;
@@ -14,12 +13,13 @@ import org.neo4j.rest.graphdb.util.QueryResult;
 import org.triple_brain.module.model.FriendlyResource;
 import org.triple_brain.module.model.Image;
 import org.triple_brain.module.model.UserUris;
-import org.triple_brain.module.model.graph.FriendlyResourcePojo;
-import org.triple_brain.module.model.graph.GraphElementOperator;
+import org.triple_brain.module.model.graph.*;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.*;
+
 import javax.inject.Inject;
 import java.net.URI;
 import java.util.*;
+
 import static org.triple_brain.module.neo4j_graph_manipulator.graph.Neo4jRestApiUtils.map;
 
 /*
@@ -28,26 +28,26 @@ import static org.triple_brain.module.neo4j_graph_manipulator.graph.Neo4jRestApi
 public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOperator {
 
     protected Node node;
-    protected Neo4jFriendlyResource friendlyResource;
-    protected Neo4jFriendlyResourceFactory friendlyResourceFactory;
+    protected Neo4jIdentification identification;
     protected URI uri;
     protected QueryEngine<Map<String, Object>> queryEngine;
     protected RestAPI restApi;
+    protected Neo4jIdentificationFactory identificationFactory;
 
     @Inject
     protected Neo4jUtils neo4jUtils;
 
     @AssistedInject
     protected Neo4jGraphElementOperator(
-            Neo4jFriendlyResourceFactory friendlyResourceFactory,
             QueryEngine queryEngine,
             RestAPI restApi,
+            Neo4jIdentificationFactory identificationFactory,
             @Assisted Node node
     ) {
-        friendlyResource = friendlyResourceFactory.withNode(
+        identification = identificationFactory.withNode(
                 node
         );
-        this.friendlyResourceFactory = friendlyResourceFactory;
+        this.identificationFactory = identificationFactory;
         this.node = node;
         this.queryEngine = queryEngine;
         this.restApi = restApi;
@@ -56,15 +56,15 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
     @AssistedInject
     protected Neo4jGraphElementOperator(
             Neo4jUtils utils,
-            Neo4jFriendlyResourceFactory friendlyResourceFactory,
             QueryEngine queryEngine,
             RestAPI restApi,
+            Neo4jIdentificationFactory identificationFactory,
             @Assisted URI uri
     ) {
-        friendlyResource = friendlyResourceFactory.withUri(
+        identification = identificationFactory.withUri(
                 uri
         );
-        this.friendlyResourceFactory = friendlyResourceFactory;
+        this.identificationFactory = identificationFactory;
         this.neo4jUtils = utils;
         this.queryEngine = queryEngine;
         this.restApi = restApi;
@@ -72,76 +72,81 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
 
     @Override
     public Date creationDate() {
-        return friendlyResource.creationDate();
+        return identification.creationDate();
     }
 
     @Override
     public Date lastModificationDate() {
-        return friendlyResource.lastModificationDate();
+        return identification.lastModificationDate();
+    }
+
+    @Override
+    public String getOwner() {
+        return identification.getOwner();
     }
 
     public void updateLastModificationDate() {
-        friendlyResource.updateLastModificationDate();
+        identification.updateLastModificationDate();
     }
 
     @Override
     public URI uri() {
-        return friendlyResource.uri();
+        return identification.uri();
     }
 
     @Override
     public String label() {
-        return friendlyResource.label();
+        return identification.label();
     }
 
     @Override
     public void label(String label) {
-        friendlyResource.label(
+        identification.label(
                 label
         );
     }
 
     @Override
     public Set<Image> images() {
-        return friendlyResource.images();
+        return identification.images();
     }
 
     @Override
     public Boolean gotImages() {
-        return friendlyResource.gotImages();
+        return identification.gotImages();
     }
 
     @Override
     public String comment() {
-        return friendlyResource.comment();
+        return identification.comment();
     }
 
     @Override
     public void comment(String comment) {
-        friendlyResource.comment(
+        identification.comment(
                 comment
         );
     }
 
     @Override
     public Boolean gotComments() {
-        return friendlyResource.gotComments();
+        return identification.gotComments();
     }
 
     @Override
     public void addImages(Set<Image> images) {
-        friendlyResource.addImages(
+        identification.addImages(
                 images
         );
     }
 
     @Override
     public boolean hasLabel() {
-        return friendlyResource.hasLabel();
+        return identification.hasLabel();
     }
 
     @Override
-    public FriendlyResourcePojo addGenericIdentification(FriendlyResource genericIdentification) throws IllegalArgumentException {
+    public IdentificationPojo addGenericIdentification(Identification genericIdentification) throws IllegalArgumentException {
         return addIdentificationUsingRelation(
                 genericIdentification,
                 Relationships.IDENTIFIED_TO
@@ -157,41 +162,44 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
 
     @Override
     public void createUsingInitialValues(Map<String, Object> values) {
-        friendlyResource.createUsingInitialValues(values);
+        identification.createUsingInitialValues(values);
     }
 
     @Override
-    public Map<URI,FriendlyResource> getGenericIdentifications() {
+    public Map<URI, Identification> getGenericIdentifications() {
         return getIdentificationUsingRelation(
                 Relationships.IDENTIFIED_TO
         );
     }
 
     @Override
-    public FriendlyResourcePojo addSameAs(FriendlyResource sameAs) throws IllegalArgumentException {
+    public IdentificationPojo addSameAs(Identification sameAs) throws IllegalArgumentException {
         return addIdentificationUsingRelation(
                 sameAs,
                 Relationships.SAME_AS
         );
     }
 
-    private FriendlyResourcePojo addIdentificationUsingRelation(
-            final FriendlyResource identification,
+    private IdentificationPojo addIdentificationUsingRelation(
+            final Identification identification,
             final Relationships relation
     ) {
         ifIdentificationIsSelfThrowException(identification);
-        final Neo4jFriendlyResource neo4jFriendlyResource = friendlyResourceFactory.withUri(
-                identification.uri()
+        final Neo4jIdentification neo4jIdentification = identificationFactory.withUri(
+                new UserUris(getOwner()).generateIdentificationUri()
         );
-        QueryResult<Map<String,Object>> results = restApi.executeBatch(new BatchCallback<QueryResult<Map<String,Object>>>() {
+        final String queryPrefix = this.identification.queryPrefix();
+        QueryResult<Map<String, Object>> results = restApi.executeBatch(new BatchCallback<QueryResult<Map<String, Object>>>() {
             @Override
-            public QueryResult<Map<String,Object>> recordBatch(RestAPI restApi) {
-                 QueryResult<Map<String,Object>> results = queryEngine.query(
-                        queryPrefix() +
+            public QueryResult<Map<String, Object>> recordBatch(RestAPI restApi) {
+                QueryResult<Map<String, Object>> results = queryEngine.query(
+                        queryPrefix +
                                 "MERGE (f {" +
-                                "uri: {uri} " +
+                                Neo4jIdentification.props.external_uri + ": {external_uri}, " +
+                                Neo4jFriendlyResource.props.owner + ": {owner}" +
                                 "}) " +
                                 "ON CREATE SET " +
+                                "f.uri = {uri}, " +
                                 "f.`" + RDFS.label.getURI() + "`={label}, " +
                                 "f.`" + RDFS.comment.getURI() + "`={comment}, " +
                                 "f." + Neo4jFriendlyResource.props.creation_date + "=timestamp(), " +
@@ -200,16 +208,19 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
                                 "n-[:" + relation + "]->f " +
                                 "RETURN " +
                                 "f.uri as uri, " +
+                                "f.external_uri as external_uri, " +
                                 "f.`" + RDFS.label.getURI() + "` as label, " +
                                 "f.`" + RDFS.comment.getURI() + "` as comment, " +
                                 "f." + Neo4jFriendlyResource.props.creation_date + " as creation_date, " +
                                 "f." + Neo4jFriendlyResource.props.last_modification_date + " as last_modification_date",
-                        neo4jFriendlyResource.addCreationProperties(
+                        neo4jIdentification.addCreationProperties(
                                 map(
                                         "label",
                                         identification.label(),
                                         "comment",
-                                        identification.comment()
+                                        identification.comment(),
+                                        "external_uri",
+                                        identification.getExternalResourceUri().toString()
                                 )
                         )
                 );
@@ -217,33 +228,38 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
                 return results;
             }
         });
-        Map<String,Object> result = results.iterator().next();
-        return new FriendlyResourcePojo(
+        Map<String, Object> result = results.iterator().next();
+        return new IdentificationPojo(
                 URI.create(
-                        result.get("uri").toString()
+                        result.get("external_uri").toString()
                 ),
-                result.get("label") == null ?
-                        "" : result.get("label").toString(),
-                new HashSet<Image>(),
-                result.get("comment") == null ? "" : result.get("comment").toString(),
-                new Date(
-                        (Long) result.get("creation_date")
-                ),
-                new Date(
-                        (Long) result.get("last_modification_date")
+                new FriendlyResourcePojo(
+                        URI.create(
+                                result.get("uri").toString()
+                        ),
+                        result.get("label") == null ?
+                                "" : result.get("label").toString(),
+                        new HashSet<Image>(),
+                        result.get("comment") == null ? "" : result.get("comment").toString(),
+                        new Date(
+                                (Long) result.get("creation_date")
+                        ),
+                        new Date(
+                                (Long) result.get("last_modification_date")
+                        )
                 )
         );
     }
 
     @Override
-    public Map<URI, FriendlyResource> getSameAs() {
+    public Map<URI, Identification> getSameAs() {
         return getIdentificationUsingRelation(
                 Relationships.SAME_AS
         );
     }
 
     @Override
-    public FriendlyResourcePojo addType(FriendlyResource type) throws IllegalArgumentException {
+    public IdentificationPojo addType(Identification type) throws IllegalArgumentException {
         return addIdentificationUsingRelation(
                 type,
                 Relationships.TYPE
@@ -251,13 +267,13 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
     }
 
     @Override
-    public void removeIdentification(FriendlyResource friendlyResource) {
-        Node friendlyResourceAsNode = friendlyResourceFactory.withUri(
+    public void removeIdentification(Identification friendlyResource) {
+        Node identificationAsNode = identificationFactory.withUri(
                 friendlyResource.uri()
         ).getNode();
         for (Relationship relationship : getNode().getRelationships(Direction.OUTGOING)) {
             Node endNode = relationship.getEndNode();
-            if (endNode.equals(friendlyResourceAsNode)) {
+            if (endNode.equals(identificationAsNode)) {
                 relationship.delete();
             }
         }
@@ -265,15 +281,15 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
     }
 
     @Override
-    public Map<URI,FriendlyResource> getAdditionalTypes() {
+    public Map<URI, Identification> getAdditionalTypes() {
         return getIdentificationUsingRelation(
                 Relationships.TYPE
         );
     }
 
     @Override
-    public Map<URI,FriendlyResource> getIdentifications() {
-        Map<URI,FriendlyResource> identifications = getSameAs();
+    public Map<URI, Identification> getIdentifications() {
+        Map<URI, Identification> identifications = getSameAs();
         identifications.putAll(getAdditionalTypes());
         identifications.putAll(getGenericIdentifications());
         return identifications;
@@ -281,7 +297,7 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
 
     @Override
     public void remove() {
-        friendlyResource.remove();
+        identification.remove();
     }
 
     @Override
@@ -291,8 +307,8 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
         );
     }
 
-    private Map<URI, FriendlyResource> getIdentificationUsingRelation(Relationships relationship) {
-        QueryResult<Map<String,Object>> result = queryEngine.query(
+    private Map<URI, Identification> getIdentificationUsingRelation(Relationships relationship) {
+        QueryResult<Map<String, Object>> result = queryEngine.query(
                 queryPrefix() +
                         "MATCH " +
                         "n-[:" + relationship + "]->identification " +
@@ -301,62 +317,61 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
                 map()
         );
         Iterator<Map<String, Object>> iterator = result.iterator();
-        Map<URI, FriendlyResource> friendlyResources = new HashMap<>();
+        Map<URI, Identification> identifications = new HashMap<>();
         while (iterator.hasNext()) {
             URI uri = URI.create(
                     iterator.next().get("uri").toString()
             );
-            friendlyResources.put(
+            identifications.put(
                     uri,
-                    friendlyResourceFactory.withUri(
+                    identificationFactory.withUri(
                             uri
                     )
             );
         }
-        return friendlyResources;
+        return identifications;
     }
 
-    private void ifIdentificationIsSelfThrowException(FriendlyResource identification) throws IllegalArgumentException {
-        if (identification.equals(this)) {
+    private void ifIdentificationIsSelfThrowException(Identification identification) throws IllegalArgumentException {
+        if (identification.getExternalResourceUri().equals(this.uri())) {
             throw new IllegalArgumentException(
                     "identification cannot be the same"
             );
         }
     }
 
-    private IllegalArgumentException duplicateIdentificationError() {
-        return new IllegalArgumentException(
-                "cannot have duplicate identifications"
-        );
-    }
-
     @Override
     public boolean equals(Object graphElementToCompare) {
-        return friendlyResource.equals(graphElementToCompare);
+        return identification.equals(graphElementToCompare);
     }
 
     @Override
     public int hashCode() {
-        return friendlyResource.hashCode();
+        return identification.hashCode();
     }
 
     @Override
     public String queryPrefix() {
-        return friendlyResource.queryPrefix();
+        return identification.queryPrefix();
     }
 
     @Override
     public Node getNode() {
         if (null == node) {
-            node = friendlyResource.getNode();
+            node = identification.getNode();
         }
         return node;
     }
 
     @Override
     public Map<String, Object> addCreationProperties(Map<String, Object> map) {
-        return friendlyResource.addCreationProperties(
+        return identification.addCreationProperties(
                 map
         );
+    }
+
+    @Override
+    public URI getExternalResourceUri() {
+        return identification.getExternalResourceUri();
     }
 }

@@ -3,9 +3,7 @@ package org.triple_brain.module.neo4j_graph_manipulator.graph.graph.vertex;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
-import com.hp.hpl.jena.vocabulary.RDFS;
-import org.codehaus.jettison.json.JSONArray;
-import org.neo4j.graphdb.*;
+import org.neo4j.graphdb.Node;
 import org.neo4j.rest.graphdb.RestAPI;
 import org.neo4j.rest.graphdb.batch.BatchCallback;
 import org.neo4j.rest.graphdb.query.QueryEngine;
@@ -14,26 +12,21 @@ import org.triple_brain.module.model.FriendlyResource;
 import org.triple_brain.module.model.Image;
 import org.triple_brain.module.model.UserUris;
 import org.triple_brain.module.model.graph.FriendlyResourcePojo;
+import org.triple_brain.module.model.graph.Identification;
+import org.triple_brain.module.model.graph.IdentificationPojo;
 import org.triple_brain.module.model.graph.edge.Edge;
 import org.triple_brain.module.model.graph.edge.EdgeOperator;
 import org.triple_brain.module.model.graph.edge.EdgePojo;
 import org.triple_brain.module.model.graph.vertex.*;
 import org.triple_brain.module.model.json.SuggestionJson;
-import org.triple_brain.module.model.suggestion.Suggestion;
-import org.triple_brain.module.model.suggestion.SuggestionOriginPojo;
 import org.triple_brain.module.model.suggestion.SuggestionPojo;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.*;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.Neo4jGraphElementFactory;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.Neo4jGraphElementOperator;
-import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.Neo4jUserGraph;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.edge.Neo4jEdgeFactory;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.edge.Neo4jEdgeOperator;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.extractor.IncludedGraphElementFromExtractorQueryRow;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.extractor.Neo4jSubGraphExtractor;
-import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.extractor.SuggestionExtractorQueryRow;
-import org.triple_brain.module.neo4j_graph_manipulator.graph.suggestion.Neo4jSuggestionOperator;
-import org.triple_brain.module.neo4j_graph_manipulator.graph.suggestion.Neo4jSuggestionFactory;
-import org.triple_brain.module.neo4j_graph_manipulator.graph.suggestion.Neo4jSuggestionOriginOperator;
 
 import java.net.URI;
 import java.util.*;
@@ -61,7 +54,6 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
 
     protected Neo4jUtils utils;
 
-    protected Neo4jSuggestionFactory suggestionFactory;
 
     protected Neo4jGraphElementFactory neo4jGraphElementFactory;
     protected Node node;
@@ -77,7 +69,6 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
             Neo4jEdgeFactory edgeFactory,
             Neo4jUtils utils,
             Neo4jGraphElementFactory neo4jGraphElementFactory,
-            Neo4jSuggestionFactory suggestionFactory,
             QueryEngine queryEngine,
             RestAPI restApi,
             @Assisted Node node
@@ -87,7 +78,6 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
                 edgeFactory,
                 utils,
                 neo4jGraphElementFactory,
-                suggestionFactory,
                 queryEngine,
                 restApi,
                 neo4jGraphElementFactory.withNode(
@@ -103,7 +93,6 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
             Neo4jEdgeFactory edgeFactory,
             Neo4jUtils utils,
             Neo4jGraphElementFactory neo4jGraphElementFactory,
-            Neo4jSuggestionFactory suggestionFactory,
             QueryEngine queryEngine,
             RestAPI restApi,
             @Assisted URI uri
@@ -112,7 +101,6 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
         this.edgeFactory = edgeFactory;
         this.utils = utils;
         this.neo4jGraphElementFactory = neo4jGraphElementFactory;
-        this.suggestionFactory = suggestionFactory;
         this.queryEngine = queryEngine;
         this.restApi = restApi;
         this.graphElementOperator = neo4jGraphElementFactory.withUri(
@@ -126,7 +114,6 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
             Neo4jEdgeFactory edgeFactory,
             Neo4jUtils utils,
             Neo4jGraphElementFactory neo4jGraphElementFactory,
-            Neo4jSuggestionFactory suggestionFactory,
             QueryEngine queryEngine,
             RestAPI restApi,
             @Assisted String ownerUserName
@@ -136,7 +123,6 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
                 edgeFactory,
                 utils,
                 neo4jGraphElementFactory,
-                suggestionFactory,
                 queryEngine,
                 restApi,
                 new UserUris(ownerUserName).generateVertexUri()
@@ -150,7 +136,6 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
             Neo4jEdgeFactory edgeFactory,
             Neo4jUtils utils,
             Neo4jGraphElementFactory neo4jGraphElementFactory,
-            Neo4jSuggestionFactory suggestionFactory,
             QueryEngine queryEngine,
             RestAPI restApi,
             final @Assisted Set<Vertex> includedVertices,
@@ -161,7 +146,6 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
                 edgeFactory,
                 utils,
                 neo4jGraphElementFactory,
-                suggestionFactory,
                 queryEngine,
                 restApi,
                 new UserUris(
@@ -420,12 +404,12 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
     }
 
     @Override
-    public FriendlyResourcePojo addType(FriendlyResource type) {
+    public IdentificationPojo addType(Identification type) {
         return graphElementOperator.addType(type);
     }
 
     @Override
-    public void removeIdentification(final FriendlyResource friendlyResource) {
+    public void removeIdentification(final Identification friendlyResource) {
         QueryResult<Map<String,Object>> cypherResult = restApi.executeBatch(new BatchCallback<QueryResult<Map<String,Object>>>() {
             @Override
             public QueryResult<Map<String, Object>> recordBatch(RestAPI restAPI) {
@@ -462,27 +446,27 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
     }
 
     @Override
-    public Map<URI, FriendlyResource> getAdditionalTypes() {
+    public Map<URI, Identification> getAdditionalTypes() {
         return graphElementOperator.getAdditionalTypes();
     }
 
     @Override
-    public Map<URI, FriendlyResource> getIdentifications() {
+    public Map<URI, Identification> getIdentifications() {
         return graphElementOperator.getIdentifications();
     }
 
     @Override
-    public FriendlyResourcePojo addSameAs(FriendlyResource friendlyResourceImpl) {
+    public IdentificationPojo addSameAs(Identification friendlyResourceImpl) {
         return graphElementOperator.addSameAs(friendlyResourceImpl);
     }
 
     @Override
-    public Map<URI, FriendlyResource> getSameAs() {
+    public Map<URI, Identification> getSameAs() {
         return graphElementOperator.getSameAs();
     }
 
     @Override
-    public Map<URI,FriendlyResource> getGenericIdentifications() {
+    public Map<URI,Identification> getGenericIdentifications() {
         return graphElementOperator.getGenericIdentifications();
     }
 
@@ -598,6 +582,11 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
     }
 
     @Override
+    public String getOwner() {
+        return graphElementOperator.getOwner();
+    }
+
+    @Override
     public URI uri() {
         return graphElementOperator.uri();
     }
@@ -652,7 +641,7 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
     }
 
     @Override
-    public FriendlyResourcePojo addGenericIdentification(FriendlyResource friendlyResource) {
+    public IdentificationPojo addGenericIdentification(Identification friendlyResource) {
 
         return graphElementOperator.addGenericIdentification(friendlyResource);
     }
@@ -719,5 +708,10 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
                 newMap
         );
         return newMap;
+    }
+
+    @Override
+    public URI getExternalResourceUri() {
+        return graphElementOperator.getExternalResourceUri();
     }
 }

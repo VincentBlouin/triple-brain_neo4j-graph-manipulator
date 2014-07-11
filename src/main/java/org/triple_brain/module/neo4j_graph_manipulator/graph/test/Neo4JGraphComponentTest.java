@@ -58,11 +58,18 @@ public class Neo4JGraphComponentTest implements GraphComponentTest {
     @Inject
     protected Neo4jUserGraphFactory neo4jUserGraphFactory;
 
+    @Inject
+    protected GraphFactory graphFactory;
+
     protected VertexOperator vertexA;
     protected VertexOperator vertexB;
     protected VertexOperator vertexC;
 
     protected static User user;
+
+    protected static User anotherUser;
+    protected static UserGraph anotherUserGraph;
+    protected static VertexOperator vertexOfAnotherUser;
 
     protected Transaction transaction;
 
@@ -81,6 +88,11 @@ public class Neo4JGraphComponentTest implements GraphComponentTest {
                 "roger.lamothe@example.org",
                 "[fr]"
         );
+        anotherUser = User.withUsernameEmailAndLocales(
+                "colette_armande",
+                "college.armande@example.org",
+                "[fr]"
+        );
 
         userGraph = neo4jUserGraphFactory.withUser(user);
         VerticesCalledABAndC verticesCalledABAndC = testScenarios.makeGraphHave3VerticesABCWhereAIsDefaultCenterVertexAndAPointsToBAndBPointsToC(
@@ -89,6 +101,10 @@ public class Neo4JGraphComponentTest implements GraphComponentTest {
         vertexA = verticesCalledABAndC.vertexA();
         vertexB = verticesCalledABAndC.vertexB();
         vertexC = verticesCalledABAndC.vertexC();
+        anotherUserGraph = neo4jUserGraphFactory.withUser(anotherUser);
+        graphFactory.createForUser(anotherUserGraph.user());
+        vertexOfAnotherUser = anotherUserGraph.defaultVertex();
+        vertexOfAnotherUser.label("vertex of another user");
     }
 
     @Override
@@ -210,6 +226,11 @@ public class Neo4JGraphComponentTest implements GraphComponentTest {
         return vertexFactory.withUri(
                 vertexC.uri()
         );
+    }
+
+    @Override
+    public VertexOperator vertexOfAnotherUser() {
+        return vertexOfAnotherUser;
     }
 
     @Override

@@ -19,16 +19,11 @@ import org.triple_brain.module.model.EmptyGraphTransaction;
 import org.triple_brain.module.model.FriendlyResourceFactory;
 import org.triple_brain.module.model.GraphTransaction;
 import org.triple_brain.module.model.WholeGraph;
-import org.triple_brain.module.model.graph.FriendlyResourceOperator;
-import org.triple_brain.module.model.graph.GraphElementOperator;
-import org.triple_brain.module.model.graph.GraphElementOperatorFactory;
-import org.triple_brain.module.model.graph.GraphFactory;
+import org.triple_brain.module.model.graph.*;
 import org.triple_brain.module.model.graph.edge.EdgeFactory;
 import org.triple_brain.module.model.graph.edge.EdgeOperator;
 import org.triple_brain.module.model.graph.vertex.VertexFactory;
 import org.triple_brain.module.model.graph.vertex.VertexInSubGraphOperator;
-import org.triple_brain.module.model.suggestion.SuggestionFactory;
-import org.triple_brain.module.model.suggestion.SuggestionOperator;
 import org.triple_brain.module.model.test.GraphComponentTest;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.embedded.QueryEngineUsingEmbedded;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.embedded.RestApiUsingEmbedded;
@@ -39,9 +34,6 @@ import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.extractor.Neo
 import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.vertex.Neo4jVertexFactory;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.vertex.Neo4jVertexInSubGraphOperator;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.image.Neo4jImageFactory;
-import org.triple_brain.module.neo4j_graph_manipulator.graph.suggestion.Neo4jSuggestionOperator;
-import org.triple_brain.module.neo4j_graph_manipulator.graph.suggestion.Neo4jSuggestionFactory;
-import org.triple_brain.module.neo4j_graph_manipulator.graph.suggestion.Neo4jSuggestionOriginFactory;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.test.Neo4JGraphComponentTest;
 
 import javax.inject.Singleton;
@@ -88,12 +80,12 @@ public class Neo4jModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        if(useEmbedded){
+        if (useEmbedded) {
             bindForEmbedded();
-        }else{
+        } else {
             bindForRestApi();
         }
-        if(test){
+        if (test) {
             bind(GraphComponentTest.class).to(Neo4JGraphComponentTest.class);
         }
         bind(WholeGraph.class).to(Neo4jWholeGraph.class);
@@ -121,57 +113,50 @@ public class Neo4jModule extends AbstractModule {
                 .build(EdgeFactory.class));
 
         install(factoryModuleBuilder
-                .implement(GraphElementOperator.class, Neo4jGraphElementOperator.class)
-                .build(GraphElementOperatorFactory.class)
+                        .implement(GraphElementOperator.class, Neo4jGraphElementOperator.class)
+                        .build(GraphElementOperatorFactory.class)
         );
 
         install(factoryModuleBuilder
                 .build(Neo4jGraphElementFactory.class));
 
         install(factoryModuleBuilder
-                .implement(FriendlyResourceOperator.class, Neo4jFriendlyResource.class)
-                .build(FriendlyResourceFactory.class)
+                        .implement(FriendlyResourceOperator.class, Neo4jFriendlyResource.class)
+                        .build(FriendlyResourceFactory.class)
         );
         install(factoryModuleBuilder
-                .build(Neo4jFriendlyResourceFactory.class)
+                        .build(Neo4jFriendlyResourceFactory.class)
         );
         install(factoryModuleBuilder
                         .build(Neo4jImageFactory.class)
         );
-        install(factoryModuleBuilder
-                .implement(SuggestionOperator.class, Neo4jSuggestionOperator.class)
-                .build(SuggestionFactory.class)
-        );
-        install(factoryModuleBuilder
-                .build(Neo4jSuggestionFactory.class)
-        );
-        install(factoryModuleBuilder
-                .build(Neo4jSuggestionOriginFactory.class)
-        );
 
+        install(factoryModuleBuilder
+                        .implement(IdentificationOperator.class, Neo4jIdentification.class)
+                        .build(IdentificationFactory.class)
+        );
+        install(factoryModuleBuilder
+                        .build(Neo4jIdentificationFactory.class)
+        );
         bind(GraphFactory.class).to(Neo4jGraphFactory.class).in(Singleton.class);
-
         requireBinding(Neo4jUtils.class);
     }
-    private void bindForEmbedded(){
+
+    private void bindForEmbedded() {
         bind(GraphTransaction.class).to(Neo4jGraphTransaction.class);
         GraphDatabaseService graphDb = new GraphDatabaseFactory().newEmbeddedDatabaseBuilder(
                 test ? DB_PATH_FOR_TESTS : DB_PATH
         )
                 .setConfig(
                         GraphDatabaseSettings.node_keys_indexable,
-                        Neo4jUserGraph.URI_PROPERTY_NAME
+                        Neo4jFriendlyResource.props.uri + "," +
+                                Neo4jFriendlyResource.props.owner + "," +
+                                Neo4jIdentification.props.external_uri
                 ).setConfig(
                         GraphDatabaseSettings.node_auto_indexing,
                         "true"
-                ).setConfig(
-                        GraphDatabaseSettings.relationship_keys_indexable,
-                        Neo4jUserGraph.URI_PROPERTY_NAME
-                ).setConfig(
-                        GraphDatabaseSettings.relationship_auto_indexing,
-                        "true"
                 ).newGraphDatabase();
-        if(test){
+        if (test) {
             registerShutdownHook(graphDb);
         }
         bind(new TypeLiteral<ReadableIndex<Node>>() {
@@ -200,7 +185,8 @@ public class Neo4jModule extends AbstractModule {
                 graphDb
         );
     }
-    private void bindForRestApi(){
+
+    private void bindForRestApi() {
         bind(GraphTransaction.class).to(
                 EmptyGraphTransaction.class
         );
