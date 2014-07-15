@@ -2,9 +2,8 @@ package org.triple_brain.module.neo4j_graph_manipulator.graph.graph.extractor;
 
 import org.triple_brain.module.model.graph.GraphElement;
 import org.triple_brain.module.model.graph.GraphElementPojo;
-import org.triple_brain.module.model.graph.Identification;
 import org.triple_brain.module.model.graph.IdentificationPojo;
-import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.Neo4jUserGraph;
+import org.triple_brain.module.neo4j_graph_manipulator.graph.Neo4jFriendlyResource;
 
 import java.net.URI;
 import java.util.HashMap;
@@ -71,7 +70,7 @@ public class GraphElementFromExtractorQueryRow {
     ) {
         if (hasIdentificationInRow(key)) {
             URI uri = URI.create(
-                    uriKey(key)
+                    row.get(uriKey(key)).toString()
             );
             IdentificationFromExtractorQueryRow extractor = IdentificationFromExtractorQueryRow.usingRowAndKey(
                     row,
@@ -111,6 +110,6 @@ public class GraphElementFromExtractorQueryRow {
     }
 
     private String uriKey(String prefix) {
-        return prefix + "." + Neo4jUserGraph.URI_PROPERTY_NAME;
+        return prefix + "." + Neo4jFriendlyResource.props.uri;
     }
 }
