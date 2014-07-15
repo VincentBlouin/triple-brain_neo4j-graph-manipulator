@@ -1,4 +1,4 @@
-package org.triple_brain.module.neo4j_graph_manipulator.graph.embedded.admin;
+package org.triple_brain.module.neo4j_graph_manipulator.graph.embedded.admin.suggestion;
 
 
 import com.google.gson.Gson;
@@ -11,6 +11,7 @@ import org.neo4j.rest.graphdb.util.QueryResult;
 import org.triple_brain.module.model.WholeGraph;
 import org.triple_brain.module.model.graph.vertex.VertexInSubGraphOperator;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.Neo4jModule;
+import org.triple_brain.module.neo4j_graph_manipulator.graph.embedded.admin.AdminOperationsOnDatabase;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.vertex.Neo4jVertexInSubGraphOperator;
 
 import java.util.Iterator;

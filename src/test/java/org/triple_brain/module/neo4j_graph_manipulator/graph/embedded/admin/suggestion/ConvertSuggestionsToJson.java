@@ -1,4 +1,4 @@
-package org.triple_brain.module.neo4j_graph_manipulator.graph.embedded.admin;
+package org.triple_brain.module.neo4j_graph_manipulator.graph.embedded.admin.suggestion;
 
 import com.google.inject.Guice;
 import com.google.inject.Inject;
@@ -10,6 +10,7 @@ import org.triple_brain.module.model.graph.vertex.VertexInSubGraphOperator;
 import org.triple_brain.module.model.graph.vertex.VertexOperator;
 import org.triple_brain.module.model.suggestion.SuggestionPojo;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.Neo4jModule;
+import org.triple_brain.module.neo4j_graph_manipulator.graph.embedded.admin.AdminOperationsOnDatabase;
 
 import java.net.URI;
 import java.util.HashSet;

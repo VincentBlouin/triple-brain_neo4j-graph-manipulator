@@ -51,7 +51,7 @@ public class Neo4jImages {
     public Set<Image> get(){
         QueryResult<Map<String, Object>> result = queryEngine.query(
                 friendlyResource.queryPrefix() +
-                        "return n.`" + props.images + "` as images",
+                        "return n." + props.images + " as images",
                 map()
         );
         if(!result.iterator().hasNext()){

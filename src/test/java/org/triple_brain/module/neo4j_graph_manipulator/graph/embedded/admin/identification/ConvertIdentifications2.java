@@ -1,4 +1,4 @@
-package org.triple_brain.module.neo4j_graph_manipulator.graph.embedded.admin;
+package org.triple_brain.module.neo4j_graph_manipulator.graph.embedded.admin.identification;
 
 
 import com.google.inject.Guice;
@@ -13,6 +13,7 @@ import org.triple_brain.module.model.graph.Identification;
 import org.triple_brain.module.model.graph.edge.EdgeOperator;
 import org.triple_brain.module.model.graph.vertex.VertexInSubGraphOperator;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.Neo4jModule;
+import org.triple_brain.module.neo4j_graph_manipulator.graph.embedded.admin.AdminOperationsOnDatabase;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.Neo4jIdentification;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.edge.Neo4jEdgeOperator;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.vertex.Neo4jVertexInSubGraphOperator;
@@ -22,7 +23,7 @@ import java.util.Iterator;
 import static org.triple_brain.module.neo4j_graph_manipulator.graph.Neo4jRestApiUtils.map;
 
 @Ignore
-public class ConvertIdentifications2 extends AdminOperationsOnDatabase{
+public class ConvertIdentifications2 extends AdminOperationsOnDatabase {
 
     @Inject
     WholeGraph wholeGraph;

@@ -14,7 +14,9 @@ import org.triple_brain.module.model.FriendlyResource;
 import org.triple_brain.module.model.Image;
 import org.triple_brain.module.model.UserUris;
 import org.triple_brain.module.model.graph.*;
+import org.triple_brain.module.model.json.ImageJson;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.*;
+import org.triple_brain.module.neo4j_graph_manipulator.graph.image.Neo4jImages;
 
 import javax.inject.Inject;
 import java.net.URI;
@@ -211,6 +213,7 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
                                 "f.external_uri as external_uri, " +
                                 "f.`" + RDFS.label.getURI() + "` as label, " +
                                 "f.`" + RDFS.comment.getURI() + "` as comment, " +
+                                "f." + Neo4jImages.props.images + " as images, " +
                                 "f." + Neo4jFriendlyResource.props.creation_date + " as creation_date, " +
                                 "f." + Neo4jFriendlyResource.props.last_modification_date + " as last_modification_date",
                         neo4jIdentification.addCreationProperties(
@@ -239,7 +242,8 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
                         ),
                         result.get("label") == null ?
                                 "" : result.get("label").toString(),
-                        new HashSet<Image>(),
+                        result.get("images") == null ?
+                                new HashSet<Image>() : ImageJson.fromJson(result.get("images").toString()),
                         result.get("comment") == null ? "" : result.get("comment").toString(),
                         new Date(
                                 (Long) result.get("creation_date")
