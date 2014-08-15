@@ -75,18 +75,6 @@ public class Neo4jSubGraphExtractor {
                 );
             }
         }
-        for (EdgePojo edge : subGraph.edges().values()) {
-            edge.setSourceVertex(
-                    subGraph.vertices().get(
-                            edge.sourceVertex().uri()
-                    )
-            );
-            edge.setDestinationVertex(
-                    subGraph.vertices().get(
-                            edge.destinationVertex().uri()
-                    )
-            );
-        }
         return subGraph;
     }
 
@@ -288,9 +276,7 @@ public class Neo4jSubGraphExtractor {
         }
         EdgePojo edge = (EdgePojo) EdgeFromExtractorQueryRow.usingRow(
                 row
-        ).build(
-                subGraph.vertices()
-        );
+        ).build();
         subGraph.addEdge(edge);
         return edge;
     }
