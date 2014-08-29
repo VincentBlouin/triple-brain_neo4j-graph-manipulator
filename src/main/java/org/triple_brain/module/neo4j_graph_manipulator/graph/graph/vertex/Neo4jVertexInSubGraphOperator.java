@@ -8,10 +8,8 @@ import org.neo4j.rest.graphdb.RestAPI;
 import org.neo4j.rest.graphdb.batch.BatchCallback;
 import org.neo4j.rest.graphdb.query.QueryEngine;
 import org.neo4j.rest.graphdb.util.QueryResult;
-import org.triple_brain.module.model.FriendlyResource;
 import org.triple_brain.module.model.Image;
 import org.triple_brain.module.model.UserUris;
-import org.triple_brain.module.model.graph.FriendlyResourcePojo;
 import org.triple_brain.module.model.graph.Identification;
 import org.triple_brain.module.model.graph.IdentificationPojo;
 import org.triple_brain.module.model.graph.edge.Edge;
@@ -25,8 +23,8 @@ import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.Neo4jGraphEle
 import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.Neo4jGraphElementOperator;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.edge.Neo4jEdgeFactory;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.edge.Neo4jEdgeOperator;
-import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.extractor.IncludedGraphElementFromExtractorQueryRow;
-import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.extractor.Neo4jSubGraphExtractor;
+import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph.IncludedGraphElementFromExtractorQueryRow;
+import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph.Neo4jSubGraphExtractor;
 
 import java.net.URI;
 import java.util.*;

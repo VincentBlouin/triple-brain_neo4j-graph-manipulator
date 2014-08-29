@@ -22,6 +22,7 @@ import org.triple_brain.module.model.WholeGraph;
 import org.triple_brain.module.model.graph.*;
 import org.triple_brain.module.model.graph.edge.EdgeFactory;
 import org.triple_brain.module.model.graph.edge.EdgeOperator;
+import org.triple_brain.module.model.graph.schema.SchemaOperator;
 import org.triple_brain.module.model.graph.vertex.VertexFactory;
 import org.triple_brain.module.model.graph.vertex.VertexInSubGraphOperator;
 import org.triple_brain.module.model.test.GraphComponentTest;
@@ -30,7 +31,10 @@ import org.triple_brain.module.neo4j_graph_manipulator.graph.embedded.RestApiUsi
 import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.*;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.edge.Neo4jEdgeFactory;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.edge.Neo4jEdgeOperator;
-import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.extractor.Neo4jSubGraphExtractorFactory;
+import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.extractor.schema.Neo4jSchemaExtractorFactory;
+import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph.Neo4jSubGraphExtractorFactory;
+import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.schema.Neo4jSchemaOperator;
+import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.schema.SchemaFactory;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.vertex.Neo4jVertexFactory;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.vertex.Neo4jVertexInSubGraphOperator;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.image.Neo4jImageFactory;
@@ -103,10 +107,18 @@ public class Neo4jModule extends AbstractModule {
                 .build(VertexFactory.class));
 
         install(factoryModuleBuilder
+                .implement(SchemaOperator.class, Neo4jSchemaOperator.class)
+                .build(SchemaFactory.class));
+
+        install(factoryModuleBuilder
                 .build(Neo4jVertexFactory.class));
 
         install(factoryModuleBuilder
                 .build(Neo4jSubGraphExtractorFactory.class));
+
+        install(factoryModuleBuilder
+                .build(Neo4jSchemaExtractorFactory.class));
+
 
         install(factoryModuleBuilder
                 .implement(EdgeOperator.class, Neo4jEdgeOperator.class)

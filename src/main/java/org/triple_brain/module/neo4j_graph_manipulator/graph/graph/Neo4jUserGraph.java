@@ -3,28 +3,26 @@ package org.triple_brain.module.neo4j_graph_manipulator.graph.graph;
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 import org.neo4j.graphdb.Node;
-import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.index.ReadableIndex;
-import org.neo4j.rest.graphdb.RestAPI;
-import org.neo4j.rest.graphdb.batch.CypherResult;
 import org.triple_brain.module.model.User;
 import org.triple_brain.module.model.UserUris;
+import org.triple_brain.module.model.graph.GraphElementOperator;
 import org.triple_brain.module.model.graph.SubGraphPojo;
 import org.triple_brain.module.model.graph.UserGraph;
 import org.triple_brain.module.model.graph.edge.EdgeOperator;
 import org.triple_brain.module.model.graph.exceptions.InvalidDepthOfSubVerticesException;
 import org.triple_brain.module.model.graph.exceptions.NonExistingResourceException;
+import org.triple_brain.module.model.graph.schema.SchemaOperator;
+import org.triple_brain.module.model.graph.schema.SchemaPojo;
 import org.triple_brain.module.model.graph.vertex.VertexOperator;
 import org.triple_brain.module.model.graph.vertex.VertexPojo;
-import org.triple_brain.module.neo4j_graph_manipulator.graph.Neo4jFriendlyResource;
-import org.triple_brain.module.neo4j_graph_manipulator.graph.Neo4jFriendlyResourceFactory;
-import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.extractor.Neo4jSubGraphExtractorFactory;
-import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.vertex.Neo4jVertexFactory;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.edge.Neo4jEdgeFactory;
+import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.extractor.schema.Neo4jSchemaExtractorFactory;
+import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph.Neo4jSubGraphExtractorFactory;
+import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.schema.SchemaFactory;
+import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.vertex.Neo4jVertexFactory;
 
 import java.net.URI;
-
-import static org.triple_brain.module.neo4j_graph_manipulator.graph.Neo4jRestApiUtils.map;
 
 /*
 * Copyright Mozilla Public License 1.1
@@ -35,29 +33,29 @@ public class Neo4jUserGraph implements UserGraph {
 
     private User user;
     private ReadableIndex<Node> nodeIndex;
-    private ReadableIndex<Relationship> relationshipIndex;
     private Neo4jVertexFactory vertexFactory;
+    private SchemaFactory schemaFactory;
     private Neo4jSubGraphExtractorFactory subGraphExtractorFactory;
     private Neo4jEdgeFactory edgeFactory;
-    private Neo4jFriendlyResourceFactory friendlyResourceFactory;
+    private Neo4jSchemaExtractorFactory schemaExtractorFactory;
 
     @AssistedInject
     protected Neo4jUserGraph(
             ReadableIndex<Node> nodeIndex,
-            ReadableIndex<Relationship> relationshipIndex,
             Neo4jVertexFactory vertexFactory,
             Neo4jEdgeFactory edgeFactory,
             Neo4jSubGraphExtractorFactory subGraphExtractorFactory,
-            Neo4jFriendlyResourceFactory friendlyResourceFactory,
+            Neo4jSchemaExtractorFactory schemaExtractorFactory,
+            SchemaFactory schemaFactory,
             @Assisted User user
     ) {
         this.nodeIndex = nodeIndex;
-        this.relationshipIndex = relationshipIndex;
         this.user = user;
         this.vertexFactory = vertexFactory;
         this.edgeFactory = edgeFactory;
         this.subGraphExtractorFactory = subGraphExtractorFactory;
-        this.friendlyResourceFactory = friendlyResourceFactory;
+        this.schemaExtractorFactory = schemaExtractorFactory;
+        this.schemaFactory = schemaFactory;
     }
 
     @Override
@@ -134,12 +132,34 @@ public class Neo4jUserGraph implements UserGraph {
     }
 
     @Override
+    public SchemaPojo schemaPojoWithUri(URI uri) {
+        return schemaExtractorFactory.havingUri(
+                uri
+        ).load();
+    }
+
+    @Override
+    public SchemaOperator schemaOperatorWithUri(URI uri) {
+        return schemaFactory.withUri(uri);
+    }
+
+    @Override
     public VertexPojo createVertex() {
         VertexOperator operator = vertexFactory.createForOwnerUsername(
                 user.username()
         );
         return new VertexPojo(
                 operator.uri()
+        );
+    }
+
+    @Override
+    public SchemaPojo createSchema() {
+        SchemaOperator schemaOperator = schemaFactory.createForOwnerUsername(
+                user.username()
+        );
+        return new SchemaPojo(
+                schemaOperator.uri()
         );
     }
 

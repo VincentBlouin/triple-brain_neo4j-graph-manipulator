@@ -1,4 +1,4 @@
-package org.triple_brain.module.neo4j_graph_manipulator.graph.graph.extractor;
+package org.triple_brain.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph;
 
 import org.triple_brain.module.model.graph.edge.EdgePojo;
 import org.triple_brain.module.model.graph.vertex.VertexInSubGraph;

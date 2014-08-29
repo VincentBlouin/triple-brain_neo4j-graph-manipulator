@@ -1,7 +1,8 @@
-package org.triple_brain.module.neo4j_graph_manipulator.graph.graph.extractor;
+package org.triple_brain.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph;
 
 import org.triple_brain.module.model.graph.IdentificationPojo;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.Neo4jIdentification;
+import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.extractor.FriendlyResourceFromExtractorQueryRow;
 
 import java.net.URI;
 import java.util.Map;

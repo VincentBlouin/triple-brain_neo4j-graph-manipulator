@@ -1,4 +1,4 @@
-package org.triple_brain.module.neo4j_graph_manipulator.graph.graph.extractor;
+package org.triple_brain.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph;
 
 /*
 * Copyright Mozilla Public License 1.1

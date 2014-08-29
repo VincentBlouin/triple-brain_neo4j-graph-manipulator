@@ -1,4 +1,4 @@
-package org.triple_brain.module.neo4j_graph_manipulator.graph.graph.extractor;
+package org.triple_brain.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph;
 
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
@@ -8,18 +8,21 @@ import org.neo4j.rest.graphdb.util.QueryResult;
 import org.triple_brain.module.model.graph.SubGraphPojo;
 import org.triple_brain.module.model.graph.edge.Edge;
 import org.triple_brain.module.model.graph.edge.EdgePojo;
-import org.triple_brain.module.model.graph.vertex.*;
-import org.triple_brain.module.neo4j_graph_manipulator.graph.*;
+import org.triple_brain.module.model.graph.vertex.VertexInSubGraph;
+import org.triple_brain.module.model.graph.vertex.VertexInSubGraphPojo;
+import org.triple_brain.module.neo4j_graph_manipulator.graph.Relationships;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.Neo4jIdentification;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.Neo4jUserGraph;
-import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.edge.Neo4jEdgeFactory;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.edge.Neo4jEdgeOperator;
-import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.vertex.Neo4jVertexFactory;
+import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.extractor.FriendlyResourceQueryBuilder;
+import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.extractor.IdentificationQueryBuilder;
+import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.extractor.QueryUtils;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.vertex.Neo4jVertexInSubGraphOperator;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.image.Neo4jImages;
 
 import java.net.URI;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.neo4j.helpers.collection.MapUtil.map;
 
@@ -27,8 +30,6 @@ import static org.neo4j.helpers.collection.MapUtil.map;
 * Copyright Mozilla Public License 1.1
 */
 public class Neo4jSubGraphExtractor {
-    Neo4jVertexFactory vertexFactory;
-    Neo4jEdgeFactory edgeFactory;
     QueryEngine engine;
     URI centerVertexUri;
     Integer depth;
@@ -39,14 +40,10 @@ public class Neo4jSubGraphExtractor {
 
     @AssistedInject
     protected Neo4jSubGraphExtractor(
-            Neo4jVertexFactory vertexFactory,
-            Neo4jEdgeFactory edgeFactory,
             QueryEngine engine,
             @Assisted URI centerVertexUri,
             @Assisted Integer depth
     ) {
-        this.vertexFactory = vertexFactory;
-        this.edgeFactory = edgeFactory;
         this.engine = engine;
         this.centerVertexUri = centerVertexUri;
         this.depth = depth;
@@ -134,21 +131,21 @@ public class Neo4jSubGraphExtractor {
 
     private String edgeReturnQueryPart(String prefix) {
         return edgeSpecificPropertiesQueryPartUsingPrefix(prefix) +
-                friendlyResourceReturnQueryPartUsingPrefix(prefix) +
-                genericIdentificationReturnQueryPart(prefix) +
-                typeReturnQueryPart(prefix) +
-                sameAsReturnQueryPart(prefix);
+                FriendlyResourceQueryBuilder.returnQueryPartUsingPrefix(prefix) +
+                IdentificationQueryBuilder.genericIdentificationReturnQueryPart(prefix) +
+                IdentificationQueryBuilder.typeReturnQueryPart(prefix) +
+                IdentificationQueryBuilder.sameAsReturnQueryPart(prefix);
     }
 
     private String vertexReturnQueryPart(String prefix) {
         return vertexSpecificPropertiesQueryPartUsingPrefix(prefix) +
-                friendlyResourceReturnQueryPartUsingPrefix(prefix) +
+                FriendlyResourceQueryBuilder.returnQueryPartUsingPrefix(prefix) +
                 includedElementQueryPart(prefix + "_included_vertex") +
                 includedEdgeQueryPart(prefix) +
-                imageReturnQueryPart(prefix) +
-                genericIdentificationReturnQueryPart(prefix) +
-                typeReturnQueryPart(prefix) +
-                sameAsReturnQueryPart(prefix);
+                FriendlyResourceQueryBuilder.imageReturnQueryPart(prefix) +
+                IdentificationQueryBuilder.genericIdentificationReturnQueryPart(prefix) +
+                IdentificationQueryBuilder.typeReturnQueryPart(prefix) +
+                IdentificationQueryBuilder.sameAsReturnQueryPart(prefix);
     }
 
     private static String includedEdgeQueryPart(String prefix) {
@@ -163,102 +160,39 @@ public class Neo4jSubGraphExtractor {
     }
 
     public static String includedElementQueryPart(String key) {
-        return getPropertyUsingContainerNameQueryPart(
+        return QueryUtils.getPropertyUsingContainerNameQueryPart(
                 key,
                 Neo4jUserGraph.URI_PROPERTY_NAME
-        ) + getPropertyUsingContainerNameQueryPart(
+        ) + QueryUtils.getPropertyUsingContainerNameQueryPart(
                 key,
                 "`" + RDFS.label.getURI() + "`"
         );
     }
 
-    private static String imageReturnQueryPart(String prefix) {
-        return getPropertyUsingContainerNameQueryPart(
-                prefix,
-                Neo4jImages.props.images.name()
-        );
-    }
-
-    private String typeReturnQueryPart(String prefix) {
-        return identificationReturnQueryPart(
-                prefix + "_type"
-        );
-    }
-
-    private String sameAsReturnQueryPart(String prefix) {
-        return identificationReturnQueryPart(
-                prefix + "_same_as"
-        );
-    }
-
-    private String genericIdentificationReturnQueryPart(String prefix) {
-        return identificationReturnQueryPart(
-                prefix + "_generic_identification"
-        );
-    }
-
-
-    private String identificationReturnQueryPart(String prefix) {
-        return getPropertyUsingContainerNameQueryPart(
-                prefix, Neo4jIdentification.props.external_uri.name()
-        ) +
-                friendlyResourceReturnQueryPartUsingPrefix(
-                        prefix
-                ) + imageReturnQueryPart(prefix);
-    }
-
     private String edgeSpecificPropertiesQueryPartUsingPrefix(String prefix) {
-        return getPropertyUsingContainerNameQueryPart(
+        return QueryUtils.getPropertyUsingContainerNameQueryPart(
                 prefix,
                 Neo4jEdgeOperator.props.source_vertex_uri.toString()
         ) +
-                getPropertyUsingContainerNameQueryPart(
+                QueryUtils.getPropertyUsingContainerNameQueryPart(
                         prefix,
                         Neo4jEdgeOperator.props.destination_vertex_uri.toString()
                 );
     }
 
     private String vertexSpecificPropertiesQueryPartUsingPrefix(String prefix) {
-        return getPropertyUsingContainerNameQueryPart(
+        return QueryUtils.getPropertyUsingContainerNameQueryPart(
                 prefix,
                 Neo4jVertexInSubGraphOperator.props.number_of_connected_edges_property_name.toString()
         ) +
-                getPropertyUsingContainerNameQueryPart(
+                QueryUtils.getPropertyUsingContainerNameQueryPart(
                         prefix,
                         Neo4jVertexInSubGraphOperator.props.is_public.name()
                 ) +
-                getPropertyUsingContainerNameQueryPart(
+                QueryUtils.getPropertyUsingContainerNameQueryPart(
                         prefix,
                         Neo4jVertexInSubGraphOperator.props.suggestions.name()
                 );
-    }
-
-    public static String friendlyResourceReturnQueryPartUsingPrefix(String prefix) {
-        return
-                getPropertyUsingContainerNameQueryPart(
-                        prefix,
-                        Neo4jUserGraph.URI_PROPERTY_NAME
-                ) +
-                        getPropertyUsingContainerNameQueryPart(
-                                prefix,
-                                "`" + RDFS.label.getURI() + "`"
-                        ) +
-                        getPropertyUsingContainerNameQueryPart(
-                                prefix,
-                                "`" + RDFS.comment.getURI() + "`"
-                        ) +
-                        getPropertyUsingContainerNameQueryPart(
-                                prefix,
-                                Neo4jFriendlyResource.props.creation_date.name()
-                        ) +
-                        getPropertyUsingContainerNameQueryPart(
-                                prefix,
-                                Neo4jFriendlyResource.props.last_modification_date.name()
-                        );
-    }
-
-    private static String getPropertyUsingContainerNameQueryPart(String containerName, String propertyName) {
-        return containerName + "." + propertyName + ", ";
     }
 
     private Edge addOrUpdateEdgeUsingRow(Map<String, Object> row) {

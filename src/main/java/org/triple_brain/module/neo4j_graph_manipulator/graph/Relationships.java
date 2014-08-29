@@ -17,5 +17,6 @@ public enum Relationships implements RelationshipType {
     SUGGESTION,
     SUGGESTION_ORIGIN,
     HAS_INCLUDED_VERTEX,
-    HAS_INCLUDED_EDGE
+    HAS_INCLUDED_EDGE,
+    HAS_PROPERTY
 }
