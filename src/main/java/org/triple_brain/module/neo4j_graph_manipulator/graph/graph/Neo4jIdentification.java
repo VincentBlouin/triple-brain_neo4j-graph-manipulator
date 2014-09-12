@@ -1,3 +1,7 @@
+/*
+ * Copyright Vincent Blouin under the Mozilla Public License 1.1
+ */
+
 package org.triple_brain.module.neo4j_graph_manipulator.graph.graph;
 
 import com.google.inject.assistedinject.Assisted;
@@ -19,9 +23,6 @@ import java.util.Set;
 
 import static org.triple_brain.module.neo4j_graph_manipulator.graph.Neo4jRestApiUtils.map;
 
-/*
-* Copyright Mozilla Public License 1.1
-*/
 public class Neo4jIdentification implements IdentificationOperator, Neo4jOperator {
 
     public enum props {
@@ -116,8 +117,8 @@ public class Neo4jIdentification implements IdentificationOperator, Neo4jOperato
     }
 
     @Override
-    public String getOwner() {
-        return friendlyResourceOperator.getOwner();
+    public String getOwnerUsername() {
+        return friendlyResourceOperator.getOwnerUsername();
     }
 
     @Override

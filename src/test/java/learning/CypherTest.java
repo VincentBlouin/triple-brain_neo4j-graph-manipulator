@@ -1,3 +1,7 @@
+/*
+ * Copyright Vincent Blouin under the Mozilla Public License 1.1
+ */
+
 package learning;
 
 import org.junit.Test;
@@ -17,9 +21,6 @@ import static org.junit.Assert.*;
 import static org.triple_brain.module.neo4j_graph_manipulator.graph.Neo4jRestApiUtils.map;
 import static org.triple_brain.module.neo4j_graph_manipulator.graph.Neo4jRestApiUtils.wrap;
 
-/*
- * Copyright Mozilla Public License 1.1
- */
 public class CypherTest extends Neo4jServerTestGeneric {
 
     enum relationships implements RelationshipType {

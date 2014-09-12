@@ -1,3 +1,7 @@
+/*
+ * Copyright Vincent Blouin under the Mozilla Public License 1.1
+ */
+
 package org.triple_brain.module.neo4j_graph_manipulator.graph;
 
 import com.google.inject.assistedinject.Assisted;
@@ -28,9 +32,6 @@ import java.util.Set;
 import static org.triple_brain.module.neo4j_graph_manipulator.graph.Neo4jRestApiUtils.map;
 import static org.triple_brain.module.neo4j_graph_manipulator.graph.Neo4jRestApiUtils.wrap;
 
-/*
-* Copyright Mozilla Public License 1.1
-*/
 public class Neo4jFriendlyResource implements FriendlyResourceOperator, Neo4jOperator {
 
     public enum props {
@@ -264,7 +265,7 @@ public class Neo4jFriendlyResource implements FriendlyResourceOperator, Neo4jOpe
     }
 
     @Override
-    public String getOwner() {
+    public String getOwnerUsername() {
         return UserUris.ownerUserNameFromUri(uri);
     }
 

@@ -1,3 +1,7 @@
+/*
+ * Copyright Vincent Blouin under the Mozilla Public License 1.1
+ */
+
 package learning;
 
 import org.junit.Ignore;
@@ -12,9 +16,6 @@ import java.io.IOException;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
-/*
-* Copyright Mozilla Public License 1.1
-*/
 @Ignore("I want to prevent starting another noe4j server here to prevent memory overload")
 public class Neo4JTest {
 

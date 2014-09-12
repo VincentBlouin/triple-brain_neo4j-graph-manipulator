@@ -1,3 +1,7 @@
+/*
+ * Copyright Vincent Blouin under the Mozilla Public License 1.1
+ */
+
 package learning;
 
 import org.junit.Ignore;
@@ -16,9 +20,6 @@ import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.*;
 import static org.triple_brain.module.neo4j_graph_manipulator.graph.Neo4jRestApiUtils.wrap;
 
-/*
- * Copyright Mozilla Public License 1.1
- */
 public class Neo4jRestServerTest extends  Neo4jServerTestGeneric{
 
     public enum Relationships implements RelationshipType {

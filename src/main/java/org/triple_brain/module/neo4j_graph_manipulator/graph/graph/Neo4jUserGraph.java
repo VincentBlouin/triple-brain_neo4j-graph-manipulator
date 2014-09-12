@@ -1,3 +1,7 @@
+/*
+ * Copyright Vincent Blouin under the Mozilla Public License 1.1
+ */
+
 package org.triple_brain.module.neo4j_graph_manipulator.graph.graph;
 
 import com.google.inject.assistedinject.Assisted;
@@ -24,9 +28,6 @@ import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.vertex.Neo4jV
 
 import java.net.URI;
 
-/*
-* Copyright Mozilla Public License 1.1
-*/
 public class Neo4jUserGraph implements UserGraph {
 
     public static final String URI_PROPERTY_NAME = "uri";

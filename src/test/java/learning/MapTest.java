@@ -1,3 +1,7 @@
+/*
+ * Copyright Vincent Blouin under the Mozilla Public License 1.1
+ */
+
 package learning;
 
 import org.junit.Test;
@@ -8,9 +12,6 @@ import java.util.Map;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 
-/*
- * Copyright Mozilla Public License 1.1
- */
 public class MapTest {
     @Test
     public void can_keep_original_value_if_hashmap_merge_conflicts(){

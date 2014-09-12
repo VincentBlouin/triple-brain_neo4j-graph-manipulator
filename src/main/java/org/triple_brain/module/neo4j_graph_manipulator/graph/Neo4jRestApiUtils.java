@@ -1,11 +1,12 @@
+/*
+ * Copyright Vincent Blouin under the Mozilla Public License 1.1
+ */
+
 package org.triple_brain.module.neo4j_graph_manipulator.graph;
 
 import java.util.HashMap;
 import java.util.Map;
 
-/*
- * Copyright Mozilla Public License 1.1
- */
 public class Neo4jRestApiUtils {
 
     public static Map<String, Object> wrap(Map<String,Object> props){

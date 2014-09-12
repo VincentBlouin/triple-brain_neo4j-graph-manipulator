@@ -1,3 +1,7 @@
+/*
+ * Copyright Vincent Blouin under the Mozilla Public License 1.1
+ */
+
 package org.triple_brain.module.neo4j_graph_manipulator.graph.graph;
 
 import com.google.inject.assistedinject.Assisted;
@@ -24,9 +28,6 @@ import java.util.*;
 
 import static org.triple_brain.module.neo4j_graph_manipulator.graph.Neo4jRestApiUtils.map;
 
-/*
-* Copyright Mozilla Public License 1.1
-*/
 public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOperator {
 
     protected Node node;
@@ -83,8 +84,8 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
     }
 
     @Override
-    public String getOwner() {
-        return identification.getOwner();
+    public String getOwnerUsername() {
+        return identification.getOwnerUsername();
     }
 
     public void updateLastModificationDate() {
@@ -188,7 +189,7 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
     ) {
         ifIdentificationIsSelfThrowException(identification);
         final Neo4jIdentification neo4jIdentification = identificationFactory.withUri(
-                new UserUris(getOwner()).generateIdentificationUri()
+                new UserUris(getOwnerUsername()).generateIdentificationUri()
         );
         final String queryPrefix = this.identification.queryPrefix();
         QueryResult<Map<String, Object>> results = restApi.executeBatch(new BatchCallback<QueryResult<Map<String, Object>>>() {
@@ -304,12 +305,6 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
         identification.remove();
     }
 
-    @Override
-    public String ownerUsername() {
-        return UserUris.ownerUserNameFromUri(
-                uri()
-        );
-    }
 
     private Map<URI, Identification> getIdentificationUsingRelation(Relationships relationship) {
         QueryResult<Map<String, Object>> result = queryEngine.query(

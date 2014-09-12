@@ -1,3 +1,7 @@
+/*
+ * Copyright Vincent Blouin under the Mozilla Public License 1.1
+ */
+
 package org.triple_brain.module.neo4j_graph_manipulator.graph;
 
 import com.google.inject.AbstractModule;
@@ -44,9 +48,6 @@ import javax.inject.Singleton;
 import java.io.File;
 import java.io.IOException;
 
-/*
-* Copyright Mozilla Public License 1.1
-*/
 public class Neo4jModule extends AbstractModule {
 
     public static final String DB_PATH = "/var/lib/triple_brain/neo4j/db";

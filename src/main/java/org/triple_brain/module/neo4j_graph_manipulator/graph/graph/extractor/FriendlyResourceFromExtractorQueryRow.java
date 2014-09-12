@@ -1,3 +1,7 @@
+/*
+ * Copyright Vincent Blouin under the Mozilla Public License 1.1
+ */
+
 package org.triple_brain.module.neo4j_graph_manipulator.graph.graph.extractor;
 
 import com.hp.hpl.jena.vocabulary.RDFS;
@@ -11,9 +15,6 @@ import org.triple_brain.module.neo4j_graph_manipulator.graph.image.Neo4jImages;
 import java.net.URI;
 import java.util.*;
 
-/*
-* Copyright Mozilla Public License 1.1
-*/
 public class FriendlyResourceFromExtractorQueryRow {
 
     private Map<String, Object> row;

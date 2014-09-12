@@ -1,3 +1,7 @@
+/*
+ * Copyright Vincent Blouin under the Mozilla Public License 1.1
+ */
+
 package org.triple_brain.module.neo4j_graph_manipulator.graph.graph.extractor.schema;
 
 import com.google.inject.assistedinject.Assisted;
@@ -15,9 +19,6 @@ import java.util.Map;
 
 import static org.neo4j.helpers.collection.MapUtil.map;
 
-/*
-* Copyright Mozilla Public License 1.1
-*/
 public class Neo4jSchemaExtractor {
     protected QueryEngine<Map<String, Object>> queryEngine;
     protected URI schemaUri;
@@ -39,13 +40,6 @@ public class Neo4jSchemaExtractor {
         return new SchemaFromQueryResult(
                 result
         ).build();
-//        return properties;
-//        return new SchemaPojo(
-//                FriendlyResourceFromExtractorQueryRow.usingRowAndPrefix(
-//                        result.iterator().next(),
-//                        "schema_node"
-//                ).build()
-//        );
     }
 
     private String buildQuery() {

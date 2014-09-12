@@ -1,3 +1,7 @@
+/*
+ * Copyright Vincent Blouin under the Mozilla Public License 1.1
+ */
+
 package org.triple_brain.module.neo4j_graph_manipulator.graph.embedded.admin.identification;
 
 
@@ -39,7 +43,7 @@ public class ConvertIdentifications2 extends AdminOperationsOnDatabase {
             Neo4jVertexInSubGraphOperator vertexOperator = (Neo4jVertexInSubGraphOperator) vertexIt.next();
             convert(
                     vertexOperator,
-                    vertexOperator.getOwner()
+                    vertexOperator.getOwnerUsername()
             );
         }
         Iterator<EdgeOperator> edgeIt = wholeGraph.getAllEdges();
@@ -47,7 +51,7 @@ public class ConvertIdentifications2 extends AdminOperationsOnDatabase {
             Neo4jEdgeOperator edgeOperator = (Neo4jEdgeOperator) edgeIt.next();
             convert(
                     edgeOperator,
-                    edgeOperator.getOwner()
+                    edgeOperator.getOwnerUsername()
             );
         }
     }

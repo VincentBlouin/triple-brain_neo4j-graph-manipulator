@@ -1,3 +1,7 @@
+/*
+ * Copyright Vincent Blouin under the Mozilla Public License 1.1
+ */
+
 package org.triple_brain.module.neo4j_graph_manipulator.graph.graph.edge;
 
 import com.google.inject.assistedinject.Assisted;
@@ -30,9 +34,6 @@ import java.util.Set;
 import static org.triple_brain.module.neo4j_graph_manipulator.graph.Neo4jRestApiUtils.map;
 import static org.triple_brain.module.neo4j_graph_manipulator.graph.Neo4jRestApiUtils.wrap;
 
-/*
-* Copyright Mozilla Public License 1.1
-*/
 public class Neo4jEdgeOperator implements EdgeOperator, Neo4jOperator {
 
     public enum props {
@@ -201,11 +202,6 @@ public class Neo4jEdgeOperator implements EdgeOperator, Neo4jOperator {
     }
 
     @Override
-    public String ownerUsername() {
-        return graphElementOperator.ownerUsername();
-    }
-
-    @Override
     public Date creationDate() {
         return graphElementOperator.creationDate();
     }
@@ -216,8 +212,8 @@ public class Neo4jEdgeOperator implements EdgeOperator, Neo4jOperator {
     }
 
     @Override
-    public String getOwner() {
-        return graphElementOperator.getOwner();
+    public String getOwnerUsername() {
+        return graphElementOperator.getOwnerUsername();
     }
 
     @Override

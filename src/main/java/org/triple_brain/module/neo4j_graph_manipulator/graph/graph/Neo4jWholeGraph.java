@@ -1,3 +1,7 @@
+/*
+ * Copyright Vincent Blouin under the Mozilla Public License 1.1
+ */
+
 package org.triple_brain.module.neo4j_graph_manipulator.graph.graph;
 
 import org.neo4j.graphdb.Node;
@@ -5,19 +9,20 @@ import org.neo4j.rest.graphdb.query.QueryEngine;
 import org.neo4j.rest.graphdb.util.QueryResult;
 import org.triple_brain.module.model.WholeGraph;
 import org.triple_brain.module.model.graph.edge.EdgeOperator;
+import org.triple_brain.module.model.graph.schema.SchemaOperator;
 import org.triple_brain.module.model.graph.vertex.VertexInSubGraphOperator;
+import org.triple_brain.module.neo4j_graph_manipulator.graph.Neo4jFriendlyResource;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.Relationships;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.edge.Neo4jEdgeFactory;
+import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.schema.SchemaFactory;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.vertex.Neo4jVertexFactory;
 
 import javax.inject.Inject;
+import java.net.URI;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
 
-/*
-* Copyright Mozilla Public License 1.1
-*/
 public class Neo4jWholeGraph implements WholeGraph {
 
     @Inject
@@ -28,6 +33,9 @@ public class Neo4jWholeGraph implements WholeGraph {
 
     @Inject
     protected Neo4jEdgeFactory neo4jEdgeFactory;
+
+    @Inject
+    protected SchemaFactory schemaFactory;
 
     @Override
     public Iterator<VertexInSubGraphOperator> getAllVertices() {
@@ -80,6 +88,38 @@ public class Neo4jWholeGraph implements WholeGraph {
             public EdgeOperator next() {
                 return neo4jEdgeFactory.createOrLoadWithNode(
                         (Node) iterator.next().get("relation")
+                );
+            }
+
+            @Override
+            public void remove() {
+                //To change body of implemented methods use File | Settings | File Templates.
+            }
+        };
+    }
+
+    @Override
+    public Iterator<SchemaOperator> getAllSchemas() {
+        return new Iterator<SchemaOperator>() {
+            QueryResult<Map<String, Object>> result = queryEngine.query(
+                    "START n = node(*) " +
+                            "MATCH (n:schema) " +
+                            "RETURN n." + Neo4jFriendlyResource.props.uri + " as uri",
+                    Collections.emptyMap()
+            );
+            Iterator<Map<String, Object>> iterator = result.iterator();
+            @Override
+            public boolean hasNext() {
+                return iterator.hasNext();
+            }
+
+            @Override
+            public SchemaOperator next() {
+                URI uri = URI.create(
+                        iterator.next().get("uri").toString()
+                );
+                return schemaFactory.withUri(
+                        uri
                 );
             }
 

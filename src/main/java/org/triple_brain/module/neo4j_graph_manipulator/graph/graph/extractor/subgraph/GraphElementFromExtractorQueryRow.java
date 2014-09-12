@@ -1,3 +1,7 @@
+/*
+ * Copyright Vincent Blouin under the Mozilla Public License 1.1
+ */
+
 package org.triple_brain.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph;
 
 import org.triple_brain.module.model.graph.GraphElement;
@@ -10,9 +14,6 @@ import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 
-/*
-* Copyright Mozilla Public License 1.1
-*/
 public class GraphElementFromExtractorQueryRow {
 
     private Map<String, Object> row;

@@ -1,3 +1,7 @@
+/*
+ * Copyright Vincent Blouin under the Mozilla Public License 1.1
+ */
+
 package org.triple_brain.module.neo4j_graph_manipulator.graph.graph.schema;
 
 import com.google.inject.assistedinject.Assisted;
@@ -17,16 +21,15 @@ import org.triple_brain.module.neo4j_graph_manipulator.graph.Relationships;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.Neo4jGraphElementFactory;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.Neo4jGraphElementOperator;
 
-import javax.management.relation.Relation;
 import java.net.URI;
-import java.util.*;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 import static org.triple_brain.module.neo4j_graph_manipulator.graph.Neo4jRestApiUtils.map;
 import static org.triple_brain.module.neo4j_graph_manipulator.graph.Neo4jRestApiUtils.wrap;
 
-/*
-* Copyright Mozilla Public License 1.1
-*/
 public class Neo4jSchemaOperator implements SchemaOperator, Neo4jOperator {
 
     protected Neo4jFriendlyResource friendlyResourceOperator;
@@ -107,8 +110,8 @@ public class Neo4jSchemaOperator implements SchemaOperator, Neo4jOperator {
     }
 
     @Override
-    public String getOwner() {
-        return friendlyResourceOperator.getOwner();
+    public String getOwnerUsername() {
+        return friendlyResourceOperator.getOwnerUsername();
     }
 
     @Override
@@ -160,7 +163,7 @@ public class Neo4jSchemaOperator implements SchemaOperator, Neo4jOperator {
 
     @Override
     public void remove() {
-        friendlyResourceOperator.remove();
+        //cannot remove schema for now
     }
 
     @Override

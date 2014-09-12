@@ -1,3 +1,7 @@
+/*
+ * Copyright Vincent Blouin under the Mozilla Public License 1.1
+ */
+
 package org.triple_brain.module.neo4j_graph_manipulator.graph.graph.vertex;
 
 import com.google.inject.Inject;
@@ -33,9 +37,6 @@ import static org.triple_brain.module.neo4j_graph_manipulator.graph.Neo4jFriendl
 import static org.triple_brain.module.neo4j_graph_manipulator.graph.Neo4jRestApiUtils.map;
 import static org.triple_brain.module.neo4j_graph_manipulator.graph.Neo4jRestApiUtils.wrap;
 
-/*
-* Copyright Mozilla Public License 1.1
-*/
 public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, Neo4jOperator {
 
     public enum props {
@@ -44,7 +45,6 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
         suggestions
     }
 
-    private Integer depthInSubGraph = -1;
     protected Neo4jGraphElementOperator graphElementOperator;
     protected Neo4jVertexFactory vertexFactory;
 
@@ -147,7 +147,7 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
                 queryEngine,
                 restApi,
                 new UserUris(
-                        includedVertices.iterator().next().ownerUsername()
+                        includedVertices.iterator().next().getOwnerUsername()
                 ).generateVertexUri()
         );
         if (includedVertices.size() <= 1) {
@@ -181,7 +181,7 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
     }
 
     @Override
-    public EdgeOperator edgeThatLinksToDestinationVertex(Vertex destinationVertex) {
+    public EdgeOperator getEdgeThatLinksToDestinationVertex(Vertex destinationVertex) {
         Neo4jFriendlyResource destinationVertexOperator = friendlyResourceFactory.withUri(
                 destinationVertex.uri()
         );
@@ -229,7 +229,7 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
             @Override
             public EdgeOperator recordBatch(RestAPI batchRestApi) {
                 URI newVertexUri = new UserUris(
-                        ownerUsername()
+                        getOwnerUsername()
                 ).generateVertexUri();
                 Neo4jVertexInSubGraphOperator newVertexOperator = vertexFactory.withUri(
                         newVertexUri
@@ -311,11 +311,6 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
                 return null;
             }
         });
-    }
-
-    @Override
-    public String ownerUsername() {
-        return graphElementOperator.ownerUsername();
     }
 
     @Override
@@ -580,8 +575,8 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
     }
 
     @Override
-    public String getOwner() {
-        return graphElementOperator.getOwner();
+    public String getOwnerUsername() {
+        return graphElementOperator.getOwnerUsername();
     }
 
     @Override
@@ -652,17 +647,6 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
     @Override
     public int hashCode() {
         return graphElementOperator.hashCode();
-    }
-
-    @Override
-    public Integer minDistanceFromCenterVertex() {
-        return depthInSubGraph;
-    }
-
-    @Override
-    public VertexInSubGraph setMinDistanceFromCenterVertex(Integer minDistanceFromCenterVertex) {
-        this.depthInSubGraph = minDistanceFromCenterVertex;
-        return this;
     }
 
     @Override

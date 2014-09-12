@@ -1,3 +1,7 @@
+/*
+ * Copyright Vincent Blouin under the Mozilla Public License 1.1
+ */
+
 package org.triple_brain.module.neo4j_graph_manipulator.graph.test;
 
 import com.hp.hpl.jena.vocabulary.RDFS;
@@ -26,9 +30,6 @@ import javax.inject.Inject;
 import java.net.URI;
 import java.util.*;
 
-/*
-* Copyright Mozilla Public License 1.1
-*/
 public class Neo4JGraphComponentTest implements GraphComponentTest {
 
     @Inject
@@ -311,43 +312,7 @@ public class Neo4JGraphComponentTest implements GraphComponentTest {
         return allEdges().size();
     }
 
-    private void commit() {
-        finishTransaction();
-        startTransaction();
-    }
-
     private void startTransaction() {
         transaction = graphDb.beginTx();
-    }
-
-    private void finishTransaction() {
-        transaction.success();
-    }
-
-    private Set<VertexInSubGraphOperator> convertVertexSetToOperator(Map<URI, ?extends VertexInSubGraph> vertices) {
-        Set<VertexInSubGraphOperator> verticesOperator = new HashSet<VertexInSubGraphOperator>();
-        for (VertexInSubGraph vertexInSubGraph : vertices.values()) {
-            VertexInSubGraphOperator vertexInSubGraphOperator = vertexFactory.withUri(
-                    vertexInSubGraph.uri()
-            );
-            vertexInSubGraphOperator.setMinDistanceFromCenterVertex(
-                    vertexInSubGraph.minDistanceFromCenterVertex()
-            );
-            verticesOperator.add(
-                    vertexInSubGraphOperator
-            );
-        }
-        return verticesOperator;
-    }
-
-    private Set<EdgeOperator> convertEdgeSetToOperator(Map<URI, ?extends Edge> edges) {
-        Set<EdgeOperator> edgesOperator = new HashSet<EdgeOperator>();
-        for(Edge edge: edges.values()){
-            edgesOperator.add(
-                    edgeFactory.createOrLoadUsingUri(
-                            edge.uri()
-                    ));
-        }
-        return edgesOperator;
     }
 }

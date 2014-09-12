@@ -1,3 +1,7 @@
+/*
+ * Copyright Vincent Blouin under the Mozilla Public License 1.1
+ */
+
 package org.triple_brain.module.neo4j_graph_manipulator.graph.embedded.admin;
 
 import org.junit.BeforeClass;
@@ -6,9 +10,6 @@ import org.neo4j.rest.graphdb.RestAPIFacade;
 import org.neo4j.rest.graphdb.query.QueryEngine;
 import org.neo4j.rest.graphdb.query.RestCypherQueryEngine;
 
-/*
-* Copyright Mozilla Public License 1.1
-*/
 public class AdminOperationsOnDatabase {
 
     @BeforeClass

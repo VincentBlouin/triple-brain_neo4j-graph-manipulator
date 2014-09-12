@@ -1,3 +1,7 @@
+/*
+ * Copyright Vincent Blouin under the Mozilla Public License 1.1
+ */
+
 package org.triple_brain.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph;
 
 import com.google.inject.assistedinject.Assisted;
@@ -26,9 +30,6 @@ import java.util.Map;
 
 import static org.neo4j.helpers.collection.MapUtil.map;
 
-/*
-* Copyright Mozilla Public License 1.1
-*/
 public class Neo4jSubGraphExtractor {
     QueryEngine engine;
     URI centerVertexUri;
@@ -56,15 +57,8 @@ public class Neo4jSubGraphExtractor {
         );
         for (Map<String, Object> row : result) {
             if (isVertexFromRow(row)) {
-                VertexInSubGraph vertexInSubGraph = addOrUpdateVertexUsingRow(
+                addOrUpdateVertexUsingRow(
                         row
-                );
-                Integer distanceFromCenterVertex = (Integer) (
-                        row.get("length(path)")
-                );
-                setDistanceFromCenterVertexToVertexIfApplicable(
-                        vertexInSubGraph,
-                        distanceFromCenterVertex / 2
                 );
             } else {
                 addOrUpdateEdgeUsingRow(
@@ -77,15 +71,6 @@ public class Neo4jSubGraphExtractor {
 
     private Boolean isVertexFromRow(Map<String, Object> row) {
         return row.get("type").toString().contains("vertex");
-    }
-
-    private void setDistanceFromCenterVertexToVertexIfApplicable(
-            VertexInSubGraph vertexInSubGraph,
-            Integer distance
-    ) {
-        if (vertexInSubGraph.minDistanceFromCenterVertex() == -1 || vertexInSubGraph.minDistanceFromCenterVertex() > distance) {
-            vertexInSubGraph.setMinDistanceFromCenterVertex(distance);
-        }
     }
 
     private VertexInSubGraph addOrUpdateVertexUsingRow(Map<String, Object> row) {
@@ -124,8 +109,7 @@ public class Neo4jSubGraphExtractor {
                 "RETURN " +
                 vertexReturnQueryPart("in_path_node") +
                 edgeReturnQueryPart("in_path_node") +
-                "labels(in_path_node) as type, " +
-                "length(path)";
+                "labels(in_path_node) as type";
 
     }
 

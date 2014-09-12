@@ -1,3 +1,7 @@
+/*
+ * Copyright Vincent Blouin under the Mozilla Public License 1.1
+ */
+
 package learning;
 
 import com.google.inject.Guice;
@@ -17,9 +21,6 @@ import org.triple_brain.module.neo4j_graph_manipulator.graph.Neo4jModule;
 import javax.inject.Inject;
 import java.util.Collections;
 
-/*
- * Copyright Mozilla Public License 1.1
- */
 public class Neo4jServerTestGeneric {
 
     protected static Injector injector;
