@@ -43,18 +43,17 @@ public class Neo4jSchemaExtractor {
     }
 
     private String buildQuery() {
-        String dummyReturnValueToAvoidFinishWithComma = "1";
         return "START schema_node=node:node_auto_index(uri='" + schemaUri + "') " +
-                "OPTIONAL MATCH (schema_node)-[:" + Relationships.HAS_PROPERTY+ "]->(schema_property) " +
-                "OPTIONAL MATCH (schema_property)-[:" + Relationships.IDENTIFIED_TO + "]->(schema_property_generic_identification) " +
-                "OPTIONAL MATCH (schema_property)-[:" + Relationships.TYPE + "]->(schema_property_type) " +
-                "OPTIONAL MATCH (schema_property)-[:" + Relationships.SAME_AS + "]->(schema_property_same_as) " +
+                "OPTIONAL MATCH (schema_node)-[:" + Relationships.HAS_PROPERTY + "]->(schema_property) " +
+                "OPTIONAL MATCH (schema_property)-[identification_relation:" +
+                Relationships.IDENTIFIED_TO + "|" +
+                Relationships.TYPE + "|" +
+                Relationships.SAME_AS +
+                "]->(schema_property_identification) " +
                 "RETURN " +
                 FriendlyResourceQueryBuilder.returnQueryPartUsingPrefix("schema_node") +
                 FriendlyResourceQueryBuilder.returnQueryPartUsingPrefix("schema_property") +
-                IdentificationQueryBuilder.genericIdentificationReturnQueryPart("schema_property") +
-                IdentificationQueryBuilder.typeReturnQueryPart("schema_property") +
-                IdentificationQueryBuilder.sameAsReturnQueryPart("schema_property") +
-                dummyReturnValueToAvoidFinishWithComma;
+                IdentificationQueryBuilder.identificationReturnQueryPart("schema_property_identification") +
+                "type(identification_relation) as schema_property_identification_type";
     }
 }

@@ -8,6 +8,7 @@ import org.triple_brain.module.model.graph.GraphElement;
 import org.triple_brain.module.model.graph.GraphElementPojo;
 import org.triple_brain.module.model.graph.IdentificationPojo;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.Neo4jFriendlyResource;
+import org.triple_brain.module.neo4j_graph_manipulator.graph.Relationships;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.extractor.FriendlyResourceFromExtractorQueryRow;
 
 import java.net.URI;
@@ -18,9 +19,8 @@ public class GraphElementFromExtractorQueryRow {
 
     private Map<String, Object> row;
     private String key;
-    private String genericIdentificationKey;
-    private String typeKey;
-    private String sameAsKey;
+    private String identificationKey;
+    private String identificationTypeKey;
 
     public static GraphElementFromExtractorQueryRow usingRowAndKey(Map<String, Object> row, String key) {
         return new GraphElementFromExtractorQueryRow(
@@ -32,9 +32,8 @@ public class GraphElementFromExtractorQueryRow {
     protected GraphElementFromExtractorQueryRow(Map<String, Object> row, String key) {
         this.row = row;
         this.key = key;
-        this.genericIdentificationKey = key + "_generic_identification";
-        this.typeKey = key + "_type";
-        this.sameAsKey = key + "_same_as";
+        this.identificationKey = key + "_identification";
+        this.identificationTypeKey = key + "_identification_type";
     }
 
     public GraphElementPojo build() {
@@ -51,34 +50,15 @@ public class GraphElementFromExtractorQueryRow {
     }
 
     private void updateIdentifications(GraphElementPojo graphElement) {
-        updateIdentificationsUsingKeyAndCollection(
-                genericIdentificationKey,
-                graphElement.getGenericIdentifications()
-        );
-        updateIdentificationsUsingKeyAndCollection(
-                typeKey,
-                graphElement.getAdditionalTypes()
-        );
-        updateIdentificationsUsingKeyAndCollection(
-                sameAsKey,
-                graphElement.getSameAs()
-        );
-    }
-
-
-    private void updateIdentificationsUsingKeyAndCollection(
-            String key,
-            Map<URI, IdentificationPojo> collection
-    ) {
-        if (hasIdentificationInRow(key)) {
+        if (hasIdentificationInRow()) {
             URI uri = URI.create(
-                    row.get(uriKey(key)).toString()
+                    row.get(uriKey(identificationKey)).toString()
             );
             IdentificationFromExtractorQueryRow extractor = IdentificationFromExtractorQueryRow.usingRowAndKey(
                     row,
-                    key
+                    identificationKey
             );
-            collection.put(
+            getCorrectIdentificationCollection(graphElement).put(
                     uri,
                     extractor.build()
             );
@@ -98,20 +78,31 @@ public class GraphElementFromExtractorQueryRow {
     }
 
 
-    private Boolean hasIdentificationInRow(String key) {
+    private Boolean hasIdentificationInRow() {
         return row.get(
-                uriKey(key)
+                uriKey(identificationKey)
         ) != null;
-    }
-
-    private FriendlyResourceFromExtractorQueryRow identificationExtractorUsingKey(String key) {
-        return FriendlyResourceFromExtractorQueryRow.usingRowAndPrefix(
-                row,
-                key
-        );
     }
 
     private String uriKey(String prefix) {
         return prefix + "." + Neo4jFriendlyResource.props.uri;
+    }
+
+    private Map<URI, IdentificationPojo> getCorrectIdentificationCollection(GraphElementPojo graphElement){
+        Relationships identificationType = Relationships.valueOf(getIdentificationType());
+        if(Relationships.TYPE == identificationType) {
+            return graphElement.getAdditionalTypes();
+        }else if(Relationships.SAME_AS == identificationType){
+            return graphElement.getSameAs();
+        }
+        else {
+            return graphElement.getGenericIdentifications();
+        }
+    }
+
+    private String getIdentificationType(){
+        return row.get(
+                identificationTypeKey
+        ).toString();
     }
 }

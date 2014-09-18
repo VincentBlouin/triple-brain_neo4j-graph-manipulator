@@ -103,22 +103,23 @@ public class Neo4jSubGraphExtractor {
                 "OPTIONAL MATCH (in_path_node)-[:HAS_INCLUDED_EDGE]->(in_path_node_included_edge) " +
                 "OPTIONAL MATCH (in_path_node_included_edge)-[:" + Relationships.SOURCE_VERTEX + "]->(in_path_node_included_edge_source_vertex) " +
                 "OPTIONAL MATCH (in_path_node_included_edge)-[:" + Relationships.DESTINATION_VERTEX + "]->(in_path_node_included_edge_destination_vertex) " +
-                "OPTIONAL MATCH (in_path_node)-[:" + Relationships.IDENTIFIED_TO + "]->(in_path_node_generic_identification) " +
-                "OPTIONAL MATCH (in_path_node)-[:" + Relationships.TYPE + "]->(in_path_node_type) " +
-                "OPTIONAL MATCH (in_path_node)-[:" + Relationships.SAME_AS + "]->(in_path_node_same_as) " +
+                "OPTIONAL MATCH (in_path_node)-[identification_relation:" +
+                Relationships.IDENTIFIED_TO + "|" +
+                Relationships.TYPE + "|" +
+                Relationships.SAME_AS +
+                "]->(in_path_node_identification) " +
                 "RETURN " +
                 vertexReturnQueryPart("in_path_node") +
                 edgeReturnQueryPart("in_path_node") +
-                "labels(in_path_node) as type";
+                "labels(in_path_node) as type, " +
+                "type(identification_relation) as in_path_node_identification_type";
 
     }
 
     private String edgeReturnQueryPart(String prefix) {
         return edgeSpecificPropertiesQueryPartUsingPrefix(prefix) +
                 FriendlyResourceQueryBuilder.returnQueryPartUsingPrefix(prefix) +
-                IdentificationQueryBuilder.genericIdentificationReturnQueryPart(prefix) +
-                IdentificationQueryBuilder.typeReturnQueryPart(prefix) +
-                IdentificationQueryBuilder.sameAsReturnQueryPart(prefix);
+                IdentificationQueryBuilder.identificationReturnQueryPart(prefix + "_identification");
     }
 
     private String vertexReturnQueryPart(String prefix) {
@@ -127,9 +128,7 @@ public class Neo4jSubGraphExtractor {
                 includedElementQueryPart(prefix + "_included_vertex") +
                 includedEdgeQueryPart(prefix) +
                 FriendlyResourceQueryBuilder.imageReturnQueryPart(prefix) +
-                IdentificationQueryBuilder.genericIdentificationReturnQueryPart(prefix) +
-                IdentificationQueryBuilder.typeReturnQueryPart(prefix) +
-                IdentificationQueryBuilder.sameAsReturnQueryPart(prefix);
+                IdentificationQueryBuilder.identificationReturnQueryPart(prefix + "_identification");
     }
 
     private static String includedEdgeQueryPart(String prefix) {
