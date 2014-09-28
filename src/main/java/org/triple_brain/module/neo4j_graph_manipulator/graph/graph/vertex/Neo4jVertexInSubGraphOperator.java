@@ -272,6 +272,37 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
     }
 
     @Override
+    public EdgeOperator acceptSuggestion(SuggestionPojo suggestion) {
+        //todo the method operations should somehow be in a batch execution
+        EdgeOperator newEdge = addVertexAndRelation();
+        newEdge.label(suggestion.label());
+        VertexOperator newVertex = newEdge.destinationVertex();
+        if(suggestion.getSameAs() != null){
+            newEdge.addSameAs(
+                    new IdentificationPojo(
+                            suggestion.getSameAs().uri(),
+                            suggestion.getSameAs()
+                    )
+            );
+            newVertex.addType(
+                    new IdentificationPojo(
+                            suggestion.getSameAs().uri(),
+                            suggestion.getSameAs()
+                    )
+            );
+        }
+        if(suggestion.getType() != null){
+            newVertex.addType(
+                    new IdentificationPojo(
+                            suggestion.getType().uri(),
+                            suggestion.getType()
+                    )
+            );
+        }
+        return newEdge;
+    }
+
+    @Override
     public void remove() {
         restApi.executeBatch(new BatchCallback<Object>() {
             @Override
