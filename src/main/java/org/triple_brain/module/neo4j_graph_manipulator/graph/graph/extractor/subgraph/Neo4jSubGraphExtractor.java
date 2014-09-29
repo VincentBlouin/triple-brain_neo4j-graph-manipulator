@@ -14,6 +14,7 @@ import org.triple_brain.module.model.graph.edge.Edge;
 import org.triple_brain.module.model.graph.edge.EdgePojo;
 import org.triple_brain.module.model.graph.vertex.VertexInSubGraph;
 import org.triple_brain.module.model.graph.vertex.VertexInSubGraphPojo;
+import org.triple_brain.module.neo4j_graph_manipulator.graph.Neo4jFriendlyResource;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.Relationships;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.Neo4jIdentification;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.Neo4jUserGraph;
@@ -148,7 +149,7 @@ public class Neo4jSubGraphExtractor {
                 Neo4jUserGraph.URI_PROPERTY_NAME
         ) + QueryUtils.getPropertyUsingContainerNameQueryPart(
                 key,
-                "`" + RDFS.label.getURI() + "`"
+                Neo4jFriendlyResource.props.label.toString()
         );
     }
 

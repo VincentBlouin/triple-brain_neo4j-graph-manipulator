@@ -11,6 +11,7 @@ import org.junit.Test;
 import org.neo4j.graphdb.Node;
 import org.neo4j.rest.graphdb.util.QueryResult;
 import org.triple_brain.module.model.UserUris;
+import org.triple_brain.module.neo4j_graph_manipulator.graph.Neo4jFriendlyResource;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.Relationships;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.embedded.admin.AdminOperationsOnDatabase;
 
@@ -49,7 +50,7 @@ public class ConvertIdentifications4 extends AdminOperationsOnDatabase{
         String owner = node.getProperty("owner").toString();
         String uri = new UserUris(owner).generateEdgeUri().toString();
         System.out.println(owner);
-        System.out.println(node.getProperty(RDFS.label.getURI().toString()));
+        System.out.println(node.getProperty(Neo4jFriendlyResource.props.label.toString()));
         System.out.println(node.getProperty("uri"));
         System.out.println(node.getProperty("external_uri"));
         node.setProperty("uri", uri);

@@ -37,6 +37,7 @@ public class Neo4jFriendlyResource implements FriendlyResourceOperator, Neo4jOpe
     public enum props {
         uri,
         label,
+        comment,
         creation_date,
         last_modification_date,
         owner
@@ -125,8 +126,8 @@ public class Neo4jFriendlyResource implements FriendlyResourceOperator, Neo4jOpe
         this.uri = pojo.uri();
         createUsingInitialValues(
                 map(
-                        RDFS.label.getURI().toString(), pojo.label() == null ? "" : pojo.label(),
-                        RDFS.comment.getURI().toString(), pojo.comment() == null ? "" : pojo.comment()
+                        props.label.toString(), pojo.label() == null ? "" : pojo.label(),
+                        props.comment.toString(), pojo.comment() == null ? "" : pojo.comment()
                 )
         );
     }
@@ -145,7 +146,7 @@ public class Neo4jFriendlyResource implements FriendlyResourceOperator, Neo4jOpe
     public String label() {
         QueryResult<Map<String, Object>> result = queryEngine.query(
                 queryPrefix() +
-                        "return n.`" + RDFS.label.getURI() + "` as label",
+                        "return n." + props.label.toString() + " as label",
                 map()
         );
         Object label = result.iterator().next().get("label");
@@ -157,7 +158,7 @@ public class Neo4jFriendlyResource implements FriendlyResourceOperator, Neo4jOpe
     @Override
     public void label(String label) {
         String query = queryPrefix() +
-                " SET n.`" + RDFS.label.getURI() + "`= {label}, " +
+                " SET n." + props.label + "= {label}, " +
                 LAST_MODIFICATION_QUERY_PART;
         Map<String, Object> props = map(
                 "label", label
@@ -181,8 +182,8 @@ public class Neo4jFriendlyResource implements FriendlyResourceOperator, Neo4jOpe
 
     @Override
     public String comment() {
-        String query = queryPrefix() + "return n.`"
-                + RDFS.comment.getURI() + "` as comment";
+        String query = queryPrefix() + "return n."
+                + props.comment + " as comment";
         QueryResult<Map<String, Object>> result = queryEngine.query(
                 query,
                 map()
@@ -196,9 +197,9 @@ public class Neo4jFriendlyResource implements FriendlyResourceOperator, Neo4jOpe
 
     @Override
     public void comment(String comment) {
-        String query = queryPrefix() + "SET n.`"
-                + RDFS.comment.getURI() +
-                "`= {comment}, " + LAST_MODIFICATION_QUERY_PART;
+        String query = queryPrefix() + "SET n."
+                + props.comment +
+                "= {comment}, " + LAST_MODIFICATION_QUERY_PART;
         queryEngine.query(
                 query,
                 addUpdatedLastModificationDate(map(

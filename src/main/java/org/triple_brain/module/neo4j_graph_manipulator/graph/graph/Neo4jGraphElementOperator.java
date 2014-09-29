@@ -203,8 +203,8 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
                                 "}) " +
                                 "ON CREATE SET " +
                                 "f.uri = {uri}, " +
-                                "f.`" + RDFS.label.getURI() + "`={label}, " +
-                                "f.`" + RDFS.comment.getURI() + "`={comment}, " +
+                                "f." + Neo4jFriendlyResource.props.label + "={label}, " +
+                                "f." + Neo4jFriendlyResource.props.comment + "={comment}, " +
                                 "f." + Neo4jFriendlyResource.props.creation_date + "=timestamp(), " +
                                 "f." + Neo4jFriendlyResource.props.last_modification_date + "=timestamp() " +
                                 "CREATE UNIQUE " +
@@ -212,8 +212,8 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
                                 "RETURN " +
                                 "f.uri as uri, " +
                                 "f.external_uri as external_uri, " +
-                                "f.`" + RDFS.label.getURI() + "` as label, " +
-                                "f.`" + RDFS.comment.getURI() + "` as comment, " +
+                                "f." + Neo4jFriendlyResource.props.label + " as label, " +
+                                "f." + Neo4jFriendlyResource.props.comment + " as comment, " +
                                 "f." + Neo4jImages.props.images + " as images, " +
                                 "f." + Neo4jFriendlyResource.props.creation_date + " as creation_date, " +
                                 "f." + Neo4jFriendlyResource.props.last_modification_date + " as last_modification_date",

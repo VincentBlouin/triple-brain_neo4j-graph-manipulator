@@ -20,6 +20,7 @@ import org.triple_brain.module.model.graph.edge.EdgePojo;
 import org.triple_brain.module.model.graph.vertex.*;
 import org.triple_brain.module.model.test.scenarios.TestScenarios;
 import org.triple_brain.module.model.test.scenarios.VerticesCalledABAndC;
+import org.triple_brain.module.neo4j_graph_manipulator.graph.Neo4jFriendlyResource;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.Neo4jModule;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph.Neo4jSubGraphExtractorFactory;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.Neo4jUserGraphFactory;
@@ -178,7 +179,7 @@ public class Neo4JGraphComponentTest implements GraphComponentTest {
 
     protected boolean hasLabel(PropertyContainer propertyContainer, String label) {
         try {
-            String labelProperty = RDFS.label.getURI();
+            String labelProperty = Neo4jFriendlyResource.props.label.toString();
             return propertyContainer.hasProperty(
                     labelProperty
             ) &&

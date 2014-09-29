@@ -71,14 +71,14 @@ public class FriendlyResourceFromExtractorQueryRow {
     }
 
     private String getLabel() {
-        String labelKey = nodeKey + ".`" + RDFS.label.getURI().toString() + "`";
+        String labelKey = nodeKey + "." + Neo4jFriendlyResource.props.label + "";
         return row.get(
                 labelKey
         ) != null ? row.get(labelKey).toString() : "";
     }
 
     private String getComment() {
-        String commmentKey = nodeKey + ".`" + RDFS.comment.getURI().toString() + "`";
+        String commmentKey = nodeKey + "." + Neo4jFriendlyResource.props.comment + "";
         return row.get(
                 commmentKey
         ) != null ? row.get(commmentKey).toString() : "";

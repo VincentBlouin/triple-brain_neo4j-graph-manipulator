@@ -19,11 +19,11 @@ public class FriendlyResourceQueryBuilder {
                 ) +
                         QueryUtils.getPropertyUsingContainerNameQueryPart(
                                 prefix,
-                                "`" + RDFS.label.getURI() + "`"
+                                Neo4jFriendlyResource.props.label.toString()
                         ) +
                         QueryUtils.getPropertyUsingContainerNameQueryPart(
                                 prefix,
-                                "`" + RDFS.comment.getURI() + "`"
+                                Neo4jFriendlyResource.props.comment.toString()
                         ) +
                         QueryUtils.getPropertyUsingContainerNameQueryPart(
                                 prefix,

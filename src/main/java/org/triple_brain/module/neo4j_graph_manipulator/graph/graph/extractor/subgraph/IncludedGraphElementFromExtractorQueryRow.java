@@ -5,6 +5,7 @@
 package org.triple_brain.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph;
 
 import com.hp.hpl.jena.vocabulary.RDFS;
+import org.triple_brain.module.neo4j_graph_manipulator.graph.Neo4jFriendlyResource;
 
 import java.net.URI;
 import java.util.Map;
@@ -38,7 +39,7 @@ public class IncludedGraphElementFromExtractorQueryRow {
     }
 
     public String getLabel() {
-        String labelKey = key+ ".`" + RDFS.label.getURI().toString() + "`";
+        String labelKey = key+ "." + Neo4jFriendlyResource.props.label;
         return row.get(
                 labelKey
         ) != null ? row.get(labelKey).toString() : "";
