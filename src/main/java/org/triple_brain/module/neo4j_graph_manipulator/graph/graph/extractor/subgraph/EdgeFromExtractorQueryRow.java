@@ -15,13 +15,25 @@ import java.util.Map;
 public class EdgeFromExtractorQueryRow {
 
     private Map<String, Object> row;
+    private String key;
+    public static EdgeFromExtractorQueryRow usingRowAndKey(Map<String, Object> row, String key) {
+        return new EdgeFromExtractorQueryRow(row, key);
+    }
 
     public static EdgeFromExtractorQueryRow usingRow(Map<String, Object> row) {
         return new EdgeFromExtractorQueryRow(row);
     }
 
     protected EdgeFromExtractorQueryRow(Map<String, Object> row) {
+        this(
+                row,
+                "in_path_node"
+        );
+    }
+
+    protected EdgeFromExtractorQueryRow(Map<String, Object> row, String key) {
         this.row = row;
+        this.key = key;
     }
 
     public Edge build() {
@@ -31,7 +43,7 @@ public class EdgeFromExtractorQueryRow {
     }
 
     public Edge update(Edge edge) {
-        GraphElementFromExtractorQueryRow.usingRowAndKey(row, "in_path_node").update(
+        GraphElementFromExtractorQueryRow.usingRowAndKey(row, key).update(
                 ((EdgePojo) edge).getGraphElement()
         );
         return edge;
@@ -40,20 +52,20 @@ public class EdgeFromExtractorQueryRow {
     private EdgePojo init() {
         return new EdgePojo(
                 GraphElementFromExtractorQueryRow.usingRowAndKey(
-                        row, "in_path_node"
+                        row, key
                 ).build(),
                 new VertexInSubGraphPojo(getSourceVertexUri()),
                 new VertexInSubGraphPojo(getDestinationVertexUri())
         );
     }
 
-    private URI getSourceVertexUri() {
+    public URI getSourceVertexUri() {
         return vertexUriFromProp(
                 Neo4jEdgeOperator.props.source_vertex_uri
         );
     }
 
-    private URI getDestinationVertexUri() {
+    public URI getDestinationVertexUri() {
         return vertexUriFromProp(
                 Neo4jEdgeOperator.props.destination_vertex_uri
         );
@@ -62,8 +74,7 @@ public class EdgeFromExtractorQueryRow {
     private URI vertexUriFromProp(Enum prop) {
         return URI.create(
                 row.get(
-                        "in_path_node." +
-                                prop
+                        key + "." + prop
 
                 ).toString()
         );

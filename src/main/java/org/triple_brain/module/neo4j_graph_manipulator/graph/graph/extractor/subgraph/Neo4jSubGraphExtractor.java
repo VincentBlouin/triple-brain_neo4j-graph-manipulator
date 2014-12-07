@@ -102,8 +102,6 @@ public class Neo4jSubGraphExtractor {
                 "]->in_path_node " +
                 "OPTIONAL MATCH (in_path_node)-[:HAS_INCLUDED_VERTEX]->(in_path_node_included_vertex) " +
                 "OPTIONAL MATCH (in_path_node)-[:HAS_INCLUDED_EDGE]->(in_path_node_included_edge) " +
-                "OPTIONAL MATCH (in_path_node_included_edge)-[:" + Relationships.SOURCE_VERTEX + "]->(in_path_node_included_edge_source_vertex) " +
-                "OPTIONAL MATCH (in_path_node_included_edge)-[:" + Relationships.DESTINATION_VERTEX + "]->(in_path_node_included_edge_destination_vertex) " +
                 "OPTIONAL MATCH (in_path_node)-[identification_relation:" +
                 Relationships.IDENTIFIED_TO + "|" +
                 Relationships.TYPE + "|" +
@@ -114,7 +112,6 @@ public class Neo4jSubGraphExtractor {
                 edgeReturnQueryPart("in_path_node") +
                 "labels(in_path_node) as type, " +
                 "type(identification_relation) as in_path_node_identification_type";
-
     }
 
     private String edgeReturnQueryPart(String prefix) {
@@ -134,13 +131,10 @@ public class Neo4jSubGraphExtractor {
 
     private static String includedEdgeQueryPart(String prefix) {
         String key = prefix + "_included_edge";
-        return includedElementQueryPart(
-                key
-        ) + includedElementQueryPart(
-                key + "_source_vertex"
-        ) + includedElementQueryPart(
-                key + "_destination_vertex"
-        );
+        return edgeSpecificPropertiesQueryPartUsingPrefix(key) +
+                includedElementQueryPart(
+                        key
+                );
     }
 
     public static String includedElementQueryPart(String key) {
@@ -153,7 +147,7 @@ public class Neo4jSubGraphExtractor {
         );
     }
 
-    private String edgeSpecificPropertiesQueryPartUsingPrefix(String prefix) {
+    private static String edgeSpecificPropertiesQueryPartUsingPrefix(String prefix) {
         return QueryUtils.getPropertyUsingContainerNameQueryPart(
                 prefix,
                 Neo4jEdgeOperator.props.source_vertex_uri.toString()

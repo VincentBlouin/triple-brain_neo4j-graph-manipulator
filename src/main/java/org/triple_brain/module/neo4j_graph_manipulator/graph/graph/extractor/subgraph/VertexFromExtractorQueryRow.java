@@ -50,6 +50,7 @@ public class VertexFromExtractorQueryRow {
                 getIsPublic()
         );
     }
+
     public void update(VertexInSubGraphPojo vertex) {
         GraphElementFromExtractorQueryRow.usingRowAndKey(
                 row,
@@ -88,36 +89,34 @@ public class VertexFromExtractorQueryRow {
         );
         if (includedEdgeExtractor.isInRow()) {
             URI uri = includedEdgeExtractor.getUri();
-            if (!vertex.getIncludedEdges().containsKey(uri)) {
-                EdgePojo edge = new EdgePojo(
-                        uri,
-                        includedEdgeExtractor.getLabel()
-                );
-                IncludedGraphElementFromExtractorQueryRow sourceVertexExtractor = new IncludedGraphElementFromExtractorQueryRow(
-                        row,
-                        key + "_source_vertex"
-                );
-                edge.setSourceVertex(
-                        new VertexInSubGraphPojo(
-                                sourceVertexExtractor.getUri(),
-                                sourceVertexExtractor.getLabel()
-                        )
-                );
-                IncludedGraphElementFromExtractorQueryRow destinationVertexExtractor = new IncludedGraphElementFromExtractorQueryRow(
-                        row,
-                        key + "_destination_vertex"
-                );
-                edge.setDestinationVertex(
-                        new VertexInSubGraphPojo(
-                                destinationVertexExtractor.getUri(),
-                                destinationVertexExtractor.getLabel()
-                        )
-                );
-                vertex.getIncludedEdges().put(
-                        uri,
-                        edge
-                );
+            if (vertex.getIncludedEdges().containsKey(uri)) {
+                return;
             }
+            EdgePojo edge = new EdgePojo(
+                    uri,
+                    includedEdgeExtractor.getLabel()
+            );
+            EdgeFromExtractorQueryRow edgeExtractor = EdgeFromExtractorQueryRow.usingRowAndKey(
+                    row,
+                    key
+            );
+            edge.setSourceVertex(
+                    new VertexInSubGraphPojo(
+                            edgeExtractor.getSourceVertexUri(),
+                            ""
+                    )
+            );
+
+            edge.setDestinationVertex(
+                    new VertexInSubGraphPojo(
+                            edgeExtractor.getDestinationVertexUri(),
+                            ""
+                    )
+            );
+            vertex.getIncludedEdges().put(
+                    uri,
+                    edge
+            );
         }
     }
 
@@ -141,7 +140,7 @@ public class VertexFromExtractorQueryRow {
         Object suggestionValue = row.get(
                 keyPrefix + "." + Neo4jVertexInSubGraphOperator.props.suggestions
         );
-        if(suggestionValue == null){
+        if (suggestionValue == null) {
             return new HashSet<>();
         }
         return SuggestionJson.fromJsonArray(
