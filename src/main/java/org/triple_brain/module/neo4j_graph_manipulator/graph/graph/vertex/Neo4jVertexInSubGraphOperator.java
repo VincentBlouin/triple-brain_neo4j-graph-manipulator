@@ -224,31 +224,32 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
 
     @Override
     public EdgeOperator addVertexAndRelation() {
-        final Neo4jVertexInSubGraphOperator self = this;
-        return restApi.executeBatch(new BatchCallback<EdgeOperator>() {
-            @Override
-            public EdgeOperator recordBatch(RestAPI batchRestApi) {
-                URI newVertexUri = new UserUris(
-                        getOwnerUsername()
-                ).generateVertexUri();
-                Neo4jVertexInSubGraphOperator newVertexOperator = vertexFactory.withUri(
-                        newVertexUri
-                );
-                self.incrementNumberOfConnectedEdges();
-                newVertexOperator.createUsingInitialValues(
-                        map(
-                                props.number_of_connected_edges_property_name.name(),
-                                1
-                        )
-                );
-                Neo4jEdgeOperator edgeOperator = edgeFactory.withSourceAndDestinationVertex(
-                        self,
-                        newVertexOperator
-                );
-                edgeOperator.create();
-                return edgeOperator;
-            }
-        });
+        UserUris userUris = new UserUris(
+                getOwnerUsername()
+        );
+        return addVertexAndRelationAction(
+                this,
+                userUris.generateVertexUri()
+        );
+    }
+
+    private EdgeOperator addVertexAndRelationAction(Neo4jVertexInSubGraphOperator self, URI newVertexUri) {
+        Neo4jVertexInSubGraphOperator newVertexOperator = vertexFactory.withUri(
+                newVertexUri
+        );
+        self.incrementNumberOfConnectedEdges();
+        newVertexOperator.createUsingInitialValues(
+                map(
+                        props.number_of_connected_edges_property_name.name(),
+                        1
+                )
+        );
+        Neo4jEdgeOperator edgeOperator = edgeFactory.withSourceAndDestinationVertex(
+                self,
+                newVertexOperator
+        );
+        edgeOperator.create();
+        return edgeOperator;
     }
 
     @Override
@@ -273,12 +274,17 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
 
     @Override
     public EdgeOperator acceptSuggestion(final SuggestionPojo suggestion) {
+        final Neo4jVertexInSubGraphOperator self = this;
         return restApi.executeBatch(new BatchCallback<EdgeOperator>() {
             @Override
             public EdgeOperator recordBatch(RestAPI batchRestApi) {
-                EdgeOperator newEdge = addVertexAndRelation();
+                UserUris userUris = new UserUris(
+                        getOwnerUsername()
+                );
+                URI destinationVertexUri = userUris.generateVertexUri();
+                EdgeOperator newEdge = addVertexAndRelationAction(self, destinationVertexUri);
                 newEdge.label(suggestion.label());
-                VertexOperator newVertex = newEdge.destinationVertex();
+                VertexOperator newVertex = vertexFactory.withUri(destinationVertexUri);
                 if(suggestion.getSameAs() != null){
                     newEdge.addSameAs(
                             new IdentificationPojo(

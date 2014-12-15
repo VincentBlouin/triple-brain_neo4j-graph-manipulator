@@ -11,10 +11,8 @@ import org.neo4j.rest.graphdb.RestAPI;
 import org.neo4j.rest.graphdb.batch.BatchCallback;
 import org.neo4j.rest.graphdb.query.QueryEngine;
 import org.neo4j.rest.graphdb.util.QueryResult;
-import org.triple_brain.module.model.FriendlyResource;
 import org.triple_brain.module.model.Image;
 import org.triple_brain.module.model.UserUris;
-import org.triple_brain.module.model.graph.FriendlyResourcePojo;
 import org.triple_brain.module.model.graph.Identification;
 import org.triple_brain.module.model.graph.IdentificationPojo;
 import org.triple_brain.module.model.graph.edge.EdgeOperator;
@@ -49,7 +47,7 @@ public class Neo4jEdgeOperator implements EdgeOperator, Neo4jOperator {
     protected Vertex sourceVertex;
     protected Vertex destinationVertex;
     protected RestAPI restApi;
-    protected QueryEngine<Map<String,Object>> queryEngine;
+    protected QueryEngine<Map<String, Object>> queryEngine;
 
     @AssistedInject
     protected Neo4jEdgeOperator(
@@ -126,7 +124,7 @@ public class Neo4jEdgeOperator implements EdgeOperator, Neo4jOperator {
     }
 
     private VertexOperator vertexUsingProperty(Enum prop) {
-        QueryResult<Map<String,Object>> result = queryEngine.query(
+        QueryResult<Map<String, Object>> result = queryEngine.query(
                 queryPrefix() +
                         "RETURN n." + prop.name(),
                 map()
@@ -180,7 +178,7 @@ public class Neo4jEdgeOperator implements EdgeOperator, Neo4jOperator {
             public Object recordBatch(RestAPI restAPI) {
                 queryEngine.query(
                         queryPrefix() +
-                        "MATCH " +
+                                "MATCH " +
                                 "n-[:SOURCE_VERTEX]->(source_vertex), " +
                                 "n-[:DESTINATION_VERTEX]->(destination_vertex) " +
                                 "SET source_vertex.number_of_connected_edges_property_name = " +
@@ -298,7 +296,7 @@ public class Neo4jEdgeOperator implements EdgeOperator, Neo4jOperator {
     }
 
     @Override
-    public Map<URI,Identification> getGenericIdentifications() {
+    public Map<URI, Identification> getGenericIdentifications() {
         return graphElementOperator.getGenericIdentifications();
     }
 
@@ -308,7 +306,7 @@ public class Neo4jEdgeOperator implements EdgeOperator, Neo4jOperator {
     }
 
     @Override
-    public Map<URI,Identification> getSameAs() {
+    public Map<URI, Identification> getSameAs() {
         return graphElementOperator.getSameAs();
     }
 
@@ -323,12 +321,12 @@ public class Neo4jEdgeOperator implements EdgeOperator, Neo4jOperator {
     }
 
     @Override
-    public Map<URI,Identification> getAdditionalTypes() {
+    public Map<URI, Identification> getAdditionalTypes() {
         return graphElementOperator.getAdditionalTypes();
     }
 
     @Override
-    public Map<URI,Identification> getIdentifications() {
+    public Map<URI, Identification> getIdentifications() {
         return graphElementOperator.getIdentifications();
     }
 
