@@ -169,6 +169,7 @@ public class Neo4jModule extends AbstractModule {
                         GraphDatabaseSettings.node_auto_indexing,
                         "true"
                 ).newGraphDatabase();
+
         if (test) {
             registerShutdownHook(graphDb);
         }

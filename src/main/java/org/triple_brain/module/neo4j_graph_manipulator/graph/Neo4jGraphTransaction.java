@@ -24,6 +24,6 @@ public class Neo4jGraphTransaction implements GraphTransaction {
     public void after(Object transactionAsObject) {
         Transaction transaction = (Transaction) transactionAsObject;
         transaction.success();
-        transaction.finish();
+        transaction.close();
     }
 }
