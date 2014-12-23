@@ -38,14 +38,6 @@ public class EdgeFromExtractorQueryRow {
 
     public Edge build() {
         EdgePojo edge = init();
-        update(edge);
-        return edge;
-    }
-
-    public Edge update(Edge edge) {
-        GraphElementFromExtractorQueryRow.usingRowAndKey(row, key).update(
-                ((EdgePojo) edge).getGraphElement()
-        );
         return edge;
     }
 

@@ -443,40 +443,8 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
     }
 
     @Override
-    public void removeIdentification(final Identification friendlyResource) {
-        QueryResult<Map<String,Object>> cypherResult = restApi.executeBatch(new BatchCallback<QueryResult<Map<String,Object>>>() {
-            @Override
-            public QueryResult<Map<String, Object>> recordBatch(RestAPI restAPI) {
-                URI friendlyResourceUri = friendlyResource.uri();
-                Neo4jFriendlyResource friendlyResourceOperator = friendlyResourceFactory.withUri(
-                        friendlyResourceUri
-                );
-                String friendlyResourceSelect = friendlyResourceOperator.addToSelectUsingVariableName(
-                        "f"
-                );
-                return queryEngine.query(queryPrefix() + ", " + friendlyResourceSelect + " MATCH (n)-[r]->(f) " +
-                        "DELETE r " +
-                        "SET " + Neo4jFriendlyResource.LAST_MODIFICATION_QUERY_PART,
-                        addUpdatedLastModificationDate(map())
-                );
-            }
-        });
-        Iterator<Map<String, Object>> it = cypherResult.iterator();
-        if (!it.hasNext()) {
-            return;
-        }
-        Map<String,Object> results = it.next();
-        Integer numberOriginsBeforeDeletion = new Integer(
-                results.get("number_of_origins").toString()
-        );
-        if (1 == numberOriginsBeforeDeletion) {
-            URI suggestionUri = URI.create(
-                    results.get("uri").toString()
-            );
-            friendlyResourceFactory.withUri(
-                    suggestionUri
-            ).remove();
-        }
+    public void removeIdentification(Identification identification) {
+        graphElementOperator.removeIdentification(identification);
     }
 
     @Override
@@ -485,7 +453,7 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
     }
 
     @Override
-    public Map<URI, Identification> getIdentifications() {
+    public Map<URI, IdentificationPojo> getIdentifications() {
         return graphElementOperator.getIdentifications();
     }
 

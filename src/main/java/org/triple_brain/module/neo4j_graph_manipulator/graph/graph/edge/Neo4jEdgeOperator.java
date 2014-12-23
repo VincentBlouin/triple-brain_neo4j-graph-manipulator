@@ -326,7 +326,7 @@ public class Neo4jEdgeOperator implements EdgeOperator, Neo4jOperator {
     }
 
     @Override
-    public Map<URI, Identification> getIdentifications() {
+    public Map<URI, IdentificationPojo> getIdentifications() {
         return graphElementOperator.getIdentifications();
     }
 

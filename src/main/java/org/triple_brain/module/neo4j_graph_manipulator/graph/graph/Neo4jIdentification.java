@@ -10,16 +10,16 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.rest.graphdb.query.QueryEngine;
 import org.neo4j.rest.graphdb.util.QueryResult;
 import org.triple_brain.module.model.Image;
+import org.triple_brain.module.model.graph.Identification;
 import org.triple_brain.module.model.graph.IdentificationOperator;
+import org.triple_brain.module.model.json.IdentificationJson;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.Neo4jFriendlyResource;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.Neo4jFriendlyResourceFactory;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.Neo4jOperator;
+import scala.util.parsing.combinator.testing.Ident;
 
 import java.net.URI;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import static org.triple_brain.module.neo4j_graph_manipulator.graph.Neo4jRestApiUtils.map;
 

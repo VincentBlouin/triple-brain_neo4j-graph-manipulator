@@ -52,12 +52,6 @@ public class VertexFromExtractorQueryRow {
     }
 
     public void update(VertexInSubGraphPojo vertex) {
-        GraphElementFromExtractorQueryRow.usingRowAndKey(
-                row,
-                keyPrefix
-        ).update(
-                vertex.getGraphElement()
-        );
         updateIncludedVertices(vertex);
         updateIncludedEdges(vertex);
     }

@@ -50,16 +50,10 @@ public class SchemaFromQueryResult {
         );
         if(rowHasSchemaProperty(row)){
             URI uri = getPropertyUri(row);
-            if(properties.containsKey(uri)){
-                extractor.update(
-                        properties.get(uri)
-                );
-            }else{
-                properties.put(
-                        uri,
-                        extractor.build()
-                );
-            }
+            properties.put(
+                    uri,
+                    extractor.build()
+            );
         }
     }
 

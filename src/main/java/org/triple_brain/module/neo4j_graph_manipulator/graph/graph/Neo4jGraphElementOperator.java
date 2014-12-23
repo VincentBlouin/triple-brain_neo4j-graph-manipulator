@@ -6,21 +6,15 @@ package org.triple_brain.module.neo4j_graph_manipulator.graph.graph;
 
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
-import com.hp.hpl.jena.vocabulary.RDFS;
-import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
-import org.neo4j.graphdb.Relationship;
 import org.neo4j.rest.graphdb.RestAPI;
-import org.neo4j.rest.graphdb.batch.BatchCallback;
 import org.neo4j.rest.graphdb.query.QueryEngine;
 import org.neo4j.rest.graphdb.util.QueryResult;
-import org.triple_brain.module.model.FriendlyResource;
 import org.triple_brain.module.model.Image;
 import org.triple_brain.module.model.UserUris;
 import org.triple_brain.module.model.graph.*;
-import org.triple_brain.module.model.json.ImageJson;
+import org.triple_brain.module.model.json.IdentificationJson;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.*;
-import org.triple_brain.module.neo4j_graph_manipulator.graph.image.Neo4jImages;
 
 import javax.inject.Inject;
 import java.net.URI;
@@ -29,6 +23,10 @@ import java.util.*;
 import static org.triple_brain.module.neo4j_graph_manipulator.graph.Neo4jRestApiUtils.map;
 
 public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOperator {
+
+    public enum props{
+        identifications
+    }
 
     protected Node node;
     protected Neo4jIdentification identification;
@@ -150,9 +148,9 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
 
     @Override
     public IdentificationPojo addGenericIdentification(Identification genericIdentification) throws IllegalArgumentException {
-        return addIdentificationUsingRelation(
+        return addIdentificationUsingType(
                 genericIdentification,
-                Relationships.IDENTIFIED_TO
+                IdentificationType.generic
         );
     }
 
@@ -170,134 +168,76 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
 
     @Override
     public Map<URI, Identification> getGenericIdentifications() {
-        return getIdentificationUsingRelation(
-                Relationships.IDENTIFIED_TO
+        return getIdentificationOfType(
+                IdentificationType.generic
         );
     }
 
     @Override
     public IdentificationPojo addSameAs(Identification sameAs) throws IllegalArgumentException {
-        return addIdentificationUsingRelation(
+        return addIdentificationUsingType(
                 sameAs,
-                Relationships.SAME_AS
+                IdentificationType.same_as
         );
     }
 
-    private IdentificationPojo addIdentificationUsingRelation(
-            final Identification identification,
-            final Relationships relation
+    private IdentificationPojo addIdentificationUsingType(
+            Identification identification,
+            IdentificationType identificationType
     ) {
         ifIdentificationIsSelfThrowException(identification);
-        final Neo4jIdentification neo4jIdentification = identificationFactory.withUri(
-                new UserUris(getOwnerUsername()).generateIdentificationUri()
+        Map<URI, IdentificationPojo> identifications = getIdentifications();
+
+        IdentificationPojo identificationPojo = new IdentificationPojo(
+                new UserUris(getOwnerUsername()).generateIdentificationUri(),
+                identification
         );
-        final String queryPrefix = this.identification.queryPrefix();
-        QueryResult<Map<String, Object>> results = restApi.executeBatch(new BatchCallback<QueryResult<Map<String, Object>>>() {
-            @Override
-            public QueryResult<Map<String, Object>> recordBatch(RestAPI restApi) {
-                QueryResult<Map<String, Object>> results = queryEngine.query(
-                        queryPrefix +
-                                "MERGE (f {" +
-                                Neo4jIdentification.props.external_uri + ": {external_uri}, " +
-                                Neo4jFriendlyResource.props.owner + ": {owner}" +
-                                "}) " +
-                                "ON CREATE SET " +
-                                "f.uri = {uri}, " +
-                                "f." + Neo4jFriendlyResource.props.label + "={label}, " +
-                                "f." + Neo4jFriendlyResource.props.comment + "={comment}, " +
-                                "f." + Neo4jFriendlyResource.props.creation_date + "=timestamp(), " +
-                                "f." + Neo4jFriendlyResource.props.last_modification_date + "=timestamp() " +
-                                "CREATE UNIQUE " +
-                                "n-[:" + relation + "]->f " +
-                                "RETURN " +
-                                "f.uri as uri, " +
-                                "f.external_uri as external_uri, " +
-                                "f." + Neo4jFriendlyResource.props.label + " as label, " +
-                                "f." + Neo4jFriendlyResource.props.comment + " as comment, " +
-                                "f." + Neo4jImages.props.images + " as images, " +
-                                "f." + Neo4jFriendlyResource.props.creation_date + " as creation_date, " +
-                                "f." + Neo4jFriendlyResource.props.last_modification_date + " as last_modification_date",
-                        neo4jIdentification.addCreationProperties(
-                                map(
-                                        "label",
-                                        identification.label(),
-                                        "comment",
-                                        identification.comment(),
-                                        "external_uri",
-                                        identification.getExternalResourceUri().toString()
-                                )
-                        )
-                );
-                updateLastModificationDate();
-                return results;
-            }
-        });
-        Map<String, Object> result = results.iterator().next();
-        return new IdentificationPojo(
-                URI.create(
-                        result.get("external_uri").toString()
-                ),
-                new FriendlyResourcePojo(
-                        URI.create(
-                                result.get("uri").toString()
-                        ),
-                        result.get("label") == null ?
-                                "" : result.get("label").toString(),
-                        result.get("images") == null ?
-                                new HashSet<Image>() : ImageJson.fromJson(result.get("images").toString()),
-                        result.get("comment") == null ? "" : result.get("comment").toString(),
-                        new Date(
-                                (Long) result.get("creation_date")
-                        ),
-                        new Date(
-                                (Long) result.get("last_modification_date")
-                        )
-                )
+        if(identifications.containsKey(identification.getExternalResourceUri())){
+            identificationPojo.setUri(
+                    identifications.get(
+                            identification.getExternalResourceUri()
+                    ).uri()
+            );
+        }
+        identificationPojo.setCreationDate(new Date());
+        identificationPojo.setType(identificationType);
+        identifications.put(
+                identificationPojo.getExternalResourceUri(),
+                identificationPojo
         );
+        setIdentifications(identifications);
+        return identificationPojo;
     }
 
     @Override
     public Map<URI, Identification> getSameAs() {
-        return getIdentificationUsingRelation(
-                Relationships.SAME_AS
+        return getIdentificationOfType(
+                IdentificationType.same_as
         );
     }
 
     @Override
     public IdentificationPojo addType(Identification type) throws IllegalArgumentException {
-        return addIdentificationUsingRelation(
+        return addIdentificationUsingType(
                 type,
-                Relationships.TYPE
+                IdentificationType.type
         );
     }
 
     @Override
-    public void removeIdentification(Identification friendlyResource) {
-        Node identificationAsNode = identificationFactory.withUri(
-                friendlyResource.uri()
-        ).getNode();
-        for (Relationship relationship : getNode().getRelationships(Direction.OUTGOING)) {
-            Node endNode = relationship.getEndNode();
-            if (endNode.equals(identificationAsNode)) {
-                relationship.delete();
-            }
-        }
+    public void removeIdentification(Identification identification) {
+        Map<URI, IdentificationPojo> identifications = getIdentifications();
+        identifications.remove(identification.getExternalResourceUri());
+        identifications.values().remove(identification);
+        setIdentifications(identifications);
         updateLastModificationDate();
     }
 
     @Override
     public Map<URI, Identification> getAdditionalTypes() {
-        return getIdentificationUsingRelation(
-                Relationships.TYPE
+        return getIdentificationOfType(
+                IdentificationType.type
         );
-    }
-
-    @Override
-    public Map<URI, Identification> getIdentifications() {
-        Map<URI, Identification> identifications = getSameAs();
-        identifications.putAll(getAdditionalTypes());
-        identifications.putAll(getGenericIdentifications());
-        return identifications;
     }
 
     @Override
@@ -306,29 +246,17 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
     }
 
 
-    private Map<URI, Identification> getIdentificationUsingRelation(Relationships relationship) {
-        QueryResult<Map<String, Object>> result = queryEngine.query(
-                queryPrefix() +
-                        "MATCH " +
-                        "n-[:" + relationship + "]->identification " +
-                        "RETURN " +
-                        "identification.uri as uri",
-                map()
-        );
-        Iterator<Map<String, Object>> iterator = result.iterator();
-        Map<URI, Identification> identifications = new HashMap<>();
-        while (iterator.hasNext()) {
-            URI uri = URI.create(
-                    iterator.next().get("uri").toString()
-            );
-            identifications.put(
-                    uri,
-                    identificationFactory.withUri(
-                            uri
-                    )
-            );
+    private Map<URI, Identification> getIdentificationOfType(IdentificationType identificationType) {
+        Map<URI, Identification> identificationsOfType = new HashMap<>();
+        for(IdentificationPojo identification: getIdentifications().values()){
+            if(identification.getType().equals(identificationType)){
+                identificationsOfType.put(
+                        identification.getExternalResourceUri(),
+                        identification
+                );
+            }
         }
-        return identifications;
+        return identificationsOfType;
     }
 
     private void ifIdentificationIsSelfThrowException(Identification identification) throws IllegalArgumentException {
@@ -372,5 +300,34 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
     @Override
     public URI getExternalResourceUri() {
         return identification.getExternalResourceUri();
+    }
+
+    @Override
+    public Map<URI, IdentificationPojo> getIdentifications(){
+        QueryResult<Map<String, Object>> result = queryEngine.query(
+                identification.queryPrefix() +
+                        "return n." + props.identifications + " as identifications",
+                map()
+        );
+        if(!result.iterator().hasNext()){
+            return new HashMap<>();
+        }
+        Object identificationsValue = result.iterator().next().get("identifications");
+        if(identificationsValue == null){
+            return new HashMap<>();
+        }
+        return IdentificationJson.fromJson(
+                identificationsValue.toString()
+        );
+    }
+
+    private void setIdentifications(Map<URI, IdentificationPojo> identifications){
+        queryEngine.query(
+                this.identification.queryPrefix() +
+                        "SET n." + props.identifications + "= { " + props.identifications + "} ",
+                map(
+                        props.identifications.name(), IdentificationJson.toJson(identifications)
+                )
+        );
     }
 }
