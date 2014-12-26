@@ -5,7 +5,6 @@
 package org.triple_brain.module.neo4j_graph_manipulator.graph.embedded.admin.identification;
 
 
-import com.hp.hpl.jena.vocabulary.RDFS;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.neo4j.graphdb.Node;
