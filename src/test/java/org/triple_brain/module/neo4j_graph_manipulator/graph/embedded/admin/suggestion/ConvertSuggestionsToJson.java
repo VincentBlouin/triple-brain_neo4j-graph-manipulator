@@ -17,10 +17,7 @@ import org.triple_brain.module.neo4j_graph_manipulator.graph.Neo4jModule;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.embedded.admin.AdminOperationsOnDatabase;
 
 import java.net.URI;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 @Ignore
 public class ConvertSuggestionsToJson extends AdminOperationsOnDatabase {
@@ -37,9 +34,9 @@ public class ConvertSuggestionsToJson extends AdminOperationsOnDatabase {
         Iterator<VertexInSubGraphOperator> vertexIt = wholeGraph.getAllVertices();
         while(vertexIt.hasNext()){
             VertexOperator vertex = vertexIt.next();
-            Set<SuggestionPojo> suggestions = new HashSet<>();
-            Map<URI, SuggestionPojo> suggestionsMap = (Map<URI, SuggestionPojo>) vertex.getSuggestions();
-            suggestions.addAll(suggestionsMap.values());
+            Map<URI, SuggestionPojo> suggestions = new HashMap<>();
+            Map<URI, SuggestionPojo> suggestionsMap = vertex.getSuggestions();
+            suggestions.putAll(suggestionsMap);
             vertex.setSuggestions(suggestions);
         }
     }

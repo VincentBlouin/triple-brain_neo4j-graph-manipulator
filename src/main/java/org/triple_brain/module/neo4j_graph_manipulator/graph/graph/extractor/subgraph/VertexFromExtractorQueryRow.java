@@ -130,12 +130,12 @@ public class VertexFromExtractorQueryRow {
         );
     }
 
-    private Set<SuggestionPojo> getSuggestions() {
+    private Map<URI, SuggestionPojo> getSuggestions() {
         Object suggestionValue = row.get(
                 keyPrefix + "." + Neo4jVertexInSubGraphOperator.props.suggestions
         );
         if (suggestionValue == null) {
-            return new HashSet<>();
+            return new HashMap<>();
         }
         return SuggestionJson.fromJsonArray(
                 suggestionValue.toString()

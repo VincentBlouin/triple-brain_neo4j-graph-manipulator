@@ -404,7 +404,7 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
     }
 
     @Override
-    public void setSuggestions(Set<SuggestionPojo> suggestions){
+    public void setSuggestions(Map<URI, SuggestionPojo> suggestions){
         queryEngine.query(
                 queryPrefix() +
                         "SET n." + props.suggestions + "= { " + props.suggestions + "} ",
@@ -415,14 +415,14 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
     }
 
     @Override
-    public void addSuggestions(final Set<SuggestionPojo> suggestions) {
-        Set<SuggestionPojo> current = getSuggestions();
-        current.addAll(suggestions);
+    public void addSuggestions(final Map<URI, SuggestionPojo> suggestions) {
+        Map<URI, SuggestionPojo> current = getSuggestions();
+        current.putAll(suggestions);
         setSuggestions(current);
     }
 
     @Override
-    public Set<SuggestionPojo> getSuggestions() {
+    public Map<URI, SuggestionPojo> getSuggestions() {
         QueryResult<Map<String, Object>> result = queryEngine.query(
                 queryPrefix() +
                         "return n.`" + props.suggestions + "` as suggestions",
@@ -430,7 +430,7 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
         );
         Object suggestionsValue = result.iterator().next().get("suggestions");
         if(suggestionsValue == null){
-            return new HashSet<>();
+            return new HashMap<>();
         }
         return SuggestionJson.fromJsonArray(
                 suggestionsValue.toString()
