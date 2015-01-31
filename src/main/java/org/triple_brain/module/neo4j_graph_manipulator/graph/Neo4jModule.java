@@ -10,9 +10,12 @@ import com.google.inject.assistedinject.FactoryModuleBuilder;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
+import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 import org.neo4j.graphdb.factory.GraphDatabaseSettings;
+import org.neo4j.graphdb.index.IndexManager;
 import org.neo4j.graphdb.index.ReadableIndex;
+import org.neo4j.helpers.collection.MapUtil;
 import org.neo4j.kernel.impl.util.FileUtils;
 import org.neo4j.rest.graphdb.RestAPI;
 import org.neo4j.rest.graphdb.RestAPIFacade;
@@ -163,6 +166,7 @@ public class Neo4jModule extends AbstractModule {
                 .setConfig(
                         GraphDatabaseSettings.node_keys_indexable,
                         Neo4jFriendlyResource.props.uri + "," +
+                                Neo4jFriendlyResource.props.label + "," +
                                 Neo4jFriendlyResource.props.owner + "," +
                                 Neo4jIdentification.props.external_uri
                 ).setConfig(
@@ -170,6 +174,22 @@ public class Neo4jModule extends AbstractModule {
                         "true"
                 ).newGraphDatabase();
 
+        RestAPI restAPI = RestApiUsingEmbedded.usingGraphDb(
+                graphDb
+        );
+        Transaction tx = restAPI.beginTx();
+        graphDb.index().forNodes("node_auto_index",
+                MapUtil.stringMap(
+                        IndexManager.PROVIDER,
+                        "lucene",
+                        "type",
+                        "fulltext",
+                        "to_lower_case",
+                        "true"
+                )
+        );
+        tx.success();
+        tx.close();
         if (test) {
             registerShutdownHook(graphDb);
         }
@@ -191,9 +211,7 @@ public class Neo4jModule extends AbstractModule {
                 )
         );
         bind(RestAPI.class).toInstance(
-                RestApiUsingEmbedded.usingGraphDb(
-                        graphDb
-                )
+                restAPI
         );
         bind(GraphDatabaseService.class).toInstance(
                 graphDb
