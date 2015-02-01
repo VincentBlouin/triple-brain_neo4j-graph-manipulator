@@ -6,7 +6,6 @@ package org.triple_brain.module.neo4j_graph_manipulator.graph;
 
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
-import com.hp.hpl.jena.vocabulary.RDFS;
 import org.apache.commons.lang.StringUtils;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
@@ -326,7 +325,7 @@ public class Neo4jFriendlyResource implements FriendlyResourceOperator, Neo4jOpe
     }
 
     public String addToSelectUsingVariableName(String variableName) {
-        return variableName + "=node:node_auto_index(uri='" + uri + "') ";
+        return variableName + "=node:node_auto_index('uri:" + uri + "') ";
     }
 
 }
