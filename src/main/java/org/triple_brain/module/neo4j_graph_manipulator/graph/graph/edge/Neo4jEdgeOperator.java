@@ -18,6 +18,7 @@ import org.triple_brain.module.model.graph.IdentificationPojo;
 import org.triple_brain.module.model.graph.edge.EdgeOperator;
 import org.triple_brain.module.model.graph.vertex.Vertex;
 import org.triple_brain.module.model.graph.vertex.VertexOperator;
+import org.triple_brain.module.neo4j_graph_manipulator.graph.Neo4jFriendlyResource;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.Neo4jOperator;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.Relationships;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.Neo4jGraphElementFactory;
@@ -33,6 +34,8 @@ import static org.triple_brain.module.neo4j_graph_manipulator.graph.Neo4jRestApi
 import static org.triple_brain.module.neo4j_graph_manipulator.graph.Neo4jRestApiUtils.wrap;
 
 public class Neo4jEdgeOperator implements EdgeOperator, Neo4jOperator {
+
+    public static final String NEO4J_LABEL_NAME = "edge";
 
     public enum props {
         source_vertex_uri,
@@ -284,7 +287,7 @@ public class Neo4jEdgeOperator implements EdgeOperator, Neo4jOperator {
     public void createUsingInitialValues(Map<String, Object> values) {
         String query = "START source_node=node:node_auto_index(\"uri:" + sourceVertex.uri() + "\"), " +
                 "destination_node=node:node_auto_index(\"uri:" + destinationVertex.uri() + "\") " +
-                "create (n {props}), " +
+                "create (n:" + NEO4J_LABEL_NAME + " {props}), " +
                 "n-[:" + Relationships.SOURCE_VERTEX.name() + "]->source_node, " +
                 "n-[:" + Relationships.DESTINATION_VERTEX.name() + "]->destination_node " +
                 "return n, source_node, destination_node";
@@ -357,7 +360,8 @@ public class Neo4jEdgeOperator implements EdgeOperator, Neo4jOperator {
     public Map<String, Object> addCreationProperties(Map<String, Object> map) {
         Map<String, Object> newMap = map(
                 props.source_vertex_uri.name(), sourceVertex.uri().toString(),
-                props.destination_vertex_uri.name(), destinationVertex.uri().toString()
+                props.destination_vertex_uri.name(), destinationVertex.uri().toString(),
+                Neo4jFriendlyResource.props.type.name(), Neo4jFriendlyResource.type.edge.name()
         );
         newMap.putAll(
                 map

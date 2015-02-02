@@ -32,6 +32,9 @@ import static org.triple_brain.module.neo4j_graph_manipulator.graph.Neo4jRestApi
 
 public class Neo4jSchemaOperator implements SchemaOperator, Neo4jOperator {
 
+    public static final String NEO4J_LABEL_NAME = "schema";
+    public static final String NEO4J_PROPERTY_LABEL_NAME = "property";
+
     protected Neo4jFriendlyResource friendlyResourceOperator;
     protected Neo4jGraphElementFactory graphElementFactory;
     protected QueryEngine<Map<String, Object>> queryEngine;
@@ -126,9 +129,16 @@ public class Neo4jSchemaOperator implements SchemaOperator, Neo4jOperator {
 
     @Override
     public Map<String, Object> addCreationProperties(Map<String, Object> map) {
-        return friendlyResourceOperator.addCreationProperties(
+        Map<String, Object> newMap = map(
+                Neo4jFriendlyResource.props.type.name(), Neo4jFriendlyResource.type.schema.name()
+        );
+        newMap.putAll(
                 map
         );
+        newMap = friendlyResourceOperator.addCreationProperties(
+                newMap
+        );
+        return newMap;
     }
 
     @Override
@@ -157,7 +167,7 @@ public class Neo4jSchemaOperator implements SchemaOperator, Neo4jOperator {
                 values
         );
         queryEngine.query(
-                "create (n:schema {props})", wrap(props)
+                "create (n:" + NEO4J_LABEL_NAME + " {props})", wrap(props)
         );
     }
 
@@ -172,12 +182,14 @@ public class Neo4jSchemaOperator implements SchemaOperator, Neo4jOperator {
         Neo4jGraphElementOperator property = graphElementFactory.withUri(createdUri);
         queryEngine.query(
                 queryPrefix() +
-                        "CREATE (p {props}) " +
+                        "CREATE (p:" + NEO4J_PROPERTY_LABEL_NAME + " {props}) " +
                         "CREATE UNIQUE " +
                         "n-[:" + Relationships.HAS_PROPERTY + "]->p ",
                 map(
                         "props",
-                        property.addCreationProperties(map())
+                        property.addCreationProperties(map(
+                                Neo4jFriendlyResource.props.type.name(), Neo4jFriendlyResource.type.property.name()
+                        ))
                 )
         );
         return property;

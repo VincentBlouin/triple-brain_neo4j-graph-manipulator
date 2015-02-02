@@ -33,13 +33,21 @@ import static org.triple_brain.module.neo4j_graph_manipulator.graph.Neo4jRestApi
 
 public class Neo4jFriendlyResource implements FriendlyResourceOperator, Neo4jOperator {
 
+    public enum type{
+        vertex,
+        edge,
+        schema,
+        property
+    }
+
     public enum props {
         uri,
         label,
         comment,
         creation_date,
         last_modification_date,
-        owner
+        owner,
+        type
     }
 
     public static final String LAST_MODIFICATION_QUERY_PART = " n." + props.last_modification_date + "= { " + props.last_modification_date + "} ";

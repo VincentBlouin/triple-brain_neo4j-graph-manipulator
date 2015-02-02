@@ -168,6 +168,8 @@ public class Neo4jModule extends AbstractModule {
                         Neo4jFriendlyResource.props.uri + "," +
                                 Neo4jFriendlyResource.props.label + "," +
                                 Neo4jFriendlyResource.props.owner + "," +
+                                Neo4jFriendlyResource.props.type + "," +
+                                Neo4jVertexInSubGraphOperator.props.is_public + "," +
                                 Neo4jIdentification.props.external_uri
                 ).setConfig(
                         GraphDatabaseSettings.node_auto_indexing,
@@ -188,8 +190,6 @@ public class Neo4jModule extends AbstractModule {
                         "true"
                 )
         );
-        tx.success();
-        tx.close();
         if (test) {
             registerShutdownHook(graphDb);
         }
@@ -205,6 +205,8 @@ public class Neo4jModule extends AbstractModule {
                         .getRelationshipAutoIndexer()
                         .getAutoIndex()
         );
+        tx.success();
+        tx.close();
         bind(QueryEngine.class).toInstance(
                 QueryEngineUsingEmbedded.usingGraphDb(
                         graphDb
