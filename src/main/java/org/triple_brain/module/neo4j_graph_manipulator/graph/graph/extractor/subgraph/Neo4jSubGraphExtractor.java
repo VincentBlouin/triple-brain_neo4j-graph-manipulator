@@ -143,7 +143,7 @@ public class Neo4jSubGraphExtractor {
         );
     }
 
-    private static String edgeSpecificPropertiesQueryPartUsingPrefix(String prefix) {
+    public static String edgeSpecificPropertiesQueryPartUsingPrefix(String prefix) {
         return QueryUtils.getPropertyUsingContainerNameQueryPart(
                 prefix,
                 Neo4jEdgeOperator.props.source_vertex_uri.toString()
