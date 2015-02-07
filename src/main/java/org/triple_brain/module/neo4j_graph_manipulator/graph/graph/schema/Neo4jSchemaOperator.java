@@ -20,6 +20,7 @@ import org.triple_brain.module.neo4j_graph_manipulator.graph.Neo4jOperator;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.Relationships;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.Neo4jGraphElementFactory;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.Neo4jGraphElementOperator;
+import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.vertex.Neo4jVertexInSubGraphOperator;
 
 import java.net.URI;
 import java.util.Date;
@@ -130,7 +131,10 @@ public class Neo4jSchemaOperator implements SchemaOperator, Neo4jOperator {
     @Override
     public Map<String, Object> addCreationProperties(Map<String, Object> map) {
         Map<String, Object> newMap = map(
-                Neo4jFriendlyResource.props.type.name(), Neo4jFriendlyResource.type.schema.name()
+                Neo4jFriendlyResource.props.type.name(),
+                Neo4jFriendlyResource.type.schema.name(),
+                Neo4jVertexInSubGraphOperator.props.is_public.name(),
+                true
         );
         newMap.putAll(
                 map
