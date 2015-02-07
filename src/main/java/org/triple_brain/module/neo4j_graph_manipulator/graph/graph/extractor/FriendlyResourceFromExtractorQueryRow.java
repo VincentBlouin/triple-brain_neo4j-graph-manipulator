@@ -47,9 +47,7 @@ public class FriendlyResourceFromExtractorQueryRow {
 
     public FriendlyResourcePojo build() {
         return new FriendlyResourcePojo(
-                URI.create(
-                        row.get(nodeKey + "." + Neo4jUserGraph.URI_PROPERTY_NAME).toString()
-                ),
+                getUri(),
                 getLabel(),
                 getImages(),
                 getComment(),
@@ -70,7 +68,7 @@ public class FriendlyResourceFromExtractorQueryRow {
         );
     }
 
-    private String getLabel() {
+    public String getLabel() {
         String labelKey = nodeKey + "." + Neo4jFriendlyResource.props.label + "";
         return row.get(
                 labelKey
@@ -95,4 +93,11 @@ public class FriendlyResourceFromExtractorQueryRow {
                 nodeKey + "." + Neo4jFriendlyResource.props.creation_date.name()
         ));
     }
+
+    public URI getUri(){
+        return URI.create(
+                row.get(nodeKey + "." + Neo4jUserGraph.URI_PROPERTY_NAME).toString()
+        );
+    }
+
 }
