@@ -192,7 +192,8 @@ public class Neo4jSchemaOperator implements SchemaOperator, Neo4jOperator {
                 map(
                         "props",
                         property.addCreationProperties(map(
-                                Neo4jFriendlyResource.props.type.name(), Neo4jFriendlyResource.type.property.name()
+                                Neo4jFriendlyResource.props.type.name(), Neo4jFriendlyResource.type.property.name(),
+                                Neo4jVertexInSubGraphOperator.props.is_public.name(), true
                         ))
                 )
         );
