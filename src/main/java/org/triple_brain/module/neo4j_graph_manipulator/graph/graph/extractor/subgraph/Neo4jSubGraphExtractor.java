@@ -95,7 +95,7 @@ public class Neo4jSubGraphExtractor {
     }
 
     private String queryToGetGraph() {
-        return "START start_node=node:node_auto_index(uri='" + centerVertexUri + "') " +
+        return "START start_node=node:node_auto_index('uri:" + centerVertexUri + "') " +
                 "MATCH path=start_node<-[:" +
                 Relationships.SOURCE_VERTEX +
                 "|" + Relationships.DESTINATION_VERTEX + "*0.." + depth * 2 +

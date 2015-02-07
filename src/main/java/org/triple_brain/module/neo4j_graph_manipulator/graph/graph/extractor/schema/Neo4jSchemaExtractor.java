@@ -44,7 +44,7 @@ public class Neo4jSchemaExtractor {
 
     private String buildQuery() {
         String dummyReturnValueToAvoidFinishWithComma = "1";
-        return "START schema_node=node:node_auto_index(uri='" + schemaUri + "') " +
+        return "START schema_node=node:node_auto_index('uri:" + schemaUri + "') " +
                 "OPTIONAL MATCH (schema_node)-[:" + Relationships.HAS_PROPERTY + "]->(schema_property) " +
                 "RETURN " +
                 FriendlyResourceQueryBuilder.returnQueryPartUsingPrefix("schema_node") +
