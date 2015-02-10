@@ -4,7 +4,6 @@
 
 package org.triple_brain.module.neo4j_graph_manipulator.graph.test;
 
-import com.hp.hpl.jena.vocabulary.RDFS;
 import org.neo4j.graphdb.*;
 import org.neo4j.rest.graphdb.RestAPI;
 import org.neo4j.rest.graphdb.query.QueryEngine;
@@ -28,7 +27,6 @@ import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.vertex.Neo4jV
 import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.Neo4jWholeGraph;
 
 import javax.inject.Inject;
-import java.net.URI;
 import java.util.*;
 
 public class Neo4JGraphComponentTest implements GraphComponentTest {

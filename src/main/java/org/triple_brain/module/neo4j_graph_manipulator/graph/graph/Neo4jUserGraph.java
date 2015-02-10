@@ -10,7 +10,6 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.index.ReadableIndex;
 import org.triple_brain.module.model.User;
 import org.triple_brain.module.model.UserUris;
-import org.triple_brain.module.model.graph.GraphElementOperator;
 import org.triple_brain.module.model.graph.SubGraphPojo;
 import org.triple_brain.module.model.graph.UserGraph;
 import org.triple_brain.module.model.graph.edge.EdgeOperator;

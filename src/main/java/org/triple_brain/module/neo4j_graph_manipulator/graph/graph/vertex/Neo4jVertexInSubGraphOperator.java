@@ -33,7 +33,6 @@ import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.extractor.sub
 import java.net.URI;
 import java.util.*;
 
-import static org.triple_brain.module.neo4j_graph_manipulator.graph.Neo4jFriendlyResource.addUpdatedLastModificationDate;
 import static org.triple_brain.module.neo4j_graph_manipulator.graph.Neo4jRestApiUtils.map;
 import static org.triple_brain.module.neo4j_graph_manipulator.graph.Neo4jRestApiUtils.wrap;
 
