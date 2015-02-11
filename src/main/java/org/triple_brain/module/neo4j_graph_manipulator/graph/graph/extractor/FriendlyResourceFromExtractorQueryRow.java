@@ -83,18 +83,26 @@ public class FriendlyResourceFromExtractorQueryRow {
     }
 
     private Date getLastModificationDate() {
+        String key = nodeKey + "." + Neo4jFriendlyResource.props.last_modification_date.name();
+        if (row.get(key) == null) {
+            return new Date();
+        }
         return new Date((Long) row.get(
-                nodeKey + "." + Neo4jFriendlyResource.props.last_modification_date.name()
+                key
         ));
     }
 
     private Date getCreationDate() {
+        String key = nodeKey + "." + Neo4jFriendlyResource.props.creation_date.name();
+        if (row.get(key) == null) {
+            return new Date();
+        }
         return new Date((Long) row.get(
-                nodeKey + "." + Neo4jFriendlyResource.props.creation_date.name()
+                key
         ));
     }
 
-    public URI getUri(){
+    public URI getUri() {
         return URI.create(
                 row.get(nodeKey + "." + Neo4jUserGraph.URI_PROPERTY_NAME).toString()
         );
