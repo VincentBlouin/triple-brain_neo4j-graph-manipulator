@@ -199,12 +199,6 @@ public class Neo4jModule extends AbstractModule {
                         .getNodeAutoIndexer()
                         .getAutoIndex()
         );
-        bind(new TypeLiteral<ReadableIndex<Relationship>>() {
-        }).toInstance(
-                graphDb.index()
-                        .getRelationshipAutoIndexer()
-                        .getAutoIndex()
-        );
         tx.success();
         tx.close();
         bind(QueryEngine.class).toInstance(
@@ -245,12 +239,12 @@ public class Neo4jModule extends AbstractModule {
                         .getAutoIndex()
         );
 
-        bind(new TypeLiteral<ReadableIndex<Relationship>>() {
-        }).toInstance(
-                restApi.index()
-                        .getRelationshipAutoIndexer()
-                        .getAutoIndex()
-        );
+//        bind(new TypeLiteral<ReadableIndex<Relationship>>() {
+//        }).toInstance(
+//                restApi.index()
+//                        .getRelationshipAutoIndexer()
+//                        .getAutoIndex()
+//        );
     }
 
     private void registerShutdownHook(final GraphDatabaseService graphDb) {
