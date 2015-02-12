@@ -14,6 +14,8 @@ import org.neo4j.rest.graphdb.query.QueryEngine;
 import org.neo4j.rest.graphdb.util.QueryResult;
 import org.triple_brain.module.model.Image;
 import org.triple_brain.module.model.UserUris;
+import org.triple_brain.module.model.graph.GraphElement;
+import org.triple_brain.module.model.graph.GraphElementType;
 import org.triple_brain.module.model.graph.Identification;
 import org.triple_brain.module.model.graph.IdentificationPojo;
 import org.triple_brain.module.model.graph.edge.Edge;
@@ -37,8 +39,6 @@ import static org.triple_brain.module.neo4j_graph_manipulator.graph.Neo4jRestApi
 import static org.triple_brain.module.neo4j_graph_manipulator.graph.Neo4jRestApiUtils.wrap;
 
 public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, Neo4jOperator {
-
-    public static final String NEO4J_LABEL_NAME = "vertex";
 
     public enum props {
         number_of_connected_edges_property_name,
@@ -670,7 +670,7 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
                 values
         );
         queryEngine.query(
-                "create (n:" + NEO4J_LABEL_NAME + " {props})", wrap(props)
+                "create (n:" + GraphElementType.vertex + " {props})", wrap(props)
         );
     }
 
@@ -692,7 +692,7 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
         Map<String, Object> newMap = map(
                 props.is_public.name(), false,
                 props.number_of_connected_edges_property_name.name(), 0,
-                Neo4jFriendlyResource.props.type.name(), Neo4jFriendlyResource.type.vertex.name()
+                Neo4jFriendlyResource.props.type.name(), GraphElementType.vertex.name()
         );
         newMap.putAll(
                 map

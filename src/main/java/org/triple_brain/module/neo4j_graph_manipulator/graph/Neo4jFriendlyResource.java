@@ -33,13 +33,6 @@ import static org.triple_brain.module.neo4j_graph_manipulator.graph.Neo4jRestApi
 
 public class Neo4jFriendlyResource implements FriendlyResourceOperator, Neo4jOperator {
 
-    public enum type{
-        vertex,
-        edge,
-        schema,
-        property
-    }
-
     public enum props {
         uri,
         label,

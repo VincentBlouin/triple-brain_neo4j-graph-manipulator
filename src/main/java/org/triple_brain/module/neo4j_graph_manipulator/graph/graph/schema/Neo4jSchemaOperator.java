@@ -13,6 +13,7 @@ import org.triple_brain.module.model.Image;
 import org.triple_brain.module.model.UserUris;
 import org.triple_brain.module.model.graph.GraphElement;
 import org.triple_brain.module.model.graph.GraphElementOperator;
+import org.triple_brain.module.model.graph.GraphElementType;
 import org.triple_brain.module.model.graph.schema.SchemaOperator;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.Neo4jFriendlyResource;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.Neo4jFriendlyResourceFactory;
@@ -32,9 +33,6 @@ import static org.triple_brain.module.neo4j_graph_manipulator.graph.Neo4jRestApi
 import static org.triple_brain.module.neo4j_graph_manipulator.graph.Neo4jRestApiUtils.wrap;
 
 public class Neo4jSchemaOperator implements SchemaOperator, Neo4jOperator {
-
-    public static final String NEO4J_LABEL_NAME = "schema";
-    public static final String NEO4J_PROPERTY_LABEL_NAME = "property";
 
     protected Neo4jFriendlyResource friendlyResourceOperator;
     protected Neo4jGraphElementFactory graphElementFactory;
@@ -132,7 +130,7 @@ public class Neo4jSchemaOperator implements SchemaOperator, Neo4jOperator {
     public Map<String, Object> addCreationProperties(Map<String, Object> map) {
         Map<String, Object> newMap = map(
                 Neo4jFriendlyResource.props.type.name(),
-                Neo4jFriendlyResource.type.schema.name(),
+                GraphElementType.schema.name(),
                 Neo4jVertexInSubGraphOperator.props.is_public.name(),
                 true
         );
@@ -171,7 +169,7 @@ public class Neo4jSchemaOperator implements SchemaOperator, Neo4jOperator {
                 values
         );
         queryEngine.query(
-                "create (n:" + NEO4J_LABEL_NAME + " {props})", wrap(props)
+                "create (n:" + GraphElementType.schema + " {props})", wrap(props)
         );
     }
 
@@ -186,13 +184,13 @@ public class Neo4jSchemaOperator implements SchemaOperator, Neo4jOperator {
         Neo4jGraphElementOperator property = graphElementFactory.withUri(createdUri);
         queryEngine.query(
                 queryPrefix() +
-                        "CREATE (p:" + NEO4J_PROPERTY_LABEL_NAME + " {props}) " +
+                        "CREATE (p:" + GraphElementType.property + " {props}) " +
                         "CREATE UNIQUE " +
                         "n-[:" + Relationships.HAS_PROPERTY + "]->p ",
                 map(
                         "props",
                         property.addCreationProperties(map(
-                                Neo4jFriendlyResource.props.type.name(), Neo4jFriendlyResource.type.property.name(),
+                                Neo4jFriendlyResource.props.type.name(), GraphElementType.property.name(),
                                 Neo4jVertexInSubGraphOperator.props.is_public.name(), true
                         ))
                 )
