@@ -35,9 +35,6 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
     protected RestAPI restApi;
     protected Neo4jIdentificationFactory identificationFactory;
 
-    @Inject
-    protected Neo4jUtils neo4jUtils;
-
     @AssistedInject
     protected Neo4jGraphElementOperator(
             QueryEngine queryEngine,
@@ -56,7 +53,6 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
 
     @AssistedInject
     protected Neo4jGraphElementOperator(
-            Neo4jUtils utils,
             QueryEngine queryEngine,
             RestAPI restApi,
             Neo4jIdentificationFactory identificationFactory,
@@ -66,7 +62,6 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
                 uri
         );
         this.identificationFactory = identificationFactory;
-        this.neo4jUtils = utils;
         this.queryEngine = queryEngine;
         this.restApi = restApi;
     }

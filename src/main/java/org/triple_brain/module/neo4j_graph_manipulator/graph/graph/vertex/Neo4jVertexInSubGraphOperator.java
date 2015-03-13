@@ -26,7 +26,10 @@ import org.triple_brain.module.model.graph.vertex.VertexInSubGraphPojo;
 import org.triple_brain.module.model.graph.vertex.VertexOperator;
 import org.triple_brain.module.model.json.SuggestionJson;
 import org.triple_brain.module.model.suggestion.SuggestionPojo;
-import org.triple_brain.module.neo4j_graph_manipulator.graph.*;
+import org.triple_brain.module.neo4j_graph_manipulator.graph.Neo4jFriendlyResource;
+import org.triple_brain.module.neo4j_graph_manipulator.graph.Neo4jFriendlyResourceFactory;
+import org.triple_brain.module.neo4j_graph_manipulator.graph.Neo4jOperator;
+import org.triple_brain.module.neo4j_graph_manipulator.graph.Relationships;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.Neo4jGraphElementFactory;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.Neo4jGraphElementOperator;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.edge.Neo4jEdgeFactory;
@@ -53,9 +56,6 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
 
     protected Neo4jEdgeFactory edgeFactory;
 
-    protected Neo4jUtils utils;
-
-
     protected Neo4jGraphElementFactory neo4jGraphElementFactory;
     protected Node node;
     protected RestAPI restApi;
@@ -68,7 +68,6 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
     protected Neo4jVertexInSubGraphOperator(
             Neo4jVertexFactory vertexFactory,
             Neo4jEdgeFactory edgeFactory,
-            Neo4jUtils utils,
             Neo4jGraphElementFactory neo4jGraphElementFactory,
             QueryEngine queryEngine,
             RestAPI restApi,
@@ -77,7 +76,6 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
         this(
                 vertexFactory,
                 edgeFactory,
-                utils,
                 neo4jGraphElementFactory,
                 queryEngine,
                 restApi,
@@ -92,7 +90,6 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
     protected Neo4jVertexInSubGraphOperator(
             Neo4jVertexFactory vertexFactory,
             Neo4jEdgeFactory edgeFactory,
-            Neo4jUtils utils,
             Neo4jGraphElementFactory neo4jGraphElementFactory,
             QueryEngine queryEngine,
             RestAPI restApi,
@@ -100,7 +97,6 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
     ) {
         this.vertexFactory = vertexFactory;
         this.edgeFactory = edgeFactory;
-        this.utils = utils;
         this.neo4jGraphElementFactory = neo4jGraphElementFactory;
         this.queryEngine = queryEngine;
         this.restApi = restApi;
@@ -113,7 +109,6 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
     protected Neo4jVertexInSubGraphOperator(
             Neo4jVertexFactory vertexFactory,
             Neo4jEdgeFactory edgeFactory,
-            Neo4jUtils utils,
             Neo4jGraphElementFactory neo4jGraphElementFactory,
             QueryEngine queryEngine,
             RestAPI restApi,
@@ -122,7 +117,6 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
         this(
                 vertexFactory,
                 edgeFactory,
-                utils,
                 neo4jGraphElementFactory,
                 queryEngine,
                 restApi,
@@ -135,7 +129,6 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
     protected Neo4jVertexInSubGraphOperator(
             final Neo4jVertexFactory vertexFactory,
             Neo4jEdgeFactory edgeFactory,
-            Neo4jUtils utils,
             Neo4jGraphElementFactory neo4jGraphElementFactory,
             QueryEngine queryEngine,
             RestAPI restApi,
@@ -145,7 +138,6 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
         this(
                 vertexFactory,
                 edgeFactory,
-                utils,
                 neo4jGraphElementFactory,
                 queryEngine,
                 restApi,
@@ -561,7 +553,7 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
     public void setIncludedVertices(Set<Vertex> includedVertices) {
         for (Vertex vertex : includedVertices) {
             getNode().createRelationshipTo(
-                    utils.getFromUri(vertex.uri()),
+                    vertexFactory.withUri(vertex.uri()).getNode(),
                     Relationships.HAS_INCLUDED_VERTEX
             );
         }
@@ -570,7 +562,7 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
     public void setIncludedEdges(Set<Edge> includedEdges) {
         for (Edge edge : includedEdges) {
             getNode().createRelationshipTo(
-                    utils.getFromUri(edge.uri()),
+                    edgeFactory.withUri(edge.uri()).getNode(),
                     Relationships.HAS_INCLUDED_EDGE
             );
         }
@@ -672,7 +664,7 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
                 values
         );
         queryEngine.query(
-                "create (n:" + GraphElementType.vertex + " {props})", wrap(props)
+                "create (n:" + GraphElementType.resource + " {props})", wrap(props)
         );
     }
 

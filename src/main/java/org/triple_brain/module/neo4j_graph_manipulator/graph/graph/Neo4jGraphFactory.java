@@ -35,7 +35,7 @@ public class Neo4jGraphFactory implements GraphFactory {
 
     private VertexOperator createDefaultVertexForUser(User user) {
         VertexOperator operator = vertexFactory.withUri(
-                new UserUris(user).defaultVertexUri()
+                new UserUris(user).generateVertexUri()
         );
         operator.create();
         return operator;

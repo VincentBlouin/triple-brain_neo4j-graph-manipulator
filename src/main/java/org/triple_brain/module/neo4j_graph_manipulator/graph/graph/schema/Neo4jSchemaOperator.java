@@ -169,7 +169,7 @@ public class Neo4jSchemaOperator implements SchemaOperator, Neo4jOperator {
                 values
         );
         queryEngine.query(
-                "create (n:" + GraphElementType.schema + " {props})", wrap(props)
+                "create (n:" + GraphElementType.resource + " {props})", wrap(props)
         );
     }
 
@@ -184,7 +184,7 @@ public class Neo4jSchemaOperator implements SchemaOperator, Neo4jOperator {
         Neo4jGraphElementOperator property = graphElementFactory.withUri(createdUri);
         queryEngine.query(
                 queryPrefix() +
-                        "CREATE (p:" + GraphElementType.property + " {props}) " +
+                        "CREATE (p:" + GraphElementType.resource + " {props}) " +
                         "CREATE UNIQUE " +
                         "n-[:" + Relationships.HAS_PROPERTY + "]->p ",
                 map(

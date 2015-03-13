@@ -6,10 +6,11 @@ package org.triple_brain.module.neo4j_graph_manipulator.graph.graph;
 
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
-import org.neo4j.graphdb.Node;
-import org.neo4j.graphdb.index.ReadableIndex;
+import org.neo4j.rest.graphdb.query.QueryEngine;
+import org.neo4j.rest.graphdb.util.QueryResult;
 import org.triple_brain.module.model.User;
 import org.triple_brain.module.model.UserUris;
+import org.triple_brain.module.model.graph.GraphElementType;
 import org.triple_brain.module.model.graph.SubGraphPojo;
 import org.triple_brain.module.model.graph.UserGraph;
 import org.triple_brain.module.model.graph.edge.EdgeOperator;
@@ -26,13 +27,16 @@ import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.schema.Schema
 import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.vertex.Neo4jVertexFactory;
 
 import java.net.URI;
+import java.util.Map;
+
+import static org.triple_brain.module.neo4j_graph_manipulator.graph.Neo4jRestApiUtils.map;
 
 public class Neo4jUserGraph implements UserGraph {
 
     public static final String URI_PROPERTY_NAME = "uri";
 
     private User user;
-    private ReadableIndex<Node> nodeIndex;
+    private QueryEngine<Map<String, Object>> queryEngine;
     private Neo4jVertexFactory vertexFactory;
     private SchemaFactory schemaFactory;
     private Neo4jSubGraphExtractorFactory subGraphExtractorFactory;
@@ -41,7 +45,7 @@ public class Neo4jUserGraph implements UserGraph {
 
     @AssistedInject
     protected Neo4jUserGraph(
-            ReadableIndex<Node> nodeIndex,
+            QueryEngine queryEngine,
             Neo4jVertexFactory vertexFactory,
             Neo4jEdgeFactory edgeFactory,
             Neo4jSubGraphExtractorFactory subGraphExtractorFactory,
@@ -49,7 +53,7 @@ public class Neo4jUserGraph implements UserGraph {
             SchemaFactory schemaFactory,
             @Assisted User user
     ) {
-        this.nodeIndex = nodeIndex;
+        this.queryEngine = queryEngine;
         this.user = user;
         this.vertexFactory = vertexFactory;
         this.edgeFactory = edgeFactory;
@@ -60,15 +64,7 @@ public class Neo4jUserGraph implements UserGraph {
 
     @Override
     public VertexOperator defaultVertex() {
-        return vertexWithUri(
-                getDefaultVertexUri()
-        );
-    }
-
-    private URI getDefaultVertexUri(){
-        return new UserUris(
-                user
-        ).defaultVertexUri();
+        return getAnyVertex();
     }
 
     @Override
@@ -77,16 +73,18 @@ public class Neo4jUserGraph implements UserGraph {
     }
 
     @Override
-    public Boolean haveElementWithId(URI id) {
-        return nodeIndex.get(
-                URI_PROPERTY_NAME,
-                id.toString()
-        ).hasNext();
+    public Boolean haveElementWithId(URI uri) {
+        QueryResult<Map<String, Object>> result = queryEngine.query(
+                "START n=node:node_auto_index('uri:" + uri + "') "
+                        + "return n.uri",
+                map()
+        );
+        return result.iterator().hasNext();
     }
 
     @Override
     public SubGraphPojo graphWithDepthAndCenterVertexId(Integer depthOfSubVertices, URI centerVertexURI) throws NonExistingResourceException {
-        if(depthOfSubVertices < 0){
+        if (depthOfSubVertices < 0) {
             throw new InvalidDepthOfSubVerticesException(
                     depthOfSubVertices,
                     centerVertexURI
@@ -96,7 +94,7 @@ public class Neo4jUserGraph implements UserGraph {
                 centerVertexURI,
                 depthOfSubVertices
         ).load();
-        if(subGraph.vertices().isEmpty()){
+        if (subGraph.vertices().isEmpty()) {
             throw new NonExistingResourceException(
                     centerVertexURI
             );
@@ -108,7 +106,7 @@ public class Neo4jUserGraph implements UserGraph {
     public SubGraphPojo graphWithDefaultVertexAndDepth(Integer depth) throws InvalidDepthOfSubVerticesException {
         return graphWithDepthAndCenterVertexId(
                 depth,
-                getDefaultVertexUri()
+                getAnyVertex().uri()
         );
     }
 
@@ -163,4 +161,19 @@ public class Neo4jUserGraph implements UserGraph {
         );
     }
 
+
+    private VertexOperator getAnyVertex(){
+        QueryResult<Map<String, Object>> result = queryEngine.query(
+                "START n=node:node_auto_index(" +
+                        "'type:" + GraphElementType.vertex+ " AND " +
+                        "owner:" + user.username() + 
+                        "') "
+                        + "return n.uri limit 1",
+                map()
+        );
+        URI uri = URI.create(
+                result.iterator().next().get("n.uri").toString()
+        );
+        return vertexFactory.withUri(uri);
+    }
 }

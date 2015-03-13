@@ -18,6 +18,7 @@ import org.triple_brain.module.model.Image;
 import org.triple_brain.module.model.UserUris;
 import org.triple_brain.module.model.graph.FriendlyResourceOperator;
 import org.triple_brain.module.model.graph.FriendlyResourcePojo;
+import org.triple_brain.module.model.graph.GraphElementType;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.Neo4jUserGraph;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.image.Neo4jImageFactory;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.image.Neo4jImages;
@@ -92,24 +93,6 @@ public class Neo4jFriendlyResource implements FriendlyResourceOperator, Neo4jOpe
             throw new RuntimeException("uri for friendly resource is mandatory");
         }
         this.uri = uri;
-    }
-
-    @AssistedInject
-    protected Neo4jFriendlyResource(
-            RestAPI restApi,
-            QueryEngine queryEngine,
-            Neo4jUtils neo4jUtils,
-            Neo4jImageFactory imageFactory,
-            @Assisted URI uri,
-            @Assisted String label
-    ) {
-        this(
-                restApi,
-                queryEngine,
-                imageFactory,
-                neo4jUtils.getOrCreate(uri)
-        );
-        label(label);
     }
 
     @AssistedInject
@@ -233,7 +216,7 @@ public class Neo4jFriendlyResource implements FriendlyResourceOperator, Neo4jOpe
                 values
         );
         queryEngine.query(
-                "create (n {props})", wrap(props)
+                "create (n:"+GraphElementType.resource+" {props})", wrap(props)
         );
     }
 

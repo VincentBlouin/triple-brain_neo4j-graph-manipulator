@@ -8,6 +8,7 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.rest.graphdb.query.QueryEngine;
 import org.neo4j.rest.graphdb.util.QueryResult;
 import org.triple_brain.module.model.WholeGraph;
+import org.triple_brain.module.model.graph.GraphElementType;
 import org.triple_brain.module.model.graph.edge.EdgeOperator;
 import org.triple_brain.module.model.graph.schema.SchemaOperator;
 import org.triple_brain.module.model.graph.vertex.VertexInSubGraphOperator;
@@ -41,8 +42,9 @@ public class Neo4jWholeGraph implements WholeGraph {
     public Iterator<VertexInSubGraphOperator> getAllVertices() {
         return new Iterator<VertexInSubGraphOperator>() {
             QueryResult<Map<String, Object>> result = queryEngine.query(
-                    "START n = node(*) " +
-                            "MATCH (n:vertex) " +
+                    "START n=node:node_auto_index('" +
+                            Neo4jFriendlyResource.props.type + ":" + GraphElementType.vertex +
+                            "') " +
                             "RETURN n",
                     Collections.emptyMap()
             );
@@ -71,11 +73,10 @@ public class Neo4jWholeGraph implements WholeGraph {
     public Iterator<EdgeOperator> getAllEdges() {
         return new Iterator<EdgeOperator>() {
             QueryResult<Map<String,Object>> result = queryEngine.query(
-                    "START relation=node(*) " +
-                            "MATCH relation-[:" +
-                            Relationships.SOURCE_VERTEX +
-                            "]->vertex " +
-                            "RETURN relation",
+                    "START n=node:node_auto_index('" +
+                            Neo4jFriendlyResource.props.type + ":" + GraphElementType.edge +
+                            "') " +
+                            "RETURN n",
                     Collections.EMPTY_MAP
             );
             Iterator<Map<String, Object>> iterator =result.iterator();
@@ -87,7 +88,7 @@ public class Neo4jWholeGraph implements WholeGraph {
             @Override
             public EdgeOperator next() {
                 return neo4jEdgeFactory.createOrLoadWithNode(
-                        (Node) iterator.next().get("relation")
+                        (Node) iterator.next().get("n")
                 );
             }
 
@@ -102,8 +103,9 @@ public class Neo4jWholeGraph implements WholeGraph {
     public Iterator<SchemaOperator> getAllSchemas() {
         return new Iterator<SchemaOperator>() {
             QueryResult<Map<String, Object>> result = queryEngine.query(
-                    "START n = node(*) " +
-                            "MATCH (n:schema) " +
+                    "START n=node:node_auto_index('" +
+                            Neo4jFriendlyResource.props.type + ":" + GraphElementType.schema +
+                            "') " +
                             "RETURN n." + Neo4jFriendlyResource.props.uri + " as uri",
                     Collections.emptyMap()
             );

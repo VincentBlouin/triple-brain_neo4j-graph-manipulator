@@ -25,6 +25,7 @@ import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.extractor.sub
 import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.Neo4jUserGraphFactory;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.vertex.Neo4jVertexFactory;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.Neo4jWholeGraph;
+import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.vertex.Neo4jVertexInSubGraphOperator;
 
 import javax.inject.Inject;
 import java.util.*;
@@ -146,7 +147,12 @@ public class Neo4JGraphComponentTest implements GraphComponentTest {
     @Override
     public void removeWholeGraph() {
         queryEngine.query(
-                "START n = node(*), r=relationship(*) DELETE n, r;",
+                "START n=node:node_auto_index(" +
+                        "'type:" + GraphElementType.vertex + " " +
+                        "OR type:" + GraphElementType.edge + " " +
+                        "OR type:" + GraphElementType.schema + " " +
+                        "OR type:" + GraphElementType.property + " " +
+                        "'), r=relationship(*) DELETE n, r;",
                 Collections.EMPTY_MAP
         );
     }

@@ -22,6 +22,7 @@ import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.edge.Neo4jEdg
 import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.extractor.FriendlyResourceQueryBuilder;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.extractor.IdentificationQueryBuilder;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.extractor.QueryUtils;
+import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.vertex.Neo4jVertexFactory;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.vertex.Neo4jVertexInSubGraphOperator;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.image.Neo4jImages;
 
@@ -35,6 +36,7 @@ public class Neo4jSubGraphExtractor {
     QueryEngine engine;
     URI centerVertexUri;
     Integer depth;
+    Neo4jVertexFactory vertexFactory;
     private SubGraphPojo subGraph = SubGraphPojo.withVerticesAndEdges(
             new HashMap<URI, VertexInSubGraphPojo>(),
             new HashMap<URI, EdgePojo>()
@@ -43,10 +45,12 @@ public class Neo4jSubGraphExtractor {
     @AssistedInject
     protected Neo4jSubGraphExtractor(
             QueryEngine engine,
+            Neo4jVertexFactory vertexFactory,
             @Assisted URI centerVertexUri,
             @Assisted Integer depth
     ) {
         this.engine = engine;
+        this.vertexFactory = vertexFactory;
         this.centerVertexUri = centerVertexUri;
         this.depth = depth;
     }
@@ -106,7 +110,7 @@ public class Neo4jSubGraphExtractor {
                 vertexAndEdgeCommonQueryPart("in_path_node") +
                 vertexReturnQueryPart("in_path_node") +
                 edgeReturnQueryPart("in_path_node") +
-                "labels(in_path_node) as type";
+                "in_path_node.type as type";
     }
 
     private String vertexAndEdgeCommonQueryPart(String prefix){
