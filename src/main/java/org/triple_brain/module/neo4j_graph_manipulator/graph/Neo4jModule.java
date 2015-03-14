@@ -62,6 +62,10 @@ public class Neo4jModule extends AbstractModule {
         return new Neo4jModule(false, true);
     }
 
+    public static Neo4jModule notForTestingUsingRest() {
+        return new Neo4jModule(false, false);
+    }
+
     public static Neo4jModule notForTestingUsingEmbedded() {
         return new Neo4jModule(true, false);
     }
