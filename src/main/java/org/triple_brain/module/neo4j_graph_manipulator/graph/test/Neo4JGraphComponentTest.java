@@ -86,10 +86,10 @@ public class Neo4JGraphComponentTest implements GraphComponentTest {
         startTransaction();
         user = User.withEmail(
                 "roger.lamothe@example.org"
-        );
+        ).setUsername("roger_lamothe");
         anotherUser = User.withEmail(
                 "colette.armande@example.org"
-        );
+        ).setUsername("colette_armande");
 
         userGraph = neo4jUserGraphFactory.withUser(user);
         VerticesCalledABAndC verticesCalledABAndC = testScenarios.makeGraphHave3VerticesABCWhereAIsDefaultCenterVertexAndAPointsToBAndBPointsToC(
