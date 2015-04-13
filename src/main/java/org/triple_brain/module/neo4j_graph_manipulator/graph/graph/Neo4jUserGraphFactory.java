@@ -8,5 +8,5 @@ import org.triple_brain.module.model.User;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.Neo4jUserGraph;
 
 public interface Neo4jUserGraphFactory {
-    public Neo4jUserGraph withUser(User user);
+    Neo4jUserGraph withUser(User user);
 }

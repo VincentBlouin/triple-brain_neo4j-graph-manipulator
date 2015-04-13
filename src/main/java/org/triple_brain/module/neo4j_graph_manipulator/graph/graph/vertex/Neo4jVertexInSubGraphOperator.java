@@ -550,6 +550,7 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
         return includedEdges;
     }
 
+
     public void setIncludedVertices(Set<Vertex> includedVertices) {
         for (Vertex vertex : includedVertices) {
             getNode().createRelationshipTo(
