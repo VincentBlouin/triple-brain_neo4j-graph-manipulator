@@ -334,10 +334,10 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
                 );
                 queryEngine.query(
                         queryPrefix() +
-                                "MATCH " +
+                                "OPTIONAL MATCH " +
                                 "n<-[:SOURCE_VERTEX|DESTINATION_VERTEX]-(edge), " +
                                 "edge-[edge_relation]-() " +
-                                "MATCH " +
+                                "OPTIONAL MATCH " +
                                 "n-[vertex_relation]-() " +
                                 "DELETE " +
                                 "vertex_relation, n, " +
