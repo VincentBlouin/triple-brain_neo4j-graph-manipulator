@@ -103,7 +103,7 @@ public class Neo4jUserGraph implements UserGraph {
     }
 
     @Override
-    public SubGraphPojo graphWithDefaultVertexAndDepth(Integer depth) throws InvalidDepthOfSubVerticesException {
+    public SubGraphPojo graphWithAnyVertexAndDepth(Integer depth) throws InvalidDepthOfSubVerticesException {
         return graphWithDepthAndCenterVertexId(
                 depth,
                 getAnyVertex().uri()
