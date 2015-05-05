@@ -27,7 +27,7 @@ public class SchemaFromQueryResult {
     public SchemaPojo build() {
         Iterator<Map<String,Object>> iterator = result.iterator();
         Map<String,Object> row = iterator.next();
-        FriendlyResourcePojo schemaFriendlyResource = FriendlyResourceFromExtractorQueryRow.usingRowAndPrefix(
+        GraphElementPojo schemaGraphElement = GraphElementFromExtractorQueryRow.usingRowAndKey(
                 row ,
                 "schema_node"
         ).build();
@@ -38,7 +38,7 @@ public class SchemaFromQueryResult {
             );
         }
         return new SchemaPojo(
-                schemaFriendlyResource,
+                schemaGraphElement,
                 properties
         );
     }

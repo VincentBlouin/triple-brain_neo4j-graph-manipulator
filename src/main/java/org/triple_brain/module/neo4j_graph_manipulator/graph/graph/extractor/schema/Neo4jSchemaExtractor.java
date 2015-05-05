@@ -48,6 +48,7 @@ public class Neo4jSchemaExtractor {
                 "OPTIONAL MATCH (schema_node)-[:" + Relationships.HAS_PROPERTY + "]->(schema_property) " +
                 "RETURN " +
                 FriendlyResourceQueryBuilder.returnQueryPartUsingPrefix("schema_node") +
+                IdentificationQueryBuilder.identificationReturnQueryPart("schema_node") +
                 FriendlyResourceQueryBuilder.returnQueryPartUsingPrefix("schema_property") +
                 IdentificationQueryBuilder.identificationReturnQueryPart("schema_property") +
                 dummyReturnValueToAvoidFinishWithComma;

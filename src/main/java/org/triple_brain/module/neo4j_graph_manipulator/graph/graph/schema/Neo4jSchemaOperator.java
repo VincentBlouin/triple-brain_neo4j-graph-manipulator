@@ -11,12 +11,9 @@ import org.neo4j.rest.graphdb.query.QueryEngine;
 import org.neo4j.rest.graphdb.util.QueryResult;
 import org.triple_brain.module.model.Image;
 import org.triple_brain.module.model.UserUris;
-import org.triple_brain.module.model.graph.GraphElement;
-import org.triple_brain.module.model.graph.GraphElementOperator;
-import org.triple_brain.module.model.graph.GraphElementType;
+import org.triple_brain.module.model.graph.*;
 import org.triple_brain.module.model.graph.schema.SchemaOperator;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.Neo4jFriendlyResource;
-import org.triple_brain.module.neo4j_graph_manipulator.graph.Neo4jFriendlyResourceFactory;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.Neo4jOperator;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.Relationships;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.Neo4jGraphElementFactory;
@@ -34,31 +31,28 @@ import static org.triple_brain.module.neo4j_graph_manipulator.graph.Neo4jRestApi
 
 public class Neo4jSchemaOperator implements SchemaOperator, Neo4jOperator {
 
-    protected Neo4jFriendlyResource friendlyResourceOperator;
+    protected Neo4jGraphElementOperator graphElementOperator;
     protected Neo4jGraphElementFactory graphElementFactory;
     protected QueryEngine<Map<String, Object>> queryEngine;
 
     @AssistedInject
     protected Neo4jSchemaOperator(
-            Neo4jFriendlyResourceFactory friendlyResourceFactory,
             QueryEngine queryEngine,
             Neo4jGraphElementFactory graphElementFactory,
             @Assisted URI uri
     ) {
         this.queryEngine = queryEngine;
         this.graphElementFactory = graphElementFactory;
-        friendlyResourceOperator = friendlyResourceFactory.withUri(uri);
+        graphElementOperator = graphElementFactory.withUri(uri);
     }
 
     @AssistedInject
     protected Neo4jSchemaOperator(
-            Neo4jFriendlyResourceFactory friendlyResourceFactory,
             QueryEngine queryEngine,
             Neo4jGraphElementFactory graphElementFactory,
             @Assisted String ownerUserName
     ) {
         this(
-                friendlyResourceFactory,
                 queryEngine,
                 graphElementFactory,
                 new UserUris(ownerUserName).generateSchemaUri()
@@ -68,62 +62,62 @@ public class Neo4jSchemaOperator implements SchemaOperator, Neo4jOperator {
 
     @Override
     public URI uri() {
-        return friendlyResourceOperator.uri();
+        return graphElementOperator.uri();
     }
 
     @Override
     public boolean hasLabel() {
-        return friendlyResourceOperator.hasLabel();
+        return graphElementOperator.hasLabel();
     }
 
     @Override
     public String label() {
-        return friendlyResourceOperator.label();
+        return graphElementOperator.label();
     }
 
     @Override
     public Set<Image> images() {
-        return friendlyResourceOperator.images();
+        return graphElementOperator.images();
     }
 
     @Override
     public Boolean gotImages() {
-        return friendlyResourceOperator.gotImages();
+        return graphElementOperator.gotImages();
     }
 
     @Override
     public String comment() {
-        return friendlyResourceOperator.comment();
+        return graphElementOperator.comment();
     }
 
     @Override
     public Boolean gotComments() {
-        return friendlyResourceOperator.gotComments();
+        return graphElementOperator.gotComments();
     }
 
     @Override
     public Date creationDate() {
-        return friendlyResourceOperator.creationDate();
+        return graphElementOperator.creationDate();
     }
 
     @Override
     public Date lastModificationDate() {
-        return friendlyResourceOperator.lastModificationDate();
+        return graphElementOperator.lastModificationDate();
     }
 
     @Override
     public String getOwnerUsername() {
-        return friendlyResourceOperator.getOwnerUsername();
+        return graphElementOperator.getOwnerUsername();
     }
 
     @Override
     public String queryPrefix() {
-        return friendlyResourceOperator.queryPrefix();
+        return graphElementOperator.queryPrefix();
     }
 
     @Override
     public Node getNode() {
-        return friendlyResourceOperator.getNode();
+        return graphElementOperator.getNode();
     }
 
     @Override
@@ -137,7 +131,7 @@ public class Neo4jSchemaOperator implements SchemaOperator, Neo4jOperator {
         newMap.putAll(
                 map
         );
-        newMap = friendlyResourceOperator.addCreationProperties(
+        newMap = graphElementOperator.addCreationProperties(
                 newMap
         );
         return newMap;
@@ -145,17 +139,17 @@ public class Neo4jSchemaOperator implements SchemaOperator, Neo4jOperator {
 
     @Override
     public void comment(String comment) {
-        friendlyResourceOperator.comment(comment);
+        graphElementOperator.comment(comment);
     }
 
     @Override
     public void label(String label) {
-        friendlyResourceOperator.label(label);
+        graphElementOperator.label(label);
     }
 
     @Override
     public void addImages(Set<Image> images) {
-        friendlyResourceOperator.addImages(images);
+        graphElementOperator.addImages(images);
     }
 
     @Override
@@ -176,6 +170,26 @@ public class Neo4jSchemaOperator implements SchemaOperator, Neo4jOperator {
     @Override
     public void remove() {
         //cannot remove schema for now
+    }
+
+    @Override
+    public void removeIdentification(Identification type) {
+        graphElementOperator.removeIdentification(type);
+    }
+
+    @Override
+    public IdentificationPojo addType(Identification type) {
+        return graphElementOperator.addType(type);
+    }
+
+    @Override
+    public IdentificationPojo addSameAs(Identification friendlyResource) {
+        return graphElementOperator.addSameAs(friendlyResource);
+    }
+
+    @Override
+    public IdentificationPojo addGenericIdentification(Identification friendlyResource) {
+        return graphElementOperator.addGenericIdentification(friendlyResource);
     }
 
     @Override
@@ -200,12 +214,12 @@ public class Neo4jSchemaOperator implements SchemaOperator, Neo4jOperator {
 
     @Override
     public boolean equals(Object graphElementToCompareAsObject) {
-        return friendlyResourceOperator.equals(graphElementToCompareAsObject);
+        return graphElementOperator.equals(graphElementToCompareAsObject);
     }
 
     @Override
     public int hashCode() {
-        return friendlyResourceOperator.hashCode();
+        return graphElementOperator.hashCode();
     }
 
     @Override
@@ -231,5 +245,30 @@ public class Neo4jSchemaOperator implements SchemaOperator, Neo4jOperator {
             );
         }
         return properties;
+    }
+
+    @Override
+    public Map<URI, ? extends Identification> getGenericIdentifications() {
+        return graphElementOperator.getGenericIdentifications();
+    }
+
+    @Override
+    public Map<URI, ? extends Identification> getSameAs() {
+        return graphElementOperator.getSameAs();
+    }
+
+    @Override
+    public Map<URI, ? extends Identification> getAdditionalTypes() {
+        return graphElementOperator.getAdditionalTypes();
+    }
+
+    @Override
+    public Map<URI, ? extends Identification> getIdentifications() {
+        return graphElementOperator.getIdentifications();
+    }
+
+    @Override
+    public URI getExternalResourceUri() {
+        return graphElementOperator.getExternalResourceUri();
     }
 }
