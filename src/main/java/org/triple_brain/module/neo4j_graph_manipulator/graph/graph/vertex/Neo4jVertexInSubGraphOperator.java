@@ -392,8 +392,8 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
     protected void incrementNumberOfConnectedEdges() {
         queryEngine.query(
                 queryPrefix() +
-                        "SET n.number_of_connected_edges_property_name = " +
-                        "n.number_of_connected_edges_property_name + 1",
+                        "SET n." + props.number_of_connected_edges_property_name + "= " +
+                        "n."+ props.number_of_connected_edges_property_name  +"+ 1",
                 map()
         );
     }
