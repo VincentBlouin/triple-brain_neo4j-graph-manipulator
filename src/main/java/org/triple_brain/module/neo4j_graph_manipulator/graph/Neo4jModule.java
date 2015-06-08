@@ -7,15 +7,14 @@ package org.triple_brain.module.neo4j_graph_manipulator.graph;
 import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
-import org.neo4j.graphdb.*;
+import org.neo4j.graphdb.GraphDatabaseService;
+import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 import org.neo4j.graphdb.factory.GraphDatabaseSettings;
 import org.neo4j.graphdb.index.IndexManager;
 import org.neo4j.graphdb.index.ReadableIndex;
-import org.neo4j.graphdb.schema.IndexDefinition;
-import org.neo4j.graphdb.schema.Schema;
 import org.neo4j.helpers.collection.MapUtil;
-import org.neo4j.kernel.impl.util.FileUtils;
 import org.neo4j.rest.graphdb.RestAPI;
 import org.neo4j.rest.graphdb.RestAPIFacade;
 import org.neo4j.rest.graphdb.RestGraphDatabase;
@@ -48,7 +47,6 @@ import org.triple_brain.module.neo4j_graph_manipulator.graph.test.Neo4JGraphComp
 
 import javax.inject.Singleton;
 import java.io.File;
-import java.io.IOException;
 
 public class Neo4jModule extends AbstractModule {
 
@@ -264,12 +262,28 @@ public class Neo4jModule extends AbstractModule {
     }
 
     public static void clearDb() {
-        try {
-            FileUtils.deleteRecursively(new File(
-                    DB_PATH_FOR_TESTS
-            ));
-        } catch (IOException e) {
-            System.out.println(e.getMessage());
+        deleteFileOrDirectory(
+                new File(
+                        DB_PATH_FOR_TESTS
+                )
+        );
+//        try {
+//            FileUtils.deleteRecursively(new File(
+//                    DB_PATH_FOR_TESTS
+//            ));
+//        } catch (IOException e) {
+//            System.out.println(e.getMessage());
+//        }
+    }
+
+    public static void deleteFileOrDirectory(final File file) {
+        if (file.exists()) {
+            if (file.isDirectory()) {
+                for (File child : file.listFiles()) {
+                    deleteFileOrDirectory(child);
+                }
+            }
+            file.delete();
         }
     }
 }

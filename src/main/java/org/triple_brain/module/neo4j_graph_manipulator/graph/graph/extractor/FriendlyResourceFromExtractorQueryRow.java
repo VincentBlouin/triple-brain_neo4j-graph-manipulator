@@ -4,7 +4,6 @@
 
 package org.triple_brain.module.neo4j_graph_manipulator.graph.graph.extractor;
 
-import com.hp.hpl.jena.vocabulary.RDFS;
 import org.triple_brain.module.model.Image;
 import org.triple_brain.module.model.graph.FriendlyResourcePojo;
 import org.triple_brain.module.model.json.ImageJson;
@@ -13,7 +12,10 @@ import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.Neo4jUserGrap
 import org.triple_brain.module.neo4j_graph_manipulator.graph.image.Neo4jImages;
 
 import java.net.URI;
-import java.util.*;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 public class FriendlyResourceFromExtractorQueryRow {
 

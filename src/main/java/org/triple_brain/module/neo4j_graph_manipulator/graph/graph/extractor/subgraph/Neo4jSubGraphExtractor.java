@@ -6,7 +6,6 @@ package org.triple_brain.module.neo4j_graph_manipulator.graph.graph.extractor.su
 
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
-import com.hp.hpl.jena.vocabulary.RDFS;
 import org.neo4j.rest.graphdb.query.QueryEngine;
 import org.neo4j.rest.graphdb.util.QueryResult;
 import org.triple_brain.module.model.graph.SubGraphPojo;
@@ -16,7 +15,6 @@ import org.triple_brain.module.model.graph.vertex.VertexInSubGraph;
 import org.triple_brain.module.model.graph.vertex.VertexInSubGraphPojo;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.Neo4jFriendlyResource;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.Relationships;
-import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.Neo4jIdentification;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.Neo4jUserGraph;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.edge.Neo4jEdgeOperator;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.extractor.FriendlyResourceQueryBuilder;
@@ -24,7 +22,6 @@ import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.extractor.Ide
 import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.extractor.QueryUtils;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.vertex.Neo4jVertexFactory;
 import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.vertex.Neo4jVertexInSubGraphOperator;
-import org.triple_brain.module.neo4j_graph_manipulator.graph.image.Neo4jImages;
 
 import java.net.URI;
 import java.util.HashMap;
