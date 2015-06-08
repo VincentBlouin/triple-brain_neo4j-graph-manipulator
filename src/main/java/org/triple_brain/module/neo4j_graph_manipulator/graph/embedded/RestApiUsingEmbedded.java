@@ -291,12 +291,12 @@ public class RestApiUsingEmbedded implements RestAPI {
     }
 
     @Override
-    public void addLabel(String s, String s2) {
+    public void addLabels(RestNode restNode, String... strings) {
 
     }
 
     @Override
-    public void removeLabel(String s, String s2) {
+    public void removeLabel(RestNode restNode, String s) {
 
     }
 
@@ -308,11 +308,6 @@ public class RestApiUsingEmbedded implements RestAPI {
     @Override
     public Collection<String> getAllLabelNames() {
         return null;
-    }
-
-    @Override
-    public void addLabels(String s, String... strings) {
-
     }
 
     @Override
