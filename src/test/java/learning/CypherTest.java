@@ -7,8 +7,8 @@ package learning;
 import org.junit.Test;
 import org.neo4j.graphdb.*;
 import org.neo4j.rest.graphdb.util.QueryResult;
-import org.triple_brain.module.common_utils.Uris;
-import org.triple_brain.module.neo4j_graph_manipulator.graph.graph.Neo4jUserGraph;
+import guru.bubl.module.common_utils.Uris;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.Neo4jUserGraph;
 
 import java.net.URI;
 import java.util.Collections;
@@ -18,8 +18,8 @@ import java.util.UUID;
 
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.*;
-import static org.triple_brain.module.neo4j_graph_manipulator.graph.Neo4jRestApiUtils.map;
-import static org.triple_brain.module.neo4j_graph_manipulator.graph.Neo4jRestApiUtils.wrap;
+import static guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jRestApiUtils.map;
+import static guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jRestApiUtils.wrap;
 
 public class CypherTest extends Neo4jServerTestGeneric {
 

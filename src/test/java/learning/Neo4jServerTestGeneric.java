@@ -16,7 +16,7 @@ import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.index.ReadableIndex;
 import org.neo4j.rest.graphdb.RestAPI;
 import org.neo4j.rest.graphdb.query.QueryEngine;
-import org.triple_brain.module.neo4j_graph_manipulator.graph.Neo4jModule;
+import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jModule;
 
 import javax.inject.Inject;
 import java.util.Collections;

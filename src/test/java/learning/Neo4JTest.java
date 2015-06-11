@@ -8,10 +8,9 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.neo4j.graphdb.*;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
-import org.triple_brain.module.neo4j_graph_manipulator.graph.Neo4jModule;
+import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jModule;
 
 import java.io.File;
-import java.io.IOException;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
