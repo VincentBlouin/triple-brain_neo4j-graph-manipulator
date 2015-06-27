@@ -6,25 +6,20 @@ package guru.bubl.module.neo4j_graph_manipulator.graph.graph;
 
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
-import org.neo4j.graphdb.Node;
-import org.neo4j.rest.graphdb.query.QueryEngine;
-import org.neo4j.rest.graphdb.util.QueryResult;
 import guru.bubl.module.model.Image;
 import guru.bubl.module.model.graph.IdentificationOperator;
 import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jFriendlyResource;
 import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jFriendlyResourceFactory;
 import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jOperator;
+import org.neo4j.graphdb.Node;
+import org.neo4j.rest.graphdb.query.QueryEngine;
 
 import java.net.URI;
-import java.util.*;
-
-import static guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jRestApiUtils.map;
+import java.util.Date;
+import java.util.Map;
+import java.util.Set;
 
 public class Neo4jIdentification implements IdentificationOperator, Neo4jOperator {
-
-    public enum props {
-        external_uri
-    }
 
     Neo4jFriendlyResource friendlyResourceOperator;
     QueryEngine queryEngine;
@@ -55,17 +50,7 @@ public class Neo4jIdentification implements IdentificationOperator, Neo4jOperato
 
     @Override
     public URI getExternalResourceUri() {
-        String query = friendlyResourceOperator.queryPrefix() + "return n."
-                + props.external_uri + " as external_uri";
-        QueryResult<Map<String, Object>> result = queryEngine.query(
-                query,
-                map()
-        );
-        Iterator<Map<String, Object>> it = result.iterator();
-        Object externalUriValue = it.next().get("external_uri");
-        return externalUriValue == null ? friendlyResourceOperator.uri() : URI.create(
-                externalUriValue.toString()
-        );
+        return uri();
     }
 
     @Override
