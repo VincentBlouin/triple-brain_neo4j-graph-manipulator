@@ -4,14 +4,9 @@
 
 package guru.bubl.module.neo4j_graph_manipulator.graph.graph;
 
-import guru.bubl.module.model.graph.GraphElement;
+import guru.bubl.module.model.WholeGraph;
 import guru.bubl.module.model.graph.GraphElementOperator;
 import guru.bubl.module.model.graph.GraphElementOperatorFactory;
-import org.apache.commons.lang.StringUtils;
-import org.neo4j.graphdb.Node;
-import org.neo4j.rest.graphdb.query.QueryEngine;
-import org.neo4j.rest.graphdb.util.QueryResult;
-import guru.bubl.module.model.WholeGraph;
 import guru.bubl.module.model.graph.GraphElementType;
 import guru.bubl.module.model.graph.edge.EdgeOperator;
 import guru.bubl.module.model.graph.schema.SchemaOperator;
@@ -20,6 +15,10 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jFriendlyResource;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.edge.Neo4jEdgeFactory;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.schema.SchemaFactory;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.Neo4jVertexFactory;
+import org.apache.commons.lang.StringUtils;
+import org.neo4j.graphdb.Node;
+import org.neo4j.rest.graphdb.query.QueryEngine;
+import org.neo4j.rest.graphdb.util.QueryResult;
 
 import javax.inject.Inject;
 import java.net.URI;
