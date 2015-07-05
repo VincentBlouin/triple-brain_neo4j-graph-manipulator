@@ -6,6 +6,7 @@ package guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph;
 
 import guru.bubl.module.model.graph.GraphElementPojo;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.FriendlyResourceFromExtractorQueryRow;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.IdentificationQueryBuilder;
 
 import java.util.Map;
 
@@ -27,11 +28,6 @@ public class GraphElementFromExtractorQueryRow {
     }
 
     public GraphElementPojo build() {
-        GraphElementPojo graphElement = init();
-        return graphElement;
-    }
-
-    private GraphElementPojo init() {
         return new GraphElementPojo(
                 FriendlyResourceFromExtractorQueryRow.usingRowAndNodeKey(
                         row,
@@ -39,7 +35,7 @@ public class GraphElementFromExtractorQueryRow {
                 ).build(),
                 IdentificationsFromExtractorQueryRow.usingRowAndKey(
                         row,
-                        key
+                        IdentificationQueryBuilder.IDENTIFICATION_QUERY_KEY
                 ).build()
         );
     }

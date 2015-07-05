@@ -30,13 +30,18 @@ import java.util.Map;
 import static org.neo4j.helpers.collection.MapUtil.map;
 
 public class Neo4jSubGraphExtractor {
+    public final static String
+            INCLUDED_VERTEX_QUERY_KEY = "iv",
+            INCLUDED_EDGE_QUERY_KEY = "ie",
+            GRAPH_ELEMENT_QUERY_KEY = "ge";
+
     QueryEngine engine;
     URI centerVertexUri;
     Integer depth;
     Neo4jVertexFactory vertexFactory;
     private SubGraphPojo subGraph = SubGraphPojo.withVerticesAndEdges(
-            new HashMap<URI, VertexInSubGraphPojo>(),
-            new HashMap<URI, EdgePojo>()
+            new HashMap<>(),
+            new HashMap<>()
     );
 
     @AssistedInject
@@ -59,11 +64,11 @@ public class Neo4jSubGraphExtractor {
         );
         for (Map<String, Object> row : result) {
             if (isVertexFromRow(row)) {
-                addOrUpdateVertexUsingRow(
+                addVertexUsingRow(
                         row
                 );
             } else {
-                addOrUpdateEdgeUsingRow(
+                addEdgeUsingRow(
                         row
                 );
             }
@@ -75,20 +80,11 @@ public class Neo4jSubGraphExtractor {
         return row.get("type").toString().contains("vertex");
     }
 
-    private VertexInSubGraph addOrUpdateVertexUsingRow(Map<String, Object> row) {
-        URI uri = URI.create(
-                row.get("in_path_node.uri").toString()
-        );
-        VertexInSubGraph vertex;
-        if (subGraph.vertices().containsKey(uri)) {
-            vertex = subGraph.vertexWithIdentifier(uri);
-            new VertexFromExtractorQueryRow(row, "in_path_node").update(
-                    (VertexInSubGraphPojo) vertex
-            );
-            return vertex;
-        }
-        vertex = new VertexFromExtractorQueryRow(row, "in_path_node").build();
-
+    private VertexInSubGraph addVertexUsingRow(Map<String, Object> row) {
+        VertexInSubGraph vertex = new VertexFromExtractorQueryRow(
+                row,
+                Neo4jSubGraphExtractor.GRAPH_ELEMENT_QUERY_KEY
+        ).build();
         subGraph.addVertex(
                 (VertexInSubGraphPojo) vertex
         );
@@ -100,19 +96,20 @@ public class Neo4jSubGraphExtractor {
                 "MATCH path=start_node<-[:" +
                 Relationships.SOURCE_VERTEX +
                 "|" + Relationships.DESTINATION_VERTEX + "*0.." + depth * 2 +
-                "]->in_path_node " +
-                "OPTIONAL MATCH (in_path_node)-[:HAS_INCLUDED_VERTEX]->(in_path_node_included_vertex) " +
-                "OPTIONAL MATCH (in_path_node)-[:HAS_INCLUDED_EDGE]->(in_path_node_included_edge) " +
+                "]->" + Neo4jSubGraphExtractor.GRAPH_ELEMENT_QUERY_KEY + " " +
+                "OPTIONAL MATCH (" + GRAPH_ELEMENT_QUERY_KEY + ")-[:HAS_INCLUDED_VERTEX]->(" + INCLUDED_VERTEX_QUERY_KEY + ") " +
+                "OPTIONAL MATCH(" + GRAPH_ELEMENT_QUERY_KEY + ")-[:HAS_INCLUDED_EDGE]->(" + INCLUDED_EDGE_QUERY_KEY + ") " +
+                "OPTIONAL MATCH ("+GRAPH_ELEMENT_QUERY_KEY+")-[" + IdentificationQueryBuilder.IDENTIFICATION_RELATION_QUERY_KEY + ":" + Relationships.IDENTIFIED_TO + "]->(" + IdentificationQueryBuilder.IDENTIFICATION_QUERY_KEY + ") " +
                 "RETURN " +
-                vertexAndEdgeCommonQueryPart("in_path_node") +
-                vertexReturnQueryPart("in_path_node") +
-                edgeReturnQueryPart("in_path_node") +
-                "in_path_node.type as type";
+                vertexAndEdgeCommonQueryPart(GRAPH_ELEMENT_QUERY_KEY) +
+                vertexReturnQueryPart(GRAPH_ELEMENT_QUERY_KEY) +
+                edgeReturnQueryPart(GRAPH_ELEMENT_QUERY_KEY) +
+                IdentificationQueryBuilder.identificationReturnQueryPart() +
+                Neo4jSubGraphExtractor.GRAPH_ELEMENT_QUERY_KEY + ".type as type";
     }
 
-    private String vertexAndEdgeCommonQueryPart(String prefix){
-        return FriendlyResourceQueryBuilder.returnQueryPartUsingPrefix(prefix) +
-                IdentificationQueryBuilder.identificationReturnQueryPart(prefix);
+    private String vertexAndEdgeCommonQueryPart(String prefix) {
+        return FriendlyResourceQueryBuilder.returnQueryPartUsingPrefix(prefix);
     }
 
     private String edgeReturnQueryPart(String prefix) {
@@ -121,17 +118,36 @@ public class Neo4jSubGraphExtractor {
 
     private String vertexReturnQueryPart(String prefix) {
         return vertexSpecificPropertiesQueryPartUsingPrefix(prefix) +
-                includedElementQueryPart(prefix + "_included_vertex") +
-                includedEdgeQueryPart(prefix) +
+                includedVertexQueryPart(INCLUDED_VERTEX_QUERY_KEY) +
+                includedEdgeQueryPart(INCLUDED_EDGE_QUERY_KEY) +
                 FriendlyResourceQueryBuilder.imageReturnQueryPart(prefix);
     }
 
-    private static String includedEdgeQueryPart(String prefix) {
-        String key = prefix + "_included_edge";
-        return edgeSpecificPropertiesQueryPartUsingPrefix(key) +
-                includedElementQueryPart(
-                        key
-                );
+    private static String includedVertexQueryPart(String key) {
+        return "COLLECT([" +
+                QueryUtils.getPropertyUsingContainerNameQueryPart(
+                        key,
+                        Neo4jUserGraph.URI_PROPERTY_NAME
+                ) +
+                QueryUtils.getLastPropertyUsingContainerNameQueryPart(
+                        key,
+                        Neo4jFriendlyResource.props.label.toString()
+                ) +
+                "]) as " + key + ", ";
+    }
+
+    private static String includedEdgeQueryPart(String key) {
+        return "COLLECT([" +
+                edgeSpecificPropertiesQueryPartUsingPrefix(key) +
+                QueryUtils.getPropertyUsingContainerNameQueryPart(
+                        key,
+                        Neo4jUserGraph.URI_PROPERTY_NAME
+                ) +
+                QueryUtils.getLastPropertyUsingContainerNameQueryPart(
+                        key,
+                        Neo4jFriendlyResource.props.label.toString()
+                ) +
+                "]) as " + key + ", ";
     }
 
     public static String includedElementQueryPart(String key) {
@@ -170,7 +186,7 @@ public class Neo4jSubGraphExtractor {
                 );
     }
 
-    private Edge addOrUpdateEdgeUsingRow(Map<String, Object> row) {
+    private Edge addEdgeUsingRow(Map<String, Object> row) {
         EdgePojo edge = (EdgePojo) EdgeFromExtractorQueryRow.usingRow(
                 row
         ).build();

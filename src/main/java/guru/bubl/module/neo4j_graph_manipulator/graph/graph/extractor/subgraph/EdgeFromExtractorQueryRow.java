@@ -27,7 +27,7 @@ public class EdgeFromExtractorQueryRow {
     protected EdgeFromExtractorQueryRow(Map<String, Object> row) {
         this(
                 row,
-                "in_path_node"
+                Neo4jSubGraphExtractor.GRAPH_ELEMENT_QUERY_KEY
         );
     }
 

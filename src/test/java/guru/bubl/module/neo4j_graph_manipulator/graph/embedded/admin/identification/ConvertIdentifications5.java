@@ -35,7 +35,7 @@ public class ConvertIdentifications5 extends AdminOperationsOnDatabase {
         String query = "START  graph_element=node(*) " +
                 "MATCH graph_element-[identification_relation:" +
                 Relationships.IDENTIFIED_TO + "|" +
-                Relationships.TYPE + "|" +
+                Relationships.HAS_TYPE + "|" +
                 Relationships.SAME_AS + "]->identification " +
                 "RETURN graph_element.uri as graph_element_uri, identification.uri as identification_uri, " +
                 "type(identification_relation) as in_path_node_identification_type";
@@ -69,7 +69,7 @@ public class ConvertIdentifications5 extends AdminOperationsOnDatabase {
             if (identificationTypeStr.equals(Relationships.SAME_AS.toString())) {
                 identificationType = IdentificationType.same_as;
             } else if (
-                    identificationTypeStr.equals(Relationships.TYPE.toString())
+                    identificationTypeStr.equals(Relationships.HAS_TYPE.toString())
                     ) {
                 identificationType = IdentificationType.type;
             } else if (

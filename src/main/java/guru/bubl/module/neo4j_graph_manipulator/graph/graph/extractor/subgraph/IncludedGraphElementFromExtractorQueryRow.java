@@ -4,9 +4,11 @@
 
 package guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph;
 
+import com.sun.org.apache.xpath.internal.operations.Bool;
 import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jFriendlyResource;
 
 import java.net.URI;
+import java.util.List;
 import java.util.Map;
 
 public class IncludedGraphElementFromExtractorQueryRow {
@@ -23,11 +25,6 @@ public class IncludedGraphElementFromExtractorQueryRow {
         this.key = key;
     }
 
-    public Boolean isInRow() {
-        return row.get(
-                key + ".uri"
-        ) != null;
-    }
 
     public URI getUri() {
         return URI.create(
@@ -37,11 +34,19 @@ public class IncludedGraphElementFromExtractorQueryRow {
         );
     }
 
+
+    public Boolean hasResult(){
+        return row.get(key) != null;
+    }
+
+    public List<List<String>> getList(){
+        return (List) row.get(key);
+    }
+
     public String getLabel() {
         String labelKey = key+ "." + Neo4jFriendlyResource.props.label;
         return row.get(
                 labelKey
         ) != null ? row.get(labelKey).toString() : "";
     }
-
 }

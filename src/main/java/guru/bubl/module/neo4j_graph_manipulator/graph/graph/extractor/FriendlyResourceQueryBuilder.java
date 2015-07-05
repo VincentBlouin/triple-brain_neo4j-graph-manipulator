@@ -34,9 +34,9 @@ public class FriendlyResourceQueryBuilder {
                         );
     }
 
-    public static String imageReturnQueryPart(String prefix) {
+    public static String imageReturnQueryPart(String key) {
         return QueryUtils.getPropertyUsingContainerNameQueryPart(
-                prefix,
+                key,
                 Neo4jImages.props.images.name()
         );
     }

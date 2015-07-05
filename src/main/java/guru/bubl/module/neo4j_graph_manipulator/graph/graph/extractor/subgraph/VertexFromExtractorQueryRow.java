@@ -13,6 +13,7 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.Neo4jVertexIn
 
 import java.net.URI;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class VertexFromExtractorQueryRow {
@@ -30,86 +31,84 @@ public class VertexFromExtractorQueryRow {
     }
 
     public VertexInSubGraph build() {
-        VertexInSubGraphPojo vertex = init();
-        update(vertex);
-        return vertex;
-    }
-
-    private VertexInSubGraphPojo init() {
         return new VertexInSubGraphPojo(
                 GraphElementFromExtractorQueryRow.usingRowAndKey(
                         row,
                         keyPrefix
                 ).build(),
                 getNumberOfConnectedEdges(),
-                new HashMap<URI, VertexInSubGraphPojo>(),
-                new HashMap<URI, EdgePojo>(),
+                buildIncludedVertices(),
+                buildIncludedEdges(),
                 getSuggestions(),
                 getIsPublic()
         );
     }
 
-    public void update(VertexInSubGraphPojo vertex) {
-        updateIncludedVertices(vertex);
-        updateIncludedEdges(vertex);
-    }
-
-    private void updateIncludedVertices(VertexInSubGraphPojo vertex) {
+    private Map<URI, VertexInSubGraphPojo> buildIncludedVertices() {
         IncludedGraphElementFromExtractorQueryRow includedVertexExtractor = new IncludedGraphElementFromExtractorQueryRow(
                 row,
-                keyPrefix + "_included_vertex"
+                Neo4jSubGraphExtractor.INCLUDED_VERTEX_QUERY_KEY
         );
-        if (includedVertexExtractor.isInRow()) {
-            URI uri = includedVertexExtractor.getUri();
-            if (!vertex.getIncludedVertices().containsKey(uri)) {
-                vertex.getIncludedVertices().put(
-                        uri,
-                        new VertexInSubGraphPojo(
-                                uri,
-                                includedVertexExtractor.getLabel()
-                        )
-                );
-            }
+        Map<URI, VertexInSubGraphPojo> includedVertices = new HashMap<>();
+        if(!includedVertexExtractor.hasResult()){
+            return includedVertices;
         }
+
+        for(List<String> properties:includedVertexExtractor.getList()){
+            if(properties.get(0) == null){
+                return includedVertices;
+            }
+            URI uri = URI.create(properties.get(0));
+            includedVertices.put(
+                    uri,
+                    new VertexInSubGraphPojo(
+                            uri,
+                            properties.get(1)
+                    )
+            );
+        }
+        return includedVertices;
     }
 
-    private void updateIncludedEdges(VertexInSubGraphPojo vertex) {
-        String key = keyPrefix + "_included_edge";
+    private Map<URI, EdgePojo> buildIncludedEdges() {
         IncludedGraphElementFromExtractorQueryRow includedEdgeExtractor = new IncludedGraphElementFromExtractorQueryRow(
                 row,
-                key
+                Neo4jSubGraphExtractor.INCLUDED_EDGE_QUERY_KEY
         );
-        if (includedEdgeExtractor.isInRow()) {
-            URI uri = includedEdgeExtractor.getUri();
-            if (vertex.getIncludedEdges().containsKey(uri)) {
-                return;
+        Map<URI, EdgePojo> includedEdges = new HashMap<>();
+        if(!includedEdgeExtractor.hasResult()){
+            return includedEdges;
+        }
+        for(List<String> properties:includedEdgeExtractor.getList()){
+            if(properties.get(0) == null){
+                return includedEdges;
             }
+            URI sourceVertexUri = URI.create(properties.get(0));
+            URI destinationVertexUri = URI.create(properties.get(1));
+            URI edgeUri = URI.create(properties.get(2));
+            String label = properties.get(3);
             EdgePojo edge = new EdgePojo(
-                    uri,
-                    includedEdgeExtractor.getLabel()
-            );
-            EdgeFromExtractorQueryRow edgeExtractor = EdgeFromExtractorQueryRow.usingRowAndKey(
-                    row,
-                    key
+                    edgeUri,
+                    label
             );
             edge.setSourceVertex(
                     new VertexInSubGraphPojo(
-                            edgeExtractor.getSourceVertexUri(),
+                            sourceVertexUri,
                             ""
                     )
             );
-
             edge.setDestinationVertex(
                     new VertexInSubGraphPojo(
-                            edgeExtractor.getDestinationVertexUri(),
+                            destinationVertexUri,
                             ""
                     )
             );
-            vertex.getIncludedEdges().put(
-                    uri,
+            includedEdges.put(
+                    edgeUri,
                     edge
             );
         }
+        return includedEdges;
     }
 
     private Integer getNumberOfConnectedEdges() {

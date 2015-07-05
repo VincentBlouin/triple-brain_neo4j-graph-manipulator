@@ -21,6 +21,11 @@ import java.util.Set;
 
 public class Neo4jIdentification implements IdentificationOperator, Neo4jOperator {
 
+    public enum props{
+        external_uri,
+        identification_type
+    }
+
     Neo4jFriendlyResource friendlyResourceOperator;
     QueryEngine queryEngine;
 
