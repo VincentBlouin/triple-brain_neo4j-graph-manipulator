@@ -6,6 +6,7 @@ package guru.bubl.module.neo4j_graph_manipulator.graph.graph;
 
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
+import guru.bubl.module.common_utils.NoExRun;
 import org.neo4j.rest.graphdb.query.QueryEngine;
 import org.neo4j.rest.graphdb.util.QueryResult;
 import guru.bubl.module.model.User;
@@ -25,7 +26,11 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph.N
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.schema.SchemaFactory;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.Neo4jVertexFactory;
 
+import javax.inject.Inject;
 import java.net.URI;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.Statement;
 import java.util.Map;
 
 import static guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jRestApiUtils.map;
@@ -41,6 +46,9 @@ public class Neo4jUserGraph implements UserGraph {
     private Neo4jSubGraphExtractorFactory subGraphExtractorFactory;
     private Neo4jEdgeFactory edgeFactory;
     private Neo4jSchemaExtractorFactory schemaExtractorFactory;
+
+    @Inject
+    Connection connection;
 
     @AssistedInject
     protected Neo4jUserGraph(
@@ -73,12 +81,15 @@ public class Neo4jUserGraph implements UserGraph {
 
     @Override
     public Boolean haveElementWithId(URI uri) {
-        QueryResult<Map<String, Object>> result = queryEngine.query(
-                "START n=node:node_auto_index('uri:" + uri + "') "
-                        + "return n.uri",
-                map()
+        String query = String.format(
+                "START n=node:node_auto_index('uri:%s') return n.uri as uri",
+                uri
         );
-        return result.iterator().hasNext();
+        return NoExRun.wrap(() ->
+                        connection.createStatement().executeQuery(
+                                query
+                        ).next()
+        ).get();
     }
 
     @Override
@@ -161,18 +172,22 @@ public class Neo4jUserGraph implements UserGraph {
     }
 
 
-    private VertexOperator getAnyVertex(){
-        QueryResult<Map<String, Object>> result = queryEngine.query(
-                "START n=node:node_auto_index(" +
-                        "'type:" + GraphElementType.vertex+ " AND " +
-                        "owner:" + user.username() + 
-                        "') "
-                        + "return n.uri limit 1",
-                map()
+    private VertexOperator getAnyVertex() {
+        String query = String.format(
+                "START n=node:node_auto_index('type:%s AND owner:%s') return n.uri limit 1",
+                GraphElementType.vertex,
+                user.username()
         );
-        URI uri = URI.create(
-                result.iterator().next().get("n.uri").toString()
-        );
+        URI uri = NoExRun.wrap(() -> {
+            Statement statement = connection.createStatement();
+            ResultSet rs = statement.executeQuery(
+                    query
+            );
+            rs.next();
+            return URI.create(
+                    rs.getString("n.uri")
+            );
+        }).get();
         return vertexFactory.withUri(uri);
     }
 }

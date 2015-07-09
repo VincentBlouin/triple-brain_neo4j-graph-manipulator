@@ -6,6 +6,15 @@ package guru.bubl.module.neo4j_graph_manipulator.graph;
 
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
+import guru.bubl.module.common_utils.NamedParameterStatement;
+import guru.bubl.module.common_utils.NoExRun;
+import guru.bubl.module.common_utils.Uris;
+import guru.bubl.module.model.FriendlyResource;
+import guru.bubl.module.model.Image;
+import guru.bubl.module.model.UserUris;
+import guru.bubl.module.model.graph.FriendlyResourceOperator;
+import guru.bubl.module.model.graph.FriendlyResourcePojo;
+import guru.bubl.module.model.graph.GraphElementType;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.Neo4jUserGraph;
 import guru.bubl.module.neo4j_graph_manipulator.graph.image.Neo4jImageFactory;
 import guru.bubl.module.neo4j_graph_manipulator.graph.image.Neo4jImages;
@@ -15,21 +24,16 @@ import org.neo4j.graphdb.Relationship;
 import org.neo4j.rest.graphdb.RestAPI;
 import org.neo4j.rest.graphdb.query.QueryEngine;
 import org.neo4j.rest.graphdb.util.QueryResult;
-import guru.bubl.module.common_utils.Uris;
-import guru.bubl.module.model.FriendlyResource;
-import guru.bubl.module.model.Image;
-import guru.bubl.module.model.UserUris;
-import guru.bubl.module.model.graph.FriendlyResourceOperator;
-import guru.bubl.module.model.graph.FriendlyResourcePojo;
-import guru.bubl.module.model.graph.GraphElementType;
 
+import javax.inject.Inject;
 import java.net.URI;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-
-import static guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jRestApiUtils.map;
 
 public class Neo4jFriendlyResource implements FriendlyResourceOperator, Neo4jOperator {
 
@@ -43,7 +47,11 @@ public class Neo4jFriendlyResource implements FriendlyResourceOperator, Neo4jOpe
         type
     }
 
-    public static final String LAST_MODIFICATION_QUERY_PART = " n." + props.last_modification_date + "= { " + props.last_modification_date + "} ";
+    public static final String LAST_MODIFICATION_QUERY_PART = String.format(
+            " n.%s=@%s ",
+            props.last_modification_date,
+            props.last_modification_date
+    );
 
     public static Map<String, Object> addUpdatedLastModificationDate(Map<String, Object> map) {
         map.put(
@@ -61,6 +69,9 @@ public class Neo4jFriendlyResource implements FriendlyResourceOperator, Neo4jOpe
     protected RestAPI restApi;
 
     protected Neo4jImages images;
+
+    @Inject
+    Connection connection;
 
     @AssistedInject
     protected Neo4jFriendlyResource(
@@ -126,30 +137,39 @@ public class Neo4jFriendlyResource implements FriendlyResourceOperator, Neo4jOpe
 
     @Override
     public String label() {
-        QueryResult<Map<String, Object>> result = queryEngine.query(
-                queryPrefix() +
-                        "return n." + props.label.toString() + " as label",
-                Neo4jRestApiUtils.map()
-        );
-        Object label = result.iterator().next().get("label");
-        return label == null ?
-                "" :
-                label.toString();
+        return NoExRun.wrap(() -> {
+            String query = String.format(
+                    "%s return n.%s as label",
+                    queryPrefix(),
+                    props.label.toString()
+            );
+            Statement statement = connection.createStatement();
+            ResultSet rs = statement.executeQuery(query);
+            rs.next();
+            String label = rs.getString("label");
+            return label == null ?
+                    "" : label;
+        }).get();
     }
 
     @Override
     public void label(String label) {
-        String query = queryPrefix() +
-                " SET n." + props.label + "= {label}, " +
-                LAST_MODIFICATION_QUERY_PART;
+        String query = String.format(
+                "%s SET n.%s=@label, %s",
+                queryPrefix(),
+                Neo4jFriendlyResource.props.label,
+                LAST_MODIFICATION_QUERY_PART
+        );
         Map<String, Object> props = Neo4jRestApiUtils.map(
                 "label", label
         );
         addUpdatedLastModificationDate(props);
-        queryEngine.query(
-                query,
-                props
-        );
+        NoExRun.wrap(() -> {
+            NamedParameterStatement statement = new NamedParameterStatement(connection, query);
+            statement.setString("label", label);
+            setLastUpdatedDateInStatement(statement);
+            return statement.execute();
+        }).get();
     }
 
     @Override
@@ -164,24 +184,39 @@ public class Neo4jFriendlyResource implements FriendlyResourceOperator, Neo4jOpe
 
     @Override
     public String comment() {
-        String query = queryPrefix() + "return n."
-                + props.comment + " as comment";
-        QueryResult<Map<String, Object>> result = queryEngine.query(
-                query,
-                Neo4jRestApiUtils.map()
+        String query = String.format(
+                "%sreturn n.%s as comment",
+                queryPrefix(),
+                props.comment
         );
-        Iterator<Map<String, Object>> it = result.iterator();
-        Object comment = it.next().get("comment");
-        return null == comment ?
-                "" :
-                comment.toString();
+        return NoExRun.wrap(() -> {
+            Statement statement = connection.createStatement();
+            ResultSet rs = statement.executeQuery(query);
+            rs.next();
+            String comment = rs.getString("comment");
+            return comment == null ?
+                    "" : comment;
+        }).get();
     }
 
     @Override
     public void comment(String comment) {
-        String query = queryPrefix() + "SET n."
-                + props.comment +
-                "= {comment}, " + LAST_MODIFICATION_QUERY_PART;
+        String query = String.format(
+                "%s SET n.%s=@comment, %s",
+                queryPrefix(),
+                props.comment,
+                LAST_MODIFICATION_QUERY_PART
+        );
+        Map<String, Object> props = Neo4jRestApiUtils.map(
+                "comment", comment
+        );
+        addUpdatedLastModificationDate(props);
+        NoExRun.wrap(() -> {
+            NamedParameterStatement statement = new NamedParameterStatement(connection, query);
+            statement.setString("comment", comment);
+            setLastUpdatedDateInStatement(statement);
+            return statement.execute();
+        }).get();
         queryEngine.query(
                 query,
                 addUpdatedLastModificationDate(Neo4jRestApiUtils.map(
@@ -215,7 +250,7 @@ public class Neo4jFriendlyResource implements FriendlyResourceOperator, Neo4jOpe
                 values
         );
         queryEngine.query(
-                "create (n:"+GraphElementType.resource+" {props})", Neo4jRestApiUtils.wrap(props)
+                "create (n:" + GraphElementType.resource + " {props})", Neo4jRestApiUtils.wrap(props)
         );
     }
 
@@ -256,22 +291,44 @@ public class Neo4jFriendlyResource implements FriendlyResourceOperator, Neo4jOpe
         String query = queryPrefix() +
                 " SET " +
                 LAST_MODIFICATION_QUERY_PART;
-        queryEngine.query(
-                query,
-                addUpdatedLastModificationDate(Neo4jRestApiUtils.map())
-        );
+        NoExRun.wrap(() -> {
+            NamedParameterStatement statement = new NamedParameterStatement(
+                    connection,
+                    query
+            );
+            setLastUpdatedDateInStatement(statement);
+            return statement.execute();
+        });
     }
 
     @Override
     public Node getNode() {
         if (null == node) {
-            QueryResult<Map<String, Object>> result = queryEngine.query(
-                    queryPrefix() + "return n",
-                    Neo4jRestApiUtils.map()
-            );
-            node = (Node) result.iterator().next().get("n");
+            node = NoExRun.wrap(()->{
+                ResultSet rs = connection.createStatement().executeQuery(
+                        queryPrefix() + "return n"
+                );
+                rs.next();
+                return (Node) rs.getObject("n");
+            }).get();
         }
         return node;
+    }
+
+    @Override
+    public void setNamedCreationProperties(NamedParameterStatement statement) throws SQLException {
+        statement.setString(
+                Neo4jUserGraph.URI_PROPERTY_NAME,
+                uri().toString()
+        );
+        statement.setString(
+                props.owner.name(),
+                UserUris.ownerUserNameFromUri(uri())
+        );
+        /*
+        *  not setting creation date and last modification date because it
+        *  can be easily done in neo4j using timestamp()
+        */
     }
 
     @Override
@@ -302,13 +359,26 @@ public class Neo4jFriendlyResource implements FriendlyResourceOperator, Neo4jOpe
 
     @Override
     public String queryPrefix() {
-        return "START " + addToSelectUsingVariableName(
-                "n"
-        ) + " ";
+        return String.format(
+                "START %s ",
+                addToSelectUsingVariableName(
+                        "n"
+                )
+        );
+    }
+
+    public void setLastUpdatedDateInStatement(NamedParameterStatement statement) throws SQLException {
+        statement.setLong(
+                props.last_modification_date.name(),
+                new Date().getTime()
+        );
     }
 
     public String addToSelectUsingVariableName(String variableName) {
-        return variableName + "=node:node_auto_index('uri:" + uri + "') ";
+        return String.format(
+                "%s=node:node_auto_index('uri:%s') ",
+                variableName,
+                uri
+        );
     }
-
 }

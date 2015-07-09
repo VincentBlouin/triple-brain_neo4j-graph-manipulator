@@ -22,22 +22,22 @@ import java.util.*;
 @Ignore
 public class ConvertSuggestionsToJson extends AdminOperationsOnDatabase {
 
-    @Inject
-    WholeGraph wholeGraph;
-
-    @Test
-    public void go(){
-        Injector injector = Guice.createInjector(
-                Neo4jModule.forTestingUsingRest()
-        );
-        injector.injectMembers(this);
-        Iterator<VertexInSubGraphOperator> vertexIt = wholeGraph.getAllVertices();
-        while(vertexIt.hasNext()){
-            VertexOperator vertex = vertexIt.next();
-            Map<URI, SuggestionPojo> suggestions = new HashMap<>();
-            Map<URI, SuggestionPojo> suggestionsMap = vertex.getSuggestions();
-            suggestions.putAll(suggestionsMap);
-            vertex.setSuggestions(suggestions);
-        }
-    }
+//    @Inject
+//    WholeGraph wholeGraph;
+//
+//    @Test
+//    public void go(){
+//        Injector injector = Guice.createInjector(
+//                Neo4jModule.forTestingUsingRest()
+//        );
+//        injector.injectMembers(this);
+//        Iterator<VertexInSubGraphOperator> vertexIt = wholeGraph.getAllVertices();
+//        while(vertexIt.hasNext()){
+//            VertexOperator vertex = vertexIt.next();
+//            Map<URI, SuggestionPojo> suggestions = new HashMap<>();
+//            Map<URI, SuggestionPojo> suggestionsMap = vertex.getSuggestions();
+//            suggestions.putAll(suggestionsMap);
+//            vertex.setSuggestions(suggestions);
+//        }
+//    }
 }

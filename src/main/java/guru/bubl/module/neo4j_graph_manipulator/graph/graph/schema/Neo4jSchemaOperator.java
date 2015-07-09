@@ -6,6 +6,7 @@ package guru.bubl.module.neo4j_graph_manipulator.graph.graph.schema;
 
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
+import guru.bubl.module.common_utils.NamedParameterStatement;
 import guru.bubl.module.model.graph.*;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.Neo4jGraphElementFactory;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.Neo4jVertexInSubGraphOperator;
@@ -21,6 +22,7 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.Relationships;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.Neo4jGraphElementOperator;
 
 import java.net.URI;
+import java.sql.SQLException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -135,6 +137,21 @@ public class Neo4jSchemaOperator implements SchemaOperator, Neo4jOperator {
                 newMap
         );
         return newMap;
+    }
+
+    @Override
+    public void setNamedCreationProperties(NamedParameterStatement statement) throws SQLException {
+        statement.setString(
+                Neo4jFriendlyResource.props.type.name(),
+                GraphElementType.schema.name()
+        );
+        statement.setObject(
+                Neo4jVertexInSubGraphOperator.props.is_public.name(),
+                true
+        );
+        graphElementOperator.setNamedCreationProperties(
+                statement
+        );
     }
 
     @Override

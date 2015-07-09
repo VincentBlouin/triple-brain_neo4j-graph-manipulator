@@ -6,6 +6,8 @@ package guru.bubl.module.neo4j_graph_manipulator.graph.graph;
 
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
+import guru.bubl.module.common_utils.NamedParameterStatement;
+import guru.bubl.module.common_utils.NoExRun;
 import guru.bubl.module.model.graph.*;
 import guru.bubl.module.model.json.ImageJson;
 import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jFriendlyResource;
@@ -25,14 +27,18 @@ import guru.bubl.module.model.Image;
 import guru.bubl.module.model.UserUris;
 import guru.bubl.module.model.json.IdentificationJson;
 
+import javax.inject.Inject;
 import java.net.URI;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.*;
 
 import static guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jRestApiUtils.map;
 
 public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOperator {
 
-    public enum props{
+    public enum props {
         identifications
     }
 
@@ -42,6 +48,9 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
     protected QueryEngine<Map<String, Object>> queryEngine;
     protected RestAPI restApi;
     protected Neo4jIdentificationFactory identificationFactory;
+
+    @Inject
+    protected Connection connection;
 
     @AssistedInject
     protected Neo4jGraphElementOperator(
@@ -201,75 +210,98 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
                 new UserUris(getOwnerUsername()).generateIdentificationUri()
         );
         final String queryPrefix = this.identification.queryPrefix();
-        QueryResult<Map<String, Object>> results = restApi.executeBatch(new BatchCallback<QueryResult<Map<String, Object>>>() {
-            @Override
-            public QueryResult<Map<String, Object>> recordBatch(RestAPI restApi) {
-                QueryResult<Map<String, Object>> results = queryEngine.query(
-                        queryPrefix +
-                                "MERGE (f {" +
-                                Neo4jIdentification.props.external_uri + ": {external_uri}, " +
-                                Neo4jFriendlyResource.props.owner + ": {owner}" +
-                                "}) " +
-                                "ON CREATE SET " +
-                                "f.uri = {uri}, " +
-                                "f." + Neo4jFriendlyResource.props.type + "={type}, " +
-                                "f." + Neo4jFriendlyResource.props.label + "={label}, " +
-                                "f." + Neo4jFriendlyResource.props.comment + "={comment}, " +
-                                "f." + Neo4jImages.props.images + "={images}, " +
-                                "f." + Neo4jFriendlyResource.props.creation_date + "=timestamp(), " +
-                                "f." + Neo4jFriendlyResource.props.last_modification_date + "=timestamp() " +
-                                "CREATE UNIQUE " +
-                                "n-[r:" + Relationships.IDENTIFIED_TO + "]->f " +
-                                "SET r.type={type}" +
-                                "RETURN " +
-                                "f.uri as uri, " +
-                                "f.external_uri as external_uri, " +
-                                "f." + Neo4jFriendlyResource.props.label + " as label, " +
-                                "f." + Neo4jFriendlyResource.props.comment + " as comment, " +
-                                "f." + Neo4jImages.props.images + " as images, " +
-                                "f." + Neo4jFriendlyResource.props.creation_date + " as creation_date, " +
-                                "f." + Neo4jFriendlyResource.props.last_modification_date + " as last_modification_date",
-                        neo4jIdentification.addCreationProperties(
-                                map(
-                                        "label",
-                                        identification.label(),
-                                        "comment",
-                                        identification.comment(),
-                                        Neo4jImages.props.images.name(),
-                                        ImageJson.toJsonArray(identification.images()),
-                                        "external_uri",
-                                        identification.getExternalResourceUri().toString(),
-                                        "type",
-                                        identificationType.name()
-                                )
-                        )
-                );
-                updateLastModificationDate();
-                return results;
-            }
-        });
-        Map<String, Object> result = results.iterator().next();
-        return new IdentificationPojo(
-                URI.create(
-                        result.get("external_uri").toString()
-                ),
-                new FriendlyResourcePojo(
-                        URI.create(
-                                result.get("uri").toString()
-                        ),
-                        result.get("label") == null ?
-                                "" : result.get("label").toString(),
-                        result.get("images") == null ?
-                                new HashSet<>() : ImageJson.fromJson(result.get("images").toString()),
-                        result.get("comment") == null ? "" : result.get("comment").toString(),
-                        new Date(
-                                (Long) result.get("creation_date")
-                        ),
-                        new Date(
-                                (Long) result.get("last_modification_date")
-                        )
-                )
+        String query = String.format(
+                "%sMERGE (f {%s: @external_uri, %s: @owner}) " +
+                        "ON CREATE SET f.uri = @uri, " +
+                        "f.%s=@type, " +
+                        "f.%s=@label, " +
+                        "f.%s=@comment, " +
+                        "f.%s=@images, " +
+                        "f.%s=@%s, " +
+                        "f.%s=timestamp(), " +
+                        "f.%s=timestamp() " +
+                        "CREATE UNIQUE n-[r:%s]->f " +
+                        "SET r.type=@type " +
+                        "RETURN f.uri as uri, " +
+                        "f.external_uri as external_uri, " +
+                        "f.%s as label, " +
+                        "f.%s as comment, " +
+                        "f.%s as images, " +
+                        "f.%s as creation_date, " +
+                        "f.%s as last_modification_date",
+                queryPrefix,
+                Neo4jIdentification.props.external_uri,
+                Neo4jFriendlyResource.props.owner,
+                Neo4jFriendlyResource.props.type,
+                Neo4jFriendlyResource.props.label,
+                Neo4jFriendlyResource.props.comment,
+                Neo4jImages.props.images,
+                Neo4jFriendlyResource.props.type,
+                Neo4jFriendlyResource.props.type,
+                Neo4jFriendlyResource.props.creation_date,
+                Neo4jFriendlyResource.props.last_modification_date,
+                Relationships.IDENTIFIED_TO,
+                Neo4jFriendlyResource.props.label,
+                Neo4jFriendlyResource.props.comment,
+                Neo4jImages.props.images,
+                Neo4jFriendlyResource.props.creation_date,
+                Neo4jFriendlyResource.props.last_modification_date
         );
+        //todo batch
+        return NoExRun.wrap(() -> {
+            NamedParameterStatement statement = new NamedParameterStatement(
+                    connection,
+                    query
+            );
+            statement.setString(
+                    "label",
+                    identification.label()
+            );
+            statement.setString(
+                    "comment",
+                    identification.comment()
+            );
+            statement.setString(
+                    Neo4jImages.props.images.name(),
+                    ImageJson.toJsonArray(identification.images())
+            );
+            statement.setString(
+                    "external_uri",
+                    identification.getExternalResourceUri().toString()
+            );
+            statement.setString(
+                    "type",
+                    identificationType.name()
+            );
+            neo4jIdentification.setNamedCreationProperties(
+                    statement
+            );
+            ResultSet rs = statement.executeQuery();
+            rs.next();
+            updateLastModificationDate();
+            return new IdentificationPojo(
+                    URI.create(
+                            rs.getString("external_uri")
+                    ),
+                    new FriendlyResourcePojo(
+                            URI.create(
+                                    rs.getString("uri")
+                            ),
+                            rs.getString("label") == null ?
+                                    "" : rs.getString("label"),
+                            rs.getString("images") == null ?
+                                    new HashSet<>() : ImageJson.fromJson(rs.getString("images")),
+                            rs.getString("comment") == null ? "" : rs.getString("comment").toString(),
+                            new Date(
+                                    rs.getLong("creation_date")
+                            ),
+                            new Date(
+                                    rs.getLong("last_modification_date")
+                            )
+                    )
+            );
+        }).get();
+        //todo endbatch
     }
 
     @Override
@@ -289,6 +321,7 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
 
     @Override
     public void removeIdentification(Identification friendlyResource) {
+        //todo batch
         Node identificationAsNode = identificationFactory.withUri(
                 friendlyResource.uri()
         ).getNode();
@@ -299,6 +332,7 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
             }
         }
         updateLastModificationDate();
+        //todo end batch
     }
 
     @Override
@@ -315,37 +349,36 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
 
 
     private Map<URI, Identification> getIdentificationsUsingRelation(IdentificationType identificationType) {
-        QueryResult<Map<String, Object>> results = queryEngine.query(
-                queryPrefix() +
-                        "MATCH " +
-                        "n-[r:" + Relationships.IDENTIFIED_TO + "]->identification " +
-                        "WHERE r.type='" + identificationType + "' " +
-                        "RETURN " +
-                        "identification.uri as uri, " +
-                        "identification.external_uri as external_uri",
-                map()
+        String query = String.format(
+                "%sMATCH n-[r:%s]->identification WHERE r.type='%s' RETURN identification.uri as uri, identification.external_uri as external_uri",
+                queryPrefix(),
+                Relationships.IDENTIFIED_TO,
+                identificationType
         );
-        Iterator<Map<String, Object>> iterator = results.iterator();
         Map<URI, Identification> identifications = new HashMap<>();
-        while (iterator.hasNext()) {
-            Map<String, Object> result = iterator.next();
-            URI uri = URI.create(
-                    result.get("uri").toString()
+        return NoExRun.wrap(() -> {
+            ResultSet rs = connection.createStatement().executeQuery(
+                    query
             );
-            URI externalUri = URI.create(
-                    result.get("external_uri").toString()
-            );
-            identifications.put(
-                    externalUri,
-                    new IdentificationPojo(
-                            externalUri,
-                            new FriendlyResourcePojo(
-                                    uri
-                            )
-                    )
-            );
-        }
-        return identifications;
+            while (rs.next()) {
+                URI uri = URI.create(
+                        rs.getString("uri")
+                );
+                URI externalUri = URI.create(
+                        rs.getString("external_uri")
+                );
+                identifications.put(
+                        externalUri,
+                        new IdentificationPojo(
+                                externalUri,
+                                new FriendlyResourcePojo(
+                                        uri
+                                )
+                        )
+                );
+            }
+            return identifications;
+        }).get();
     }
 
     private void ifIdentificationIsSelfThrowException(Identification identification) throws IllegalArgumentException {
@@ -383,6 +416,13 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
     public Map<String, Object> addCreationProperties(Map<String, Object> map) {
         return identification.addCreationProperties(
                 map
+        );
+    }
+
+    @Override
+    public void setNamedCreationProperties(NamedParameterStatement statement) throws SQLException {
+        identification.setNamedCreationProperties(
+                statement
         );
     }
 
@@ -430,7 +470,7 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
         return identifications;
     }
 
-    private void setIdentifications(Map<URI, IdentificationPojo> identifications){
+    private void setIdentifications(Map<URI, IdentificationPojo> identifications) {
         queryEngine.query(
                 this.identification.queryPrefix() +
                         "SET n." + props.identifications + "= { " + props.identifications + "} ",

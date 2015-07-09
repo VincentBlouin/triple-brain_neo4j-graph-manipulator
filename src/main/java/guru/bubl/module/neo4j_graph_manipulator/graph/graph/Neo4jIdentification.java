@@ -6,6 +6,7 @@ package guru.bubl.module.neo4j_graph_manipulator.graph.graph;
 
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
+import guru.bubl.module.common_utils.NamedParameterStatement;
 import guru.bubl.module.model.Image;
 import guru.bubl.module.model.graph.IdentificationOperator;
 import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jFriendlyResource;
@@ -15,6 +16,7 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.rest.graphdb.query.QueryEngine;
 
 import java.net.URI;
+import java.sql.SQLException;
 import java.util.Date;
 import java.util.Map;
 import java.util.Set;
@@ -158,6 +160,11 @@ public class Neo4jIdentification implements IdentificationOperator, Neo4jOperato
     @Override
     public Map<String, Object> addCreationProperties(Map<String, Object> map) {
         return friendlyResourceOperator.addCreationProperties(map);
+    }
+
+    @Override
+    public void setNamedCreationProperties(NamedParameterStatement statement) throws SQLException {
+        friendlyResourceOperator.setNamedCreationProperties(statement);
     }
 
     public void updateLastModificationDate() {

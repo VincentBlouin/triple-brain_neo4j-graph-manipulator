@@ -4,36 +4,38 @@
 
 package guru.bubl.module.neo4j_graph_manipulator.graph.test;
 
+import guru.bubl.module.common_utils.NoExRun;
+import guru.bubl.module.model.User;
 import guru.bubl.module.model.graph.GraphElementType;
 import guru.bubl.module.model.graph.GraphFactory;
 import guru.bubl.module.model.graph.SubGraphPojo;
 import guru.bubl.module.model.graph.UserGraph;
-import guru.bubl.module.model.graph.vertex.Vertex;
-import guru.bubl.module.model.graph.vertex.VertexInSubGraphOperator;
-import guru.bubl.module.model.graph.vertex.VertexInSubGraphPojo;
-import guru.bubl.module.model.graph.vertex.VertexOperator;
-import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jModule;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.Neo4jWholeGraph;
-import org.neo4j.graphdb.*;
-import org.neo4j.rest.graphdb.RestAPI;
-import org.neo4j.rest.graphdb.query.QueryEngine;
-import org.neo4j.rest.graphdb.util.QueryResult;
-import guru.bubl.module.model.test.GraphComponentTest;
-import guru.bubl.module.model.test.SubGraphOperator;
-import guru.bubl.module.model.User;
 import guru.bubl.module.model.graph.edge.Edge;
 import guru.bubl.module.model.graph.edge.EdgeFactory;
 import guru.bubl.module.model.graph.edge.EdgeOperator;
 import guru.bubl.module.model.graph.edge.EdgePojo;
+import guru.bubl.module.model.graph.vertex.Vertex;
+import guru.bubl.module.model.graph.vertex.VertexInSubGraphOperator;
+import guru.bubl.module.model.graph.vertex.VertexInSubGraphPojo;
+import guru.bubl.module.model.graph.vertex.VertexOperator;
+import guru.bubl.module.model.test.GraphComponentTest;
+import guru.bubl.module.model.test.SubGraphOperator;
 import guru.bubl.module.model.test.scenarios.TestScenarios;
 import guru.bubl.module.model.test.scenarios.VerticesCalledABAndC;
-import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jFriendlyResource;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph.Neo4jSubGraphExtractorFactory;
+import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jModule;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.Neo4jUserGraphFactory;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.Neo4jWholeGraph;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph.Neo4jSubGraphExtractorFactory;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.Neo4jVertexFactory;
+import org.neo4j.graphdb.GraphDatabaseService;
+import org.neo4j.graphdb.Transaction;
 
 import javax.inject.Inject;
-import java.util.*;
+import java.sql.Connection;
+import java.sql.Statement;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
 
 public class Neo4JGraphComponentTest implements GraphComponentTest {
 
@@ -53,12 +55,6 @@ public class Neo4JGraphComponentTest implements GraphComponentTest {
     protected EdgeFactory edgeFactory;
 
     @Inject
-    protected RestAPI graphDb;
-
-    @Inject
-    protected QueryEngine queryEngine;
-
-    @Inject
     protected Neo4jVertexFactory vertexFactory;
 
     @Inject
@@ -66,6 +62,9 @@ public class Neo4JGraphComponentTest implements GraphComponentTest {
 
     @Inject
     protected GraphFactory graphFactory;
+
+    @Inject
+    Connection connection;
 
     protected VertexOperator vertexA;
     protected VertexOperator vertexB;
@@ -83,12 +82,11 @@ public class Neo4JGraphComponentTest implements GraphComponentTest {
 
     @Override
     public void beforeClass() {
-
     }
 
     @Override
     public void before() {
-        startTransaction();
+        transaction = graphDatabaseService.beginTx();
         user = User.withEmail(
                 "roger.lamothe@example.org"
         ).setUsername("roger_lamothe");
@@ -111,7 +109,6 @@ public class Neo4JGraphComponentTest implements GraphComponentTest {
 
     @Override
     public void after() {
-        transaction.failure();
         transaction.close();
     }
 
@@ -140,58 +137,27 @@ public class Neo4JGraphComponentTest implements GraphComponentTest {
     @Override
     public SubGraphOperator wholeGraph() {
         return SubGraphOperator.withVerticesAndEdges(
-                allVertices(),
-                allEdges()
+                wholeGraph().vertices(),
+                wholeGraph().edges()
         );
     }
 
     @Override
     public void removeWholeGraph() {
-        queryEngine.query(
-                "START n=node:node_auto_index(" +
-                        "'type:" + GraphElementType.vertex + " " +
-                        "OR type:" + GraphElementType.edge + " " +
-                        "OR type:" + GraphElementType.schema + " " +
-                        "OR type:" + GraphElementType.property + " " +
-                        "'), r=relationship(*) DELETE n, r;",
-                Collections.EMPTY_MAP
-        );
-    }
-
-    @Override
-    public boolean graphContainsLabel(String label) {
-        return anyNodeContainsLabel(label) ||
-                anyRelationshipContainsLabel(label);
-    }
-
-    protected boolean anyNodeContainsLabel(String label) {
-        for (Node node : allNodes()) {
-            if (hasLabel(node, label)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    protected boolean anyRelationshipContainsLabel(String label) {
-        for (Relationship relationship : allRelationships()) {
-            if (hasLabel(relationship, label)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    protected boolean hasLabel(PropertyContainer propertyContainer, String label) {
-        try {
-            String labelProperty = Neo4jFriendlyResource.props.label.toString();
-            return propertyContainer.hasProperty(
-                    labelProperty
-            ) &&
-                    propertyContainer.getProperty(labelProperty).equals(label);
-        } catch (IllegalStateException e) {
-            return false;
-        }
+        NoExRun.wrap(() -> {
+                    Statement stmt = connection.createStatement();
+                    return stmt.executeQuery(
+                            String.format(
+                                    "START n=node:node_auto_index('type:%s OR type:%s OR type:%s OR type:%s'), " +
+                                            "r=relationship(*) DELETE n, r;",
+                                    GraphElementType.vertex,
+                                    GraphElementType.edge,
+                                    GraphElementType.schema,
+                                    GraphElementType.property
+                            )
+                    );
+                }
+        ).get();
     }
 
     @Override
@@ -254,71 +220,11 @@ public class Neo4JGraphComponentTest implements GraphComponentTest {
         );
     }
 
-    protected Set<VertexInSubGraphOperator> allVertices() {
-        Set<VertexInSubGraphOperator> vertices = new HashSet<VertexInSubGraphOperator>();
-        Iterator<VertexInSubGraphOperator> iterator= wholeGraph.getAllVertices();
-        while(iterator.hasNext()) {
-            vertices.add(
-                    iterator.next()
-            );
-        }
-        return vertices;
-    }
-
-    protected Set<Node> allNodes() {
-        Set<Node> nodes = new HashSet<Node>();
-        QueryResult<Map<String, Object>> result = queryEngine.query(
-                "START n = node(*) " +
-                        " RETURN n",
-                Collections.EMPTY_MAP
-        );
-        Iterator<Map<String, Object>> iterator=result.iterator();
-        while(iterator.hasNext()) {
-            Map<String,Object> row= iterator.next();
-            nodes.add(
-                    (Node) row.get("n")
-            );
-        }
-        return nodes;
-    }
-
-    protected Set<Relationship> allRelationships() {
-        Set<Relationship> relationships = new HashSet<Relationship>();
-        QueryResult<Map<String,Object>> result = queryEngine.query(
-                "START r = relationship(*) " +
-                        " RETURN r",
-                Collections.EMPTY_MAP
-        );
-        Iterator<Map<String, Object>> iterator=result.iterator();
-        while (iterator.hasNext()) {
-            Map<String,Object> row= iterator.next();
-            relationships.add(
-                    (Relationship) row.get("r")
-            );
-        }
-        return relationships;
-    }
-
     protected int numberOfVertices() {
-        return allVertices().size();
-    }
-
-    protected Set<EdgeOperator> allEdges() {
-        Set<EdgeOperator> edges = new HashSet<EdgeOperator>();
-        Iterator<EdgeOperator> iterator = wholeGraph.getAllEdges();
-        while(iterator.hasNext()){
-            edges.add(
-                    iterator.next()
-            );
-        }
-        return edges;
+        return wholeGraph.getAllVertices().size();
     }
 
     protected int numberOfEdges() {
-        return allEdges().size();
-    }
-
-    private void startTransaction() {
-        transaction = graphDb.beginTx();
+        return wholeGraph.getAllEdges().size();
     }
 }

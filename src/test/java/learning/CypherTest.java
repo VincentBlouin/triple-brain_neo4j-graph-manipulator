@@ -4,22 +4,25 @@
 
 package learning;
 
-import org.junit.Test;
-import org.neo4j.graphdb.*;
-import org.neo4j.rest.graphdb.util.QueryResult;
+import guru.bubl.module.common_utils.NoExRun;
 import guru.bubl.module.common_utils.Uris;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.Neo4jUserGraph;
+import org.junit.Test;
+import org.neo4j.graphdb.Direction;
+import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.PropertyContainer;
+import org.neo4j.graphdb.RelationshipType;
 
 import java.net.URI;
-import java.util.Collections;
-import java.util.Iterator;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Statement;
 import java.util.Map;
 import java.util.UUID;
 
+import static guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jRestApiUtils.map;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.*;
-import static guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jRestApiUtils.map;
-import static guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jRestApiUtils.wrap;
 
 public class CypherTest extends Neo4jServerTestGeneric {
 
@@ -30,7 +33,6 @@ public class CypherTest extends Neo4jServerTestGeneric {
 
     @Test
     public void can_set_properties_using_map_of_node_found_in_index() {
-        removeWholeGraph();
         URI uri = Uris.get(
                 "/" + UUID.randomUUID()
         );
@@ -41,13 +43,17 @@ public class CypherTest extends Neo4jServerTestGeneric {
         assertTrue(
                 nodeWithUriExists(uri)
         );
-        Map<String, Object> props = map(
-                "name", "pomme"
+        String query = String.format(
+                "START n=node:node_auto_index(\"uri:%s\") SET n.name={1}",
+                uri.toString()
         );
-        queryEngine.query(
-                "START n=node:node_auto_index(\"uri:" + uri + "\") SET n.name= {name}",
-                props
-        );
+        NoExRun.wrap(() -> {
+            PreparedStatement statement = connection.prepareStatement(
+                    query
+            );
+            statement.setString(1, "pomme");
+            return statement.executeUpdate();
+        }).get();
         assertTrue(
                 nodeWithUriExists(uri)
         );
@@ -62,19 +68,28 @@ public class CypherTest extends Neo4jServerTestGeneric {
 
     @Test
     public void to_not_specify_properties_to_update_deletes_unmentioned_properties() {
-        removeWholeGraph();
         URI uri = randomUri();
         createNodeWithUri(uri);
         assertTrue(
                 nodeWithUriExists(uri)
         );
-        Map<String, Object> props = map(
-                "name", "pomme"
-        );
-        queryEngine.query(
-                "START n=node:node_auto_index(\"uri:" + uri + "\") SET n = {props}",
-                wrap(props)
-        );
+        NoExRun.wrap(
+                () -> {
+                    String query = String.format(
+                            "START n=node:node_auto_index(\"uri:%s\") SET n = {1}",
+                            uri.toString()
+                    );
+                    PreparedStatement stm = connection.prepareStatement(query);
+                    Map<String, Object> props = map(
+                            "name", "pomme"
+                    );
+                    stm.setObject(
+                            1,
+                            props
+                    );
+                    return stm.execute();
+                }
+        ).get();
         assertFalse(
                 nodeWithUriExists(uri)
         );
@@ -82,29 +97,38 @@ public class CypherTest extends Neo4jServerTestGeneric {
 
     @Test
     public void creating_a_node_and_relations_with_existing_nodes_using_index() {
-        removeWholeGraph();
         URI middleNodeUri = randomUri();
         URI startNodeUri = randomUri();
         URI endNodeUri = randomUri();
         createNodeWithUri(startNodeUri);
         createNodeWithUri(endNodeUri);
-        Map<String, Object> props = map(
-                "uri",
-                middleNodeUri.toString()
-        );
-        String query =
-                "START source_node=node:node_auto_index(\"uri:" + startNodeUri + "\"), " +
-                        "destination_node=node:node_auto_index(\"uri:" + endNodeUri + "\") " +
-                        "create (n {props}), " +
-                        "n-[:source]->source_node, " +
-                        "n-[:destination]->destination_node";
         assertFalse(
                 nodeWithUriExists(middleNodeUri)
         );
-        queryEngine.query(
-                query,
-                wrap(props)
-        );
+        NoExRun.wrap(
+                () -> {
+                    String query = String.format(
+                            "START source_node=node:node_auto_index(\"uri:%s\"), " +
+                                    "destination_node=node:node_auto_index(\"uri:%s\") " +
+                                    "create (n {1}), " +
+                                    "n-[:source]->source_node, " +
+                                    "n-[:destination]->destination_node",
+                            startNodeUri.toString(),
+                            endNodeUri.toString()
+                    );
+                    PreparedStatement statement = connection.prepareStatement(
+                            query
+                    );
+                    statement.setObject(
+                            1,
+                            map(
+                                    "uri",
+                                    middleNodeUri.toString()
+                            )
+                    );
+                    return statement.execute();
+                }
+        ).get();
         assertTrue(
                 nodeWithUriExists(middleNodeUri)
         );
@@ -135,19 +159,24 @@ public class CypherTest extends Neo4jServerTestGeneric {
 
     @Test
     public void can_remove() {
-        removeWholeGraph();
         URI startNodeUri = randomUri();
         createNodeWithUri(startNodeUri);
         assertTrue(
                 nodeWithUriExists(startNodeUri)
         );
-        queryEngine.query(
-                "START " +
-                        "n=node:node_auto_index(\"uri:" + startNodeUri + "\") " +
-                        "DELETE " +
-                        "n",
-                map()
-        );
+        NoExRun.wrap(
+                () -> {
+                    String query = String.format(
+                            "START " +
+                                    "n=node:node_auto_index(\"uri:%s\") " +
+                                    "DELETE " +
+                                    "n",
+                            startNodeUri.toString()
+                    );
+                    Statement stm = connection.createStatement();
+                    return stm.executeQuery(query);
+                }
+        ).get();
         assertFalse(
                 nodeWithUriExists(startNodeUri)
         );
@@ -155,27 +184,37 @@ public class CypherTest extends Neo4jServerTestGeneric {
 
     @Test
     public void merging_existing_node_does_not_modify_its_property_value() {
-        removeWholeGraph();
         URI uri = randomUri();
         createNodeWithUri(uri);
         getNodeWithUri(uri).setProperty(
                 "pomme",
                 "avion"
         );
-        queryEngine.query(
-                "MERGE (f {" +
-                        "uri: {uri} " +
-                        "}) " +
-                        "ON CREATE " +
-                        "SET f.pomme = {pomme} " +
-                        "SET f.bonjour = {bonjour} " +
-                        "RETURN f",
-                map(
-                        "uri", uri.toString(),
-                        "pomme", "suspense",
-                        "bonjour", "ivan"
-                )
-        );
+        NoExRun.wrap(
+                () -> {
+                    String query = "MERGE (f {" +
+                            "uri: {1} " +
+                            "}) " +
+                            "ON CREATE " +
+                            "SET f.pomme = {2} " +
+                            "SET f.bonjour = {3} " +
+                            "RETURN f";
+                    PreparedStatement stm = connection.prepareStatement(query);
+                    stm.setString(
+                            1,
+                            uri.toString()
+                    );
+                    stm.setString(
+                            2,
+                            "suspense"
+                    );
+                    stm.setString(
+                            3,
+                            "ivan"
+                    );
+                    return stm.execute();
+                }
+        ).get();
         Node node = getNodeWithUri(uri);
         assertTrue(
                 node.hasProperty("bonjour")
@@ -196,25 +235,29 @@ public class CypherTest extends Neo4jServerTestGeneric {
         assertFalse(
                 nodeWithUriExists(uri2)
         );
-        queryEngine.query(
-                "MERGE (f {" +
-                        "uri: {uri1} " +
-                        "}) " +
-                        "ON CREATE " +
-                        "SET f.property = {property1} " +
-                        "MERGE (z {" +
-                        "uri: {uri2} " +
-                        "}) " +
-                        "ON CREATE " +
-                        "SET z.property = {property2} " +
-                        "RETURN f, z",
-                map(
-                        "uri1", uri1.toString(),
-                        "uri2", uri2.toString(),
-                        "property1", "property1",
-                        "property2", "property2"
-                )
-        );
+        NoExRun.wrap(
+                () -> {
+                    String query = "MERGE (f {" +
+                            "uri: {1} " +
+                            "}) " +
+                            "ON CREATE " +
+                            "SET f.property = {2} " +
+                            "MERGE (z {" +
+                            "uri: {3} " +
+                            "}) " +
+                            "ON CREATE " +
+                            "SET z.property = {4} " +
+                            "RETURN f, z";
+                    PreparedStatement stm = connection.prepareStatement(
+                            query
+                    );
+                    stm.setString(1, uri1.toString());
+                    stm.setString(2, "property1");
+                    stm.setString(3, uri2.toString());
+                    stm.setString(4, "property2");
+                    return stm.execute();
+                }
+        ).get();
         assertTrue(
                 nodeWithUriExists(uri1)
         );
@@ -224,31 +267,42 @@ public class CypherTest extends Neo4jServerTestGeneric {
     }
 
     private Boolean nodeWithUriExists(URI uri) {
-        return nodeIndex.get(
-                "uri",
-                uri
-        ).iterator().hasNext();
+        return NoExRun.wrap(() -> {
+            Statement stm = connection.createStatement();
+            ResultSet rs = stm.executeQuery(
+                    "START n=node:node_auto_index('uri:" + uri + "') "
+                            + "return n.uri"
+            );
+            return rs.next();
+        }).get();
     }
 
     private Node getNodeWithUri(URI uri) {
-        QueryResult<Map<String, Object>> result = queryEngine.query(
-                "START n=node:node_auto_index(\"uri:" + uri.toString() + "\") return n",
-                map()
-        );
-        Iterator<Map<String, Object>> iterator = result.iterator();
-        Map<String, Object> row = iterator.next();
-        return (Node) row.get("n");
+        return NoExRun.wrap(
+                () -> {
+                    String query = "START n=node:node_auto_index(\"uri:" + uri.toString() + "\") return n";
+                    Statement stm = connection.createStatement();
+                    ResultSet rs = stm.executeQuery(query);
+                    rs.next();
+                    return (Node) rs.getObject("n");
+                }
+        ).get();
     }
 
     private void createNodeWithUri(URI uri) {
-        queryEngine.query(
-                "CREATE (n {props})",
-                wrap(
-                        map(
-                                Neo4jUserGraph.URI_PROPERTY_NAME, uri.toString()
-                        )
-                )
-        );
+        NoExRun.wrap(
+                () -> {
+                    String query = String.format(
+                            "CREATE (n {%s:{1}})",
+                            Neo4jUserGraph.URI_PROPERTY_NAME
+                    );
+                    PreparedStatement stm = connection.prepareStatement(
+                            query
+                    );
+                    stm.setString(1, uri.toString());
+                    return stm.executeUpdate();
+                }
+        ).get();
     }
 
     private URI randomUri() {
@@ -257,10 +311,4 @@ public class CypherTest extends Neo4jServerTestGeneric {
         );
     }
 
-    public void removeWholeGraph() {
-        queryEngine.query(
-                "START n = node(*), r=relationship(*) DELETE n, r;",
-                Collections.EMPTY_MAP
-        );
-    }
 }

@@ -4,6 +4,7 @@
 
 package guru.bubl.module.neo4j_graph_manipulator.graph.graph;
 
+import guru.bubl.module.common_utils.NoExRun;
 import guru.bubl.module.model.WholeGraph;
 import guru.bubl.module.model.graph.GraphElementOperator;
 import guru.bubl.module.model.graph.GraphElementOperatorFactory;
@@ -22,14 +23,18 @@ import org.neo4j.rest.graphdb.util.QueryResult;
 
 import javax.inject.Inject;
 import java.net.URI;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.Map;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import java.util.*;
 
 public class Neo4jWholeGraph implements WholeGraph {
 
     @Inject
-    protected QueryEngine queryEngine;
+    protected Connection connection;
+
+    @Inject
+    QueryEngine queryEngine;
 
     @Inject
     protected Neo4jVertexFactory neo4jVertexFactory;
@@ -44,64 +49,51 @@ public class Neo4jWholeGraph implements WholeGraph {
     protected GraphElementOperatorFactory graphElementFactory;
 
     @Override
-    public Iterator<VertexInSubGraphOperator> getAllVertices() {
-        return new Iterator<VertexInSubGraphOperator>() {
-            QueryResult<Map<String, Object>> result = queryEngine.query(
-                    "START n=node:node_auto_index('" +
-                            Neo4jFriendlyResource.props.type + ":" + GraphElementType.vertex +
-                            "') " +
-                            "RETURN n",
-                    Collections.emptyMap()
-            );
-            Iterator<Map<String, Object>> iterator = result.iterator();
-            @Override
-            public boolean hasNext() {
-                return iterator.hasNext();
-            }
-
-            @Override
-            public VertexInSubGraphOperator next() {
-                Node node = (Node) iterator.next().get("n");
-                return neo4jVertexFactory.createOrLoadUsingNode(
-                        node
+    public Set<VertexInSubGraphOperator> getAllVertices() {
+        String query = String.format(
+                "START n=node:node_auto_index('%s:%s') RETURN n.uri as uri",
+                Neo4jFriendlyResource.props.type,
+                GraphElementType.vertex
+        );
+        Set<VertexInSubGraphOperator> vertices = new HashSet<>();
+        return NoExRun.wrap(()->{
+            Statement statement = connection.createStatement();
+            ResultSet rs = statement.executeQuery(query);
+            while(rs.next()){
+                vertices.add(
+                        neo4jVertexFactory.withUri(
+                                URI.create(
+                                        rs.getString("uri")
+                                )
+                        )
                 );
             }
-
-            @Override
-            public void remove() {
-                //To change body of implemented methods use File | Settings | File Templates.
-            }
-        };
+            return vertices;
+        }).get();
     }
 
     @Override
-    public Iterator<EdgeOperator> getAllEdges() {
-        return new Iterator<EdgeOperator>() {
-            QueryResult<Map<String,Object>> result = queryEngine.query(
-                    "START n=node:node_auto_index('" +
-                            Neo4jFriendlyResource.props.type + ":" + GraphElementType.edge +
-                            "') " +
-                            "RETURN n",
-                    Collections.EMPTY_MAP
-            );
-            Iterator<Map<String, Object>> iterator =result.iterator();
-            @Override
-            public boolean hasNext() {
-                return iterator.hasNext();
-            }
-
-            @Override
-            public EdgeOperator next() {
-                return neo4jEdgeFactory.createOrLoadWithNode(
-                        (Node) iterator.next().get("n")
+    public Set<EdgeOperator> getAllEdges() {
+        String query = String.format(
+                "START n=node:node_auto_index('%s:%s') RETURN n.uri as uri",
+                Neo4jFriendlyResource.props.type,
+                GraphElementType.edge
+        );
+        Set<EdgeOperator> edges = new HashSet<>();
+        return NoExRun.wrap(()->{
+            Statement statement = connection.createStatement();
+            ResultSet rs = statement.executeQuery(query);
+            while(rs.next()){
+                edges.add(
+                        neo4jEdgeFactory.withUri(
+                                URI.create(
+                                        rs.getString("uri")
+                                )
+                        )
                 );
             }
-
-            @Override
-            public void remove() {
-                //To change body of implemented methods use File | Settings | File Templates.
-            }
-        };
+            return edges;
+        }).get();
     }
 
     @Override
@@ -115,6 +107,7 @@ public class Neo4jWholeGraph implements WholeGraph {
                     Collections.emptyMap()
             );
             Iterator<Map<String, Object>> iterator = result.iterator();
+
             @Override
             public boolean hasNext() {
                 return iterator.hasNext();
@@ -138,7 +131,7 @@ public class Neo4jWholeGraph implements WholeGraph {
     }
 
     @Override
-    public Iterator<GraphElementOperator> getAllGraphElements(){
+    public Iterator<GraphElementOperator> getAllGraphElements() {
         return new Iterator<GraphElementOperator>() {
             QueryResult<Map<String, Object>> result = queryEngine.query(
                     "START n=node:node_auto_index('" +
@@ -150,6 +143,7 @@ public class Neo4jWholeGraph implements WholeGraph {
                     Collections.emptyMap()
             );
             Iterator<Map<String, Object>> iterator = result.iterator();
+
             @Override
             public boolean hasNext() {
                 return iterator.hasNext();

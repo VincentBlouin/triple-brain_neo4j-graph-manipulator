@@ -6,6 +6,8 @@ package learning;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import guru.bubl.module.common_utils.NoExRun;
+import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jModule;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -16,10 +18,10 @@ import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.index.ReadableIndex;
 import org.neo4j.rest.graphdb.RestAPI;
 import org.neo4j.rest.graphdb.query.QueryEngine;
-import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jModule;
 
 import javax.inject.Inject;
-import java.util.Collections;
+import java.sql.Connection;
+import java.sql.Statement;
 
 public class Neo4jServerTestGeneric {
 
@@ -37,6 +39,9 @@ public class Neo4jServerTestGeneric {
     @Inject
     static protected GraphDatabaseService graphDatabaseService;
 
+    @Inject
+    Connection connection;
+
     protected Transaction transaction;
 
     @BeforeClass
@@ -50,13 +55,14 @@ public class Neo4jServerTestGeneric {
     @Before
     public void before() {
         injector.injectMembers(this);
-        transaction = restApi.beginTx();
+        transaction = graphDatabaseService.beginTx();
         removeEverything();
     }
 
+
     @After
     public void after(){
-        transaction.finish();
+        transaction.close();
     }
 
     @AfterClass
@@ -66,9 +72,13 @@ public class Neo4jServerTestGeneric {
     }
 
     private void removeEverything() {
-        restApi.query(
-                "START n = node(*) OPTIONAL MATCH n-[r]-() DELETE n, r;",
-                Collections.EMPTY_MAP
+        NoExRun.wrap(() -> {
+                    String query = "START n = node(*) OPTIONAL MATCH n-[r]-() DELETE n, r;";
+                    Statement stmt = connection.createStatement();
+                    return stmt.executeQuery(
+                            query
+                    );
+                }
         );
     }
 

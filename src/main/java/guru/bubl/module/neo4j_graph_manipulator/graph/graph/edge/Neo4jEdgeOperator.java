@@ -6,6 +6,8 @@ package guru.bubl.module.neo4j_graph_manipulator.graph.graph.edge;
 
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
+import guru.bubl.module.common_utils.NamedParameterStatement;
+import guru.bubl.module.common_utils.NoExRun;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.Neo4jGraphElementFactory;
 import org.neo4j.graphdb.Node;
 import org.neo4j.rest.graphdb.RestAPI;
@@ -26,7 +28,9 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.Relationships;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.Neo4jGraphElementOperator;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.Neo4jVertexFactory;
 
+import javax.inject.Inject;
 import java.net.URI;
+import java.sql.*;
 import java.util.Date;
 import java.util.Map;
 import java.util.Set;
@@ -50,6 +54,10 @@ public class Neo4jEdgeOperator implements EdgeOperator, Neo4jOperator {
     protected Vertex destinationVertex;
     protected RestAPI restApi;
     protected QueryEngine<Map<String, Object>> queryEngine;
+
+    @Inject
+    protected
+    Connection connection;
 
     @AssistedInject
     protected Neo4jEdgeOperator(
@@ -126,16 +134,21 @@ public class Neo4jEdgeOperator implements EdgeOperator, Neo4jOperator {
     }
 
     private VertexOperator vertexUsingProperty(Enum prop) {
-        QueryResult<Map<String, Object>> result = queryEngine.query(
-                queryPrefix() +
-                        "RETURN n." + prop.name(),
-                map()
-        );
-        return vertexFactory.withUri(URI.create(
-                result.iterator().next().get(
-                        "n." + prop.name()
-                ).toString()
-        ));
+        return NoExRun.wrap(() -> {
+            String query = String.format(
+                    "%sRETURN n.%s",
+                    queryPrefix(),
+                    prop.name()
+            );
+            Statement statement = connection.createStatement();
+            ResultSet rs = statement.executeQuery(query);
+            rs.next();
+            return vertexFactory.withUri(URI.create(
+                    rs.getString(
+                            "n." + prop.name()
+                    )
+            ));
+        }).get();
     }
 
     @Override
@@ -175,30 +188,26 @@ public class Neo4jEdgeOperator implements EdgeOperator, Neo4jOperator {
 
     @Override
     public void remove() {
-        restApi.executeBatch(new BatchCallback<Object>() {
-            @Override
-            public Object recordBatch(RestAPI restAPI) {
-                queryEngine.query(
-                        queryPrefix() +
-                                "MATCH " +
-                                "n-[:SOURCE_VERTEX]->(source_vertex), " +
-                                "n-[:DESTINATION_VERTEX]->(destination_vertex) " +
-                                "SET source_vertex.number_of_connected_edges_property_name = " +
-                                "source_vertex.number_of_connected_edges_property_name - 1, " +
-                                "destination_vertex.number_of_connected_edges_property_name = " +
-                                "destination_vertex.number_of_connected_edges_property_name - 1 ",
-                        map()
-                );
-                queryEngine.query(
-                        queryPrefix() +
-                                "MATCH " +
-                                "n-[r]-() " +
-                                "DELETE r, n",
-                        map()
-                );
-                return null;
-            }
-        });
+        //todo batch
+        NoExRun.wrap(()->{
+            Statement statement = connection.createStatement();
+            statement.executeQuery(
+                    String.format(
+                            "%sMATCH n-[:SOURCE_VERTEX]->(source_vertex), n-[:DESTINATION_VERTEX]->(destination_vertex) " +
+                                    "SET source_vertex.number_of_connected_edges_property_name = source_vertex.number_of_connected_edges_property_name - 1, " +
+                                    "destination_vertex.number_of_connected_edges_property_name = destination_vertex.number_of_connected_edges_property_name - 1 ",
+                            queryPrefix()
+                    )
+            );
+            statement = connection.createStatement();
+            return statement.executeQuery(
+                    String.format(
+                            "%sMATCH n-[r]-() DELETE r, n",
+                            queryPrefix()
+                    )
+            );
+        }).get();
+        //todo endbatch
     }
 
     @Override
@@ -284,17 +293,27 @@ public class Neo4jEdgeOperator implements EdgeOperator, Neo4jOperator {
 
     @Override
     public void createUsingInitialValues(Map<String, Object> values) {
-        String query = "START source_node=node:node_auto_index(\"uri:" + sourceVertex.uri() + "\"), " +
-                "destination_node=node:node_auto_index(\"uri:" + destinationVertex.uri() + "\") " +
-                "create (n:" + GraphElementType.edge + " {props}), " +
-                "n-[:" + Relationships.SOURCE_VERTEX.name() + "]->source_node, " +
-                "n-[:" + Relationships.DESTINATION_VERTEX.name() + "]->destination_node " +
-                "return n, source_node, destination_node";
-        values = addCreationProperties(values);
-        queryEngine.query(
-                query,
-                wrap(values)
+        String query = String.format(
+                "START source_node=node:node_auto_index(\"uri:%s\"), " +
+                        "destination_node=node:node_auto_index(\"uri:%s\") " +
+                        "create (n:%s {1}), n-[:%s]->source_node, n-[:%s]->destination_node " +
+                        "return n, source_node, destination_node",
+                sourceVertex.uri(),
+                destinationVertex.uri(),
+                GraphElementType.edge,
+                Relationships.SOURCE_VERTEX.name(),
+                Relationships.DESTINATION_VERTEX.name()
         );
+        NoExRun.wrap(() -> {
+            PreparedStatement statement = connection.prepareStatement(
+                    query
+            );
+            statement.setObject(
+                    1,
+                    addCreationProperties(values)
+            );
+            return statement.execute();
+        }).get();
     }
 
     @Override
@@ -369,6 +388,23 @@ public class Neo4jEdgeOperator implements EdgeOperator, Neo4jOperator {
                 newMap
         );
         return newMap;
+    }
+
+    @Override
+    public void setNamedCreationProperties(NamedParameterStatement statement) throws SQLException {
+        statement.setString(
+                props.source_vertex_uri.name(),
+                sourceVertex.uri().toString()
+        );
+        statement.setString(
+                props.destination_vertex_uri.name(),
+                destinationVertex.uri().toString()
+        );
+        statement.setString(
+                Neo4jFriendlyResource.props.type.name(),
+                GraphElementType.edge.name()
+        );
+        graphElementOperator.setNamedCreationProperties(statement);
     }
 
     @Override
