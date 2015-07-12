@@ -97,72 +97,52 @@ public class Neo4jWholeGraph implements WholeGraph {
     }
 
     @Override
-    public Iterator<SchemaOperator> getAllSchemas() {
-        return new Iterator<SchemaOperator>() {
-            QueryResult<Map<String, Object>> result = queryEngine.query(
-                    "START n=node:node_auto_index('" +
-                            Neo4jFriendlyResource.props.type + ":" + GraphElementType.schema +
-                            "') " +
-                            "RETURN n." + Neo4jFriendlyResource.props.uri + " as uri",
-                    Collections.emptyMap()
-            );
-            Iterator<Map<String, Object>> iterator = result.iterator();
-
-            @Override
-            public boolean hasNext() {
-                return iterator.hasNext();
-            }
-
-            @Override
-            public SchemaOperator next() {
-                URI uri = URI.create(
-                        iterator.next().get("uri").toString()
-                );
-                return schemaFactory.withUri(
-                        uri
+    public Set<SchemaOperator> getAllSchemas() {
+        String query = String.format(
+                "START n=node:node_auto_index('%s:%s') RETURN n.%s as uri",
+                Neo4jFriendlyResource.props.type,
+                GraphElementType.schema,
+                Neo4jFriendlyResource.props.uri
+        );
+        Set<SchemaOperator> schemas = new HashSet<>();
+        return NoExRun.wrap(()->{
+            Statement statement = connection.createStatement();
+            ResultSet rs = statement.executeQuery(query);
+            while(rs.next()){
+                schemas.add(
+                        schemaFactory.withUri(
+                                URI.create(
+                                        rs.getString("uri")
+                                )
+                        )
                 );
             }
-
-            @Override
-            public void remove() {
-                //To change body of implemented methods use File | Settings | File Templates.
-            }
-        };
+            return schemas;
+        }).get();
     }
 
     @Override
-    public Iterator<GraphElementOperator> getAllGraphElements() {
-        return new Iterator<GraphElementOperator>() {
-            QueryResult<Map<String, Object>> result = queryEngine.query(
-                    "START n=node:node_auto_index('" +
-                            "( " + Neo4jFriendlyResource.props.type + ":" +
-                            StringUtils.join(GraphElementType.names(), " OR type:") +
-                            ") " +
-                            "') " +
-                            "RETURN n." + Neo4jFriendlyResource.props.uri + " as uri",
-                    Collections.emptyMap()
-            );
-            Iterator<Map<String, Object>> iterator = result.iterator();
-
-            @Override
-            public boolean hasNext() {
-                return iterator.hasNext();
-            }
-
-            @Override
-            public GraphElementOperator next() {
-                URI uri = URI.create(
-                        iterator.next().get("uri").toString()
-                );
-                return graphElementFactory.withUri(
-                        uri
+    public Set<GraphElementOperator> getAllGraphElements() {
+        String query = String.format(
+                "START n=node:node_auto_index('( %s:%s) ') RETURN n.%s as uri",
+                Neo4jFriendlyResource.props.type,
+                StringUtils.join(GraphElementType.names(), " OR type:"),
+                Neo4jFriendlyResource.props.uri
+        );
+        Set<GraphElementOperator> graphElements = new HashSet<>();
+        return NoExRun.wrap(()->{
+            Statement statement = connection.createStatement();
+            ResultSet rs = statement.executeQuery(query);
+            while(rs.next()){
+                graphElements.add(
+                        graphElementFactory.withUri(
+                                URI.create(
+                                        rs.getString("uri")
+                                )
+                        )
                 );
             }
-
-            @Override
-            public void remove() {
-                //To change body of implemented methods use File | Settings | File Templates.
-            }
-        };
+            return graphElements;
+        }).get();
     }
 }

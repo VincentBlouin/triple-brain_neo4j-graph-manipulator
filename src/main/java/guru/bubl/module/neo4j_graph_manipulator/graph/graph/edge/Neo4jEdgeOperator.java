@@ -166,30 +166,36 @@ public class Neo4jEdgeOperator implements EdgeOperator, Neo4jOperator {
 
     @Override
     public void inverse() {
-        restApi.executeBatch(new BatchCallback<Object>() {
-            @Override
-            public Object recordBatch(RestAPI restAPI) {
-                queryEngine.query(
-                        queryPrefix() +
-                                "MATCH n-[source_rel:" + Relationships.SOURCE_VERTEX + "]->source_vertex, " +
-                                "n-[destination_rel:" + Relationships.DESTINATION_VERTEX + "]->destination_vertex " +
-                                "CREATE (n)-[:" + Relationships.DESTINATION_VERTEX + "]->(source_vertex) " +
-                                "CREATE (n)-[:" + Relationships.SOURCE_VERTEX + "]->(destination_vertex) " +
-                                "DELETE source_rel, destination_rel " +
-                                "SET n." + props.source_vertex_uri + "=" + "destination_vertex.uri, " +
-                                "n." + props.destination_vertex_uri + "=" + "source_vertex.uri",
-                        map()
-                );
-                graphElementOperator.updateLastModificationDate();
-                return null;
-            }
-        });
+        String query = String.format(
+                "%sMATCH n-[source_rel:%s]->source_vertex, " +
+                        "n-[destination_rel:%s]->destination_vertex " +
+                        "CREATE (n)-[:%s]->(source_vertex) " +
+                        "CREATE (n)-[:%s]->(destination_vertex) " +
+                        "DELETE source_rel, destination_rel " +
+                        "SET n.%s=destination_vertex.uri, n.%s=source_vertex.uri",
+                queryPrefix(),
+                Relationships.SOURCE_VERTEX,
+                Relationships.DESTINATION_VERTEX,
+                Relationships.DESTINATION_VERTEX,
+                Relationships.SOURCE_VERTEX,
+                props.source_vertex_uri,
+                props.destination_vertex_uri
+        );
+        //todo batch
+        NoExRun.wrap(() ->
+                        connection.createStatement().executeQuery(
+                                query
+                        )
+        ).get();
+        graphElementOperator.updateLastModificationDate();
+        //todo endbatch
+
     }
 
     @Override
     public void remove() {
         //todo batch
-        NoExRun.wrap(()->{
+        NoExRun.wrap(() -> {
             Statement statement = connection.createStatement();
             statement.executeQuery(
                     String.format(

@@ -6,6 +6,7 @@ package guru.bubl.module.neo4j_graph_manipulator.graph.image;
 
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
+import guru.bubl.module.common_utils.NoExRun;
 import org.neo4j.rest.graphdb.RestAPI;
 import org.neo4j.rest.graphdb.query.QueryEngine;
 import org.neo4j.rest.graphdb.util.QueryResult;
@@ -13,6 +14,11 @@ import guru.bubl.module.model.Image;
 import guru.bubl.module.model.json.ImageJson;
 import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jFriendlyResource;
 
+import javax.inject.Inject;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Statement;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -26,8 +32,11 @@ public class Neo4jImages {
     }
 
     protected RestAPI restApi;
-    protected QueryEngine<Map<String,Object>> queryEngine;
+    protected QueryEngine<Map<String, Object>> queryEngine;
     protected Neo4jFriendlyResource friendlyResource;
+
+    @Inject
+    protected Connection connection;
 
     @AssistedInject
     public Neo4jImages(
@@ -40,34 +49,47 @@ public class Neo4jImages {
         this.friendlyResource = friendlyResource;
     }
 
-    public void addAll(Set<Image> images){
+    public void addAll(Set<Image> images) {
         Set<Image> current = get();
         current.addAll(images);
-        queryEngine.query(
-                friendlyResource.queryPrefix() +
-                        "SET n." + props.images + "= { " + props.images + "} ",
-                map(
-                        props.images.name(), ImageJson.toJsonArray(current).toString()
-                )
+        String query = String.format(
+                "%sSET n.%s= {1} ",
+                friendlyResource.queryPrefix(),
+                props.images
         );
+        NoExRun.wrap(() -> {
+            PreparedStatement statement = connection.prepareStatement(
+                    query
+            );
+            statement.setString(
+                    1,
+                    ImageJson.toJsonArray(
+                            current
+                    )
+            );
+            return statement.execute();
+        }).get();
     }
 
-    public Set<Image> get(){
-        QueryResult<Map<String, Object>> result = queryEngine.query(
-                friendlyResource.queryPrefix() +
-                        "return n." + props.images + " as images",
-                map()
+    public Set<Image> get() {
+        String query = String.format(
+                "%sreturn n.%s as images",
+                friendlyResource.queryPrefix(),
+                props.images
         );
-        if(!result.iterator().hasNext()){
-            return new HashSet<>();
-        }
-        Object imagesValue = result.iterator().next().get("images");
-        if(imagesValue == null){
-            return new HashSet<>();
-        }
-        return ImageJson.fromJson(
-                imagesValue.toString()
-        );
+        return NoExRun.wrap(() -> {
+            Statement statement = connection.createStatement();
+            ResultSet rs = statement.executeQuery(
+                    query
+            );
+            rs.next();
+            if (rs.getString("images") == null) {
+                return new HashSet<Image>();
+            }
+            return ImageJson.fromJson(
+                    rs.getString("images")
+            );
+        }).get();
     }
 
 }

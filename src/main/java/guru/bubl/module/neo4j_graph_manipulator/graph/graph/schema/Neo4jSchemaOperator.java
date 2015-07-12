@@ -7,6 +7,7 @@ package guru.bubl.module.neo4j_graph_manipulator.graph.graph.schema;
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 import guru.bubl.module.common_utils.NamedParameterStatement;
+import guru.bubl.module.common_utils.NoExRun;
 import guru.bubl.module.model.graph.*;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.Neo4jGraphElementFactory;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.Neo4jVertexInSubGraphOperator;
@@ -22,6 +23,9 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.Relationships;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.Neo4jGraphElementOperator;
 
 import java.net.URI;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Date;
 import java.util.HashMap;
@@ -35,28 +39,28 @@ public class Neo4jSchemaOperator implements SchemaOperator, Neo4jOperator {
 
     protected Neo4jGraphElementOperator graphElementOperator;
     protected Neo4jGraphElementFactory graphElementFactory;
-    protected QueryEngine<Map<String, Object>> queryEngine;
+    protected Connection connection;
 
     @AssistedInject
     protected Neo4jSchemaOperator(
-            QueryEngine queryEngine,
             Neo4jGraphElementFactory graphElementFactory,
+            Connection connection,
             @Assisted URI uri
     ) {
-        this.queryEngine = queryEngine;
+        this.connection = connection;
         this.graphElementFactory = graphElementFactory;
         graphElementOperator = graphElementFactory.withUri(uri);
     }
 
     @AssistedInject
     protected Neo4jSchemaOperator(
-            QueryEngine queryEngine,
             Neo4jGraphElementFactory graphElementFactory,
+            Connection connection,
             @Assisted String ownerUserName
     ) {
         this(
-                queryEngine,
                 graphElementFactory,
+                connection,
                 new UserUris(ownerUserName).generateSchemaUri()
         );
         create();
@@ -179,9 +183,18 @@ public class Neo4jSchemaOperator implements SchemaOperator, Neo4jOperator {
         Map<String, Object> props = addCreationProperties(
                 values
         );
-        queryEngine.query(
-                "create (n:" + GraphElementType.resource + " {props})", wrap(props)
+        String query = String.format(
+                "create (n:%s{1})",
+                GraphElementType.resource
         );
+        NoExRun.wrap(() -> {
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setObject(
+                    1,
+                    props
+            );
+            return statement.execute();
+        }).get();
     }
 
     @Override
@@ -213,19 +226,21 @@ public class Neo4jSchemaOperator implements SchemaOperator, Neo4jOperator {
     public GraphElementOperator addProperty() {
         URI createdUri = UserUris.generateSchemaPropertyUri(uri());
         Neo4jGraphElementOperator property = graphElementFactory.withUri(createdUri);
-        queryEngine.query(
-                queryPrefix() +
-                        "CREATE (p:" + GraphElementType.resource + " {props}) " +
-                        "CREATE UNIQUE " +
-                        "n-[:" + Relationships.HAS_PROPERTY + "]->p ",
-                map(
-                        "props",
-                        property.addCreationProperties(map(
-                                Neo4jFriendlyResource.props.type.name(), GraphElementType.property.name(),
-                                Neo4jVertexInSubGraphOperator.props.is_public.name(), true
-                        ))
-                )
-        );
+        String query = queryPrefix() +
+                "CREATE (p:" + GraphElementType.resource + " {1}) " +
+                "CREATE UNIQUE " +
+                "n-[:" + Relationships.HAS_PROPERTY + "]->p ";
+        NoExRun.wrap(() -> {
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setObject(
+                    1,
+                    property.addCreationProperties(map(
+                            Neo4jFriendlyResource.props.type.name(), GraphElementType.property.name(),
+                            Neo4jVertexInSubGraphOperator.props.is_public.name(), true
+                    ))
+            );
+            return statement.execute();
+        }).get();
         return property;
     }
 
@@ -242,26 +257,28 @@ public class Neo4jSchemaOperator implements SchemaOperator, Neo4jOperator {
     @Override
     public Map<URI, ? extends GraphElement> getProperties() {
         Map<URI, GraphElementOperator> properties = new HashMap<>();
-        QueryResult<Map<String, Object>> result = queryEngine.query(
-                queryPrefix() +
-                        "MATCH n-[:" + Relationships.HAS_PROPERTY + "]->(property) " +
-                        "RETURN property.uri as uri",
-                map()
-        );
-        for (Map<String, Object> uriMap : result) {
-            URI uri = URI.create(
-                    uriMap.get(
-                            "uri"
-                    ).toString()
+        String query = queryPrefix() +
+                "MATCH n-[:" + Relationships.HAS_PROPERTY + "]->(property) " +
+                "RETURN property.uri as uri";
+        return NoExRun.wrap(() -> {
+            ResultSet rs = connection.createStatement().executeQuery(
+                    query
             );
-            properties.put(
-                    uri,
-                    graphElementFactory.withUri(
-                            uri
-                    )
-            );
-        }
-        return properties;
+            while (rs.next()) {
+                URI uri = URI.create(
+                        rs.getString(
+                                "uri"
+                        )
+                );
+                properties.put(
+                        uri,
+                        graphElementFactory.withUri(
+                                uri
+                        )
+                );
+            }
+            return properties;
+        }).get();
     }
 
     @Override

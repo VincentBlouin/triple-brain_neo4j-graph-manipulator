@@ -6,6 +6,7 @@ package guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph;
 
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
+import guru.bubl.module.common_utils.NoExRun;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.edge.Neo4jEdgeOperator;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.FriendlyResourceQueryBuilder;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.IdentificationQueryBuilder;
@@ -23,7 +24,11 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.graph.Neo4jUserGraph;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.QueryUtils;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.Neo4jVertexFactory;
 
+import javax.xml.transform.Result;
 import java.net.URI;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -39,6 +44,8 @@ public class Neo4jSubGraphExtractor {
     URI centerVertexUri;
     Integer depth;
     Neo4jVertexFactory vertexFactory;
+    protected
+    Connection connection;
     private SubGraphPojo subGraph = SubGraphPojo.withVerticesAndEdges(
             new HashMap<>(),
             new HashMap<>()
@@ -48,39 +55,45 @@ public class Neo4jSubGraphExtractor {
     protected Neo4jSubGraphExtractor(
             QueryEngine engine,
             Neo4jVertexFactory vertexFactory,
+            Connection connection,
             @Assisted URI centerVertexUri,
             @Assisted Integer depth
     ) {
         this.engine = engine;
         this.vertexFactory = vertexFactory;
+        this.connection = connection;
         this.centerVertexUri = centerVertexUri;
         this.depth = depth;
     }
 
     public SubGraphPojo load() {
-        QueryResult<Map<String, Object>> result = engine.query(
-                queryToGetGraph(),
-                map()
-        );
-        for (Map<String, Object> row : result) {
-            if (isVertexFromRow(row)) {
-                addVertexUsingRow(
-                        row
-                );
-            } else {
-                addEdgeUsingRow(
-                        row
-                );
+        NoExRun.wrap(() -> {
+            ResultSet rs = connection.createStatement().executeQuery(
+                    queryToGetGraph()
+            );
+            while(rs.next()){
+                if (isVertexFromRow(rs)) {
+                    addVertexUsingRow(
+                            rs
+                    );
+                } else {
+                    addEdgeUsingRow(
+                            rs
+                    );
+                }
             }
-        }
+            return rs;
+        }).get();
         return subGraph;
     }
 
-    private Boolean isVertexFromRow(Map<String, Object> row) {
-        return row.get("type").toString().contains("vertex");
+    private Boolean isVertexFromRow(ResultSet rs) throws SQLException{
+        return rs.getString(
+                "type"
+        ).contains("vertex");
     }
 
-    private VertexInSubGraph addVertexUsingRow(Map<String, Object> row) {
+    private VertexInSubGraph addVertexUsingRow(ResultSet row) throws SQLException{
         VertexInSubGraph vertex = new VertexFromExtractorQueryRow(
                 row,
                 Neo4jSubGraphExtractor.GRAPH_ELEMENT_QUERY_KEY
@@ -99,7 +112,7 @@ public class Neo4jSubGraphExtractor {
                 "]->" + Neo4jSubGraphExtractor.GRAPH_ELEMENT_QUERY_KEY + " " +
                 "OPTIONAL MATCH (" + GRAPH_ELEMENT_QUERY_KEY + ")-[:HAS_INCLUDED_VERTEX]->(" + INCLUDED_VERTEX_QUERY_KEY + ") " +
                 "OPTIONAL MATCH(" + GRAPH_ELEMENT_QUERY_KEY + ")-[:HAS_INCLUDED_EDGE]->(" + INCLUDED_EDGE_QUERY_KEY + ") " +
-                "OPTIONAL MATCH ("+GRAPH_ELEMENT_QUERY_KEY+")-[" + IdentificationQueryBuilder.IDENTIFICATION_RELATION_QUERY_KEY + ":" + Relationships.IDENTIFIED_TO + "]->(" + IdentificationQueryBuilder.IDENTIFICATION_QUERY_KEY + ") " +
+                "OPTIONAL MATCH (" + GRAPH_ELEMENT_QUERY_KEY + ")-[" + IdentificationQueryBuilder.IDENTIFICATION_RELATION_QUERY_KEY + ":" + Relationships.IDENTIFIED_TO + "]->(" + IdentificationQueryBuilder.IDENTIFICATION_QUERY_KEY + ") " +
                 "RETURN " +
                 vertexAndEdgeCommonQueryPart(GRAPH_ELEMENT_QUERY_KEY) +
                 vertexReturnQueryPart(GRAPH_ELEMENT_QUERY_KEY) +
@@ -186,7 +199,7 @@ public class Neo4jSubGraphExtractor {
                 );
     }
 
-    private Edge addEdgeUsingRow(Map<String, Object> row) {
+    private Edge addEdgeUsingRow(ResultSet row) throws SQLException{
         EdgePojo edge = (EdgePojo) EdgeFromExtractorQueryRow.usingRow(
                 row
         ).build();

@@ -6,6 +6,7 @@ package guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.schema;
 
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
+import guru.bubl.module.common_utils.NoExRun;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.FriendlyResourceQueryBuilder;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.IdentificationQueryBuilder;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph.Neo4jSubGraphExtractor;
@@ -14,32 +15,38 @@ import org.neo4j.rest.graphdb.util.QueryResult;
 import guru.bubl.module.model.graph.schema.SchemaPojo;
 import guru.bubl.module.neo4j_graph_manipulator.graph.Relationships;
 
+import javax.swing.plaf.nimbus.State;
 import java.net.URI;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.Statement;
 import java.util.Map;
 
 import static org.neo4j.helpers.collection.MapUtil.map;
 
 public class Neo4jSchemaExtractor {
-    protected QueryEngine<Map<String, Object>> queryEngine;
     protected URI schemaUri;
+
+    protected Connection connection;
 
     @AssistedInject
     protected Neo4jSchemaExtractor(
-            QueryEngine queryEngine,
+            Connection connection,
             @Assisted URI schemaUri
     ) {
-        this.queryEngine = queryEngine;
+        this.connection = connection;
         this.schemaUri = schemaUri;
     }
 
     public SchemaPojo load() {
-        QueryResult<Map<String, Object>> result = queryEngine.query(
-                buildQuery(),
-                map()
-        );
-        return new SchemaFromQueryResult(
-                result
-        ).build();
+        return NoExRun.wrap(() -> {
+            ResultSet rs = connection.createStatement().executeQuery(
+                    buildQuery()
+            );
+            return new SchemaFromQueryResult(
+                    rs
+            ).build();
+        }).get();
     }
 
     private String buildQuery() {
@@ -50,6 +57,8 @@ public class Neo4jSchemaExtractor {
                 "RETURN " +
                 FriendlyResourceQueryBuilder.returnQueryPartUsingPrefix("schema_node") +
                 FriendlyResourceQueryBuilder.returnQueryPartUsingPrefix("schema_property") +
+                FriendlyResourceQueryBuilder.imageReturnQueryPart("schema_node") +
+                FriendlyResourceQueryBuilder.imageReturnQueryPart("schema_property") +
                 IdentificationQueryBuilder.identificationReturnQueryPart() +
                 dummyReturnValueToAvoidFinishWithComma;
     }

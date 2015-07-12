@@ -145,10 +145,9 @@ public class Neo4jFriendlyResource implements FriendlyResourceOperator, Neo4jOpe
             );
             Statement statement = connection.createStatement();
             ResultSet rs = statement.executeQuery(query);
-            rs.next();
-            String label = rs.getString("label");
-            return label == null ?
-                    "" : label;
+            return rs.next() && rs.getString("label") != null ?
+                    rs.getString("label"):
+                    "";
         }).get();
     }
 
@@ -192,10 +191,9 @@ public class Neo4jFriendlyResource implements FriendlyResourceOperator, Neo4jOpe
         return NoExRun.wrap(() -> {
             Statement statement = connection.createStatement();
             ResultSet rs = statement.executeQuery(query);
-            rs.next();
-            String comment = rs.getString("comment");
-            return comment == null ?
-                    "" : comment;
+            return rs.next() && rs.getString("comment") != null ?
+                    rs.getString("comment"):
+                    "";
         }).get();
     }
 

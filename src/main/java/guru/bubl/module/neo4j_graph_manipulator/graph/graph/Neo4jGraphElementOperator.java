@@ -32,6 +32,7 @@ import java.net.URI;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.*;
 
 import static guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jRestApiUtils.map;
@@ -433,50 +434,38 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
 
     @Override
     public Map<URI, IdentificationPojo> getIdentifications() {
-        QueryResult<Map<String, Object>> results = queryEngine.query(
-                queryPrefix() +
-                        "MATCH " +
-                        "n-[r:" + Relationships.IDENTIFIED_TO + "]->identification " +
-                        "RETURN " +
-                        "identification.uri as uri, identification.external_uri as external_uri, r.type as type",
-                map()
+        String query = String.format(
+                "%sMATCH n-[r:%s]->identification RETURN identification.uri as uri, identification.external_uri as external_uri, r.type as type",
+                queryPrefix(),
+                Relationships.IDENTIFIED_TO
         );
-        Iterator<Map<String, Object>> iterator = results.iterator();
         Map<URI, IdentificationPojo> identifications = new HashMap<>();
-        while (iterator.hasNext()) {
-            Map<String, Object> result = iterator.next();
-            URI uri = URI.create(
-                    result.get("uri").toString()
-            );
-            URI externalUri = URI.create(
-                    result.get("external_uri").toString()
-            );
-            IdentificationPojo identification = new IdentificationPojo(
-                    externalUri,
-                    new FriendlyResourcePojo(
-                            uri
-                    )
-            );
-            identification.setType(
-                    IdentificationType.valueOf(
-                            result.get("type").toString()
-                    )
-            );
-            identifications.put(
-                    externalUri,
-                    identification
-            );
-        }
-        return identifications;
-    }
-
-    private void setIdentifications(Map<URI, IdentificationPojo> identifications) {
-        queryEngine.query(
-                this.identification.queryPrefix() +
-                        "SET n." + props.identifications + "= { " + props.identifications + "} ",
-                map(
-                        props.identifications.name(), IdentificationJson.toJson(identifications)
-                )
-        );
+        return NoExRun.wrap(()->{
+            ResultSet rs = connection.createStatement().executeQuery(query);
+            while(rs.next()){
+                URI uri = URI.create(
+                        rs.getString("uri")
+                );
+                URI externalUri = URI.create(
+                        rs.getString("external_uri")
+                );
+                IdentificationPojo identification = new IdentificationPojo(
+                        externalUri,
+                        new FriendlyResourcePojo(
+                                uri
+                        )
+                );
+                identification.setType(
+                        IdentificationType.valueOf(
+                                rs.getString("type")
+                        )
+                );
+                identifications.put(
+                        externalUri,
+                        identification
+                );
+            }
+            return identifications;
+        }).get();
     }
 }

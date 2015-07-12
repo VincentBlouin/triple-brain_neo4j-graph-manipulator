@@ -137,8 +137,8 @@ public class Neo4JGraphComponentTest implements GraphComponentTest {
     @Override
     public SubGraphOperator wholeGraph() {
         return SubGraphOperator.withVerticesAndEdges(
-                wholeGraph().vertices(),
-                wholeGraph().edges()
+                wholeGraph.getAllVertices(),
+                wholeGraph.getAllEdges()
         );
     }
 

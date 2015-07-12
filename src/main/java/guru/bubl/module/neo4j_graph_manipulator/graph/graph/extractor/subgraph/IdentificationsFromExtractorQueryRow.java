@@ -14,28 +14,36 @@ import guru.bubl.module.model.json.ImageJson;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.Neo4jGraphElementOperator;
 
 import java.net.URI;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class IdentificationsFromExtractorQueryRow {
 
-    private Map<String, Object> row;
+    private ResultSet row;
     private String key;
 
-    public static IdentificationsFromExtractorQueryRow usingRowAndKey(Map<String, Object> row, String key) {
+    public static IdentificationsFromExtractorQueryRow usingRowAndKey(
+            ResultSet row,
+            String key
+    ) {
         return new IdentificationsFromExtractorQueryRow(
                 row,
                 key
         );
     }
 
-    protected IdentificationsFromExtractorQueryRow(Map<String, Object> row, String key) {
+    protected IdentificationsFromExtractorQueryRow(
+            ResultSet row,
+            String key
+    ) {
         this.row = row;
         this.key = key;
     }
 
-    public Map<URI, IdentificationPojo> build() {
+    public Map<URI, IdentificationPojo> build() throws SQLException{
         Map<URI, IdentificationPojo> identifications = new HashMap<>();
         if(!isInQuery()){
             return identifications;
@@ -75,11 +83,11 @@ public class IdentificationsFromExtractorQueryRow {
         return identifications;
     }
 
-    private Boolean isInQuery() {
-        return row.get(key) != null;
+    private Boolean isInQuery() throws SQLException{
+        return row.getString(key) != null;
     }
 
-    private List<List<String>> getList() {
-        return (List) row.get(key);
+    private List<List<String>> getList() throws SQLException{
+        return (List) row.getObject(key);
     }
 }

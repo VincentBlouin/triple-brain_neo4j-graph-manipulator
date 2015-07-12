@@ -4,35 +4,34 @@
 
 package guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.schema;
 
-import org.neo4j.rest.graphdb.util.QueryResult;
 import guru.bubl.module.model.graph.GraphElementPojo;
 import guru.bubl.module.model.graph.schema.SchemaPojo;
 import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jFriendlyResource;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph.GraphElementFromExtractorQueryRow;
 
 import java.net.URI;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 public class SchemaFromQueryResult {
-    private QueryResult<Map<String, Object>> result;
+    private ResultSet result;
     private Map<URI, GraphElementPojo> properties = new HashMap<>();
-    public SchemaFromQueryResult(QueryResult<Map<String, Object>> result) {
+    public SchemaFromQueryResult(ResultSet result) {
         this.result = result;
     }
 
-    public SchemaPojo build() {
-        Iterator<Map<String,Object>> iterator = result.iterator();
-        Map<String,Object> row = iterator.next();
+    public SchemaPojo build() throws SQLException{
+        result.next();
         GraphElementPojo schemaGraphElement = GraphElementFromExtractorQueryRow.usingRowAndKey(
-                row ,
+                result,
                 "schema_node"
         ).build();
-        buildOrUpdatePropertyInRow(row);
-        while(iterator.hasNext()){
+        buildOrUpdatePropertyInRow(result);
+        while(result.next()){
             buildOrUpdatePropertyInRow(
-                    iterator.next()
+                    result
             );
         }
         return new SchemaPojo(
@@ -41,7 +40,7 @@ public class SchemaFromQueryResult {
         );
     }
 
-    private void buildOrUpdatePropertyInRow(Map<String, Object> row){
+    private void buildOrUpdatePropertyInRow(ResultSet row) throws SQLException{
         GraphElementFromExtractorQueryRow extractor = GraphElementFromExtractorQueryRow.usingRowAndKey(
                 row,
                 "schema_property"
@@ -55,12 +54,17 @@ public class SchemaFromQueryResult {
         }
     }
 
-    private Boolean rowHasSchemaProperty(Map<String, Object> row) {
-        return row.get("schema_property." + Neo4jFriendlyResource.props.uri) != null;
+    private Boolean rowHasSchemaProperty(ResultSet row) throws SQLException{
+        return row.getString(
+                "schema_property." + Neo4jFriendlyResource.props.uri
+        ) != null;
     }
-    private URI getPropertyUri(Map<String, Object> row){
+
+    private URI getPropertyUri(ResultSet row)throws SQLException{
         return URI.create(
-                row.get("schema_property." + Neo4jFriendlyResource.props.uri).toString()
+                row.getString(
+                        "schema_property." + Neo4jFriendlyResource.props.uri
+                )
         );
     }
 }

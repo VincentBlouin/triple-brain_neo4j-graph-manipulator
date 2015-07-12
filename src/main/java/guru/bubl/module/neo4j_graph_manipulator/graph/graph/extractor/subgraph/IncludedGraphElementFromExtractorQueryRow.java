@@ -4,21 +4,22 @@
 
 package guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph;
 
-import com.sun.org.apache.xpath.internal.operations.Bool;
 import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jFriendlyResource;
 
 import java.net.URI;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 
 public class IncludedGraphElementFromExtractorQueryRow {
 
-    private Map<String, Object> row;
+    private ResultSet row;
 
     private String key;
 
     public IncludedGraphElementFromExtractorQueryRow(
-            Map<String, Object> row,
+            ResultSet row,
             String key
     ) {
         this.row = row;
@@ -26,27 +27,28 @@ public class IncludedGraphElementFromExtractorQueryRow {
     }
 
 
-    public URI getUri() {
+    public URI getUri() throws SQLException{
         return URI.create(
-                row.get(
+                row.getString(
                         key + ".uri"
-                ).toString()
+                )
         );
     }
 
 
-    public Boolean hasResult(){
-        return row.get(key) != null;
+    public Boolean hasResult() throws SQLException{
+        return row.getString(key) != null;
+
     }
 
-    public List<List<String>> getList(){
-        return (List) row.get(key);
+    public List<List<String>> getList() throws SQLException{
+        return (List) row.getObject(key);
     }
 
-    public String getLabel() {
+    public String getLabel() throws SQLException{
         String labelKey = key+ "." + Neo4jFriendlyResource.props.label;
-        return row.get(
+        return row.getString(
                 labelKey
-        ) != null ? row.get(labelKey).toString() : "";
+        ) != null ? row.getString(labelKey) : "";
     }
 }

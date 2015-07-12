@@ -12,25 +12,27 @@ import guru.bubl.module.model.suggestion.SuggestionPojo;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.Neo4jVertexInSubGraphOperator;
 
 import java.net.URI;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class VertexFromExtractorQueryRow {
 
-    private Map<String, Object> row;
+    private ResultSet row;
 
     private String keyPrefix;
 
     public VertexFromExtractorQueryRow(
-            Map<String, Object> row,
+            ResultSet row,
             String keyPrefix
     ) {
         this.row = row;
         this.keyPrefix = keyPrefix;
     }
 
-    public VertexInSubGraph build() {
+    public VertexInSubGraph build() throws SQLException {
         return new VertexInSubGraphPojo(
                 GraphElementFromExtractorQueryRow.usingRowAndKey(
                         row,
@@ -44,18 +46,18 @@ public class VertexFromExtractorQueryRow {
         );
     }
 
-    private Map<URI, VertexInSubGraphPojo> buildIncludedVertices() {
+    private Map<URI, VertexInSubGraphPojo> buildIncludedVertices() throws SQLException {
         IncludedGraphElementFromExtractorQueryRow includedVertexExtractor = new IncludedGraphElementFromExtractorQueryRow(
                 row,
                 Neo4jSubGraphExtractor.INCLUDED_VERTEX_QUERY_KEY
         );
         Map<URI, VertexInSubGraphPojo> includedVertices = new HashMap<>();
-        if(!includedVertexExtractor.hasResult()){
+        if (!includedVertexExtractor.hasResult()) {
             return includedVertices;
         }
 
-        for(List<String> properties:includedVertexExtractor.getList()){
-            if(properties.get(0) == null){
+        for (List<String> properties : includedVertexExtractor.getList()) {
+            if (properties.get(0) == null) {
                 return includedVertices;
             }
             URI uri = URI.create(properties.get(0));
@@ -70,17 +72,17 @@ public class VertexFromExtractorQueryRow {
         return includedVertices;
     }
 
-    private Map<URI, EdgePojo> buildIncludedEdges() {
+    private Map<URI, EdgePojo> buildIncludedEdges() throws SQLException {
         IncludedGraphElementFromExtractorQueryRow includedEdgeExtractor = new IncludedGraphElementFromExtractorQueryRow(
                 row,
                 Neo4jSubGraphExtractor.INCLUDED_EDGE_QUERY_KEY
         );
         Map<URI, EdgePojo> includedEdges = new HashMap<>();
-        if(!includedEdgeExtractor.hasResult()){
+        if (!includedEdgeExtractor.hasResult()) {
             return includedEdges;
         }
-        for(List<String> properties:includedEdgeExtractor.getList()){
-            if(properties.get(0) == null){
+        for (List<String> properties : includedEdgeExtractor.getList()) {
+            if (properties.get(0) == null) {
                 return includedEdges;
             }
             URI sourceVertexUri = URI.create(properties.get(0));
@@ -111,24 +113,24 @@ public class VertexFromExtractorQueryRow {
         return includedEdges;
     }
 
-    private Integer getNumberOfConnectedEdges() {
+    private Integer getNumberOfConnectedEdges() throws SQLException {
         return Integer.valueOf(
-                row.get(
+                row.getString(
                         keyPrefix + "." + Neo4jVertexInSubGraphOperator.props.number_of_connected_edges_property_name
-                ).toString()
+                )
         );
     }
 
-    private Boolean getIsPublic() {
+    private Boolean getIsPublic() throws SQLException {
         return Boolean.valueOf(
-                row.get(
+                row.getString(
                         keyPrefix + "." + Neo4jVertexInSubGraphOperator.props.is_public
-                ).toString()
+                )
         );
     }
 
-    private Map<URI, SuggestionPojo> getSuggestions() {
-        Object suggestionValue = row.get(
+    private Map<URI, SuggestionPojo> getSuggestions() throws SQLException{
+        Object suggestionValue = row.getObject(
                 keyPrefix + "." + Neo4jVertexInSubGraphOperator.props.suggestions
         );
         if (suggestionValue == null) {
