@@ -8,6 +8,8 @@ import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 import guru.bubl.module.common_utils.NamedParameterStatement;
 import guru.bubl.module.common_utils.NoExRun;
+import guru.bubl.module.model.Image;
+import guru.bubl.module.model.UserUris;
 import guru.bubl.module.model.graph.*;
 import guru.bubl.module.model.json.ImageJson;
 import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jFriendlyResource;
@@ -15,24 +17,15 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jIdentificationFactory
 import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jOperator;
 import guru.bubl.module.neo4j_graph_manipulator.graph.Relationships;
 import guru.bubl.module.neo4j_graph_manipulator.graph.image.Neo4jImages;
-import org.apache.commons.lang.StringUtils;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
-import org.neo4j.rest.graphdb.RestAPI;
-import org.neo4j.rest.graphdb.batch.BatchCallback;
-import org.neo4j.rest.graphdb.query.QueryEngine;
-import org.neo4j.rest.graphdb.util.QueryResult;
-import guru.bubl.module.model.Image;
-import guru.bubl.module.model.UserUris;
-import guru.bubl.module.model.json.IdentificationJson;
 
 import javax.inject.Inject;
 import java.net.URI;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.*;
 
 import static guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jRestApiUtils.map;
@@ -46,8 +39,6 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
     protected Node node;
     protected Neo4jIdentification identification;
     protected URI uri;
-    protected QueryEngine<Map<String, Object>> queryEngine;
-    protected RestAPI restApi;
     protected Neo4jIdentificationFactory identificationFactory;
 
     @Inject
@@ -55,8 +46,6 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
 
     @AssistedInject
     protected Neo4jGraphElementOperator(
-            QueryEngine queryEngine,
-            RestAPI restApi,
             Neo4jIdentificationFactory identificationFactory,
             @Assisted Node node
     ) {
@@ -65,14 +54,10 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
         );
         this.identificationFactory = identificationFactory;
         this.node = node;
-        this.queryEngine = queryEngine;
-        this.restApi = restApi;
     }
 
     @AssistedInject
     protected Neo4jGraphElementOperator(
-            QueryEngine queryEngine,
-            RestAPI restApi,
             Neo4jIdentificationFactory identificationFactory,
             @Assisted URI uri
     ) {
@@ -80,8 +65,6 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
                 uri
         );
         this.identificationFactory = identificationFactory;
-        this.queryEngine = queryEngine;
-        this.restApi = restApi;
     }
 
     @Override

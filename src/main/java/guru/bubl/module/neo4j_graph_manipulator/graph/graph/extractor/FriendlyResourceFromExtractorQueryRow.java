@@ -11,13 +11,11 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jFriendlyResource;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.Neo4jUserGraph;
 import guru.bubl.module.neo4j_graph_manipulator.graph.image.Neo4jImages;
 
-import javax.xml.transform.Result;
 import java.net.URI;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 public class FriendlyResourceFromExtractorQueryRow {
@@ -61,16 +59,18 @@ public class FriendlyResourceFromExtractorQueryRow {
         );
     }
 
-    private Set<Image> getImages() throws SQLException {
-        Object imagesValue = row.getString(
-                nodeKey + "." + Neo4jImages.props.images
-        );
-        if (imagesValue == null) {
+    private Set<Image> getImages(){
+        try{
+            return ImageJson.fromJson(
+                    row.getString(
+                            nodeKey + "." + Neo4jImages.props.images
+                    )
+            );
+        }catch(SQLException e){
             return new HashSet<>();
         }
-        return ImageJson.fromJson(
-                imagesValue.toString()
-        );
+
+
     }
 
     public String getLabel() throws SQLException {
@@ -80,11 +80,15 @@ public class FriendlyResourceFromExtractorQueryRow {
         ) != null ? row.getString(labelKey) : "";
     }
 
-    private String getComment() throws SQLException{
-        String commmentKey = nodeKey + "." + Neo4jFriendlyResource.props.comment + "";
-        return row.getString(
-                commmentKey
-        ) != null ? row.getString(commmentKey) : "";
+    private String getComment(){
+        try{
+            return row.getString(
+                    nodeKey + "." + Neo4jFriendlyResource.props.comment
+            );
+        }catch(SQLException e){
+            return "";
+        }
+
     }
 
     private Date getLastModificationDate() throws SQLException{

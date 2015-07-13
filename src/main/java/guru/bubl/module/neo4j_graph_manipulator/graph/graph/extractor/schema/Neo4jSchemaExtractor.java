@@ -7,22 +7,14 @@ package guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.schema;
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 import guru.bubl.module.common_utils.NoExRun;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.FriendlyResourceQueryBuilder;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.IdentificationQueryBuilder;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph.Neo4jSubGraphExtractor;
-import org.neo4j.rest.graphdb.query.QueryEngine;
-import org.neo4j.rest.graphdb.util.QueryResult;
 import guru.bubl.module.model.graph.schema.SchemaPojo;
 import guru.bubl.module.neo4j_graph_manipulator.graph.Relationships;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.FriendlyResourceQueryBuilder;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.IdentificationQueryBuilder;
 
-import javax.swing.plaf.nimbus.State;
 import java.net.URI;
 import java.sql.Connection;
 import java.sql.ResultSet;
-import java.sql.Statement;
-import java.util.Map;
-
-import static org.neo4j.helpers.collection.MapUtil.map;
 
 public class Neo4jSchemaExtractor {
     protected URI schemaUri;

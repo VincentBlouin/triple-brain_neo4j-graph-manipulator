@@ -16,8 +16,6 @@ import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.index.ReadableIndex;
-import org.neo4j.rest.graphdb.RestAPI;
-import org.neo4j.rest.graphdb.query.QueryEngine;
 
 import javax.inject.Inject;
 import java.sql.Connection;
@@ -26,12 +24,6 @@ import java.sql.Statement;
 public class Neo4jServerTestGeneric {
 
     protected static Injector injector;
-
-    @Inject
-    protected RestAPI restApi;
-
-    @Inject
-    protected QueryEngine queryEngine;
 
     @Inject
     protected ReadableIndex<Node> nodeIndex;

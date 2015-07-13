@@ -84,7 +84,12 @@ public class IdentificationsFromExtractorQueryRow {
     }
 
     private Boolean isInQuery() throws SQLException{
-        return row.getString(key) != null;
+        try{
+            row.getString(key);
+            return true;
+        }catch(SQLException e){
+            return false;
+        }
     }
 
     private List<List<String>> getList() throws SQLException{

@@ -29,40 +29,21 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.Neo4jVertexFa
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.Neo4jVertexInSubGraphOperator;
 import guru.bubl.module.neo4j_graph_manipulator.graph.image.Neo4jImageFactory;
 import guru.bubl.module.neo4j_graph_manipulator.graph.test.Neo4JGraphComponentTest;
-import org.neo4j.graphdb.*;
+import org.neo4j.graphdb.GraphDatabaseService;
+import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 import org.neo4j.graphdb.factory.GraphDatabaseSettings;
-import org.neo4j.graphdb.index.IndexHits;
 import org.neo4j.graphdb.index.IndexManager;
 import org.neo4j.graphdb.index.ReadableIndex;
-import org.neo4j.graphdb.traversal.TraversalDescription;
 import org.neo4j.helpers.collection.MapUtil;
-import org.neo4j.rest.graphdb.RequestResult;
-import org.neo4j.rest.graphdb.RestAPI;
-import org.neo4j.rest.graphdb.batch.BatchCallback;
-import org.neo4j.rest.graphdb.batch.CypherResult;
-import org.neo4j.rest.graphdb.converter.RestEntityExtractor;
-import org.neo4j.rest.graphdb.entity.RestEntity;
-import org.neo4j.rest.graphdb.entity.RestNode;
-import org.neo4j.rest.graphdb.entity.RestRelationship;
-import org.neo4j.rest.graphdb.index.IndexInfo;
-import org.neo4j.rest.graphdb.index.RestIndex;
-import org.neo4j.rest.graphdb.index.RestIndexManager;
-import org.neo4j.rest.graphdb.query.QueryEngine;
-import org.neo4j.rest.graphdb.services.RequestType;
-import org.neo4j.rest.graphdb.traversal.RestTraverser;
-import org.neo4j.rest.graphdb.util.QueryResult;
-import org.neo4j.rest.graphdb.util.ResultConverter;
 
 import javax.inject.Singleton;
 import java.io.File;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.Collection;
-import java.util.Map;
 import java.util.Properties;
-import java.util.Set;
 
 public class Neo4jModule extends AbstractModule {
 
@@ -95,7 +76,6 @@ public class Neo4jModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        crotte();
         if (useEmbedded) {
             bindForEmbedded();
         } else {
@@ -283,274 +263,5 @@ public class Neo4jModule extends AbstractModule {
         } catch (ClassNotFoundException | SQLException e) {
             throw new RuntimeException(e);
         }
-    }
-    private void crotte(){
-        bind(QueryEngine.class).toInstance(new QueryEngine() {
-            @Override
-            public QueryResult query(String statement, Map params) {
-                return null;
-            }
-        });
-        bind(RestAPI.class).toInstance(new RestAPI() {
-            @Override
-            public RestIndexManager index() {
-                return null;
-            }
-
-            @Override
-            public RestNode getNodeById(long id) {
-                return null;
-            }
-
-            @Override
-            public RestRelationship getRelationshipById(long id) {
-                return null;
-            }
-
-            @Override
-            public RestNode createNode(Map<String, Object> props) {
-                return null;
-            }
-
-            @Override
-            public RestNode createRestNode(RequestResult requestResult) {
-                return null;
-            }
-
-            @Override
-            public RestRelationship createRelationship(Node startNode, Node endNode, RelationshipType type, Map<String, Object> props) {
-                return null;
-            }
-
-            @Override
-            public RestRelationship createRestRelationship(RequestResult requestResult, PropertyContainer element) {
-                return null;
-            }
-
-            @Override
-            public <T extends PropertyContainer> RestIndex<T> getIndex(String indexName) {
-                return null;
-            }
-
-            @Override
-            public void createIndex(String type, String indexName, Map<String, String> config) {
-
-            }
-
-            @Override
-            public TraversalDescription createTraversalDescription() {
-                return null;
-            }
-
-            @Override
-            public Node getReferenceNode() {
-                return null;
-            }
-
-            @Override
-            public Transaction beginTx() {
-                return null;
-            }
-
-            @Override
-            public <S extends PropertyContainer> IndexHits<S> queryIndex(String indexPath, Class<S> entityType) {
-                return null;
-            }
-
-            @Override
-            public void deleteEntity(RestEntity entity) {
-
-            }
-
-            @Override
-            public IndexInfo indexInfo(String indexType) {
-                return null;
-            }
-
-            @Override
-            public void setPropertyOnEntity(RestEntity entity, String key, Object value) {
-
-            }
-
-            @Override
-            public Map<String, Object> getPropertiesFromEntity(RestEntity entity) {
-                return null;
-            }
-
-            @Override
-            public void delete(RestIndex index) {
-
-            }
-
-            @Override
-            public <T extends PropertyContainer> void removeFromIndex(RestIndex index, T entity, String key, Object value) {
-
-            }
-
-            @Override
-            public <T extends PropertyContainer> void removeFromIndex(RestIndex index, T entity, String key) {
-
-            }
-
-            @Override
-            public <T extends PropertyContainer> void removeFromIndex(RestIndex index, T entity) {
-
-            }
-
-            @Override
-            public <T extends PropertyContainer> void addToIndex(T entity, RestIndex index, String key, Object value) {
-
-            }
-
-            @Override
-            public <T extends PropertyContainer> T putIfAbsent(T entity, RestIndex index, String key, Object value) {
-                return null;
-            }
-
-            @Override
-            public Map<?, ?> getData(RestEntity uri) {
-                return null;
-            }
-
-            @Override
-            public boolean hasToUpdate(long lastUpdate) {
-                return false;
-            }
-
-            @Override
-            public void removeProperty(RestEntity entity, String key) {
-
-            }
-
-            @Override
-            public CypherResult query(String statement, Map<String, Object> params) {
-                return null;
-            }
-
-            @Override
-            public Iterable<Relationship> getRelationships(RestNode restNode, String path) {
-                return null;
-            }
-
-            @Override
-            public RestTraverser traverse(RestNode restNode, Map<String, Object> description) {
-                return null;
-            }
-
-            @Override
-            public String getBaseUri() {
-                return null;
-            }
-
-            @Override
-            public <T> T getPlugin(Class<T> pluginType) {
-                return null;
-            }
-
-            @Override
-            public <T> T getService(Class<T> type, String baseUri) {
-                return null;
-            }
-
-            @Override
-            public <T> T executeBatch(BatchCallback<T> batchCallback) {
-                return null;
-            }
-
-            @Override
-            public RestNode getOrCreateNode(RestIndex<Node> index, String key, Object value, Map<String, Object> properties) {
-                return null;
-            }
-
-            @Override
-            public RestRelationship getOrCreateRelationship(RestIndex<Relationship> index, String key, Object value, RestNode start, RestNode end, String type, Map<String, Object> properties) {
-                return null;
-            }
-
-            @Override
-            public QueryResult<Map<String, Object>> query(String statement, Map<String, Object> params, ResultConverter resultConverter) {
-                return null;
-            }
-
-            @Override
-            public QueryResult<Object> run(String statement, Map<String, Object> params, ResultConverter resultConverter) {
-                return null;
-            }
-
-            @Override
-            public RestEntityExtractor createExtractor() {
-                return null;
-            }
-
-            @Override
-            public <T extends PropertyContainer> RestIndex<T> createIndex(Class<T> type, String indexName, Map<String, String> config) {
-                return null;
-            }
-
-            @Override
-            public RequestResult execute(RequestType requestType, String uri, Object params) {
-                return null;
-            }
-
-            @Override
-            public void close() {
-
-            }
-
-            @Override
-            public boolean isAutoIndexingEnabled(Class<? extends PropertyContainer> clazz) {
-                return false;
-            }
-
-            @Override
-            public void setAutoIndexingEnabled(Class<? extends PropertyContainer> clazz, boolean enabled) {
-
-            }
-
-            @Override
-            public Set<String> getAutoIndexedProperties(Class forClass) {
-                return null;
-            }
-
-            @Override
-            public void startAutoIndexingProperty(Class forClass, String s) {
-
-            }
-
-            @Override
-            public void stopAutoIndexingProperty(Class forClass, String s) {
-
-            }
-
-            @Override
-            public void addLabels(RestNode node, String... label) {
-
-            }
-
-            @Override
-            public void removeLabel(RestNode node, String label) {
-
-            }
-
-            @Override
-            public Collection<String> getNodeLabels(String path) {
-                return null;
-            }
-
-            @Override
-            public Collection<String> getAllLabelNames() {
-                return null;
-            }
-
-            @Override
-            public Iterable<RestNode> getNodesByLabel(String label) {
-                return null;
-            }
-
-            @Override
-            public Iterable<RestNode> getNodesByLabelAndProperty(String label, String property, Object value) {
-                return null;
-            }
-        });
     }
 }

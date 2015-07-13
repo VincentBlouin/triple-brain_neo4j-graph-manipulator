@@ -13,7 +13,6 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jFriendlyResource;
 import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jFriendlyResourceFactory;
 import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jOperator;
 import org.neo4j.graphdb.Node;
-import org.neo4j.rest.graphdb.query.QueryEngine;
 
 import java.net.URI;
 import java.sql.SQLException;
@@ -29,15 +28,12 @@ public class Neo4jIdentification implements IdentificationOperator, Neo4jOperato
     }
 
     Neo4jFriendlyResource friendlyResourceOperator;
-    QueryEngine queryEngine;
 
     @AssistedInject
     protected Neo4jIdentification(
-            QueryEngine queryEngine,
             Neo4jFriendlyResourceFactory friendlyResourceFactory,
             @Assisted Node node
     ){
-        this.queryEngine = queryEngine;
         this.friendlyResourceOperator = friendlyResourceFactory.withNode(
                 node
         );
@@ -45,11 +41,9 @@ public class Neo4jIdentification implements IdentificationOperator, Neo4jOperato
 
     @AssistedInject
     protected Neo4jIdentification(
-            QueryEngine queryEngine,
             Neo4jFriendlyResourceFactory friendlyResourceFactory,
             @Assisted URI uri
             ){
-        this.queryEngine = queryEngine;
         this.friendlyResourceOperator = friendlyResourceFactory.withUri(
                 uri
         );

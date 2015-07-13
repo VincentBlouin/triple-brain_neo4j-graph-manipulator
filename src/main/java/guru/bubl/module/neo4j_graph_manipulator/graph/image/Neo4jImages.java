@@ -7,9 +7,6 @@ package guru.bubl.module.neo4j_graph_manipulator.graph.image;
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 import guru.bubl.module.common_utils.NoExRun;
-import org.neo4j.rest.graphdb.RestAPI;
-import org.neo4j.rest.graphdb.query.QueryEngine;
-import org.neo4j.rest.graphdb.util.QueryResult;
 import guru.bubl.module.model.Image;
 import guru.bubl.module.model.json.ImageJson;
 import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jFriendlyResource;
@@ -20,10 +17,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
-
-import static guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jRestApiUtils.map;
 
 public class Neo4jImages {
 
@@ -31,8 +25,6 @@ public class Neo4jImages {
         images
     }
 
-    protected RestAPI restApi;
-    protected QueryEngine<Map<String, Object>> queryEngine;
     protected Neo4jFriendlyResource friendlyResource;
 
     @Inject
@@ -40,12 +32,8 @@ public class Neo4jImages {
 
     @AssistedInject
     public Neo4jImages(
-            RestAPI restApi,
-            QueryEngine queryEngine,
             @Assisted Neo4jFriendlyResource friendlyResource
     ) {
-        this.restApi = restApi;
-        this.queryEngine = queryEngine;
         this.friendlyResource = friendlyResource;
     }
 

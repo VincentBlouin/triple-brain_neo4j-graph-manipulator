@@ -8,12 +8,6 @@ import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 import guru.bubl.module.common_utils.NamedParameterStatement;
 import guru.bubl.module.common_utils.NoExRun;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.Neo4jGraphElementFactory;
-import org.neo4j.graphdb.Node;
-import org.neo4j.rest.graphdb.RestAPI;
-import org.neo4j.rest.graphdb.batch.BatchCallback;
-import org.neo4j.rest.graphdb.query.QueryEngine;
-import org.neo4j.rest.graphdb.util.QueryResult;
 import guru.bubl.module.model.Image;
 import guru.bubl.module.model.UserUris;
 import guru.bubl.module.model.graph.GraphElementType;
@@ -25,8 +19,10 @@ import guru.bubl.module.model.graph.vertex.VertexOperator;
 import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jFriendlyResource;
 import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jOperator;
 import guru.bubl.module.neo4j_graph_manipulator.graph.Relationships;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.Neo4jGraphElementFactory;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.Neo4jGraphElementOperator;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.Neo4jVertexFactory;
+import org.neo4j.graphdb.Node;
 
 import javax.inject.Inject;
 import java.net.URI;
@@ -36,7 +32,6 @@ import java.util.Map;
 import java.util.Set;
 
 import static guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jRestApiUtils.map;
-import static guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jRestApiUtils.wrap;
 
 public class Neo4jEdgeOperator implements EdgeOperator, Neo4jOperator {
 
@@ -52,8 +47,6 @@ public class Neo4jEdgeOperator implements EdgeOperator, Neo4jOperator {
 
     protected Vertex sourceVertex;
     protected Vertex destinationVertex;
-    protected RestAPI restApi;
-    protected QueryEngine<Map<String, Object>> queryEngine;
 
     @Inject
     protected
@@ -64,15 +57,11 @@ public class Neo4jEdgeOperator implements EdgeOperator, Neo4jOperator {
             Neo4jVertexFactory vertexFactory,
             Neo4jEdgeFactory edgeFactory,
             Neo4jGraphElementFactory neo4jGraphElementFactory,
-            QueryEngine queryEngine,
-            RestAPI restApi,
             @Assisted Node node
     ) {
         this.vertexFactory = vertexFactory;
         this.edgeFactory = edgeFactory;
         this.node = node;
-        this.queryEngine = queryEngine;
-        this.restApi = restApi;
         graphElementOperator = neo4jGraphElementFactory.withNode(node);
     }
 
@@ -81,8 +70,6 @@ public class Neo4jEdgeOperator implements EdgeOperator, Neo4jOperator {
             Neo4jVertexFactory vertexFactory,
             Neo4jEdgeFactory edgeFactory,
             Neo4jGraphElementFactory graphElementFactory,
-            QueryEngine queryEngine,
-            RestAPI restApi,
             @Assisted URI uri
     ) {
         this.vertexFactory = vertexFactory;
@@ -90,8 +77,6 @@ public class Neo4jEdgeOperator implements EdgeOperator, Neo4jOperator {
         this.graphElementOperator = graphElementFactory.withUri(
                 uri
         );
-        this.queryEngine = queryEngine;
-        this.restApi = restApi;
     }
 
     @AssistedInject
@@ -99,15 +84,11 @@ public class Neo4jEdgeOperator implements EdgeOperator, Neo4jOperator {
             Neo4jVertexFactory vertexFactory,
             Neo4jEdgeFactory edgeFactory,
             Neo4jGraphElementFactory graphElementFactory,
-            QueryEngine queryEngine,
-            RestAPI restApi,
             @Assisted("source") Vertex sourceVertex,
             @Assisted("destination") Vertex destinationVertex
     ) {
         this.vertexFactory = vertexFactory;
         this.edgeFactory = edgeFactory;
-        this.queryEngine = queryEngine;
-        this.restApi = restApi;
         UserUris userUris = new UserUris(
                 UserUris.ownerUserNameFromUri(sourceVertex.uri())
         );

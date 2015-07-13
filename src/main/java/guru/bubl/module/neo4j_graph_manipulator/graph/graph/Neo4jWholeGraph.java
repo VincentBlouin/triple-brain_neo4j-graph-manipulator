@@ -17,24 +17,19 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.graph.edge.Neo4jEdgeFactor
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.schema.SchemaFactory;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.Neo4jVertexFactory;
 import org.apache.commons.lang.StringUtils;
-import org.neo4j.graphdb.Node;
-import org.neo4j.rest.graphdb.query.QueryEngine;
-import org.neo4j.rest.graphdb.util.QueryResult;
 
 import javax.inject.Inject;
 import java.net.URI;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
-import java.util.*;
+import java.util.HashSet;
+import java.util.Set;
 
 public class Neo4jWholeGraph implements WholeGraph {
 
     @Inject
     protected Connection connection;
-
-    @Inject
-    QueryEngine queryEngine;
 
     @Inject
     protected Neo4jVertexFactory neo4jVertexFactory;

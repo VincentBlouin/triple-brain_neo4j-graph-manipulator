@@ -7,8 +7,6 @@ package guru.bubl.module.neo4j_graph_manipulator.graph.graph;
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 import guru.bubl.module.common_utils.NoExRun;
-import org.neo4j.rest.graphdb.query.QueryEngine;
-import org.neo4j.rest.graphdb.util.QueryResult;
 import guru.bubl.module.model.User;
 import guru.bubl.module.model.graph.GraphElementType;
 import guru.bubl.module.model.graph.SubGraphPojo;
@@ -31,16 +29,12 @@ import java.net.URI;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
-import java.util.Map;
-
-import static guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jRestApiUtils.map;
 
 public class Neo4jUserGraph implements UserGraph {
 
     public static final String URI_PROPERTY_NAME = "uri";
 
     private User user;
-    private QueryEngine<Map<String, Object>> queryEngine;
     private Neo4jVertexFactory vertexFactory;
     private SchemaFactory schemaFactory;
     private Neo4jSubGraphExtractorFactory subGraphExtractorFactory;
@@ -52,7 +46,6 @@ public class Neo4jUserGraph implements UserGraph {
 
     @AssistedInject
     protected Neo4jUserGraph(
-            QueryEngine queryEngine,
             Neo4jVertexFactory vertexFactory,
             Neo4jEdgeFactory edgeFactory,
             Neo4jSubGraphExtractorFactory subGraphExtractorFactory,
@@ -60,7 +53,6 @@ public class Neo4jUserGraph implements UserGraph {
             SchemaFactory schemaFactory,
             @Assisted User user
     ) {
-        this.queryEngine = queryEngine;
         this.user = user;
         this.vertexFactory = vertexFactory;
         this.edgeFactory = edgeFactory;

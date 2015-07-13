@@ -21,16 +21,10 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.image.Neo4jImages;
 import org.apache.commons.lang.StringUtils;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
-import org.neo4j.rest.graphdb.RestAPI;
-import org.neo4j.rest.graphdb.query.QueryEngine;
-import org.neo4j.rest.graphdb.util.QueryResult;
 
 import javax.inject.Inject;
 import java.net.URI;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.Date;
 import java.util.Map;
 import java.util.Set;
@@ -60,13 +54,9 @@ public class Neo4jFriendlyResource implements FriendlyResourceOperator, Neo4jOpe
         return map;
     }
 
-    QueryEngine<Map<String, Object>> queryEngine;
-
     protected URI uri;
 
     protected Node node;
-
-    protected RestAPI restApi;
 
     protected Neo4jImages images;
 
@@ -75,13 +65,9 @@ public class Neo4jFriendlyResource implements FriendlyResourceOperator, Neo4jOpe
 
     @AssistedInject
     protected Neo4jFriendlyResource(
-            RestAPI restApi,
-            QueryEngine queryEngine,
             Neo4jImageFactory imageFactory,
             @Assisted Node node
     ) {
-        this.queryEngine = queryEngine;
-        this.restApi = restApi;
         this.images = imageFactory.forResource(this);
         this.node = node;
         this.uri = Uris.get(node.getProperty(
@@ -91,13 +77,9 @@ public class Neo4jFriendlyResource implements FriendlyResourceOperator, Neo4jOpe
 
     @AssistedInject
     protected Neo4jFriendlyResource(
-            RestAPI restApi,
-            QueryEngine queryEngine,
             Neo4jImageFactory imageFactory,
             @Assisted URI uri
     ) {
-        this.queryEngine = queryEngine;
-        this.restApi = restApi;
         this.images = imageFactory.forResource(this);
         if (StringUtils.isEmpty(uri.toString())) {
             throw new RuntimeException("uri for friendly resource is mandatory");
@@ -107,14 +89,10 @@ public class Neo4jFriendlyResource implements FriendlyResourceOperator, Neo4jOpe
 
     @AssistedInject
     protected Neo4jFriendlyResource(
-            RestAPI restApi,
-            QueryEngine queryEngine,
             Neo4jImageFactory imageFactory,
             @Assisted FriendlyResourcePojo pojo
     ) {
 
-        this.restApi = restApi;
-        this.queryEngine = queryEngine;
         this.images = imageFactory.forResource(this);
         this.uri = pojo.uri();
         createUsingInitialValues(
@@ -215,12 +193,6 @@ public class Neo4jFriendlyResource implements FriendlyResourceOperator, Neo4jOpe
             setLastUpdatedDateInStatement(statement);
             return statement.execute();
         }).get();
-        queryEngine.query(
-                query,
-                addUpdatedLastModificationDate(Neo4jRestApiUtils.map(
-                        "comment", comment
-                ))
-        );
     }
 
     @Override
@@ -247,9 +219,18 @@ public class Neo4jFriendlyResource implements FriendlyResourceOperator, Neo4jOpe
         Map<String, Object> props = addCreationProperties(
                 values
         );
-        queryEngine.query(
-                "create (n:" + GraphElementType.resource + " {props})", Neo4jRestApiUtils.wrap(props)
+        String query = String.format(
+                "create (n:%s {1})",
+                GraphElementType.resource
         );
+        NoExRun.wrap(()->{
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setObject(
+                    1,
+                    props
+            );
+            return statement.execute();
+        }).get();
     }
 
     @Override

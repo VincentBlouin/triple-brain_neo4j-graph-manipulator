@@ -7,12 +7,6 @@ package guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph;
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 import guru.bubl.module.common_utils.NoExRun;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.edge.Neo4jEdgeOperator;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.FriendlyResourceQueryBuilder;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.IdentificationQueryBuilder;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.Neo4jVertexInSubGraphOperator;
-import org.neo4j.rest.graphdb.query.QueryEngine;
-import org.neo4j.rest.graphdb.util.QueryResult;
 import guru.bubl.module.model.graph.SubGraphPojo;
 import guru.bubl.module.model.graph.edge.Edge;
 import guru.bubl.module.model.graph.edge.EdgePojo;
@@ -21,31 +15,28 @@ import guru.bubl.module.model.graph.vertex.VertexInSubGraphPojo;
 import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jFriendlyResource;
 import guru.bubl.module.neo4j_graph_manipulator.graph.Relationships;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.Neo4jUserGraph;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.edge.Neo4jEdgeOperator;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.FriendlyResourceQueryBuilder;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.IdentificationQueryBuilder;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.QueryUtils;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.Neo4jVertexFactory;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.Neo4jVertexInSubGraphOperator;
 
-import javax.xml.transform.Result;
 import java.net.URI;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
-import java.util.Map;
-
-import static org.neo4j.helpers.collection.MapUtil.map;
 
 public class Neo4jSubGraphExtractor {
     public final static String
             INCLUDED_VERTEX_QUERY_KEY = "iv",
             INCLUDED_EDGE_QUERY_KEY = "ie",
             GRAPH_ELEMENT_QUERY_KEY = "ge";
-
-    QueryEngine engine;
     URI centerVertexUri;
     Integer depth;
     Neo4jVertexFactory vertexFactory;
-    protected
-    Connection connection;
+    protected Connection connection;
     private SubGraphPojo subGraph = SubGraphPojo.withVerticesAndEdges(
             new HashMap<>(),
             new HashMap<>()
@@ -53,13 +44,11 @@ public class Neo4jSubGraphExtractor {
 
     @AssistedInject
     protected Neo4jSubGraphExtractor(
-            QueryEngine engine,
             Neo4jVertexFactory vertexFactory,
             Connection connection,
             @Assisted URI centerVertexUri,
             @Assisted Integer depth
     ) {
-        this.engine = engine;
         this.vertexFactory = vertexFactory;
         this.connection = connection;
         this.centerVertexUri = centerVertexUri;

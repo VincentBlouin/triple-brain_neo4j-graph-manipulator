@@ -33,9 +33,6 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.graph.edge.Neo4jEdgeFactor
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.edge.Neo4jEdgeOperator;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph.Neo4jSubGraphExtractor;
 import org.neo4j.graphdb.Node;
-import org.neo4j.rest.graphdb.RestAPI;
-import org.neo4j.rest.graphdb.query.QueryEngine;
-import org.neo4j.rest.graphdb.util.QueryResult;
 
 import java.net.URI;
 import java.sql.*;
@@ -59,8 +56,6 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
 
     protected Neo4jGraphElementFactory neo4jGraphElementFactory;
     protected Node node;
-    protected RestAPI restApi;
-    protected QueryEngine<Map<String, Object>> queryEngine;
     protected Connection connection;
 
 
@@ -72,8 +67,6 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
             Neo4jVertexFactory vertexFactory,
             Neo4jEdgeFactory edgeFactory,
             Neo4jGraphElementFactory neo4jGraphElementFactory,
-            QueryEngine queryEngine,
-            RestAPI restApi,
             Connection connection,
             @Assisted Node node
     ) {
@@ -81,8 +74,6 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
                 vertexFactory,
                 edgeFactory,
                 neo4jGraphElementFactory,
-                queryEngine,
-                restApi,
                 connection,
                 neo4jGraphElementFactory.withNode(
                         node
@@ -96,16 +87,12 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
             Neo4jVertexFactory vertexFactory,
             Neo4jEdgeFactory edgeFactory,
             Neo4jGraphElementFactory neo4jGraphElementFactory,
-            QueryEngine queryEngine,
-            RestAPI restApi,
             Connection connection,
             @Assisted URI uri
     ) {
         this.vertexFactory = vertexFactory;
         this.edgeFactory = edgeFactory;
         this.neo4jGraphElementFactory = neo4jGraphElementFactory;
-        this.queryEngine = queryEngine;
-        this.restApi = restApi;
         this.connection = connection;
         this.graphElementOperator = neo4jGraphElementFactory.withUri(
                 uri
@@ -117,8 +104,6 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
             Neo4jVertexFactory vertexFactory,
             Neo4jEdgeFactory edgeFactory,
             Neo4jGraphElementFactory neo4jGraphElementFactory,
-            QueryEngine queryEngine,
-            RestAPI restApi,
             Connection connection,
             @Assisted String ownerUserName
     ) {
@@ -126,8 +111,6 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
                 vertexFactory,
                 edgeFactory,
                 neo4jGraphElementFactory,
-                queryEngine,
-                restApi,
                 connection,
                 new UserUris(ownerUserName).generateVertexUri()
         );
@@ -139,8 +122,6 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
             final Neo4jVertexFactory vertexFactory,
             Neo4jEdgeFactory edgeFactory,
             Neo4jGraphElementFactory neo4jGraphElementFactory,
-            QueryEngine queryEngine,
-            RestAPI restApi,
             Connection connection,
             final @Assisted Set<Vertex> includedVertices,
             final @Assisted Set<Edge> includedEdges
@@ -149,8 +130,6 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
                 vertexFactory,
                 edgeFactory,
                 neo4jGraphElementFactory,
-                queryEngine,
-                restApi,
                 connection,
                 new UserUris(
                         includedVertices.iterator().next().getOwnerUsername()
