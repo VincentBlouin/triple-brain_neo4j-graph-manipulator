@@ -330,8 +330,6 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
     public void remove() {
         identification.remove();
     }
-
-
     private Map<URI, Identification> getIdentificationsUsingRelation(IdentificationType identificationType) {
         String query = String.format(
                 "%sMATCH n-[r:%s]->identification WHERE r.type='%s' RETURN identification.uri as uri, identification.external_uri as external_uri",

@@ -7,10 +7,7 @@ package guru.bubl.module.neo4j_graph_manipulator.graph;
 import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
-import guru.bubl.module.model.EmptyGraphTransaction;
-import guru.bubl.module.model.FriendlyResourceFactory;
-import guru.bubl.module.model.GraphTransaction;
-import guru.bubl.module.model.WholeGraph;
+import guru.bubl.module.model.*;
 import guru.bubl.module.model.graph.*;
 import guru.bubl.module.model.graph.edge.EdgeFactory;
 import guru.bubl.module.model.graph.edge.EdgeOperator;
@@ -86,6 +83,8 @@ public class Neo4jModule extends AbstractModule {
         }
 
         bind(WholeGraph.class).to(Neo4jWholeGraph.class);
+
+        bind(IdentifiedTo.class).to(IdentifiedToNeo4J.class);
 
         FactoryModuleBuilder factoryModuleBuilder = new FactoryModuleBuilder();
 

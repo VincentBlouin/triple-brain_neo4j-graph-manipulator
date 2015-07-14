@@ -60,15 +60,16 @@ public class Neo4jFriendlyResource implements FriendlyResourceOperator, Neo4jOpe
 
     protected Neo4jImages images;
 
-    @Inject
-    Connection connection;
+    protected Connection connection;
 
     @AssistedInject
     protected Neo4jFriendlyResource(
             Neo4jImageFactory imageFactory,
+            Connection connection,
             @Assisted Node node
     ) {
         this.images = imageFactory.forResource(this);
+        this.connection = connection;
         this.node = node;
         this.uri = Uris.get(node.getProperty(
                 Neo4jUserGraph.URI_PROPERTY_NAME
@@ -78,9 +79,11 @@ public class Neo4jFriendlyResource implements FriendlyResourceOperator, Neo4jOpe
     @AssistedInject
     protected Neo4jFriendlyResource(
             Neo4jImageFactory imageFactory,
+            Connection connection,
             @Assisted URI uri
     ) {
         this.images = imageFactory.forResource(this);
+        this.connection = connection;
         if (StringUtils.isEmpty(uri.toString())) {
             throw new RuntimeException("uri for friendly resource is mandatory");
         }
@@ -90,10 +93,12 @@ public class Neo4jFriendlyResource implements FriendlyResourceOperator, Neo4jOpe
     @AssistedInject
     protected Neo4jFriendlyResource(
             Neo4jImageFactory imageFactory,
+            Connection connection,
             @Assisted FriendlyResourcePojo pojo
     ) {
 
         this.images = imageFactory.forResource(this);
+        this.connection = connection;
         this.uri = pojo.uri();
         createUsingInitialValues(
                 Neo4jRestApiUtils.map(
