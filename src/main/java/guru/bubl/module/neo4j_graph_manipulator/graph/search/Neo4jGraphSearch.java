@@ -27,6 +27,7 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.index.ReadableIndex;
 
 import javax.inject.Inject;
+import javax.xml.transform.Result;
 import java.net.URI;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -122,8 +123,6 @@ public class Neo4jGraphSearch implements GraphSearch {
     }
 
     private class Getter<ResultType extends GraphElementSearchResult> {
-        private final String nodePrefix = "node";
-        private List<ResultType> searchResults = new ArrayList<>();
 
         public GraphElementSearchResult getForUri(URI uri, String username) {
             String query = String.format(
@@ -140,9 +139,9 @@ public class Neo4jGraphSearch implements GraphSearch {
                     IdentificationQueryBuilder.identificationReturnQueryPart()
             );
 
-            return NoExRun.wrap(()->{
+            return NoExRun.wrap(() -> {
                 ResultSet rs = connection.createStatement().executeQuery(query);
-                if(!rs.next()){
+                if (!rs.next()) {
                     return null;
                 }
                 return new GraphElementSearchResultPojo(
@@ -153,7 +152,7 @@ public class Neo4jGraphSearch implements GraphSearch {
                                 ).build()
                         ),
                         GraphElementType.valueOf(
-                                nodeTypeInRow(rs)
+                                SearchResultGetter.nodeTypeInRow(rs)
                         )
                 );
             }).get();
@@ -184,67 +183,15 @@ public class Neo4jGraphSearch implements GraphSearch {
                 String username,
                 GraphElementType... graphElementTypes
         ) {
-            return getUsingQuery(
+            return new SearchResultGetter<ResultType>(
                     buildQuery(
                             searchTerm,
                             forPersonal,
                             username,
                             graphElementTypes
-                    )
-            );
-        }
-
-        private List<ResultType> getUsingQuery(String query) {
-            return NoExRun.wrap(()->{
-                ResultSet rs = connection.createStatement().executeQuery(query);
-                while(rs.next()){
-                    addResult(rs);
-                }
-                return searchResults;
-            }).get();
-        }
-
-        private void addResult(ResultSet row) throws SQLException{
-//            printRow(row);
-            SearchResultBuilder searchResultBuilder = getFromRow(row);
-            GraphElementSearchResult graphElementSearchResult = searchResultBuilder.build();
-            searchResults.add(
-                    (ResultType) graphElementSearchResult
-            );
-        }
-
-        private SearchResultBuilder getFromRow(ResultSet row) throws SQLException{
-            GraphElementType resultType = GraphElementType.valueOf(
-                    nodeTypeInRow(row)
-            );
-            switch (resultType) {
-                case vertex:
-                    return new VertexSearchResultBuilder(row, nodePrefix);
-                case edge:
-                    return new RelationSearchResultBuilder(row, nodePrefix);
-                case schema:
-                    return new SchemaSearchResultBuilder(row, nodePrefix);
-                case property:
-                    return new PropertySearchResultBuilder(row, nodePrefix);
-            }
-            throw new RuntimeException("result type " + resultType + " does not exist");
-        }
-
-        private void printRow(Map<String, Object> row) {
-            System.out.println("*************printing row*****************");
-            for (String key : row.keySet()) {
-                if (key.equals("related_nodes")) {
-                    List collection = (List) row.get(key);
-                    System.out.println(collection);
-
-                } else {
-                    System.out.println(key + " " + row.get(key));
-                }
-            }
-        }
-
-        private String nodeTypeInRow(ResultSet row) throws SQLException{
-            return row.getString("type");
+                    ),
+                    connection
+            ).get();
         }
 
         private String buildQuery(
@@ -256,7 +203,7 @@ public class Neo4jGraphSearch implements GraphSearch {
             return "START node=node:node_auto_index('" +
                     Neo4jFriendlyResource.props.label + ":(" + formatSearchTerm(searchTerm) + "*) AND " +
                     (forPersonal ? "owner:" + username : "(is_public:true " +
-                            (StringUtils.isEmpty(username) ? "" : " OR owner:" + username ) + ")") + " AND " +
+                            (StringUtils.isEmpty(username) ? "" : " OR owner:" + username) + ")") + " AND " +
                     "( " + Neo4jFriendlyResource.props.type + ":" + StringUtils.join(graphElementTypes, " OR type:") + ") " +
                     "') " +
                     "OPTIONAL MATCH node<-[relation]->related_node " +

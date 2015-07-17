@@ -9,7 +9,10 @@ import guru.bubl.module.model.IdentifiedTo;
 import guru.bubl.module.model.User;
 import guru.bubl.module.model.graph.FriendlyResourcePojo;
 import guru.bubl.module.model.graph.Identification;
+import guru.bubl.module.model.search.GraphElementSearchResult;
+import guru.bubl.module.model.search.GraphElementSearchResultPojo;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.Neo4jIdentification;
+import guru.bubl.module.neo4j_graph_manipulator.graph.search.SearchResultGetter;
 
 import javax.inject.Inject;
 import java.net.URI;
@@ -24,33 +27,29 @@ public class IdentifiedToNeo4J implements IdentifiedTo {
     protected Connection connection;
 
     @Override
-    public Set<FriendlyResourcePojo> getForIdentificationAndUser(
+    public Set<GraphElementSearchResult> getForIdentificationAndUser(
             Identification identification,
             User user
     ) {
-        Set<FriendlyResourcePojo> related = new HashSet<>();
         String query = String.format(
                 "START id=node:node_auto_index('%s:\"%s\" AND %s:%s') " +
-                        "MATCH id<-[]-n " +
-                "RETURN n.uri, n.label",
+                        "MATCH id<-[]-node " +
+                        "OPTIONAL MATCH node<-[relation]->related_node " +
+                        "WHERE not(node-[:%s]->related_node) " +
+                        "RETURN " +
+                        "node.uri, node.label, node.creation_date, node.last_modification_date, " +
+                        "COLLECT([related_node.label, related_node.uri, type(relation)])[0..5] as related_nodes, " +
+                        "node.type as type limit 10",
                 Neo4jIdentification.props.external_uri,
                 identification.getExternalResourceUri(),
                 Neo4jFriendlyResource.props.owner,
-                user.username()
+                user.username(),
+                Relationships.IDENTIFIED_TO
         );
-        return NoExRun.wrap(()->{
-            ResultSet rs = connection.createStatement().executeQuery(query);
-            while(rs.next()){
-                related.add(
-                        new FriendlyResourcePojo(
-                                URI.create(
-                                        rs.getString("n.uri")
-                                ),
-                                rs.getString("n.label")
-                        )
-                );
-            }
-            return related;
-        }).get();
+        return new HashSet<>(
+                new SearchResultGetter<>(
+                        query, connection
+                ).get()
+        );
     }
 }
