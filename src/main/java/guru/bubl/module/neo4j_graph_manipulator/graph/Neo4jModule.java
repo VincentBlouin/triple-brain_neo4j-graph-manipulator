@@ -26,20 +26,25 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.Neo4jVertexFa
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.Neo4jVertexInSubGraphOperator;
 import guru.bubl.module.neo4j_graph_manipulator.graph.image.Neo4jImageFactory;
 import guru.bubl.module.neo4j_graph_manipulator.graph.test.Neo4JGraphComponentTest;
-import org.neo4j.graphdb.GraphDatabaseService;
-import org.neo4j.graphdb.Node;
-import org.neo4j.graphdb.Transaction;
+import org.neo4j.graphdb.*;
+import org.neo4j.graphdb.event.KernelEventHandler;
+import org.neo4j.graphdb.event.TransactionEventHandler;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 import org.neo4j.graphdb.factory.GraphDatabaseSettings;
 import org.neo4j.graphdb.index.IndexManager;
 import org.neo4j.graphdb.index.ReadableIndex;
+import org.neo4j.graphdb.schema.Schema;
+import org.neo4j.graphdb.traversal.BidirectionalTraversalDescription;
+import org.neo4j.graphdb.traversal.TraversalDescription;
 import org.neo4j.helpers.collection.MapUtil;
+import org.neo4j.jdbc.Driver;
 
 import javax.inject.Singleton;
 import java.io.File;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.Map;
 import java.util.Properties;
 
 public class Neo4jModule extends AbstractModule {
@@ -201,6 +206,9 @@ public class Neo4jModule extends AbstractModule {
         bind(Connection.class).toInstance(
                 getConnectionForRest()
         );
+        bind(GraphDatabaseService.class).toInstance(
+                dummyGraphDatabaseService()
+        );
     }
 
     private void registerShutdownHook(final GraphDatabaseService graphDb) {
@@ -262,5 +270,124 @@ public class Neo4jModule extends AbstractModule {
         } catch (ClassNotFoundException | SQLException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private GraphDatabaseService dummyGraphDatabaseService(){
+        return new GraphDatabaseService() {
+            @Override
+            public Node createNode() {
+                return null;
+            }
+
+            @Override
+            public Node createNode(Label... labels) {
+                return null;
+            }
+
+            @Override
+            public Node getNodeById(long id) {
+                return null;
+            }
+
+            @Override
+            public Relationship getRelationshipById(long id) {
+                return null;
+            }
+
+            @Override
+            public Iterable<Node> getAllNodes() {
+                return null;
+            }
+
+            @Override
+            public ResourceIterator<Node> findNodes(Label label, String key, Object value) {
+                return null;
+            }
+
+            @Override
+            public Node findNode(Label label, String key, Object value) {
+                return null;
+            }
+
+            @Override
+            public ResourceIterator<Node> findNodes(Label label) {
+                return null;
+            }
+
+            @Override
+            public ResourceIterable<Node> findNodesByLabelAndProperty(Label label, String key, Object value) {
+                return null;
+            }
+
+            @Override
+            public Iterable<RelationshipType> getRelationshipTypes() {
+                return null;
+            }
+
+            @Override
+            public boolean isAvailable(long timeout) {
+                return false;
+            }
+
+            @Override
+            public void shutdown() {
+
+            }
+
+            @Override
+            public Transaction beginTx() {
+                return null;
+            }
+
+            @Override
+            public Result execute(String query) throws QueryExecutionException {
+                return null;
+            }
+
+            @Override
+            public Result execute(String query, Map<String, Object> parameters) throws QueryExecutionException {
+                return null;
+            }
+
+            @Override
+            public <T> TransactionEventHandler<T> registerTransactionEventHandler(TransactionEventHandler<T> handler) {
+                return null;
+            }
+
+            @Override
+            public <T> TransactionEventHandler<T> unregisterTransactionEventHandler(TransactionEventHandler<T> handler) {
+                return null;
+            }
+
+            @Override
+            public KernelEventHandler registerKernelEventHandler(KernelEventHandler handler) {
+                return null;
+            }
+
+            @Override
+            public KernelEventHandler unregisterKernelEventHandler(KernelEventHandler handler) {
+                return null;
+            }
+
+            @Override
+            public Schema schema() {
+                return null;
+            }
+
+            @Override
+            public IndexManager index() {
+                return null;
+            }
+
+            @Override
+            public TraversalDescription traversalDescription() {
+                return null;
+            }
+
+            @Override
+            public BidirectionalTraversalDescription bidirectionalTraversalDescription() {
+                return null;
+            }
+        };
     }
 }

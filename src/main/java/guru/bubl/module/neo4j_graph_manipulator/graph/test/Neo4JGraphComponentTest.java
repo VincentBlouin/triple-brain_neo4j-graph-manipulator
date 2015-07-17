@@ -32,6 +32,7 @@ import org.neo4j.graphdb.Transaction;
 
 import javax.inject.Inject;
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -109,6 +110,7 @@ public class Neo4JGraphComponentTest implements GraphComponentTest {
 
     @Override
     public void after() {
+        transaction.failure();
         transaction.close();
     }
 

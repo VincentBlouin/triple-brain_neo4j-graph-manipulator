@@ -41,17 +41,18 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
     protected URI uri;
     protected Neo4jIdentificationFactory identificationFactory;
 
-    @Inject
     protected Connection connection;
 
     @AssistedInject
     protected Neo4jGraphElementOperator(
             Neo4jIdentificationFactory identificationFactory,
+            Connection connection,
             @Assisted Node node
     ) {
         identification = identificationFactory.withNode(
                 node
         );
+        this.connection = connection;
         this.identificationFactory = identificationFactory;
         this.node = node;
     }
@@ -59,11 +60,13 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
     @AssistedInject
     protected Neo4jGraphElementOperator(
             Neo4jIdentificationFactory identificationFactory,
+            Connection connection,
             @Assisted URI uri
     ) {
         identification = identificationFactory.withUri(
                 uri
         );
+        this.connection = connection;
         this.identificationFactory = identificationFactory;
     }
 
@@ -332,7 +335,9 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
     }
     private Map<URI, Identification> getIdentificationsUsingRelation(IdentificationType identificationType) {
         String query = String.format(
-                "%sMATCH n-[r:%s]->identification WHERE r.type='%s' RETURN identification.uri as uri, identification.external_uri as external_uri",
+                "%sMATCH n-[r:%s]->identification WHERE r.type='%s' " +
+                        "RETURN identification.uri as uri, " +
+                        "identification.external_uri as external_uri",
                 queryPrefix(),
                 Relationships.IDENTIFIED_TO,
                 identificationType
