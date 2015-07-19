@@ -43,6 +43,8 @@ import static guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jRestApiUtils.m
 
 public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, Neo4jOperator {
 
+    private final static Integer DISTANCE_TO_GET_END_VERTICES = 2;
+
     public enum props {
         number_of_connected_edges_property_name,
         is_public,
@@ -503,17 +505,43 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
 
     @Override
     public Boolean isPublic() {
-        return (Boolean) getNode().getProperty(
-                props.is_public.name()
+        String query = String.format(
+                "%s return n.%s as is_public",
+                queryPrefix(),
+                props.is_public
         );
+        return NoExRun.wrap(() -> {
+            ResultSet rs = connection.createStatement().executeQuery(
+                    query
+            );
+            rs.next();
+            return rs.getBoolean("is_public");
+        }).get();
     }
 
     @Override
     public void makePublic() {
-        getNode().setProperty(
-                props.is_public.name(),
-                true
+        String query = String.format(
+                "%s" +
+                        "SET n.%s = true " +
+                        "WITH n " +
+                        "MATCH n<-[:%s|%s]->e, " +
+                        "e<-[:%s|%s]->v " +
+                        "WHERE v.%s = true " +
+                        "SET e.%s = true ",
+                queryPrefix(),
+                props.is_public,
+                Relationships.SOURCE_VERTEX,
+                Relationships.DESTINATION_VERTEX,
+                Relationships.SOURCE_VERTEX,
+                Relationships.DESTINATION_VERTEX,
+                props.is_public,
+                props.is_public
         );
+        NoExRun.wrap(() ->
+                connection.createStatement().executeQuery(
+                        query
+                )).get();
         graphElementOperator.updateLastModificationDate();
     }
 
