@@ -22,6 +22,7 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.Relationships;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.Neo4jGraphElementFactory;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.Neo4jGraphElementOperator;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.Neo4jVertexFactory;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.Neo4jVertexInSubGraphOperator;
 import org.neo4j.graphdb.Node;
 
 import javax.inject.Inject;
@@ -51,19 +52,6 @@ public class Neo4jEdgeOperator implements EdgeOperator, Neo4jOperator {
     @Inject
     protected
     Connection connection;
-
-    @AssistedInject
-    protected Neo4jEdgeOperator(
-            Neo4jVertexFactory vertexFactory,
-            Neo4jEdgeFactory edgeFactory,
-            Neo4jGraphElementFactory neo4jGraphElementFactory,
-            @Assisted Node node
-    ) {
-        this.vertexFactory = vertexFactory;
-        this.edgeFactory = edgeFactory;
-        this.node = node;
-        graphElementOperator = neo4jGraphElementFactory.withNode(node);
-    }
 
     @AssistedInject
     protected Neo4jEdgeOperator(
@@ -139,11 +127,6 @@ public class Neo4jEdgeOperator implements EdgeOperator, Neo4jOperator {
                 sourceVertex();
     }
 
-    @Override
-    public boolean hasVertex(Vertex vertex) {
-        return sourceVertex().equals(vertex) ||
-                destinationVertex().equals(vertex);
-    }
 
     @Override
     public void inverse() {
@@ -283,13 +266,17 @@ public class Neo4jEdgeOperator implements EdgeOperator, Neo4jOperator {
         String query = String.format(
                 "START source_node=node:node_auto_index(\"uri:%s\"), " +
                         "destination_node=node:node_auto_index(\"uri:%s\") " +
-                        "create (n:%s {1}), n-[:%s]->source_node, n-[:%s]->destination_node " +
-                        "return n, source_node, destination_node",
+                        "CREATE (n:%s {1}), n-[:%s]->source_node, n-[:%s]->destination_node " +
+                        "SET n.%s = source_node.%s AND destination_node.%s " +
+                        "RETURN n, source_node, destination_node",
                 sourceVertex.uri(),
                 destinationVertex.uri(),
                 GraphElementType.edge,
                 Relationships.SOURCE_VERTEX.name(),
-                Relationships.DESTINATION_VERTEX.name()
+                Relationships.DESTINATION_VERTEX.name(),
+                Neo4jVertexInSubGraphOperator.props.is_public,
+                Neo4jVertexInSubGraphOperator.props.is_public,
+                Neo4jVertexInSubGraphOperator.props.is_public
         );
         NoExRun.wrap(() -> {
             PreparedStatement statement = connection.prepareStatement(
@@ -397,5 +384,21 @@ public class Neo4jEdgeOperator implements EdgeOperator, Neo4jOperator {
     @Override
     public URI getExternalResourceUri() {
         return graphElementOperator.getExternalResourceUri();
+    }
+
+    @Override
+    public Boolean isPublic() {
+        String query = String.format(
+                "%s return n.%s as is_public",
+                queryPrefix(),
+                Neo4jVertexInSubGraphOperator.props.is_public
+        );
+        return NoExRun.wrap(() -> {
+            ResultSet rs = connection.createStatement().executeQuery(
+                    query
+            );
+            rs.next();
+            return rs.getBoolean("is_public");
+        }).get();
     }
 }

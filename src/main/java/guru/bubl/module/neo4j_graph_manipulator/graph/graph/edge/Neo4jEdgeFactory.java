@@ -11,13 +11,11 @@ import guru.bubl.module.model.graph.vertex.Vertex;
 import java.net.URI;
 
 public interface Neo4jEdgeFactory {
-
-    public Neo4jEdgeOperator createOrLoadWithNode(Node node);
-    public Neo4jEdgeOperator withSourceAndDestinationVertex(
+    Neo4jEdgeOperator withSourceAndDestinationVertex(
             @Assisted("source") Vertex sourceVertex,
             @Assisted("destination") Vertex destinationVertex
     );
-    public Neo4jEdgeOperator withUri(
+    Neo4jEdgeOperator withUri(
             URI uri
     );
 }
