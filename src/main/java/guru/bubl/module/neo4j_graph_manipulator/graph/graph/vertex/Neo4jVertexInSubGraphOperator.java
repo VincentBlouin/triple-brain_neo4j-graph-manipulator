@@ -547,10 +547,21 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
 
     @Override
     public void makePrivate() {
-        getNode().setProperty(
-                props.is_public.name(),
-                false
+        String query = String.format(
+                "%s" +
+                        "OPTIONAL MATCH n<-[:%s|%s]->e " +
+                        "SET n.%s = false, " +
+                        "e.%s = false ",
+                queryPrefix(),
+                Relationships.SOURCE_VERTEX,
+                Relationships.DESTINATION_VERTEX,
+                props.is_public,
+                props.is_public
         );
+        NoExRun.wrap(() ->
+                connection.createStatement().executeQuery(
+                        query
+                )).get();
         graphElementOperator.updateLastModificationDate();
     }
 
