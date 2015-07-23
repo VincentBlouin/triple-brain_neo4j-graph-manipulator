@@ -19,6 +19,7 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.graph.Neo4jGraphElementFac
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.FriendlyResourceQueryBuilder;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.IdentificationQueryBuilder;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph.GraphElementFromExtractorQueryRow;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.Neo4jVertexInSubGraphOperator;
 import guru.bubl.module.neo4j_graph_manipulator.graph.search.result_builder.*;
 import org.apache.commons.lang.StringUtils;
 import org.apache.lucene.queryParser.QueryParser;
@@ -207,6 +208,9 @@ public class Neo4jGraphSearch implements GraphSearch {
                     "( " + Neo4jFriendlyResource.props.type + ":" + StringUtils.join(graphElementTypes, " OR type:") + ") " +
                     "') " +
                     "OPTIONAL MATCH node<-[relation]->related_node " +
+                    "WHERE related_node." +
+                    Neo4jVertexInSubGraphOperator.props.is_public +
+                    "=true OR related_node.owner='" + username + "' " +
                     "RETURN " +
                     "node.uri, node.label, node.creation_date, node.last_modification_date, " +
                     "COLLECT([related_node.label, related_node.uri, type(relation)])[0..5] as related_nodes, " +
