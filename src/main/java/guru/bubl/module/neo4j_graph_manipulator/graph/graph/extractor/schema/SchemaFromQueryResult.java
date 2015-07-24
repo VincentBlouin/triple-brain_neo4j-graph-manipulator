@@ -24,9 +24,10 @@ public class SchemaFromQueryResult {
 
     public SchemaPojo build() throws SQLException{
         result.next();
-        GraphElementPojo schemaGraphElement = GraphElementFromExtractorQueryRow.usingRowAndKey(
+        GraphElementPojo schemaGraphElement = GraphElementFromExtractorQueryRow.usingRowKeyAndIdentificationKey(
                 result,
-                "schema_node"
+                Neo4jSchemaExtractor.SCHEMA_QUERY_KEY,
+                Neo4jSchemaExtractor.SCHEMA_IDENTIFICATION_QUERY_KEY
         ).build();
         buildOrUpdatePropertyInRow(result);
         while(result.next()){
@@ -41,9 +42,10 @@ public class SchemaFromQueryResult {
     }
 
     private void buildOrUpdatePropertyInRow(ResultSet row) throws SQLException{
-        GraphElementFromExtractorQueryRow extractor = GraphElementFromExtractorQueryRow.usingRowAndKey(
+        GraphElementFromExtractorQueryRow extractor = GraphElementFromExtractorQueryRow.usingRowKeyAndIdentificationKey(
                 row,
-                "schema_property"
+                Neo4jSchemaExtractor.PROPERTY_QUERY_KEY,
+                Neo4jSchemaExtractor.PROPERTY_IDENTIFICATION_QUERY_KEY
         );
         if(rowHasSchemaProperty(row)){
             URI uri = getPropertyUri(row);
@@ -56,14 +58,14 @@ public class SchemaFromQueryResult {
 
     private Boolean rowHasSchemaProperty(ResultSet row) throws SQLException{
         return row.getString(
-                "schema_property." + Neo4jFriendlyResource.props.uri
+                Neo4jSchemaExtractor.PROPERTY_QUERY_KEY + "." + Neo4jFriendlyResource.props.uri
         ) != null;
     }
 
     private URI getPropertyUri(ResultSet row)throws SQLException{
         return URI.create(
                 row.getString(
-                        "schema_property." + Neo4jFriendlyResource.props.uri
+                        Neo4jSchemaExtractor.PROPERTY_QUERY_KEY + "." + Neo4jFriendlyResource.props.uri
                 )
         );
     }

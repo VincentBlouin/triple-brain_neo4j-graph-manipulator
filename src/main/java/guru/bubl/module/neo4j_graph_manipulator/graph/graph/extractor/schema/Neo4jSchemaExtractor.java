@@ -21,6 +21,15 @@ public class Neo4jSchemaExtractor {
 
     protected Connection connection;
 
+    public static final String
+            SCHEMA_QUERY_KEY = "s",
+            PROPERTY_QUERY_KEY = "p",
+            SCHEMA_IDENTIFICATION_QUERY_KEY = "id_s",
+            SCHEMA_IDENTIFICATION_RELATION_QUERY_KEY = "id_r_s",
+            PROPERTY_IDENTIFICATION_RELATION_QUERY_KEY = "id_r_p",
+            PROPERTY_IDENTIFICATION_QUERY_KEY = "id_p";
+
+
     @AssistedInject
     protected Neo4jSchemaExtractor(
             Connection connection,
@@ -43,15 +52,23 @@ public class Neo4jSchemaExtractor {
 
     private String buildQuery() {
         String dummyReturnValueToAvoidFinishWithComma = "1";
-        return "START schema_node=node:node_auto_index('uri:" + schemaUri + "') " +
-                "OPTIONAL MATCH (schema_node)-[:" + Relationships.HAS_PROPERTY + "]->(schema_property) " +
-                "OPTIONAL MATCH ()-[" + IdentificationQueryBuilder.IDENTIFICATION_RELATION_QUERY_KEY + ":" + Relationships.IDENTIFIED_TO + "]->(" + IdentificationQueryBuilder.IDENTIFICATION_QUERY_KEY + ") " +
+        return "START " + SCHEMA_QUERY_KEY + "=node:node_auto_index('uri:" + schemaUri + "') " +
+                "OPTIONAL MATCH ("+ SCHEMA_QUERY_KEY +")-[:" + Relationships.HAS_PROPERTY + "]->("+PROPERTY_QUERY_KEY+") " +
+                "OPTIONAL MATCH ("+SCHEMA_QUERY_KEY+")-[" + SCHEMA_IDENTIFICATION_RELATION_QUERY_KEY + ":" + Relationships.IDENTIFIED_TO + "]->(" + SCHEMA_IDENTIFICATION_QUERY_KEY + ") " +
+                "OPTIONAL MATCH ("+PROPERTY_QUERY_KEY+")-[" + PROPERTY_IDENTIFICATION_RELATION_QUERY_KEY + ":" + Relationships.IDENTIFIED_TO + "]->(" + PROPERTY_IDENTIFICATION_QUERY_KEY + ") " +
                 "RETURN " +
-                FriendlyResourceQueryBuilder.returnQueryPartUsingPrefix("schema_node") +
-                FriendlyResourceQueryBuilder.returnQueryPartUsingPrefix("schema_property") +
-                FriendlyResourceQueryBuilder.imageReturnQueryPart("schema_node") +
-                FriendlyResourceQueryBuilder.imageReturnQueryPart("schema_property") +
-                IdentificationQueryBuilder.identificationReturnQueryPart() +
+                FriendlyResourceQueryBuilder.returnQueryPartUsingPrefix(SCHEMA_QUERY_KEY) +
+                FriendlyResourceQueryBuilder.returnQueryPartUsingPrefix(PROPERTY_QUERY_KEY) +
+                FriendlyResourceQueryBuilder.imageReturnQueryPart(SCHEMA_QUERY_KEY) +
+                FriendlyResourceQueryBuilder.imageReturnQueryPart(PROPERTY_QUERY_KEY) +
+                IdentificationQueryBuilder.identificationReturnQueryPartUsingKeysForIdentificationRelationAndAlias(
+                        SCHEMA_IDENTIFICATION_QUERY_KEY,
+                        SCHEMA_IDENTIFICATION_RELATION_QUERY_KEY
+                ) +
+                IdentificationQueryBuilder.identificationReturnQueryPartUsingKeysForIdentificationRelationAndAlias(
+                        PROPERTY_IDENTIFICATION_QUERY_KEY,
+                        PROPERTY_IDENTIFICATION_RELATION_QUERY_KEY
+                ) +
                 dummyReturnValueToAvoidFinishWithComma;
     }
 }

@@ -17,6 +17,7 @@ public class GraphElementFromExtractorQueryRow {
 
     private ResultSet row;
     private String key;
+    private String identificationKey = IdentificationQueryBuilder.IDENTIFICATION_QUERY_KEY;
 
     public static GraphElementFromExtractorQueryRow usingRowAndKey(
             ResultSet row,
@@ -28,9 +29,27 @@ public class GraphElementFromExtractorQueryRow {
         );
     }
 
+    public static GraphElementFromExtractorQueryRow usingRowKeyAndIdentificationKey(
+            ResultSet row,
+            String key,
+            String identificationKey
+    ) {
+        return new GraphElementFromExtractorQueryRow(
+                row,
+                key,
+                identificationKey
+        );
+    }
+
     protected GraphElementFromExtractorQueryRow(ResultSet row, String key) {
         this.row = row;
         this.key = key;
+    }
+
+    protected GraphElementFromExtractorQueryRow(ResultSet row, String key, String identificationKey) {
+        this.row = row;
+        this.key = key;
+        this.identificationKey = identificationKey;
     }
 
     public GraphElementPojo build() throws SQLException{
@@ -41,7 +60,7 @@ public class GraphElementFromExtractorQueryRow {
                 ).build(),
                 IdentificationsFromExtractorQueryRow.usingRowAndKey(
                         row,
-                        IdentificationQueryBuilder.IDENTIFICATION_QUERY_KEY
+                        identificationKey
                 ).build()
         );
     }
