@@ -291,7 +291,7 @@ public class Neo4jEdgeOperator implements EdgeOperator, Neo4jOperator {
     }
 
     @Override
-    public Map<URI, Identification> getGenericIdentifications() {
+    public Map<URI, IdentificationPojo> getGenericIdentifications() {
         return graphElementOperator.getGenericIdentifications();
     }
 
@@ -301,7 +301,7 @@ public class Neo4jEdgeOperator implements EdgeOperator, Neo4jOperator {
     }
 
     @Override
-    public Map<URI, Identification> getSameAs() {
+    public Map<URI, IdentificationPojo> getSameAs() {
         return graphElementOperator.getSameAs();
     }
 
@@ -316,7 +316,7 @@ public class Neo4jEdgeOperator implements EdgeOperator, Neo4jOperator {
     }
 
     @Override
-    public Map<URI, Identification> getAdditionalTypes() {
+    public Map<URI, IdentificationPojo> getAdditionalTypes() {
         return graphElementOperator.getAdditionalTypes();
     }
 

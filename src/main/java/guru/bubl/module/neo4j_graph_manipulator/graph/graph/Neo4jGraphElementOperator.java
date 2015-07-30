@@ -166,7 +166,7 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
     }
 
     @Override
-    public Map<URI, Identification> getGenericIdentifications() {
+    public Map<URI, IdentificationPojo> getGenericIdentifications() {
         return getIdentificationsUsingRelation(
                 IdentificationType.generic
         );
@@ -292,7 +292,7 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
     }
 
     @Override
-    public Map<URI, Identification> getSameAs() {
+    public Map<URI, IdentificationPojo> getSameAs() {
         return getIdentificationsUsingRelation(
                 IdentificationType.same_as
         );
@@ -323,7 +323,7 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
     }
 
     @Override
-    public Map<URI, Identification> getAdditionalTypes() {
+    public Map<URI, IdentificationPojo> getAdditionalTypes() {
         return getIdentificationsUsingRelation(
                 IdentificationType.type
         );
@@ -333,7 +333,7 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
     public void remove() {
         identification.remove();
     }
-    private Map<URI, Identification> getIdentificationsUsingRelation(IdentificationType identificationType) {
+    private Map<URI, IdentificationPojo> getIdentificationsUsingRelation(IdentificationType identificationType) {
         String query = String.format(
                 "%sMATCH n-[r:%s]->identification WHERE r.type='%s' " +
                         "RETURN identification.uri as uri, " +
@@ -342,7 +342,7 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
                 Relationships.IDENTIFIED_TO,
                 identificationType
         );
-        Map<URI, Identification> identifications = new HashMap<>();
+        Map<URI, IdentificationPojo> identifications = new HashMap<>();
         return NoExRun.wrap(() -> {
             ResultSet rs = connection.createStatement().executeQuery(
                     query

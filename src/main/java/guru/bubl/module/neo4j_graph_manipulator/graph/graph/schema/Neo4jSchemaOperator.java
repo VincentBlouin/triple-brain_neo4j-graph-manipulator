@@ -279,22 +279,22 @@ public class Neo4jSchemaOperator implements SchemaOperator, Neo4jOperator {
     }
 
     @Override
-    public Map<URI, ? extends Identification> getGenericIdentifications() {
+    public Map<URI, IdentificationPojo> getGenericIdentifications() {
         return graphElementOperator.getGenericIdentifications();
     }
 
     @Override
-    public Map<URI, ? extends Identification> getSameAs() {
+    public Map<URI, IdentificationPojo> getSameAs() {
         return graphElementOperator.getSameAs();
     }
 
     @Override
-    public Map<URI, ? extends Identification> getAdditionalTypes() {
+    public Map<URI, IdentificationPojo> getAdditionalTypes() {
         return graphElementOperator.getAdditionalTypes();
     }
 
     @Override
-    public Map<URI, ? extends Identification> getIdentifications() {
+    public Map<URI, IdentificationPojo> getIdentifications() {
         return graphElementOperator.getIdentifications();
     }
 

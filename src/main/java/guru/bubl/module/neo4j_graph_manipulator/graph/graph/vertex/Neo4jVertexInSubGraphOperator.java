@@ -479,7 +479,7 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
     }
 
     @Override
-    public Map<URI, Identification> getAdditionalTypes() {
+    public Map<URI, IdentificationPojo> getAdditionalTypes() {
         return graphElementOperator.getAdditionalTypes();
     }
 
@@ -494,12 +494,12 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
     }
 
     @Override
-    public Map<URI, Identification> getSameAs() {
+    public Map<URI, IdentificationPojo> getSameAs() {
         return graphElementOperator.getSameAs();
     }
 
     @Override
-    public Map<URI, Identification> getGenericIdentifications() {
+    public Map<URI, IdentificationPojo> getGenericIdentifications() {
         return graphElementOperator.getGenericIdentifications();
     }
 
