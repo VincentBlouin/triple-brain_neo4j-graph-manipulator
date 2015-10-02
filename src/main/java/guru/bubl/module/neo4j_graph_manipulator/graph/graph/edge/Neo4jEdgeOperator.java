@@ -127,6 +127,37 @@ public class Neo4jEdgeOperator implements EdgeOperator, Neo4jOperator {
                 sourceVertex();
     }
 
+    @Override
+    public void changeSourceVertex(Vertex vertex) {
+        String query = String.format(
+                "%s, new_source_vertex=node:node_auto_index('%s:%s') " +
+                        "MATCH n-[prev_source_rel:%s]->prev_source_vertex " +
+                        "CREATE (n)-[:%s]->(new_source_vertex) " +
+                        "DELETE prev_source_rel " +
+                        "SET n.%s=new_source_vertex.uri, " +
+                        "prev_source_vertex.%s = prev_source_vertex.%s - 1, " +
+                        "new_source_vertex.%s = new_source_vertex.%s + 1 ",
+                queryPrefix(),
+                Neo4jFriendlyResource.props.uri,
+                vertex.uri(),
+                Relationships.SOURCE_VERTEX,
+                Relationships.SOURCE_VERTEX,
+                props.source_vertex_uri,
+                Neo4jVertexInSubGraphOperator.props.number_of_connected_edges_property_name,
+                Neo4jVertexInSubGraphOperator.props.number_of_connected_edges_property_name,
+                Neo4jVertexInSubGraphOperator.props.number_of_connected_edges_property_name,
+                Neo4jVertexInSubGraphOperator.props.number_of_connected_edges_property_name
+        );
+        //todo batch
+        NoExRun.wrap(() ->
+                        connection.createStatement().executeQuery(
+                                query
+                        )
+        ).get();
+        graphElementOperator.updateLastModificationDate();
+        //todo endbatch
+    }
+
 
     @Override
     public void inverse() {
