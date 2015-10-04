@@ -1,0 +1,51 @@
+/*
+ * Copyright Vincent Blouin under the GPL License version 3
+ */
+
+package guru.bubl.module.neo4j_graph_manipulator.graph.center_graph_element;
+
+import com.google.inject.assistedinject.Assisted;
+import com.google.inject.assistedinject.AssistedInject;
+import guru.bubl.module.common_utils.NoExRun;
+import guru.bubl.module.model.center_graph_element.CenterGraphElementOperator;
+import guru.bubl.module.model.graph.GraphElement;
+import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jFriendlyResource;
+import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jFriendlyResourceFactory;
+
+import java.sql.Connection;
+
+public class Neo4jCenterGraphElementOperator implements CenterGraphElementOperator {
+
+    public enum props{
+        number_of_visits
+    }
+
+    private Connection connection;
+    private Neo4jFriendlyResource neo4jFriendlyResource;
+
+    @AssistedInject
+    protected Neo4jCenterGraphElementOperator (
+            Connection connection,
+            Neo4jFriendlyResourceFactory friendlyResourceFactory,
+            @Assisted GraphElement graphElement
+    ){
+        this.connection = connection;
+        this.neo4jFriendlyResource = friendlyResourceFactory.withUri(
+                graphElement.uri()
+        );
+    }
+
+    @Override
+    public void incrementNumberOfVisits() {
+        String query = String.format(
+                "%s set n.%s= CASE WHEN n.%s is null THEN 1 ELSE n.%s + 1 END",
+                neo4jFriendlyResource.queryPrefix(),
+                props.number_of_visits,
+                props.number_of_visits,
+                props.number_of_visits
+        );
+        NoExRun.wrap(() -> {
+            return connection.createStatement().execute(query);
+        }).get();
+    }
+}

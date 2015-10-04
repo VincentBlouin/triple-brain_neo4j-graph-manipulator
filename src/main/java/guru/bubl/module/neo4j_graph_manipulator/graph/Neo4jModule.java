@@ -8,6 +8,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
 import guru.bubl.module.model.*;
+import guru.bubl.module.model.center_graph_element.*;
 import guru.bubl.module.model.graph.*;
 import guru.bubl.module.model.graph.edge.EdgeFactory;
 import guru.bubl.module.model.graph.edge.EdgeOperator;
@@ -15,6 +16,8 @@ import guru.bubl.module.model.graph.schema.SchemaOperator;
 import guru.bubl.module.model.graph.vertex.VertexFactory;
 import guru.bubl.module.model.graph.vertex.VertexInSubGraphOperator;
 import guru.bubl.module.model.test.GraphComponentTest;
+import guru.bubl.module.neo4j_graph_manipulator.graph.center_graph_element.Neo4jCenterGraphElementOperator;
+import guru.bubl.module.neo4j_graph_manipulator.graph.center_graph_element.Neo4jCenterGraphElementsOperator;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.*;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.edge.Neo4jEdgeFactory;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.edge.Neo4jEdgeOperator;
@@ -37,7 +40,6 @@ import org.neo4j.graphdb.schema.Schema;
 import org.neo4j.graphdb.traversal.BidirectionalTraversalDescription;
 import org.neo4j.graphdb.traversal.TraversalDescription;
 import org.neo4j.helpers.collection.MapUtil;
-import org.neo4j.jdbc.Driver;
 
 import javax.inject.Singleton;
 import java.io.File;
@@ -92,6 +94,14 @@ public class Neo4jModule extends AbstractModule {
         bind(IdentifiedTo.class).to(IdentifiedToNeo4J.class);
 
         FactoryModuleBuilder factoryModuleBuilder = new FactoryModuleBuilder();
+
+        install(factoryModuleBuilder
+                .implement(CenteredGraphElementsOperator.class, Neo4jCenterGraphElementsOperator.class)
+                .build(CenterGraphElementsOperatorFactory.class));
+
+        install(factoryModuleBuilder
+                .implement(CenterGraphElementOperator.class, Neo4jCenterGraphElementOperator.class)
+                .build(CenterGraphElementOperatorFactory.class));
 
         install(factoryModuleBuilder
                 .build(Neo4jEdgeFactory.class));
@@ -164,6 +174,7 @@ public class Neo4jModule extends AbstractModule {
                                 Neo4jFriendlyResource.props.owner + "," +
                                 Neo4jFriendlyResource.props.type + "," +
                                 Neo4jVertexInSubGraphOperator.props.is_public + "," +
+                                Neo4jCenterGraphElementOperator.props.number_of_visits + "," +
                                 "email"
                 ).setConfig(
                         GraphDatabaseSettings.node_auto_indexing,
