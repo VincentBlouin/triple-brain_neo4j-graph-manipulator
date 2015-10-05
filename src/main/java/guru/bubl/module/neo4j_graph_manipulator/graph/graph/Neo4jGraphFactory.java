@@ -6,6 +6,9 @@ package guru.bubl.module.neo4j_graph_manipulator.graph.graph;
 
 import guru.bubl.module.model.User;
 import guru.bubl.module.model.UserUris;
+import guru.bubl.module.model.center_graph_element.CenterGraphElement;
+import guru.bubl.module.model.center_graph_element.CenterGraphElementOperatorFactory;
+import guru.bubl.module.model.center_graph_element.CenterGraphElementsOperatorFactory;
 import guru.bubl.module.model.graph.GraphFactory;
 import guru.bubl.module.model.graph.UserGraph;
 import guru.bubl.module.model.graph.vertex.VertexOperator;
@@ -21,10 +24,16 @@ public class Neo4jGraphFactory implements GraphFactory {
     @Inject
     protected Neo4jVertexFactory vertexFactory;
 
+    @Inject
+    protected CenterGraphElementOperatorFactory centerGraphElementOperatorFactory;
+
     @Override
     public UserGraph createForUser(User user) {
         VertexOperator vertex = createDefaultVertexForUser(user);
         vertex.label("me");
+        centerGraphElementOperatorFactory.usingGraphElement(
+                vertex
+        ).incrementNumberOfVisits();
         return neo4jUserGraphFactory.withUser(user);
     }
 
