@@ -44,8 +44,6 @@ import static guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jRestApiUtils.m
 
 public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, Neo4jOperator {
 
-    private final static Integer DISTANCE_TO_GET_END_VERTICES = 2;
-
     public enum props {
         number_of_connected_edges_property_name,
         is_public,

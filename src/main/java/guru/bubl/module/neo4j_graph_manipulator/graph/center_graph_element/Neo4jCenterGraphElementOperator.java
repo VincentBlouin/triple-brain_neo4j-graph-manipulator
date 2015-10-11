@@ -51,7 +51,7 @@ public class Neo4jCenterGraphElementOperator implements CenterGraphElementOperat
     @Override
     public Integer getNumberOfVisits() {
         String query = String.format(
-                "%s return n.%s= as number",
+                "%s return n.%s as number;",
                 neo4jFriendlyResource.queryPrefix(),
                 props.number_of_visits
         );
