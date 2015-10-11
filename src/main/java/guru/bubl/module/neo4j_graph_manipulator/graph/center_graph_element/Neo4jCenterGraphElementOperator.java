@@ -13,6 +13,7 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jFriendlyResource;
 import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jFriendlyResourceFactory;
 
 import java.sql.Connection;
+import java.sql.ResultSet;
 
 public class Neo4jCenterGraphElementOperator implements CenterGraphElementOperator {
 
@@ -44,8 +45,22 @@ public class Neo4jCenterGraphElementOperator implements CenterGraphElementOperat
                 props.number_of_visits,
                 props.number_of_visits
         );
-        NoExRun.wrap(() -> {
-            return connection.createStatement().execute(query);
+        NoExRun.wrap(() -> connection.createStatement().execute(query)).get();
+    }
+
+    @Override
+    public Integer getNumberOfVisits() {
+        String query = String.format(
+                "%s return n.%s= as number",
+                neo4jFriendlyResource.queryPrefix(),
+                props.number_of_visits
+        );
+        return NoExRun.wrap(() -> {
+            ResultSet rs = connection.createStatement().executeQuery(query);
+            rs.next();
+            return new Integer(
+                    rs.getString("number")
+            );
         }).get();
     }
 }
