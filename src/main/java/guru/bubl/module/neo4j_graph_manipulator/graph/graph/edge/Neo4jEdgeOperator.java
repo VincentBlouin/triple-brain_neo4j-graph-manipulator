@@ -413,11 +413,6 @@ public class Neo4jEdgeOperator implements EdgeOperator, Neo4jOperator {
     }
 
     @Override
-    public URI getExternalResourceUri() {
-        return graphElementOperator.getExternalResourceUri();
-    }
-
-    @Override
     public Boolean isPublic() {
         String query = String.format(
                 "%s return n.%s as is_public",

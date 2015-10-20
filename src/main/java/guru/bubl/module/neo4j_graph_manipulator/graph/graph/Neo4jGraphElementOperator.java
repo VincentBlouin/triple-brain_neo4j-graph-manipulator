@@ -414,11 +414,6 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
     }
 
     @Override
-    public URI getExternalResourceUri() {
-        return identification.getExternalResourceUri();
-    }
-
-    @Override
     public Map<URI, IdentificationPojo> getIdentifications() {
         String query = String.format(
                 "%sMATCH n-[r:%s]->identification RETURN identification.uri as uri, identification.external_uri as external_uri, r.type as type",

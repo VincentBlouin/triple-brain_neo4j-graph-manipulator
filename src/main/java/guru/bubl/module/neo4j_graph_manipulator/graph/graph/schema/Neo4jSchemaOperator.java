@@ -298,8 +298,4 @@ public class Neo4jSchemaOperator implements SchemaOperator, Neo4jOperator {
         return graphElementOperator.getIdentifications();
     }
 
-    @Override
-    public URI getExternalResourceUri() {
-        return graphElementOperator.getExternalResourceUri();
-    }
 }

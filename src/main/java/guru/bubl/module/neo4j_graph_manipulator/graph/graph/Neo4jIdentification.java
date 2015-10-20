@@ -24,7 +24,8 @@ public class Neo4jIdentification implements IdentificationOperator, Neo4jOperato
 
     public enum props{
         external_uri,
-        identification_type
+        identification_type,
+        nb_references
     }
 
     Neo4jFriendlyResource friendlyResourceOperator;
@@ -52,6 +53,11 @@ public class Neo4jIdentification implements IdentificationOperator, Neo4jOperato
     @Override
     public URI getExternalResourceUri() {
         return uri();
+    }
+
+    @Override
+    public Integer getNbReferences() {
+        return null;
     }
 
     @Override

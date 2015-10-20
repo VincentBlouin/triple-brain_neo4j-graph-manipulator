@@ -808,8 +808,4 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
         );
     }
 
-    @Override
-    public URI getExternalResourceUri() {
-        return graphElementOperator.getExternalResourceUri();
-    }
 }
