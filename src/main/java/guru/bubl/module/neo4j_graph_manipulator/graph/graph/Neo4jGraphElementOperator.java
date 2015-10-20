@@ -206,16 +206,19 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
                         "f.%s=@images, " +
                         "f.%s=@%s, " +
                         "f.%s=timestamp(), " +
-                        "f.%s=timestamp() " +
+                        "f.%s=timestamp(), " +
+                        "f.%s=0 " +
                         "CREATE UNIQUE n-[r:%s]->f " +
-                        "SET r.type=@type " +
+                        "SET r.type=@type, " +
+                        "f.%s=f.%s + 1 " +
                         "RETURN f.uri as uri, " +
                         "f.external_uri as external_uri, " +
                         "f.%s as label, " +
                         "f.%s as comment, " +
                         "f.%s as images, " +
                         "f.%s as creation_date, " +
-                        "f.%s as last_modification_date",
+                        "f.%s as last_modification_date, " +
+                        "f.%s as nbReferences",
                 queryPrefix,
                 Neo4jIdentification.props.external_uri,
                 Neo4jFriendlyResource.props.owner,
@@ -227,12 +230,16 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
                 Neo4jFriendlyResource.props.type,
                 Neo4jFriendlyResource.props.creation_date,
                 Neo4jFriendlyResource.props.last_modification_date,
+                Neo4jIdentification.props.nb_references,
                 Relationships.IDENTIFIED_TO,
+                Neo4jIdentification.props.nb_references,
+                Neo4jIdentification.props.nb_references,
                 Neo4jFriendlyResource.props.label,
                 Neo4jFriendlyResource.props.comment,
                 Neo4jImages.props.images,
                 Neo4jFriendlyResource.props.creation_date,
-                Neo4jFriendlyResource.props.last_modification_date
+                Neo4jFriendlyResource.props.last_modification_date,
+                Neo4jIdentification.props.nb_references
         );
         //todo batch
         return NoExRun.wrap(() -> {
@@ -270,6 +277,7 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
                     URI.create(
                             rs.getString("external_uri")
                     ),
+                    new Integer(rs.getString("nbReferences")),
                     new FriendlyResourcePojo(
                             URI.create(
                                     rs.getString("uri")
@@ -333,6 +341,7 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
     public void remove() {
         identification.remove();
     }
+
     private Map<URI, IdentificationPojo> getIdentificationsUsingRelation(IdentificationType identificationType) {
         String query = String.format(
                 "%sMATCH n-[r:%s]->identification WHERE r.type='%s' " +
