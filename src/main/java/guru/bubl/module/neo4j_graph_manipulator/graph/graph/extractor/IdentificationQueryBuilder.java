@@ -44,6 +44,10 @@ public class IdentificationQueryBuilder {
                 FriendlyResourceQueryBuilder.imageReturnQueryPart(
                         identificationKey
                 ) +
+                QueryUtils.getPropertyUsingContainerNameQueryPart(
+                        identificationKey,
+                        Neo4jIdentification.props.nb_references.name()
+                ) +
                 QueryUtils.getLastPropertyUsingContainerNameQueryPart(
                         relationKey,
                         "type"

@@ -8,6 +8,7 @@ import guru.bubl.module.model.graph.FriendlyResourcePojo;
 import guru.bubl.module.model.graph.IdentificationPojo;
 import guru.bubl.module.model.graph.IdentificationType;
 import guru.bubl.module.model.json.ImageJson;
+import org.apache.commons.lang.StringUtils;
 
 import java.net.URI;
 import java.sql.ResultSet;
@@ -39,37 +40,39 @@ public class IdentificationsFromExtractorQueryRow {
         this.key = key;
     }
 
-    public Map<URI, IdentificationPojo> build() throws SQLException{
+    public Map<URI, IdentificationPojo> build() throws SQLException {
         Map<URI, IdentificationPojo> identifications = new HashMap<>();
-        if(!isInQuery()){
+        if (!isInQuery()) {
             return identifications;
         }
-        for (List<String> properties : getList()) {
+        for (List<Object> properties : getList()) {
             if (properties.get(0) == null) {
                 return identifications;
             }
-            URI externalUri = URI.create(properties.get(0));
-            URI uri = URI.create(properties.get(1));
+            URI externalUri = URI.create(properties.get(0).toString());
+            URI uri = URI.create(properties.get(1).toString());
             FriendlyResourcePojo friendlyResource = new FriendlyResourcePojo(
                     uri
             );
             friendlyResource.setLabel(
-                    properties.get(2)
+                    properties.get(2).toString()
             );
+
             friendlyResource.setComment(
-                    properties.get(3)
+                    (String) properties.get(3)
             );
             friendlyResource.setImages(
                     ImageJson.fromJson(
-                            properties.get(4)
+                            properties.get(4).toString()
                     )
             );
             IdentificationPojo identification = new IdentificationPojo(
                     externalUri,
+                    new Integer(properties.get(5).toString()),
                     friendlyResource
             );
             identification.setType(IdentificationType.valueOf(
-                    properties.get(5)
+                    properties.get(6).toString()
             ));
             identifications.put(
                     externalUri,
@@ -79,16 +82,16 @@ public class IdentificationsFromExtractorQueryRow {
         return identifications;
     }
 
-    private Boolean isInQuery() throws SQLException{
-        try{
+    private Boolean isInQuery() throws SQLException {
+        try {
             row.getString(key);
             return true;
-        }catch(SQLException e){
+        } catch (SQLException e) {
             return false;
         }
     }
 
-    private List<List<String>> getList() throws SQLException{
+    private List<List<Object>> getList() throws SQLException {
         return (List) row.getObject(key);
     }
 }
