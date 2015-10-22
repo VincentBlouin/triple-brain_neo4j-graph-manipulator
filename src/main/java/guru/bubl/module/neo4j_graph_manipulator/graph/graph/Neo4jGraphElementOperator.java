@@ -210,7 +210,8 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
                         "f.%s=0 " +
                         "CREATE UNIQUE n-[r:%s]->f " +
                         "SET r.type=@type, " +
-                        "f.%s=f.%s + 1 " +
+                        "f.%s=f.%s + 1, " +
+                        Neo4jFriendlyResource.LAST_MODIFICATION_QUERY_PART +
                         "RETURN f.uri as uri, " +
                         "f.external_uri as external_uri, " +
                         "f.%s as label, " +
@@ -241,7 +242,6 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
                 Neo4jFriendlyResource.props.last_modification_date,
                 Neo4jIdentification.props.nb_references
         );
-        //todo batch
         return NoExRun.wrap(() -> {
             NamedParameterStatement statement = new NamedParameterStatement(
                     connection,
@@ -267,12 +267,15 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
                     "type",
                     identificationType.name()
             );
+            statement.setLong(
+                    Neo4jFriendlyResource.props.last_modification_date.name(),
+                    new Date().getTime()
+            );
             neo4jIdentification.setNamedCreationProperties(
                     statement
             );
             ResultSet rs = statement.executeQuery();
             rs.next();
-            updateLastModificationDate();
             return new IdentificationPojo(
                     URI.create(
                             rs.getString("external_uri")
@@ -286,7 +289,7 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
                                     "" : rs.getString("label"),
                             rs.getString("images") == null ?
                                     new HashSet<>() : ImageJson.fromJson(rs.getString("images")),
-                            rs.getString("comment") == null ? "" : rs.getString("comment").toString(),
+                            rs.getString("comment") == null ? "" : rs.getString("comment"),
                             new Date(
                                     rs.getLong("creation_date")
                             ),
@@ -296,7 +299,6 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
                     )
             );
         }).get();
-        //todo endbatch
     }
 
     @Override
@@ -315,19 +317,31 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
     }
 
     @Override
-    public void removeIdentification(Identification friendlyResource) {
-        //todo batch
-        Node identificationAsNode = identificationFactory.withUri(
-                friendlyResource.uri()
-        ).getNode();
-        for (Relationship relationship : getNode().getRelationships(Direction.OUTGOING)) {
-            Node endNode = relationship.getEndNode();
-            if (endNode.equals(identificationAsNode)) {
-                relationship.delete();
-            }
-        }
-        updateLastModificationDate();
-        //todo end batch
+    public void removeIdentification(Identification identification) {
+        String query = String.format(
+                "%s MATCH n-[r:%s]->(i {%s:'%s'}) " +
+                        "DELETE r " +
+                        "SET i.%s=i.%s -1, " +
+                        Neo4jFriendlyResource.LAST_MODIFICATION_QUERY_PART +
+                        "RETURN i.uri as uri",
+                queryPrefix(),
+                Relationships.IDENTIFIED_TO,
+                Neo4jFriendlyResource.props.uri.name(),
+                identification.uri().toString(),
+                Neo4jIdentification.props.nb_references,
+                Neo4jIdentification.props.nb_references
+        );
+        NoExRun.wrap(() -> {
+            NamedParameterStatement statement = new NamedParameterStatement(
+                    connection,
+                    query
+            );
+            statement.setLong(
+                    Neo4jFriendlyResource.props.last_modification_date.name(),
+                    new Date().getTime()
+            );
+            return statement.executeQuery();
+        }).get();
     }
 
     @Override
@@ -425,14 +439,19 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
     @Override
     public Map<URI, IdentificationPojo> getIdentifications() {
         String query = String.format(
-                "%sMATCH n-[r:%s]->identification RETURN identification.uri as uri, identification.external_uri as external_uri, r.type as type",
+                "%sMATCH n-[r:%s]->identification " +
+                        "RETURN identification.uri as uri, " +
+                        "identification.external_uri as external_uri, " +
+                        "identification.%s as nbReferences, " +
+                        "r.type as type",
                 queryPrefix(),
-                Relationships.IDENTIFIED_TO
+                Relationships.IDENTIFIED_TO,
+                Neo4jIdentification.props.nb_references
         );
         Map<URI, IdentificationPojo> identifications = new HashMap<>();
-        return NoExRun.wrap(()->{
+        return NoExRun.wrap(() -> {
             ResultSet rs = connection.createStatement().executeQuery(query);
-            while(rs.next()){
+            while (rs.next()) {
                 URI uri = URI.create(
                         rs.getString("uri")
                 );
@@ -441,6 +460,7 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
                 );
                 IdentificationPojo identification = new IdentificationPojo(
                         externalUri,
+                        new Integer(rs.getString("nbReferences")),
                         new FriendlyResourcePojo(
                                 uri
                         )

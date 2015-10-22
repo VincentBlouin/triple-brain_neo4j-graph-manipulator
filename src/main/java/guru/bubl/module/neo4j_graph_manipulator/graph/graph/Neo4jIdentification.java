@@ -7,6 +7,7 @@ package guru.bubl.module.neo4j_graph_manipulator.graph.graph;
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 import guru.bubl.module.common_utils.NamedParameterStatement;
+import guru.bubl.module.common_utils.NoExRun;
 import guru.bubl.module.model.Image;
 import guru.bubl.module.model.graph.IdentificationOperator;
 import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jFriendlyResource;
@@ -15,6 +16,8 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jOperator;
 import org.neo4j.graphdb.Node;
 
 import java.net.URI;
+import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Date;
 import java.util.Map;
@@ -22,32 +25,37 @@ import java.util.Set;
 
 public class Neo4jIdentification implements IdentificationOperator, Neo4jOperator {
 
-    public enum props{
+    public enum props {
         external_uri,
         identification_type,
         nb_references
     }
 
     Neo4jFriendlyResource friendlyResourceOperator;
+    Connection connection;
 
     @AssistedInject
     protected Neo4jIdentification(
             Neo4jFriendlyResourceFactory friendlyResourceFactory,
+            Connection connection,
             @Assisted Node node
-    ){
+    ) {
         this.friendlyResourceOperator = friendlyResourceFactory.withNode(
                 node
         );
+        this.connection = connection;
     }
 
     @AssistedInject
     protected Neo4jIdentification(
             Neo4jFriendlyResourceFactory friendlyResourceFactory,
+            Connection connection,
             @Assisted URI uri
-            ){
+    ) {
         this.friendlyResourceOperator = friendlyResourceFactory.withUri(
                 uri
         );
+        this.connection = connection;
     }
 
     @Override
@@ -57,7 +65,19 @@ public class Neo4jIdentification implements IdentificationOperator, Neo4jOperato
 
     @Override
     public Integer getNbReferences() {
-        return null;
+        String query = String.format(
+                "%s " +
+                        "RETURN n.%s as nbReferences",
+                queryPrefix(),
+                Neo4jIdentification.props.nb_references
+        );
+        return NoExRun.wrap(() -> {
+            ResultSet rs = connection.createStatement().executeQuery(query);
+            rs.next();
+            return new Integer(
+                    rs.getString("nbReferences")
+            );
+        }).get();
     }
 
     @Override
@@ -142,6 +162,7 @@ public class Neo4jIdentification implements IdentificationOperator, Neo4jOperato
                 values
         );
     }
+
     @Override
     public void remove() {
         friendlyResourceOperator.remove();

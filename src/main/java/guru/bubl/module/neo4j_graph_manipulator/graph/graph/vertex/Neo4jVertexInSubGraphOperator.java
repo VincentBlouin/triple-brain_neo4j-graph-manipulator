@@ -30,6 +30,7 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.Relationships;
 import guru.bubl.module.neo4j_graph_manipulator.graph.center_graph_element.Neo4jCenterGraphElementOperator;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.Neo4jGraphElementFactory;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.Neo4jGraphElementOperator;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.Neo4jIdentification;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.edge.Neo4jEdgeFactory;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.edge.Neo4jEdgeOperator;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph.Neo4jSubGraphExtractor;
@@ -330,6 +331,17 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
                             "SET " +
                             "vertex.number_of_connected_edges_property_name = " +
                             "vertex.number_of_connected_edges_property_name - 1"
+            );
+            connection.createStatement().executeQuery(
+                    String.format(
+                            "%s MATCH n-[r:%s]->i " +
+                                    "DELETE r " +
+                                    "SET i.%s=i.%s -1 ",
+                            queryPrefix(),
+                            Relationships.IDENTIFIED_TO,
+                            Neo4jIdentification.props.nb_references,
+                            Neo4jIdentification.props.nb_references
+                    )
             );
             return connection.createStatement().executeQuery(
                     queryPrefix() +
