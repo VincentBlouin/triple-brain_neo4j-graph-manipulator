@@ -332,17 +332,7 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
                             "vertex.number_of_connected_edges_property_name = " +
                             "vertex.number_of_connected_edges_property_name - 1"
             );
-            connection.createStatement().executeQuery(
-                    String.format(
-                            "%s MATCH n-[r:%s]->i " +
-                                    "DELETE r " +
-                                    "SET i.%s=i.%s -1 ",
-                            queryPrefix(),
-                            Relationships.IDENTIFIED_TO,
-                            Neo4jIdentification.props.nb_references,
-                            Neo4jIdentification.props.nb_references
-                    )
-            );
+            graphElementOperator.removeAllIdentifications();
             return connection.createStatement().executeQuery(
                     queryPrefix() +
                             "OPTIONAL MATCH " +

@@ -200,8 +200,8 @@ public class Neo4jEdgeOperator implements EdgeOperator, Neo4jOperator {
                             queryPrefix()
                     )
             );
-            statement = connection.createStatement();
-            return statement.executeQuery(
+            graphElementOperator.removeAllIdentifications();
+            return  connection.createStatement().executeQuery(
                     String.format(
                             "%sMATCH n-[r]-() DELETE r, n",
                             queryPrefix()

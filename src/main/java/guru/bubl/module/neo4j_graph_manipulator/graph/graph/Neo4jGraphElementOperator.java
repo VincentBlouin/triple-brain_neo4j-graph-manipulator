@@ -13,15 +13,12 @@ import guru.bubl.module.model.UserUris;
 import guru.bubl.module.model.graph.*;
 import guru.bubl.module.model.json.ImageJson;
 import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jFriendlyResource;
-import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jIdentificationFactory;
+import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jFriendlyResourceFactory;
 import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jOperator;
 import guru.bubl.module.neo4j_graph_manipulator.graph.Relationships;
 import guru.bubl.module.neo4j_graph_manipulator.graph.image.Neo4jImages;
-import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
-import org.neo4j.graphdb.Relationship;
 
-import javax.inject.Inject;
 import java.net.URI;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -37,112 +34,112 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
     }
 
     protected Node node;
-    protected Neo4jIdentification identification;
+    protected Neo4jFriendlyResource friendlyResource;
     protected URI uri;
-    protected Neo4jIdentificationFactory identificationFactory;
+    protected Neo4jFriendlyResourceFactory friendlyResourceFactory;
 
     protected Connection connection;
 
     @AssistedInject
     protected Neo4jGraphElementOperator(
-            Neo4jIdentificationFactory identificationFactory,
+            Neo4jFriendlyResourceFactory friendlyResourceFactory,
             Connection connection,
             @Assisted Node node
     ) {
-        identification = identificationFactory.withNode(
+        friendlyResource = friendlyResourceFactory.withNode(
                 node
         );
+        this.friendlyResourceFactory = friendlyResourceFactory;
         this.connection = connection;
-        this.identificationFactory = identificationFactory;
         this.node = node;
     }
 
     @AssistedInject
     protected Neo4jGraphElementOperator(
-            Neo4jIdentificationFactory identificationFactory,
+            Neo4jFriendlyResourceFactory friendlyResourceFactory,
             Connection connection,
             @Assisted URI uri
     ) {
-        identification = identificationFactory.withUri(
+        this.friendlyResource = friendlyResourceFactory.withUri(
                 uri
         );
         this.connection = connection;
-        this.identificationFactory = identificationFactory;
+        this.friendlyResourceFactory = friendlyResourceFactory;
     }
 
     @Override
     public Date creationDate() {
-        return identification.creationDate();
+        return friendlyResource.creationDate();
     }
 
     @Override
     public Date lastModificationDate() {
-        return identification.lastModificationDate();
+        return friendlyResource.lastModificationDate();
     }
 
     @Override
     public String getOwnerUsername() {
-        return identification.getOwnerUsername();
+        return friendlyResource.getOwnerUsername();
     }
 
     public void updateLastModificationDate() {
-        identification.updateLastModificationDate();
+        friendlyResource.updateLastModificationDate();
     }
 
     @Override
     public URI uri() {
-        return identification.uri();
+        return friendlyResource.uri();
     }
 
     @Override
     public String label() {
-        return identification.label();
+        return friendlyResource.label();
     }
 
     @Override
     public void label(String label) {
-        identification.label(
+        friendlyResource.label(
                 label
         );
     }
 
     @Override
     public Set<Image> images() {
-        return identification.images();
+        return friendlyResource.images();
     }
 
     @Override
     public Boolean gotImages() {
-        return identification.gotImages();
+        return friendlyResource.gotImages();
     }
 
     @Override
     public String comment() {
-        return identification.comment();
+        return friendlyResource.comment();
     }
 
     @Override
     public void comment(String comment) {
-        identification.comment(
+        friendlyResource.comment(
                 comment
         );
     }
 
     @Override
     public Boolean gotComments() {
-        return identification.gotComments();
+        return friendlyResource.gotComments();
     }
 
     @Override
     public void addImages(Set<Image> images) {
-        identification.addImages(
+        friendlyResource.addImages(
                 images
         );
     }
 
     @Override
     public boolean hasLabel() {
-        return identification.hasLabel();
+        return friendlyResource.hasLabel();
     }
 
     @Override
@@ -162,7 +159,7 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
 
     @Override
     public void createUsingInitialValues(Map<String, Object> values) {
-        identification.createUsingInitialValues(values);
+        friendlyResource.createUsingInitialValues(values);
     }
 
     @Override
@@ -193,10 +190,10 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
         identificationPojo.setType(
                 identificationType
         );
-        final Neo4jIdentification neo4jIdentification = identificationFactory.withUri(
+        final Neo4jFriendlyResource neo4jFriendlyResource = friendlyResourceFactory.withUri(
                 new UserUris(getOwnerUsername()).generateIdentificationUri()
         );
-        final String queryPrefix = this.identification.queryPrefix();
+        final String queryPrefix = this.friendlyResource.queryPrefix();
         String query = String.format(
                 "%sMERGE (f {%s: @external_uri, %s: @owner}) " +
                         "ON CREATE SET f.uri = @uri, " +
@@ -271,7 +268,7 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
                     Neo4jFriendlyResource.props.last_modification_date.name(),
                     new Date().getTime()
             );
-            neo4jIdentification.setNamedCreationProperties(
+            neo4jFriendlyResource.setNamedCreationProperties(
                     statement
             );
             ResultSet rs = statement.executeQuery();
@@ -353,7 +350,8 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
 
     @Override
     public void remove() {
-        identification.remove();
+        removeAllIdentifications();
+        friendlyResource.remove();
     }
 
     private Map<URI, IdentificationPojo> getIdentificationsUsingRelation(IdentificationType identificationType) {
@@ -401,37 +399,37 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
 
     @Override
     public boolean equals(Object graphElementToCompare) {
-        return identification.equals(graphElementToCompare);
+        return friendlyResource.equals(graphElementToCompare);
     }
 
     @Override
     public int hashCode() {
-        return identification.hashCode();
+        return friendlyResource.hashCode();
     }
 
     @Override
     public String queryPrefix() {
-        return identification.queryPrefix();
+        return friendlyResource.queryPrefix();
     }
 
     @Override
     public Node getNode() {
         if (null == node) {
-            node = identification.getNode();
+            node = friendlyResource.getNode();
         }
         return node;
     }
 
     @Override
     public Map<String, Object> addCreationProperties(Map<String, Object> map) {
-        return identification.addCreationProperties(
+        return friendlyResource.addCreationProperties(
                 map
         );
     }
 
     @Override
     public void setNamedCreationProperties(NamedParameterStatement statement) throws SQLException {
-        identification.setNamedCreationProperties(
+        friendlyResource.setNamedCreationProperties(
                 statement
         );
     }
@@ -477,5 +475,19 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
             }
             return identifications;
         }).get();
+    }
+
+    public void removeAllIdentifications(){
+        NoExRun.wrap(()-> connection.createStatement().executeQuery(
+                String.format(
+                        "%s MATCH n-[r:%s]->i " +
+                                "DELETE r " +
+                                "SET i.%s=i.%s -1 ",
+                        queryPrefix(),
+                        Relationships.IDENTIFIED_TO,
+                        Neo4jIdentification.props.nb_references,
+                        Neo4jIdentification.props.nb_references
+                )
+        )).get();
     }
 }
