@@ -68,9 +68,19 @@ public class IdentificationsFromExtractorQueryRow {
             );
             IdentificationPojo identification = new IdentificationPojo(
                     externalUri,
-                    new Integer(properties.get(5).toString()),
                     friendlyResource
             );
+            if (properties.get(5) == null) {
+                System.out.print("uri " + identification.uri());
+                System.out.print("external uri " + identification.getExternalResourceUri());
+            } else {
+                identification.setNbReferences(
+                        new Integer(
+                                properties.get(5).toString()
+                        )
+                );
+            }
+
             identification.setType(IdentificationType.valueOf(
                     properties.get(6).toString()
             ));
