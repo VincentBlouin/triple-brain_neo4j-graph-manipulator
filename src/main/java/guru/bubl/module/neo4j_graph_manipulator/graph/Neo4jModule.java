@@ -8,6 +8,8 @@ import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
 import guru.bubl.module.model.*;
+import guru.bubl.module.model.admin.WholeGraphAdmin;
+import guru.bubl.module.model.admin.WholeGraphAdminFactory;
 import guru.bubl.module.model.center_graph_element.*;
 import guru.bubl.module.model.graph.*;
 import guru.bubl.module.model.graph.edge.EdgeFactory;
@@ -16,6 +18,7 @@ import guru.bubl.module.model.graph.schema.SchemaOperator;
 import guru.bubl.module.model.graph.vertex.VertexFactory;
 import guru.bubl.module.model.graph.vertex.VertexInSubGraphOperator;
 import guru.bubl.module.model.test.GraphComponentTest;
+import guru.bubl.module.neo4j_graph_manipulator.graph.admin.Neo4jWholeGraphAdmin;
 import guru.bubl.module.neo4j_graph_manipulator.graph.center_graph_element.Neo4jCenterGraphElementOperator;
 import guru.bubl.module.neo4j_graph_manipulator.graph.center_graph_element.Neo4jCenterGraphElementsOperator;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.*;
@@ -51,11 +54,11 @@ import java.util.Properties;
 
 public class Neo4jModule extends AbstractModule {
 
-    public static final String DB_PATH = "/var/lib/triple_brain/neo4j/db";
-    public static final String DB_PATH_FOR_TESTS = "/tmp/triple_brain/neo4j/db";
+    public static final String
+            DB_PATH = "/var/lib/triple_brain/neo4j/db",
+            DB_PATH_FOR_TESTS = "/tmp/triple_brain/neo4j/db";
 
-    private Boolean useEmbedded;
-    private Boolean test;
+    private Boolean useEmbedded, test;
 
     public static Neo4jModule forTestingUsingRest() {
         return new Neo4jModule(false, true);
@@ -94,6 +97,10 @@ public class Neo4jModule extends AbstractModule {
         bind(IdentifiedTo.class).to(IdentifiedToNeo4J.class);
 
         FactoryModuleBuilder factoryModuleBuilder = new FactoryModuleBuilder();
+
+        install(factoryModuleBuilder
+                .implement(WholeGraphAdmin.class, Neo4jWholeGraphAdmin.class)
+                .build(WholeGraphAdminFactory.class));
 
         install(factoryModuleBuilder
                 .implement(CenteredGraphElementsOperator.class, Neo4jCenterGraphElementsOperator.class)
@@ -283,7 +290,7 @@ public class Neo4jModule extends AbstractModule {
         }
     }
 
-    private GraphDatabaseService dummyGraphDatabaseService(){
+    private GraphDatabaseService dummyGraphDatabaseService() {
         return new GraphDatabaseService() {
             @Override
             public Node createNode() {

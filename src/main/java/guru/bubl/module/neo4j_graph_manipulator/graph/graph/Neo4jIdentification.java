@@ -66,8 +66,7 @@ public class Neo4jIdentification implements IdentificationOperator, Neo4jOperato
     @Override
     public Integer getNbReferences() {
         String query = String.format(
-                "%s " +
-                        "RETURN n.%s as nbReferences",
+                "%s RETURN n.%s as nbReferences",
                 queryPrefix(),
                 Neo4jIdentification.props.nb_references
         );
@@ -77,6 +76,26 @@ public class Neo4jIdentification implements IdentificationOperator, Neo4jOperato
             return new Integer(
                     rs.getString("nbReferences")
             );
+        }).get();
+    }
+
+    @Override
+    public void setNbReferences(Integer nb) {
+        String query = String.format(
+                "%s SET n.%s=@nbReferences",
+                queryPrefix(),
+                Neo4jIdentification.props.nb_references
+        );
+        NoExRun.wrap(() -> {
+            NamedParameterStatement namedParameterStatement = new NamedParameterStatement(
+                    connection,
+                    query
+            );
+            namedParameterStatement.setInt(
+                    "nbReferences",
+                    nb
+            );
+            return namedParameterStatement.execute();
         }).get();
     }
 
@@ -186,10 +205,6 @@ public class Neo4jIdentification implements IdentificationOperator, Neo4jOperato
     @Override
     public void setNamedCreationProperties(NamedParameterStatement statement) throws SQLException {
         friendlyResourceOperator.setNamedCreationProperties(statement);
-    }
-
-    public void updateLastModificationDate() {
-        friendlyResourceOperator.updateLastModificationDate();
     }
 
     @Override

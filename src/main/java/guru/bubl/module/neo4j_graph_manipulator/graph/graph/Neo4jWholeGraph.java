@@ -6,9 +6,7 @@ package guru.bubl.module.neo4j_graph_manipulator.graph.graph;
 
 import guru.bubl.module.common_utils.NoExRun;
 import guru.bubl.module.model.WholeGraph;
-import guru.bubl.module.model.graph.GraphElementOperator;
-import guru.bubl.module.model.graph.GraphElementOperatorFactory;
-import guru.bubl.module.model.graph.GraphElementType;
+import guru.bubl.module.model.graph.*;
 import guru.bubl.module.model.graph.edge.EdgeOperator;
 import guru.bubl.module.model.graph.schema.SchemaOperator;
 import guru.bubl.module.model.graph.vertex.VertexInSubGraphOperator;
@@ -42,6 +40,9 @@ public class Neo4jWholeGraph implements WholeGraph {
 
     @Inject
     protected GraphElementOperatorFactory graphElementFactory;
+
+    @Inject
+    protected IdentificationFactory identificationFactory;
 
     @Override
     public Set<VertexInSubGraphOperator> getAllVertices() {
@@ -138,6 +139,31 @@ public class Neo4jWholeGraph implements WholeGraph {
                 );
             }
             return graphElements;
+        }).get();
+    }
+
+    @Override
+    public Set<IdentificationOperator> getAllIdentifications() {
+        String query = String.format(
+                "START n=node:node_auto_index('( %s:%s) ') RETURN n.%s as uri",
+                Neo4jFriendlyResource.props.type,
+                StringUtils.join(IdentificationType.names(), " OR type:"),
+                Neo4jFriendlyResource.props.uri
+        );
+        Set<IdentificationOperator> identifications = new HashSet<>();
+        return NoExRun.wrap(()->{
+            Statement statement = connection.createStatement();
+            ResultSet rs = statement.executeQuery(query);
+            while(rs.next()){
+                identifications.add(
+                        identificationFactory.withUri(
+                                URI.create(
+                                        rs.getString("uri")
+                                )
+                        )
+                );
+            }
+            return identifications;
         }).get();
     }
 }
