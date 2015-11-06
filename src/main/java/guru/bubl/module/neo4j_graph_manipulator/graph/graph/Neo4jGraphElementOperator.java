@@ -190,10 +190,14 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
         identificationPojo.setType(
                 identificationType
         );
+        Boolean isOwnerOfIdentification = UserUris.ownerUserNameFromUri(
+                identification.getExternalResourceUri()
+        ).equals(getOwnerUsername());
         final Neo4jFriendlyResource neo4jFriendlyResource = friendlyResourceFactory.withUri(
                 new UserUris(getOwnerUsername()).generateIdentificationUri()
         );
         final String queryPrefix = this.friendlyResource.queryPrefix();
+
         String query = String.format(
                 "%sMERGE (f {%s: @external_uri, %s: @owner}) " +
                         "ON CREATE SET f.uri = @uri, " +
@@ -205,9 +209,9 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
                         "f.%s=timestamp(), " +
                         "f.%s=timestamp(), " +
                         "f.%s=0 " +
-                        "CREATE UNIQUE n-[r:%s]->f " +
-                        "SET r.type=@type, " +
-                        "f.%s=f.%s + 1, " +
+                        "CREATE UNIQUE n-[r:%s]->f%s " +
+                        "SET r.type=@type,%s " +
+                        "f.%s=f.%s + %s, " +
                         Neo4jFriendlyResource.LAST_MODIFICATION_QUERY_PART +
                         "RETURN f.uri as uri, " +
                         "f.external_uri as external_uri, " +
@@ -217,7 +221,11 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
                         "f.%s as creation_date, " +
                         "f.%s as last_modification_date, " +
                         "f.%s as nbReferences",
-                queryPrefix,
+                isOwnerOfIdentification ?
+                        String.format(
+                                queryPrefix + ", i=node:node_auto_index(\"uri:%s\") ",
+                                identification.getExternalResourceUri()
+                        ) : queryPrefix,
                 Neo4jIdentification.props.external_uri,
                 Neo4jFriendlyResource.props.owner,
                 Neo4jFriendlyResource.props.type,
@@ -230,8 +238,19 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
                 Neo4jFriendlyResource.props.last_modification_date,
                 Neo4jIdentification.props.nb_references,
                 Relationships.IDENTIFIED_TO,
+                isOwnerOfIdentification ?
+                        String.format(
+                                ", i-[r2:%s]->f ",
+                                Relationships.IDENTIFIED_TO
+                        ) : " ",
+                isOwnerOfIdentification ?
+                        String.format(
+                                " r2.type='%s', ",
+                                IdentificationType.generic
+                        ) : " ",
                 Neo4jIdentification.props.nb_references,
                 Neo4jIdentification.props.nb_references,
+                isOwnerOfIdentification ? "2" : "1",
                 Neo4jFriendlyResource.props.label,
                 Neo4jFriendlyResource.props.comment,
                 Neo4jImages.props.images,
