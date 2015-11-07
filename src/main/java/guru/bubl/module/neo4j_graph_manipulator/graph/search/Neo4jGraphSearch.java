@@ -6,9 +6,7 @@ package guru.bubl.module.neo4j_graph_manipulator.graph.search;
 
 import guru.bubl.module.common_utils.NoExRun;
 import guru.bubl.module.model.User;
-import guru.bubl.module.model.graph.GraphElementPojo;
-import guru.bubl.module.model.graph.GraphElementType;
-import guru.bubl.module.model.graph.IdentificationPojo;
+import guru.bubl.module.model.graph.*;
 import guru.bubl.module.model.search.GraphElementSearchResult;
 import guru.bubl.module.model.search.GraphElementSearchResultPojo;
 import guru.bubl.module.model.search.GraphSearch;
@@ -53,14 +51,17 @@ public class Neo4jGraphSearch implements GraphSearch {
 
 
     @Override
-    public List<VertexSearchResult> searchSchemasOwnVerticesAndPublicOnesForAutoCompletionByLabel(String searchTerm, User user) {
-        return new Getter<VertexSearchResult>().get(
+    public List<GraphElementSearchResult> searchForAnyResourceThatCanBeUsedAsAnIdentifier(String searchTerm, User user) {
+        return new Getter<GraphElementSearchResult>().get(
                 searchTerm,
                 false,
                 user.username(),
-                GraphElementType.vertex,
-                GraphElementType.schema
-        );
+                GraphElementType.vertex.name(),
+                GraphElementType.schema.name(),
+                IdentificationType.generic.name(),
+                IdentificationType.type.name(),
+                IdentificationType.same_as.name()
+            );
     }
 
     @Override
@@ -69,8 +70,8 @@ public class Neo4jGraphSearch implements GraphSearch {
                 searchTerm,
                 true,
                 user.username(),
-                GraphElementType.vertex,
-                GraphElementType.schema
+                GraphElementType.vertex.name(),
+                GraphElementType.schema.name()
         );
     }
 
@@ -80,7 +81,7 @@ public class Neo4jGraphSearch implements GraphSearch {
                 searchTerm,
                 true,
                 user.username(),
-                GraphElementType.vertex
+                GraphElementType.vertex.name()
         );
     }
 
@@ -90,9 +91,9 @@ public class Neo4jGraphSearch implements GraphSearch {
                 searchTerm,
                 false,
                 user.username(),
-                GraphElementType.schema,
-                GraphElementType.property,
-                GraphElementType.edge
+                GraphElementType.schema.name(),
+                GraphElementType.property.name(),
+                GraphElementType.edge.name()
         );
     }
 
@@ -110,8 +111,8 @@ public class Neo4jGraphSearch implements GraphSearch {
                 searchTerm,
                 false,
                 "",
-                GraphElementType.vertex,
-                GraphElementType.schema
+                GraphElementType.vertex.name(),
+                GraphElementType.schema.name()
         );
     }
 
@@ -182,7 +183,7 @@ public class Neo4jGraphSearch implements GraphSearch {
                 String searchTerm,
                 Boolean forPersonal,
                 String username,
-                GraphElementType... graphElementTypes
+                String... graphElementTypes
         ) {
             return new SearchResultGetter<ResultType>(
                     buildQuery(
@@ -199,7 +200,7 @@ public class Neo4jGraphSearch implements GraphSearch {
                 String searchTerm,
                 Boolean forPersonal,
                 String username,
-                GraphElementType... graphElementTypes
+                String... graphElementTypes
         ) {
             return "START node=node:node_auto_index('" +
                     Neo4jFriendlyResource.props.label + ":(" + formatSearchTerm(searchTerm) + "*) AND " +

@@ -65,20 +65,18 @@ public class SearchResultGetter<ResultType extends GraphElementSearchResult> {
     }
 
     private SearchResultBuilder getFromRow(ResultSet row) throws SQLException{
-        GraphElementType resultType = GraphElementType.valueOf(
-                nodeTypeInRow(row)
-        );
-        switch (resultType) {
-            case vertex:
+        switch (nodeTypeInRow(row)) {
+            case "vertex":
                 return new VertexSearchResultBuilder(row, nodePrefix);
-            case edge:
+            case "edge":
                 return new RelationSearchResultBuilder(row, nodePrefix);
-            case schema:
+            case "schema":
                 return new SchemaSearchResultBuilder(row, nodePrefix);
-            case property:
+            case "property":
                 return new PropertySearchResultBuilder(row, nodePrefix);
+            default:
+                return new IdentificationSearchResultBuilder(row, nodePrefix);
         }
-        throw new RuntimeException("result type " + resultType + " does not exist");
     }
 
     public static String nodeTypeInRow(ResultSet row) throws SQLException{
