@@ -93,7 +93,10 @@ public class Neo4jGraphSearch implements GraphSearch {
                 user.username(),
                 GraphElementType.schema.name(),
                 GraphElementType.property.name(),
-                GraphElementType.edge.name()
+                GraphElementType.edge.name(),
+                IdentificationType.generic.name(),
+                IdentificationType.type.name(),
+                IdentificationType.same_as.name()
         );
     }
 
