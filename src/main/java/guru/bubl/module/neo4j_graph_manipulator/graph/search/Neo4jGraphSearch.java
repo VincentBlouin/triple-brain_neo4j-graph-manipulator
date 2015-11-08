@@ -61,7 +61,7 @@ public class Neo4jGraphSearch implements GraphSearch {
                 IdentificationType.generic.name(),
                 IdentificationType.type.name(),
                 IdentificationType.same_as.name()
-            );
+        );
     }
 
     @Override
@@ -86,7 +86,7 @@ public class Neo4jGraphSearch implements GraphSearch {
     }
 
     @Override
-    public List<GraphElementSearchResult> searchRelationsPropertiesOrSchemasForAutoCompletionByLabel(String searchTerm, User user) {
+    public List<GraphElementSearchResult> searchRelationsPropertiesSchemasOrIdentifiersForAutoCompletionByLabel(String searchTerm, User user) {
         return new Getter<GraphElementSearchResult>().get(
                 searchTerm,
                 false,
@@ -153,9 +153,7 @@ public class Neo4jGraphSearch implements GraphSearch {
                                         "node"
                                 ).build()
                         ),
-                        GraphElementType.valueOf(
-                                SearchResultGetter.nodeTypeInRow(rs)
-                        )
+                        SearchResultGetter.nodeTypeInRow(rs)
                 );
             }).get();
         }
