@@ -60,7 +60,18 @@ public class Neo4jIdentification implements IdentificationOperator, Neo4jOperato
 
     @Override
     public URI getExternalResourceUri() {
-        return uri();
+        String query = String.format(
+                "%s RETURN n.%s as externalUri",
+                queryPrefix(),
+                props.external_uri
+        );
+        return NoExRun.wrap(() -> {
+            ResultSet rs = connection.createStatement().executeQuery(query);
+            rs.next();
+            return URI.create(
+                    rs.getString("externalUri")
+            );
+        }).get();
     }
 
     @Override

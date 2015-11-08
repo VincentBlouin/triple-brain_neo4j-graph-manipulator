@@ -12,10 +12,7 @@ import guru.bubl.module.model.Image;
 import guru.bubl.module.model.UserUris;
 import guru.bubl.module.model.graph.*;
 import guru.bubl.module.model.json.ImageJson;
-import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jFriendlyResource;
-import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jFriendlyResourceFactory;
-import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jOperator;
-import guru.bubl.module.neo4j_graph_manipulator.graph.Relationships;
+import guru.bubl.module.neo4j_graph_manipulator.graph.*;
 import guru.bubl.module.neo4j_graph_manipulator.graph.image.Neo4jImages;
 import org.neo4j.graphdb.Node;
 
@@ -37,19 +34,22 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
     protected Neo4jFriendlyResource friendlyResource;
     protected URI uri;
     protected Neo4jFriendlyResourceFactory friendlyResourceFactory;
-
     protected Connection connection;
+
+    protected Neo4jIdentificationFactory identificationFactory;
 
     @AssistedInject
     protected Neo4jGraphElementOperator(
             Neo4jFriendlyResourceFactory friendlyResourceFactory,
             Connection connection,
+            Neo4jIdentificationFactory identificationFactory,
             @Assisted Node node
     ) {
         friendlyResource = friendlyResourceFactory.withNode(
                 node
         );
         this.friendlyResourceFactory = friendlyResourceFactory;
+        this.identificationFactory = identificationFactory;
         this.connection = connection;
         this.node = node;
     }
@@ -58,11 +58,13 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
     protected Neo4jGraphElementOperator(
             Neo4jFriendlyResourceFactory friendlyResourceFactory,
             Connection connection,
+            Neo4jIdentificationFactory identificationFactory,
             @Assisted URI uri
     ) {
         this.friendlyResource = friendlyResourceFactory.withUri(
                 uri
         );
+        this.identificationFactory = identificationFactory;
         this.connection = connection;
         this.friendlyResourceFactory = friendlyResourceFactory;
     }
@@ -182,10 +184,26 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
             IdentificationType identificationType
     ) {
         ifIdentificationIsSelfThrowException(identification);
-        IdentificationPojo identificationPojo = new IdentificationPojo(
-                new UserUris(getOwnerUsername()).generateIdentificationUri(),
-                identification
+        IdentificationPojo identificationPojo;
+        Boolean isIdentifyingToAnIdentification = UserUris.isUriOfAnIdentification(
+                identification.getExternalResourceUri()
         );
+        if (isIdentifyingToAnIdentification) {
+            identificationPojo = new IdentificationPojo(
+                    identificationFactory.withUri(
+                            identification.getExternalResourceUri()
+                    ).getExternalResourceUri(),
+                    new FriendlyResourcePojo(
+                            identification.getExternalResourceUri()
+                    )
+            );
+        } else {
+            identificationPojo = new IdentificationPojo(
+                    new UserUris(getOwnerUsername()).generateIdentificationUri(),
+                    identification
+            );
+        }
+
         identificationPojo.setCreationDate(new Date());
         identificationPojo.setType(
                 identificationType
@@ -224,7 +242,7 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
                 isOwnerOfIdentification ?
                         String.format(
                                 queryPrefix + ", i=node:node_auto_index(\"uri:%s\") ",
-                                identification.getExternalResourceUri()
+                                identificationPojo.getExternalResourceUri()
                         ) : queryPrefix,
                 Neo4jIdentification.props.external_uri,
                 Neo4jFriendlyResource.props.owner,
@@ -250,7 +268,7 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
                         ) : " ",
                 Neo4jIdentification.props.nb_references,
                 Neo4jIdentification.props.nb_references,
-                isOwnerOfIdentification ? "2" : "1",
+                isOwnerOfIdentification && !isIdentifyingToAnIdentification ? "2" : "1",
                 Neo4jFriendlyResource.props.label,
                 Neo4jFriendlyResource.props.comment,
                 Neo4jImages.props.images,
@@ -277,7 +295,7 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
             );
             statement.setString(
                     "external_uri",
-                    identification.getExternalResourceUri().toString()
+                    identificationPojo.getExternalResourceUri().toString()
             );
             statement.setString(
                     "type",
@@ -496,8 +514,8 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
         }).get();
     }
 
-    public void removeAllIdentifications(){
-        NoExRun.wrap(()-> connection.createStatement().executeQuery(
+    public void removeAllIdentifications() {
+        NoExRun.wrap(() -> connection.createStatement().executeQuery(
                 String.format(
                         "%s MATCH n-[r:%s]->i " +
                                 "DELETE r " +
