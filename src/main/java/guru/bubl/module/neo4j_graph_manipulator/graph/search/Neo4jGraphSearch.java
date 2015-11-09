@@ -214,7 +214,7 @@ public class Neo4jGraphSearch implements GraphSearch {
                     Neo4jVertexInSubGraphOperator.props.is_public +
                     "=true OR related_node.owner='" + username + "' " +
                     "RETURN " +
-                    "node.uri, node.label, node.creation_date, node.last_modification_date, " +
+                    "node.uri, node.label, node.creation_date, node.last_modification_date, node.nb_references, " +
                     "COLLECT([related_node.label, related_node.uri, type(relation)])[0..5] as related_nodes, " +
                     "node.type as type limit 10";
         }
