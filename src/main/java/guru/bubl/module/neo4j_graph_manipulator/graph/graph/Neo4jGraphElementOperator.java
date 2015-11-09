@@ -226,10 +226,10 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
                         "f.%s=@%s, " +
                         "f.%s=timestamp(), " +
                         "f.%s=timestamp(), " +
-                        "f.%s=0 " +
+                        "f.%s=%s " +
                         "CREATE UNIQUE n-[r:%s]->f%s " +
                         "SET r.type=@type,%s " +
-                        "f.%s=f.%s + %s, " +
+                        "f.%s=f.%s + 1, " +
                         Neo4jFriendlyResource.LAST_MODIFICATION_QUERY_PART +
                         "RETURN f.uri as uri, " +
                         "f.external_uri as external_uri, " +
@@ -255,6 +255,7 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
                 Neo4jFriendlyResource.props.creation_date,
                 Neo4jFriendlyResource.props.last_modification_date,
                 Neo4jIdentification.props.nb_references,
+                isOwnerOfIdentification && !isIdentifyingToAnIdentification ? "1" : "0",
                 Relationships.IDENTIFIED_TO,
                 isOwnerOfIdentification ?
                         String.format(
@@ -268,7 +269,6 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
                         ) : " ",
                 Neo4jIdentification.props.nb_references,
                 Neo4jIdentification.props.nb_references,
-                isOwnerOfIdentification && !isIdentifyingToAnIdentification ? "2" : "1",
                 Neo4jFriendlyResource.props.label,
                 Neo4jFriendlyResource.props.comment,
                 Neo4jImages.props.images,
