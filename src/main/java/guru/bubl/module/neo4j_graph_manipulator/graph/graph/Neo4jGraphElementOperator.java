@@ -208,78 +208,15 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
         identificationPojo.setType(
                 identificationType
         );
-        Boolean isOwnerOfIdentification = UserUris.ownerUserNameFromUri(
-                identification.getExternalResourceUri()
-        ).equals(getOwnerUsername());
         final Neo4jFriendlyResource neo4jFriendlyResource = friendlyResourceFactory.withUri(
                 new UserUris(getOwnerUsername()).generateIdentificationUri()
-        );
-        final String queryPrefix = this.friendlyResource.queryPrefix();
-
-        String query = String.format(
-                "%sMERGE (f {%s: @external_uri, %s: @owner}) " +
-                        "ON CREATE SET f.uri = @uri, " +
-                        "f.%s=@type, " +
-                        "f.%s=@label, " +
-                        "f.%s=@comment, " +
-                        "f.%s=@images, " +
-                        "f.%s=@%s, " +
-                        "f.%s=timestamp(), " +
-                        "f.%s=timestamp(), " +
-                        "f.%s=%s " +
-                        "CREATE UNIQUE n-[r:%s]->f%s " +
-                        "SET r.type=@type,%s " +
-                        "f.%s=f.%s + 1, " +
-                        Neo4jFriendlyResource.LAST_MODIFICATION_QUERY_PART +
-                        "RETURN f.uri as uri, " +
-                        "f.external_uri as external_uri, " +
-                        "f.%s as label, " +
-                        "f.%s as comment, " +
-                        "f.%s as images, " +
-                        "f.%s as creation_date, " +
-                        "f.%s as last_modification_date, " +
-                        "f.%s as nbReferences",
-                isOwnerOfIdentification ?
-                        String.format(
-                                queryPrefix + ", i=node:node_auto_index(\"uri:%s\") ",
-                                identificationPojo.getExternalResourceUri()
-                        ) : queryPrefix,
-                Neo4jIdentification.props.external_uri,
-                Neo4jFriendlyResource.props.owner,
-                Neo4jFriendlyResource.props.type,
-                Neo4jFriendlyResource.props.label,
-                Neo4jFriendlyResource.props.comment,
-                Neo4jImages.props.images,
-                Neo4jFriendlyResource.props.type,
-                Neo4jFriendlyResource.props.type,
-                Neo4jFriendlyResource.props.creation_date,
-                Neo4jFriendlyResource.props.last_modification_date,
-                Neo4jIdentification.props.nb_references,
-                isOwnerOfIdentification && !isIdentifyingToAnIdentification ? "1" : "0",
-                Relationships.IDENTIFIED_TO,
-                isOwnerOfIdentification ?
-                        String.format(
-                                ", i-[r2:%s]->f ",
-                                Relationships.IDENTIFIED_TO
-                        ) : " ",
-                isOwnerOfIdentification ?
-                        String.format(
-                                " r2.type='%s', ",
-                                IdentificationType.generic
-                        ) : " ",
-                Neo4jIdentification.props.nb_references,
-                Neo4jIdentification.props.nb_references,
-                Neo4jFriendlyResource.props.label,
-                Neo4jFriendlyResource.props.comment,
-                Neo4jImages.props.images,
-                Neo4jFriendlyResource.props.creation_date,
-                Neo4jFriendlyResource.props.last_modification_date,
-                Neo4jIdentification.props.nb_references
         );
         return NoExRun.wrap(() -> {
             NamedParameterStatement statement = new NamedParameterStatement(
                     connection,
-                    query
+                    AddIdentificationQueryBuilder.usingIdentificationForGraphElement(
+                            identificationPojo, this
+                    ).build()
             );
             statement.setString(
                     "label",
