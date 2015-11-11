@@ -116,10 +116,14 @@ public class AddIdentificationQueryBuilder {
                 "WITH n, i, f " +
                 "OPTIONAL MATCH i-[irg:%s]->g " +
                         "CREATE UNIQUE n-[nrg:%s]->g " +
+                        "SET g.%s = CASE WHEN nrg.type is null THEN g.%s + 1 ELSE g.%s END " +
                         "SET nrg.type= CASE WHEN nrg.type is null THEN irg.type ELSE nrg.type END " +
                 "WITH g as f ",
                 Relationships.IDENTIFIED_TO,
-                Relationships.IDENTIFIED_TO
+                Relationships.IDENTIFIED_TO,
+                Neo4jIdentification.props.nb_references,
+                Neo4jIdentification.props.nb_references,
+                Neo4jIdentification.props.nb_references
         );
     }
 }
