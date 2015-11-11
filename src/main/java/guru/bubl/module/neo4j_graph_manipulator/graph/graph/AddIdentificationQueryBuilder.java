@@ -116,7 +116,8 @@ public class AddIdentificationQueryBuilder {
                 "WITH n, i, f " +
                 "OPTIONAL MATCH i-[irg:%s]->g " +
                         "CREATE UNIQUE n-[nrg:%s]->g " +
-                        "SET nrg.type= CASE WHEN nrg.type is null THEN irg.type ELSE nrg.type END ",
+                        "SET nrg.type= CASE WHEN nrg.type is null THEN irg.type ELSE nrg.type END " +
+                "WITH g as f ",
                 Relationships.IDENTIFIED_TO,
                 Relationships.IDENTIFIED_TO
         );

@@ -470,7 +470,7 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
     }
 
     @Override
-    public IdentificationPojo addType(Identification type) {
+    public Map<URI, IdentificationPojo> addType(Identification type) {
         return graphElementOperator.addType(type);
     }
 
@@ -490,7 +490,7 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
     }
 
     @Override
-    public IdentificationPojo addSameAs(Identification friendlyResourceImpl) {
+    public Map<URI, IdentificationPojo> addSameAs(Identification friendlyResourceImpl) {
         return graphElementOperator.addSameAs(friendlyResourceImpl);
     }
 
@@ -719,8 +719,7 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
     }
 
     @Override
-    public IdentificationPojo addGenericIdentification(Identification friendlyResource) {
-
+    public Map<URI, IdentificationPojo> addGenericIdentification(Identification friendlyResource) {
         return graphElementOperator.addGenericIdentification(friendlyResource);
     }
 

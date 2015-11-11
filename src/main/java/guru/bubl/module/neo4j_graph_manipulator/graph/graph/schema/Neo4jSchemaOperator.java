@@ -205,17 +205,17 @@ public class Neo4jSchemaOperator implements SchemaOperator, Neo4jOperator {
     }
 
     @Override
-    public IdentificationPojo addType(Identification type) {
+    public Map<URI, IdentificationPojo> addType(Identification type) {
         return graphElementOperator.addType(type);
     }
 
     @Override
-    public IdentificationPojo addSameAs(Identification friendlyResource) {
+    public Map<URI, IdentificationPojo> addSameAs(Identification friendlyResource) {
         return graphElementOperator.addSameAs(friendlyResource);
     }
 
     @Override
-    public IdentificationPojo addGenericIdentification(Identification friendlyResource) {
+    public Map<URI, IdentificationPojo> addGenericIdentification(Identification friendlyResource) {
         return graphElementOperator.addGenericIdentification(friendlyResource);
     }
 

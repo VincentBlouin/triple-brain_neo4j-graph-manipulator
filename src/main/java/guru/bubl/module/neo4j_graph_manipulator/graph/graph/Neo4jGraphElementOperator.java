@@ -145,7 +145,7 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
     }
 
     @Override
-    public IdentificationPojo addGenericIdentification(Identification genericIdentification) throws IllegalArgumentException {
+    public Map<URI, IdentificationPojo> addGenericIdentification(Identification genericIdentification) throws IllegalArgumentException {
         return addIdentificationUsingType(
                 genericIdentification,
                 IdentificationType.generic
@@ -172,14 +172,14 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
     }
 
     @Override
-    public IdentificationPojo addSameAs(Identification sameAs) throws IllegalArgumentException {
+    public Map<URI, IdentificationPojo> addSameAs(Identification sameAs) throws IllegalArgumentException {
         return addIdentificationUsingType(
                 sameAs,
                 IdentificationType.same_as
         );
     }
 
-    private IdentificationPojo addIdentificationUsingType(
+    private Map<URI, IdentificationPojo> addIdentificationUsingType(
             Identification identification,
             IdentificationType identificationType
     ) {
@@ -211,6 +211,7 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
         final Neo4jFriendlyResource neo4jFriendlyResource = friendlyResourceFactory.withUri(
                 new UserUris(getOwnerUsername()).generateIdentificationUri()
         );
+        Map<URI, IdentificationPojo> identifications = new HashMap<>();
         return NoExRun.wrap(() -> {
             NamedParameterStatement statement = new NamedParameterStatement(
                     connection,
@@ -246,29 +247,35 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
                     statement
             );
             ResultSet rs = statement.executeQuery();
-            rs.next();
-            return new IdentificationPojo(
-                    URI.create(
-                            rs.getString("external_uri")
-                    ),
-                    new Integer(rs.getString("nbReferences")),
-                    new FriendlyResourcePojo(
-                            URI.create(
-                                    rs.getString("uri")
-                            ),
-                            rs.getString("label") == null ?
-                                    "" : rs.getString("label"),
-                            rs.getString("images") == null ?
-                                    new HashSet<>() : ImageJson.fromJson(rs.getString("images")),
-                            rs.getString("comment") == null ? "" : rs.getString("comment"),
-                            new Date(
-                                    rs.getLong("creation_date")
-                            ),
-                            new Date(
-                                    rs.getLong("last_modification_date")
-                            )
-                    )
-            );
+            while(rs.next()){
+                URI externalUri = URI.create(
+                        rs.getString("external_uri")
+                );
+                identifications.put(
+                        externalUri,
+                        new IdentificationPojo(
+                                externalUri,
+                                new Integer(rs.getString("nbReferences")),
+                                new FriendlyResourcePojo(
+                                        URI.create(
+                                                rs.getString("uri")
+                                        ),
+                                        rs.getString("label") == null ?
+                                                "" : rs.getString("label"),
+                                        rs.getString("images") == null ?
+                                                new HashSet<>() : ImageJson.fromJson(rs.getString("images")),
+                                        rs.getString("comment") == null ? "" : rs.getString("comment"),
+                                        new Date(
+                                                rs.getLong("creation_date")
+                                        ),
+                                        new Date(
+                                                rs.getLong("last_modification_date")
+                                        )
+                                )
+                        )
+                );
+            }
+            return identifications;
         }).get();
     }
 
@@ -280,7 +287,7 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
     }
 
     @Override
-    public IdentificationPojo addType(Identification type) throws IllegalArgumentException {
+    public Map<URI, IdentificationPojo> addType(Identification type) throws IllegalArgumentException {
         return addIdentificationUsingType(
                 type,
                 IdentificationType.type
