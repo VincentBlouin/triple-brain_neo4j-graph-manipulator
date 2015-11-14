@@ -29,8 +29,10 @@ public class Neo4jGraphFactory implements GraphFactory {
 
     @Override
     public UserGraph createForUser(User user) {
-        VertexOperator vertex = createDefaultVertexForUser(user);
-        vertex.label("me");
+        VertexOperator vertex = vertexFactory.withUri(
+                new UserUris(user).generateVertexUri()
+        );
+        vertex.create();
         centerGraphElementOperatorFactory.usingGraphElement(
                 vertex
         ).incrementNumberOfVisits();
@@ -42,11 +44,4 @@ public class Neo4jGraphFactory implements GraphFactory {
         return neo4jUserGraphFactory.withUser(user);
     }
 
-    private VertexOperator createDefaultVertexForUser(User user) {
-        VertexOperator operator = vertexFactory.withUri(
-                new UserUris(user).generateVertexUri()
-        );
-        operator.create();
-        return operator;
-    }
 }
