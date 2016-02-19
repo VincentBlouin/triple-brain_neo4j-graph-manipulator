@@ -18,7 +18,6 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.FriendlyRe
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.IdentificationQueryBuilder;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph.GraphElementFromExtractorQueryRow;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.Neo4jVertexInSubGraphOperator;
-import guru.bubl.module.neo4j_graph_manipulator.graph.search.result_builder.*;
 import org.apache.commons.lang.StringUtils;
 import org.apache.lucene.queryParser.QueryParser;
 import org.neo4j.graphdb.GraphDatabaseService;
@@ -26,14 +25,10 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.index.ReadableIndex;
 
 import javax.inject.Inject;
-import javax.xml.transform.Result;
 import java.net.URI;
 import java.sql.Connection;
 import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 public class Neo4jGraphSearch implements GraphSearch {
 
@@ -56,11 +51,8 @@ public class Neo4jGraphSearch implements GraphSearch {
                 searchTerm,
                 false,
                 user.username(),
-                GraphElementType.vertex.name(),
-                GraphElementType.schema.name(),
-                IdentificationType.generic.name(),
-                IdentificationType.type.name(),
-                IdentificationType.same_as.name()
+                GraphElementType.vertex,
+                GraphElementType.schema
         );
     }
 
@@ -70,8 +62,8 @@ public class Neo4jGraphSearch implements GraphSearch {
                 searchTerm,
                 true,
                 user.username(),
-                GraphElementType.vertex.name(),
-                GraphElementType.schema.name()
+                GraphElementType.vertex,
+                GraphElementType.schema
         );
     }
 
@@ -81,22 +73,19 @@ public class Neo4jGraphSearch implements GraphSearch {
                 searchTerm,
                 true,
                 user.username(),
-                GraphElementType.vertex.name()
+                GraphElementType.vertex
         );
     }
 
     @Override
-    public List<GraphElementSearchResult> searchRelationsPropertiesSchemasOrIdentifiersForAutoCompletionByLabel(String searchTerm, User user) {
+    public List<GraphElementSearchResult> searchRelationsPropertiesSchemasForAutoCompletionByLabel(String searchTerm, User user) {
         return new Getter<GraphElementSearchResult>().get(
                 searchTerm,
                 false,
                 user.username(),
-                GraphElementType.schema.name(),
-                GraphElementType.property.name(),
-                GraphElementType.edge.name(),
-                IdentificationType.generic.name(),
-                IdentificationType.type.name(),
-                IdentificationType.same_as.name()
+                GraphElementType.schema,
+                GraphElementType.property,
+                GraphElementType.edge
         );
     }
 
@@ -114,8 +103,8 @@ public class Neo4jGraphSearch implements GraphSearch {
                 searchTerm,
                 false,
                 "",
-                GraphElementType.vertex.name(),
-                GraphElementType.schema.name()
+                GraphElementType.vertex,
+                GraphElementType.schema
         );
     }
 
@@ -127,8 +116,11 @@ public class Neo4jGraphSearch implements GraphSearch {
         );
     }
 
-    private class Getter<ResultType extends GraphElementSearchResult> {
+    private static final String identifiersQueryArray = " [" + "'" + IdentificationType.generic.name() + "'," +
+            "'" + IdentificationType.type.name() + "'," +
+            "'" + IdentificationType.same_as.name() + "'] ";
 
+    private class Getter<ResultType extends GraphElementSearchResult> {
         public GraphElementSearchResult getForUri(URI uri, String username) {
             String query = String.format(
                     "START node=node:node_auto_index('uri:%s AND (is_public:true %s)') " +
@@ -184,7 +176,7 @@ public class Neo4jGraphSearch implements GraphSearch {
                 String searchTerm,
                 Boolean forPersonal,
                 String username,
-                String... graphElementTypes
+                GraphElementType... graphElementTypes
         ) {
             return new SearchResultGetter<ResultType>(
                     buildQuery(
@@ -201,7 +193,7 @@ public class Neo4jGraphSearch implements GraphSearch {
                 String searchTerm,
                 Boolean forPersonal,
                 String username,
-                String... graphElementTypes
+                GraphElementType... graphElementTypes
         ) {
             return "START node=node:node_auto_index('" +
                     Neo4jFriendlyResource.props.label + ":(" + formatSearchTerm(searchTerm) + "*) AND " +
@@ -210,12 +202,17 @@ public class Neo4jGraphSearch implements GraphSearch {
                     "( " + Neo4jFriendlyResource.props.type + ":" + StringUtils.join(graphElementTypes, " OR type:") + ") " +
                     "') " +
                     "OPTIONAL MATCH node<-[relation]->related_node " +
-                    "WHERE related_node." +
+                    "WHERE (related_node." +
                     Neo4jVertexInSubGraphOperator.props.is_public +
-                    "=true OR related_node.owner='" + username + "' " +
+                    "=true OR related_node.owner='" + username + "') " +
+                    "AND NOT related_node.type IN " + identifiersQueryArray +
+                    "OPTIONAL MATCH node-[]->identifier " +
+                    "WHERE identifier.type IN "  + identifiersQueryArray +
                     "RETURN " +
-                    "node.uri, node.label, node.creation_date, node.last_modification_date, node.nb_references, node.external_uri, " +
+                    "node.uri, node.label, node.creation_date, node.last_modification_date, " +
                     "COLLECT([related_node.label, related_node.uri, type(relation)])[0..5] as related_nodes, " +
+                    "identifier.nb_references as nb_references, " +
+                    "identifier.external_uri as external_uri, " +
                     "node.type as type limit 10";
         }
 

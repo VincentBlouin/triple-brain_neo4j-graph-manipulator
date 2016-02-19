@@ -10,6 +10,7 @@ import guru.bubl.module.model.graph.GraphElementType;
 import guru.bubl.module.model.search.GraphElementSearchResult;
 import guru.bubl.module.model.search.VertexSearchResult;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph.GraphElementFromExtractorQueryRow;
+import guru.bubl.module.neo4j_graph_manipulator.graph.search.SearchResultGetter;
 
 import java.net.URI;
 import java.sql.ResultSet;

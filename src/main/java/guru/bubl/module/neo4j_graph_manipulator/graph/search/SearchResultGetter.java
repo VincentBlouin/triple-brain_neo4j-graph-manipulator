@@ -5,6 +5,7 @@
 package guru.bubl.module.neo4j_graph_manipulator.graph.search;
 
 import guru.bubl.module.common_utils.NoExRun;
+import guru.bubl.module.model.graph.GraphElement;
 import guru.bubl.module.model.graph.GraphElementType;
 import guru.bubl.module.model.search.GraphElementSearchResult;
 import guru.bubl.module.neo4j_graph_manipulator.graph.search.result_builder.*;
@@ -46,6 +47,11 @@ public class SearchResultGetter<ResultType extends GraphElementSearchResult> {
 //            printRow(row);
         SearchResultBuilder searchResultBuilder = getFromRow(row);
         GraphElementSearchResult graphElementSearchResult = searchResultBuilder.build();
+        if(isIdentifierTheSame(row, graphElementSearchResult.getGraphElement())){
+            graphElementSearchResult.setNbReferences(
+                    getNbReferenceInRow(row)
+            );
+        }
         searchResults.add(
                 (ResultType) graphElementSearchResult
         );
@@ -75,11 +81,22 @@ public class SearchResultGetter<ResultType extends GraphElementSearchResult> {
             case "property":
                 return new PropertySearchResultBuilder(row, nodePrefix);
             default:
-                return new IdentificationSearchResultBuilder(row, nodePrefix);
+                return null;
         }
     }
 
     public static String nodeTypeInRow(ResultSet row) throws SQLException{
         return row.getString("type");
     }
+
+    private Integer getNbReferenceInRow(ResultSet row) throws SQLException{
+        String nbReferencesStr = row.getString("nb_references");
+        return nbReferencesStr == null ? 0 : new Integer(nbReferencesStr);
+    }
+
+    private Boolean isIdentifierTheSame(ResultSet row, GraphElement graphElement) throws SQLException{
+        String externalUri = row.getString("external_uri");
+        return externalUri != null && externalUri.equals(graphElement.uri().toString());
+    }
+
 }

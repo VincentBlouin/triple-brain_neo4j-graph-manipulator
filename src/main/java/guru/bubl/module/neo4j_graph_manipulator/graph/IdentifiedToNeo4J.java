@@ -4,20 +4,15 @@
 
 package guru.bubl.module.neo4j_graph_manipulator.graph;
 
-import guru.bubl.module.common_utils.NoExRun;
 import guru.bubl.module.model.IdentifiedTo;
 import guru.bubl.module.model.User;
-import guru.bubl.module.model.graph.FriendlyResourcePojo;
 import guru.bubl.module.model.graph.Identification;
 import guru.bubl.module.model.search.GraphElementSearchResult;
-import guru.bubl.module.model.search.GraphElementSearchResultPojo;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.Neo4jIdentification;
 import guru.bubl.module.neo4j_graph_manipulator.graph.search.SearchResultGetter;
 
 import javax.inject.Inject;
-import java.net.URI;
 import java.sql.Connection;
-import java.sql.ResultSet;
 import java.util.HashSet;
 import java.util.Set;
 
