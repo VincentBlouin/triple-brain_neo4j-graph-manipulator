@@ -34,6 +34,7 @@ public class IdentifiedToNeo4J implements IdentifiedTo {
                         "RETURN " +
                         "node.uri, node.label, node.creation_date, node.last_modification_date, " +
                         "COLLECT([related_node.label, related_node.uri, type(relation)])[0..5] as related_nodes, " +
+                        "node.external_uri as external_uri, " +
                         "node.type as type limit 10",
                 Neo4jIdentification.props.external_uri,
                 identification.getExternalResourceUri(),

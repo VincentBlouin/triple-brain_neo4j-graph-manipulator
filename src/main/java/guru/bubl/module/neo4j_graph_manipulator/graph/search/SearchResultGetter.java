@@ -9,6 +9,7 @@ import guru.bubl.module.model.graph.GraphElement;
 import guru.bubl.module.model.graph.GraphElementType;
 import guru.bubl.module.model.search.GraphElementSearchResult;
 import guru.bubl.module.neo4j_graph_manipulator.graph.search.result_builder.*;
+import org.neo4j.jdbc.IteratorResultSet;
 
 import javax.inject.Inject;
 import java.sql.Connection;
