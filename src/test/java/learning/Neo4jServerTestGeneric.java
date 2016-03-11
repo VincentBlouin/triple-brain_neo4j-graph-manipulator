@@ -13,9 +13,7 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.neo4j.graphdb.GraphDatabaseService;
-import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Transaction;
-import org.neo4j.graphdb.index.ReadableIndex;
 
 import javax.inject.Inject;
 import java.sql.Connection;
@@ -24,9 +22,6 @@ import java.sql.Statement;
 public class Neo4jServerTestGeneric {
 
     protected static Injector injector;
-
-    @Inject
-    protected ReadableIndex<Node> nodeIndex;
 
     @Inject
     static protected GraphDatabaseService graphDatabaseService;

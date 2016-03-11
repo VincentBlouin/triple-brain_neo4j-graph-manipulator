@@ -5,12 +5,14 @@
 package guru.bubl.module.neo4j_graph_manipulator.graph;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.TypeLiteral;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
 import guru.bubl.module.model.*;
 import guru.bubl.module.model.admin.WholeGraphAdmin;
 import guru.bubl.module.model.admin.WholeGraphAdminFactory;
-import guru.bubl.module.model.center_graph_element.*;
+import guru.bubl.module.model.center_graph_element.CenterGraphElementOperator;
+import guru.bubl.module.model.center_graph_element.CenterGraphElementOperatorFactory;
+import guru.bubl.module.model.center_graph_element.CenterGraphElementsOperatorFactory;
+import guru.bubl.module.model.center_graph_element.CenteredGraphElementsOperator;
 import guru.bubl.module.model.graph.*;
 import guru.bubl.module.model.graph.edge.EdgeFactory;
 import guru.bubl.module.model.graph.edge.EdgeOperator;
@@ -38,7 +40,6 @@ import org.neo4j.graphdb.event.TransactionEventHandler;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 import org.neo4j.graphdb.factory.GraphDatabaseSettings;
 import org.neo4j.graphdb.index.IndexManager;
-import org.neo4j.graphdb.index.ReadableIndex;
 import org.neo4j.graphdb.schema.Schema;
 import org.neo4j.graphdb.traversal.BidirectionalTraversalDescription;
 import org.neo4j.graphdb.traversal.TraversalDescription;
