@@ -6,7 +6,10 @@ package guru.bubl.module.neo4j_graph_manipulator.graph.search;
 
 import guru.bubl.module.common_utils.NoExRun;
 import guru.bubl.module.model.User;
-import guru.bubl.module.model.graph.*;
+import guru.bubl.module.model.graph.GraphElementPojo;
+import guru.bubl.module.model.graph.GraphElementType;
+import guru.bubl.module.model.graph.IdentificationPojo;
+import guru.bubl.module.model.graph.IdentificationType;
 import guru.bubl.module.model.search.GraphElementSearchResult;
 import guru.bubl.module.model.search.GraphElementSearchResultPojo;
 import guru.bubl.module.model.search.GraphSearch;
@@ -20,9 +23,6 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph.G
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.Neo4jVertexInSubGraphOperator;
 import org.apache.commons.lang.StringUtils;
 import org.apache.lucene.queryParser.QueryParser;
-import org.neo4j.graphdb.GraphDatabaseService;
-import org.neo4j.graphdb.Node;
-import org.neo4j.graphdb.index.ReadableIndex;
 
 import javax.inject.Inject;
 import java.net.URI;
@@ -33,13 +33,8 @@ import java.util.List;
 public class Neo4jGraphSearch implements GraphSearch {
 
     @Inject
-    GraphDatabaseService graphDatabaseService;
-
-    @Inject
     Neo4jGraphElementFactory graphElementFactory;
 
-    @Inject
-    ReadableIndex<Node> nodeIndex;
 
     @Inject
     Connection connection;

@@ -317,7 +317,9 @@ public class Neo4jEdgeOperator implements EdgeOperator, Neo4jOperator {
                     1,
                     addCreationProperties(values)
             );
-            return statement.execute();
+            statement.execute();
+            statement.close();
+            return null;
         }).get();
     }
 

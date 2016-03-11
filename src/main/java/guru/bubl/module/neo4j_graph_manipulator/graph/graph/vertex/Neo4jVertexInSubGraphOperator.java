@@ -416,9 +416,11 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
                     props.number_of_connected_edges_property_name,
                     props.number_of_connected_edges_property_name
             );
-            return statement.executeUpdate(
+            statement.executeUpdate(
                     query
             );
+            statement.close();
+            return null;
         }).get();
     }
 
@@ -753,7 +755,9 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
                     1,
                     props
             );
-            return statement.execute();
+            statement.execute();
+            statement.close();
+            return null;
         }).get();
     }
 

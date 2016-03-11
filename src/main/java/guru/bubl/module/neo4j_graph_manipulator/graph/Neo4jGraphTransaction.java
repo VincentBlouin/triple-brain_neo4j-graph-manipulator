@@ -16,7 +16,8 @@ public class Neo4jGraphTransaction implements GraphTransaction {
     GraphDatabaseService service;
 
     @Override
-    public Object before() {
+    public Object before()
+    {
         return service.beginTx();
     }
 

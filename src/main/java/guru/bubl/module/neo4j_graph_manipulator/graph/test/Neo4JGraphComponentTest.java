@@ -12,10 +12,8 @@ import guru.bubl.module.model.graph.SubGraphPojo;
 import guru.bubl.module.model.graph.UserGraph;
 import guru.bubl.module.model.graph.edge.Edge;
 import guru.bubl.module.model.graph.edge.EdgeFactory;
-import guru.bubl.module.model.graph.edge.EdgeOperator;
 import guru.bubl.module.model.graph.edge.EdgePojo;
 import guru.bubl.module.model.graph.vertex.Vertex;
-import guru.bubl.module.model.graph.vertex.VertexInSubGraphOperator;
 import guru.bubl.module.model.graph.vertex.VertexInSubGraphPojo;
 import guru.bubl.module.model.graph.vertex.VertexOperator;
 import guru.bubl.module.model.test.GraphComponentTest;
@@ -32,11 +30,7 @@ import org.neo4j.graphdb.Transaction;
 
 import javax.inject.Inject;
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
 
 public class Neo4JGraphComponentTest implements GraphComponentTest {
 

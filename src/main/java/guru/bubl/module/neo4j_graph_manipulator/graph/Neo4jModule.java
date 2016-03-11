@@ -201,20 +201,12 @@ public class Neo4jModule extends AbstractModule {
         bind(Connection.class).toInstance(
                 getConnectionForEmbedded(graphDb)
         );
+        bind(GraphDatabaseService.class).toInstance(graphDb);
         if (test) {
             registerShutdownHook(graphDb);
         }
-        bind(new TypeLiteral<ReadableIndex<Node>>() {
-        }).toInstance(
-                graphDb.index()
-                        .getNodeAutoIndexer()
-                        .getAutoIndex()
-        );
         tx.success();
         tx.close();
-        bind(GraphDatabaseService.class).toInstance(
-                graphDb
-        );
     }
 
     private void bindForRestApi() {
@@ -227,6 +219,7 @@ public class Neo4jModule extends AbstractModule {
         bind(GraphDatabaseService.class).toInstance(
                 dummyGraphDatabaseService()
         );
+
     }
 
     private void registerShutdownHook(final GraphDatabaseService graphDb) {
