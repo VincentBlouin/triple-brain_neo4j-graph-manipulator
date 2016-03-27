@@ -16,6 +16,7 @@ import guru.bubl.module.model.center_graph_element.CenteredGraphElementsOperator
 import guru.bubl.module.model.graph.*;
 import guru.bubl.module.model.graph.edge.EdgeFactory;
 import guru.bubl.module.model.graph.edge.EdgeOperator;
+import guru.bubl.module.model.graph.schema.SchemaList;
 import guru.bubl.module.model.graph.schema.SchemaOperator;
 import guru.bubl.module.model.graph.vertex.VertexFactory;
 import guru.bubl.module.model.graph.vertex.VertexInSubGraphOperator;
@@ -28,6 +29,7 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.graph.edge.Neo4jEdgeFactor
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.edge.Neo4jEdgeOperator;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.schema.Neo4jSchemaExtractorFactory;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph.Neo4jSubGraphExtractorFactory;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.schema.Neo4jSchemaList;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.schema.Neo4jSchemaOperator;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.schema.SchemaFactory;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.Neo4jVertexFactory;
@@ -121,6 +123,13 @@ public class Neo4jModule extends AbstractModule {
                 .implement(VertexInSubGraphOperator.class, Neo4jVertexInSubGraphOperator.class)
                 .build(VertexFactory.class));
 
+        bind(
+                SchemaList.class
+        ).to(
+                Neo4jSchemaList.class
+        ).in(
+                Singleton.class
+        );
         install(factoryModuleBuilder
                 .implement(SchemaOperator.class, Neo4jSchemaOperator.class)
                 .build(SchemaFactory.class));
@@ -140,30 +149,30 @@ public class Neo4jModule extends AbstractModule {
                 .build(EdgeFactory.class));
 
         install(factoryModuleBuilder
-                        .implement(GraphElementOperator.class, Neo4jGraphElementOperator.class)
-                        .build(GraphElementOperatorFactory.class)
+                .implement(GraphElementOperator.class, Neo4jGraphElementOperator.class)
+                .build(GraphElementOperatorFactory.class)
         );
 
         install(factoryModuleBuilder
                 .build(Neo4jGraphElementFactory.class));
 
         install(factoryModuleBuilder
-                        .implement(FriendlyResourceOperator.class, Neo4jFriendlyResource.class)
-                        .build(FriendlyResourceFactory.class)
+                .implement(FriendlyResourceOperator.class, Neo4jFriendlyResource.class)
+                .build(FriendlyResourceFactory.class)
         );
         install(factoryModuleBuilder
-                        .build(Neo4jFriendlyResourceFactory.class)
+                .build(Neo4jFriendlyResourceFactory.class)
         );
         install(factoryModuleBuilder
-                        .build(Neo4jImageFactory.class)
+                .build(Neo4jImageFactory.class)
         );
 
         install(factoryModuleBuilder
-                        .implement(IdentificationOperator.class, Neo4jIdentification.class)
-                        .build(IdentificationFactory.class)
+                .implement(IdentificationOperator.class, Neo4jIdentification.class)
+                .build(IdentificationFactory.class)
         );
         install(factoryModuleBuilder
-                        .build(Neo4jIdentificationFactory.class)
+                .build(Neo4jIdentificationFactory.class)
         );
         bind(GraphFactory.class).to(Neo4jGraphFactory.class).in(Singleton.class);
     }
