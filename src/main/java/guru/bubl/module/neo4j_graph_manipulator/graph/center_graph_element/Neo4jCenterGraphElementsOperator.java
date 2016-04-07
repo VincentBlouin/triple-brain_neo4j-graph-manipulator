@@ -35,10 +35,25 @@ public class Neo4jCenterGraphElementsOperator implements CenteredGraphElementsOp
     }
 
     @Override
-    public Set<CenterGraphElementPojo> get() {
+    public Set<CenterGraphElementPojo> getPublicAndPrivate() {
+        return getPublicOnlyOrNot(
+                false
+        );
+    }
+
+    @Override
+    public Set<CenterGraphElementPojo> getPublicOnly() {
+        return getPublicOnlyOrNot(
+                true
+        );
+    }
+
+    private Set<CenterGraphElementPojo> getPublicOnlyOrNot(Boolean publicOnly) {
         String query = String.format(
                 "START n=node:node_auto_index('" +
-                        "owner:%s AND %s:*') " +
+                        "owner:%s AND %s:* " +
+                        (publicOnly ? "AND is_public:true" : "") +
+                        "') " +
                         "return n.%s as numberOfVisits, n.%s as label, n.%s as uri;",
                 user.username(),
                 Neo4jCenterGraphElementOperator.props.number_of_visits,
