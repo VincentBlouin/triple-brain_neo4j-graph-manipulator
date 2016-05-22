@@ -6,9 +6,9 @@ package guru.bubl.module.neo4j_graph_manipulator.graph;
 
 import guru.bubl.module.model.IdentifiedTo;
 import guru.bubl.module.model.User;
-import guru.bubl.module.model.graph.Identification;
+import guru.bubl.module.model.graph.identification.Identification;
 import guru.bubl.module.model.search.GraphElementSearchResult;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.Neo4jIdentification;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.identification.Neo4jIdentification;
 import guru.bubl.module.neo4j_graph_manipulator.graph.search.SearchResultGetter;
 
 import javax.inject.Inject;

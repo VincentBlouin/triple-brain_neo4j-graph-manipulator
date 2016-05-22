@@ -10,27 +10,23 @@ import com.google.inject.assistedinject.AssistedInject;
 import guru.bubl.module.common_utils.NamedParameterStatement;
 import guru.bubl.module.common_utils.NoExRun;
 import guru.bubl.module.model.Image;
+import guru.bubl.module.model.User;
 import guru.bubl.module.model.UserUris;
-import guru.bubl.module.model.graph.GraphElementType;
-import guru.bubl.module.model.graph.Identification;
-import guru.bubl.module.model.graph.IdentificationPojo;
+import guru.bubl.module.model.graph.*;
 import guru.bubl.module.model.graph.edge.Edge;
 import guru.bubl.module.model.graph.edge.EdgeOperator;
 import guru.bubl.module.model.graph.edge.EdgePojo;
-import guru.bubl.module.model.graph.vertex.Vertex;
-import guru.bubl.module.model.graph.vertex.VertexInSubGraphOperator;
-import guru.bubl.module.model.graph.vertex.VertexInSubGraphPojo;
-import guru.bubl.module.model.graph.vertex.VertexOperator;
+import guru.bubl.module.model.graph.identification.Identification;
+import guru.bubl.module.model.graph.identification.IdentificationPojo;
+import guru.bubl.module.model.graph.vertex.*;
 import guru.bubl.module.model.json.SuggestionJson;
 import guru.bubl.module.model.suggestion.SuggestionPojo;
 import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jFriendlyResource;
 import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jFriendlyResourceFactory;
 import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jOperator;
 import guru.bubl.module.neo4j_graph_manipulator.graph.Relationships;
-import guru.bubl.module.neo4j_graph_manipulator.graph.center_graph_element.Neo4jCenterGraphElementOperator;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.Neo4jGraphElementFactory;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.Neo4jGraphElementOperator;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.Neo4jIdentification;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.edge.Neo4jEdgeFactory;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.edge.Neo4jEdgeOperator;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph.Neo4jSubGraphExtractor;
@@ -369,6 +365,19 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
             }
             return edges;
         }).get();
+    }
+
+    @Override
+    public VertexOperator cloneForUser(User user) {
+        VertexOperator clone = vertexFactory.withUri(
+                new UserUris(
+                        user.username()
+                ).generateVertexUri()
+        );
+        graphElementOperator.cloneCommon(
+                clone
+        );
+        return clone;
     }
 
     @Override

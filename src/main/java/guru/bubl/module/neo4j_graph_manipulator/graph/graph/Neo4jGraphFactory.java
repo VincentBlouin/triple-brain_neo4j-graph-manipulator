@@ -6,11 +6,9 @@ package guru.bubl.module.neo4j_graph_manipulator.graph.graph;
 
 import guru.bubl.module.model.User;
 import guru.bubl.module.model.UserUris;
-import guru.bubl.module.model.center_graph_element.CenterGraphElement;
 import guru.bubl.module.model.center_graph_element.CenterGraphElementOperatorFactory;
-import guru.bubl.module.model.center_graph_element.CenterGraphElementsOperatorFactory;
 import guru.bubl.module.model.graph.GraphFactory;
-import guru.bubl.module.model.graph.UserGraph;
+import guru.bubl.module.model.graph.subgraph.UserGraph;
 import guru.bubl.module.model.graph.vertex.VertexOperator;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.Neo4jVertexFactory;
 

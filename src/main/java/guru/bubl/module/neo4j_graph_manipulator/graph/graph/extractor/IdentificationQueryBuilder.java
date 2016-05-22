@@ -5,7 +5,7 @@
 package guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor;
 
 import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jFriendlyResource;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.Neo4jIdentification;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.identification.Neo4jIdentification;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.Neo4jUserGraph;
 
 public class IdentificationQueryBuilder {

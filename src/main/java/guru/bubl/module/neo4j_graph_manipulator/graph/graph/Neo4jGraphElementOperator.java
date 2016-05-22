@@ -9,10 +9,15 @@ import com.google.inject.assistedinject.AssistedInject;
 import guru.bubl.module.common_utils.NamedParameterStatement;
 import guru.bubl.module.common_utils.NoExRun;
 import guru.bubl.module.model.Image;
+import guru.bubl.module.model.User;
 import guru.bubl.module.model.UserUris;
 import guru.bubl.module.model.graph.*;
+import guru.bubl.module.model.graph.identification.Identification;
+import guru.bubl.module.model.graph.identification.IdentificationPojo;
+import guru.bubl.module.model.graph.identification.IdentificationType;
 import guru.bubl.module.model.json.ImageJson;
 import guru.bubl.module.neo4j_graph_manipulator.graph.*;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.identification.Neo4jIdentification;
 import guru.bubl.module.neo4j_graph_manipulator.graph.image.Neo4jImages;
 import org.neo4j.graphdb.Node;
 
@@ -247,7 +252,7 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
                     statement
             );
             ResultSet rs = statement.executeQuery();
-            while(rs.next()){
+            while (rs.next()) {
                 URI externalUri = URI.create(
                         rs.getString("external_uri")
                 );
@@ -470,5 +475,33 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
                         Neo4jIdentification.props.nb_references
                 )
         )).get();
+    }
+
+    public GraphElementOperator cloneCommon(GraphElementOperator clone) {
+        FriendlyResourcePojo original = new FriendlyResourcePojo(
+                uri(),
+                label()
+        );
+        original.setComment(
+                comment()
+        );
+        clone.createUsingInitialValues(
+                map(
+                        Neo4jFriendlyResource.props.label.name(), original.label(),
+                        Neo4jFriendlyResource.props.comment.name(), original.comment()
+                )
+        );
+        clone.addGenericIdentification(
+                new IdentificationPojo(
+                        this.uri(),
+                        original
+                )
+        );
+        for (IdentificationPojo identification : getIdentifications().values()) {
+            clone.addGenericIdentification(
+                    identification
+            );
+        }
+        return clone;
     }
 }

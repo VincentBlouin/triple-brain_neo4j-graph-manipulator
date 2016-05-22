@@ -5,10 +5,9 @@
 package guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph;
 
 import guru.bubl.module.model.graph.FriendlyResourcePojo;
-import guru.bubl.module.model.graph.IdentificationPojo;
-import guru.bubl.module.model.graph.IdentificationType;
+import guru.bubl.module.model.graph.identification.IdentificationPojo;
+import guru.bubl.module.model.graph.identification.IdentificationType;
 import guru.bubl.module.model.json.ImageJson;
-import org.apache.commons.lang.StringUtils;
 
 import java.net.URI;
 import java.sql.ResultSet;

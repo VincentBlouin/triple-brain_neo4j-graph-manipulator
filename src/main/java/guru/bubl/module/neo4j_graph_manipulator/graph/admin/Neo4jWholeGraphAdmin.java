@@ -9,9 +9,8 @@ import com.google.inject.assistedinject.AssistedInject;
 import guru.bubl.module.common_utils.NoExRun;
 import guru.bubl.module.model.WholeGraph;
 import guru.bubl.module.model.admin.WholeGraphAdmin;
-import guru.bubl.module.model.graph.Identification;
-import guru.bubl.module.model.graph.IdentificationOperator;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.Neo4jIdentification;
+import guru.bubl.module.model.graph.identification.IdentificationOperator;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.identification.Neo4jIdentification;
 
 import java.sql.Connection;
 

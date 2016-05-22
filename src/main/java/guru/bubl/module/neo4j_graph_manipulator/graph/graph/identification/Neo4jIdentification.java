@@ -2,14 +2,14 @@
  * Copyright Vincent Blouin under the GPL License version 3
  */
 
-package guru.bubl.module.neo4j_graph_manipulator.graph.graph;
+package guru.bubl.module.neo4j_graph_manipulator.graph.graph.identification;
 
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 import guru.bubl.module.common_utils.NamedParameterStatement;
 import guru.bubl.module.common_utils.NoExRun;
 import guru.bubl.module.model.Image;
-import guru.bubl.module.model.graph.IdentificationOperator;
+import guru.bubl.module.model.graph.identification.IdentificationOperator;
 import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jFriendlyResource;
 import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jFriendlyResourceFactory;
 import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jOperator;

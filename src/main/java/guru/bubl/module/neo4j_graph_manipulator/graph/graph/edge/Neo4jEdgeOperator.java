@@ -9,10 +9,11 @@ import com.google.inject.assistedinject.AssistedInject;
 import guru.bubl.module.common_utils.NamedParameterStatement;
 import guru.bubl.module.common_utils.NoExRun;
 import guru.bubl.module.model.Image;
+import guru.bubl.module.model.User;
 import guru.bubl.module.model.UserUris;
 import guru.bubl.module.model.graph.GraphElementType;
-import guru.bubl.module.model.graph.Identification;
-import guru.bubl.module.model.graph.IdentificationPojo;
+import guru.bubl.module.model.graph.identification.Identification;
+import guru.bubl.module.model.graph.identification.IdentificationPojo;
 import guru.bubl.module.model.graph.edge.EdgeOperator;
 import guru.bubl.module.model.graph.vertex.Vertex;
 import guru.bubl.module.model.graph.vertex.VertexOperator;
@@ -88,6 +89,24 @@ public class Neo4jEdgeOperator implements EdgeOperator, Neo4jOperator {
         this.destinationVertex = destinationVertex;
     }
 
+    @AssistedInject
+    protected Neo4jEdgeOperator(
+            Neo4jVertexFactory vertexFactory,
+            Neo4jEdgeFactory edgeFactory,
+            Neo4jGraphElementFactory graphElementFactory,
+            @Assisted URI uri,
+            @Assisted("source") Vertex sourceVertex,
+            @Assisted("destination") Vertex destinationVertex
+    ) {
+        this.vertexFactory = vertexFactory;
+        this.edgeFactory = edgeFactory;
+        this.graphElementOperator = graphElementFactory.withUri(
+                uri
+        );
+        this.sourceVertex = sourceVertex;
+        this.destinationVertex = destinationVertex;
+    }
+
     @Override
     public VertexOperator sourceVertex() {
         return vertexUsingProperty(
@@ -156,6 +175,21 @@ public class Neo4jEdgeOperator implements EdgeOperator, Neo4jOperator {
         ).get();
         graphElementOperator.updateLastModificationDate();
         //todo endbatch
+    }
+
+    @Override
+    public EdgeOperator cloneUsingSourceAndDestinationVertex(
+            Vertex sourceVertex,
+            Vertex destinationVertex
+    ) {
+        EdgeOperator clone = edgeFactory.withSourceAndDestinationVertex(
+                sourceVertex,
+                destinationVertex
+        );
+        graphElementOperator.cloneCommon(
+                clone
+        );
+        return clone;
     }
 
 

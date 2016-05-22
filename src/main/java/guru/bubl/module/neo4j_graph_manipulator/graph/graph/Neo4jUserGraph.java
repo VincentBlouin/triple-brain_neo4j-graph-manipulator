@@ -9,13 +9,15 @@ import com.google.inject.assistedinject.AssistedInject;
 import guru.bubl.module.common_utils.NoExRun;
 import guru.bubl.module.model.User;
 import guru.bubl.module.model.graph.GraphElementType;
-import guru.bubl.module.model.graph.SubGraphPojo;
-import guru.bubl.module.model.graph.UserGraph;
+import guru.bubl.module.model.graph.subgraph.SubGraph;
+import guru.bubl.module.model.graph.subgraph.SubGraphPojo;
+import guru.bubl.module.model.graph.subgraph.UserGraph;
 import guru.bubl.module.model.graph.edge.EdgeOperator;
 import guru.bubl.module.model.graph.exceptions.InvalidDepthOfSubVerticesException;
 import guru.bubl.module.model.graph.exceptions.NonExistingResourceException;
 import guru.bubl.module.model.graph.schema.SchemaOperator;
 import guru.bubl.module.model.graph.schema.SchemaPojo;
+import guru.bubl.module.model.graph.vertex.Vertex;
 import guru.bubl.module.model.graph.vertex.VertexOperator;
 import guru.bubl.module.model.graph.vertex.VertexPojo;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.edge.Neo4jEdgeFactory;
@@ -78,9 +80,9 @@ public class Neo4jUserGraph implements UserGraph {
                 uri
         );
         return NoExRun.wrap(() ->
-                        connection.createStatement().executeQuery(
-                                query
-                        ).next()
+                connection.createStatement().executeQuery(
+                        query
+                ).next()
         ).get();
     }
 
@@ -110,11 +112,6 @@ public class Neo4jUserGraph implements UserGraph {
                 depth,
                 getAnyVertex().uri()
         );
-    }
-
-    @Override
-    public String toRdfXml() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
     @Override
@@ -162,7 +159,6 @@ public class Neo4jUserGraph implements UserGraph {
                 schemaOperator.uri()
         );
     }
-
 
     private VertexOperator getAnyVertex() {
         String query = String.format(

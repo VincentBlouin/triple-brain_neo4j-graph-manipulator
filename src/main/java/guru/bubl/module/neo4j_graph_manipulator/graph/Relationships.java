@@ -4,7 +4,7 @@
 
 package guru.bubl.module.neo4j_graph_manipulator.graph;
 
-import guru.bubl.module.model.graph.IdentificationType;
+import guru.bubl.module.model.graph.identification.IdentificationType;
 import org.neo4j.graphdb.RelationshipType;
 
 public enum Relationships implements RelationshipType {

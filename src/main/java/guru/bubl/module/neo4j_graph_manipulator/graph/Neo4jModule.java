@@ -16,8 +16,13 @@ import guru.bubl.module.model.center_graph_element.CenteredGraphElementsOperator
 import guru.bubl.module.model.graph.*;
 import guru.bubl.module.model.graph.edge.EdgeFactory;
 import guru.bubl.module.model.graph.edge.EdgeOperator;
+import guru.bubl.module.model.graph.GraphFactory;
+import guru.bubl.module.model.graph.identification.IdentificationFactory;
+import guru.bubl.module.model.graph.identification.IdentificationOperator;
 import guru.bubl.module.model.graph.schema.SchemaList;
 import guru.bubl.module.model.graph.schema.SchemaOperator;
+import guru.bubl.module.model.graph.subgraph.SubGraphForker;
+import guru.bubl.module.model.graph.subgraph.SubGraphForkerFactory;
 import guru.bubl.module.model.graph.vertex.VertexFactory;
 import guru.bubl.module.model.graph.vertex.VertexInSubGraphOperator;
 import guru.bubl.module.model.test.GraphComponentTest;
@@ -29,9 +34,11 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.graph.edge.Neo4jEdgeFactor
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.edge.Neo4jEdgeOperator;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.schema.Neo4jSchemaExtractorFactory;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph.Neo4jSubGraphExtractorFactory;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.identification.Neo4jIdentification;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.schema.Neo4jSchemaList;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.schema.Neo4jSchemaOperator;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.schema.SchemaFactory;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.subgraph.Neo4jSubGraphForker;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.Neo4jVertexFactory;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.Neo4jVertexInSubGraphOperator;
 import guru.bubl.module.neo4j_graph_manipulator.graph.image.Neo4jImageFactory;
@@ -99,6 +106,7 @@ public class Neo4jModule extends AbstractModule {
 
         bind(IdentifiedTo.class).to(IdentifiedToNeo4J.class);
 
+
         FactoryModuleBuilder factoryModuleBuilder = new FactoryModuleBuilder();
 
         install(factoryModuleBuilder
@@ -136,6 +144,10 @@ public class Neo4jModule extends AbstractModule {
 
         install(factoryModuleBuilder
                 .build(Neo4jVertexFactory.class));
+
+        install(factoryModuleBuilder
+                .implement(SubGraphForker.class, Neo4jSubGraphForker.class)
+                .build(SubGraphForkerFactory.class));
 
         install(factoryModuleBuilder
                 .build(Neo4jSubGraphExtractorFactory.class));

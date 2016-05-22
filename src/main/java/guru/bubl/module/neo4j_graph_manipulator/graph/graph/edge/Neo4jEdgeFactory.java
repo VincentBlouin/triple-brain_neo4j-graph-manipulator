@@ -15,6 +15,11 @@ public interface Neo4jEdgeFactory {
             @Assisted("source") Vertex sourceVertex,
             @Assisted("destination") Vertex destinationVertex
     );
+    Neo4jEdgeOperator withUriAndSourceAndDestinationVertex(
+            URI uri,
+            @Assisted("source") Vertex sourceVertex,
+            @Assisted("destination") Vertex destinationVertex
+    );
     Neo4jEdgeOperator withUri(
             URI uri
     );
