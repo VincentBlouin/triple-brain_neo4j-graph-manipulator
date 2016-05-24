@@ -178,7 +178,7 @@ public class Neo4jEdgeOperator implements EdgeOperator, Neo4jOperator {
     }
 
     @Override
-    public EdgeOperator cloneUsingSourceAndDestinationVertex(
+    public EdgeOperator forkUsingSourceAndDestinationVertex(
             Vertex sourceVertex,
             Vertex destinationVertex
     ) {

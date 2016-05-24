@@ -368,7 +368,7 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
     }
 
     @Override
-    public VertexOperator cloneForUser(User user) {
+    public VertexOperator forkForUser(User user) {
         VertexOperator clone = vertexFactory.withUri(
                 new UserUris(
                         user.username()

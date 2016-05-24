@@ -17,7 +17,9 @@ import guru.bubl.module.model.graph.vertex.VertexOperator;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.edge.Neo4jEdgeFactory;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.Neo4jVertexFactory;
 
+import java.net.URI;
 import java.sql.Connection;
+import java.util.HashMap;
 import java.util.stream.Collectors;
 
 public class Neo4jSubGraphForker implements SubGraphForker {
@@ -26,7 +28,8 @@ public class Neo4jSubGraphForker implements SubGraphForker {
     VertexFactory vertexFactory;
     Connection connection;
     User user;
-    SubGraph subGraph;
+
+    private HashMap<URI, VertexOperator> forkedVertices;
 
     @AssistedInject
     protected Neo4jSubGraphForker(
@@ -43,14 +46,14 @@ public class Neo4jSubGraphForker implements SubGraphForker {
 
     @Override
     public void fork(SubGraph subGraph) {
+        forkedVertices = new HashMap<>();
         if (subGraph.edges().isEmpty()) {
             Vertex vertex = subGraph.vertices().values().iterator().next();
             VertexOperator vertexOperator = vertexFactory.withUri(
                     vertex.uri()
             );
-            if (vertexOperator.isPublic()) {
-                vertexOperator.cloneForUser(user);
-            }
+            forkVertexIfApplicable(vertexOperator);
+            return;
         }
         for (Edge edge : subGraph.edges().values()) {
             EdgeOperator edgeOperator = edgeFactory.withUriAndSourceAndDestinationVertex(
@@ -58,31 +61,43 @@ public class Neo4jSubGraphForker implements SubGraphForker {
                     edge.sourceVertex(),
                     edge.destinationVertex()
             );
-            VertexOperator sourceVertex = edgeOperator.sourceVertex();
-            VertexOperator destinationVertex = edgeOperator.destinationVertex();
-            Boolean isSourcePublic = sourceVertex.isPublic();
-            Boolean isDestinationPublic = destinationVertex.isPublic();
-            if (isSourcePublic) {
-                sourceVertex = sourceVertex.cloneForUser(user);
-            }
-            if (isDestinationPublic) {
-                destinationVertex = destinationVertex.cloneForUser(user);
-            }
-            if (isSourcePublic && isDestinationPublic) {
-                edgeOperator.cloneUsingSourceAndDestinationVertex(
-                        sourceVertex,
-                        destinationVertex
+            VertexOperator sourceVertexOriginal = edgeOperator.sourceVertex();
+            VertexOperator destinationVertexOriginal = edgeOperator.destinationVertex();
+            forkVertexIfApplicable(
+                    sourceVertexOriginal
+            );
+            forkVertexIfApplicable(
+                    destinationVertexOriginal
+            );
+            if (hasForkedVertex(sourceVertexOriginal) && hasForkedVertex(destinationVertexOriginal)) {
+                edgeOperator.forkUsingSourceAndDestinationVertex(
+                        getForkedVertex(sourceVertexOriginal),
+                        getForkedVertex(destinationVertexOriginal)
                 );
             }
         }
     }
 
+    private Boolean hasForkedVertex(Vertex vertex) {
+        return forkedVertices.containsKey(
+                vertex.uri()
+        );
+    }
 
-    private String buildEdgesUriStr() {
-        return subGraph.edges().values().stream()
-                .map(i -> i.uri().toString())
-                .collect(Collectors.joining(","));
+    private void forkVertexIfApplicable(VertexOperator originalVertex) {
+        if (hasForkedVertex(originalVertex) || !originalVertex.isPublic()) {
+            return;
+        }
+        forkedVertices.put(
+                originalVertex.uri(),
+                originalVertex.forkForUser(user)
+        );
+    }
 
+    private VertexOperator getForkedVertex(Vertex originalVertex) {
+        return forkedVertices.get(
+                originalVertex.uri()
+        );
     }
 
 //    this.subGraph = subGraph;
@@ -99,5 +114,12 @@ public class Neo4jSubGraphForker implements SubGraphForker {
 //            connection.createStatement().executeQuery(
 //            query
 //            )).get();
+
+//    private String buildEdgesUriStr() {
+//        return subGraph.edges().values().stream()
+//                .map(i -> i.uri().toString())
+//                .collect(Collectors.joining(","));
+//
+//    }
 
 }
