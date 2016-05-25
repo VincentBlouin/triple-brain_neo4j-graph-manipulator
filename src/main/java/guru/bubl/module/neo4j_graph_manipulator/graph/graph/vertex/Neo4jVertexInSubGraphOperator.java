@@ -368,14 +368,19 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
     }
 
     @Override
-    public VertexOperator forkForUser(User user) {
+    public VertexOperator forkForUserUsingCache(User user, Vertex cache) {
         VertexOperator clone = vertexFactory.withUri(
                 new UserUris(
                         user.username()
                 ).generateVertexUri()
         );
-        graphElementOperator.cloneCommon(
-                clone
+        graphElementOperator.forkUsingCreationPropertiesAndCache(
+                clone,
+                map(
+                        props.number_of_connected_edges_property_name.name(),
+                        cache.getNumberOfConnectedEdges()
+                ),
+                cache
         );
         return clone;
     }

@@ -9,9 +9,9 @@ import com.google.inject.assistedinject.AssistedInject;
 import guru.bubl.module.common_utils.NamedParameterStatement;
 import guru.bubl.module.common_utils.NoExRun;
 import guru.bubl.module.model.Image;
-import guru.bubl.module.model.User;
 import guru.bubl.module.model.UserUris;
 import guru.bubl.module.model.graph.GraphElementType;
+import guru.bubl.module.model.graph.edge.Edge;
 import guru.bubl.module.model.graph.identification.Identification;
 import guru.bubl.module.model.graph.identification.IdentificationPojo;
 import guru.bubl.module.model.graph.edge.EdgeOperator;
@@ -178,16 +178,19 @@ public class Neo4jEdgeOperator implements EdgeOperator, Neo4jOperator {
     }
 
     @Override
-    public EdgeOperator forkUsingSourceAndDestinationVertex(
+    public EdgeOperator forkUsingSourceAndDestinationVertexAndCache(
             Vertex sourceVertex,
-            Vertex destinationVertex
+            Vertex destinationVertex,
+            Edge cache
     ) {
         EdgeOperator clone = edgeFactory.withSourceAndDestinationVertex(
                 sourceVertex,
                 destinationVertex
         );
-        graphElementOperator.cloneCommon(
-                clone
+        graphElementOperator.forkUsingCreationPropertiesAndCache(
+                clone,
+                map(),
+                cache
         );
         return clone;
     }

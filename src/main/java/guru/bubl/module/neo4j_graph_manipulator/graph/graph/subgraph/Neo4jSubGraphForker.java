@@ -7,20 +7,18 @@ package guru.bubl.module.neo4j_graph_manipulator.graph.graph.subgraph;
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 import guru.bubl.module.model.User;
-import guru.bubl.module.model.graph.edge.Edge;
 import guru.bubl.module.model.graph.edge.EdgeOperator;
+import guru.bubl.module.model.graph.edge.EdgePojo;
 import guru.bubl.module.model.graph.subgraph.SubGraph;
 import guru.bubl.module.model.graph.subgraph.SubGraphForker;
-import guru.bubl.module.model.graph.vertex.Vertex;
-import guru.bubl.module.model.graph.vertex.VertexFactory;
-import guru.bubl.module.model.graph.vertex.VertexOperator;
+import guru.bubl.module.model.graph.vertex.*;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.edge.Neo4jEdgeFactory;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.Neo4jVertexFactory;
 
 import java.net.URI;
 import java.sql.Connection;
+import java.util.Collection;
 import java.util.HashMap;
-import java.util.stream.Collectors;
 
 public class Neo4jSubGraphForker implements SubGraphForker {
 
@@ -52,27 +50,40 @@ public class Neo4jSubGraphForker implements SubGraphForker {
             VertexOperator vertexOperator = vertexFactory.withUri(
                     vertex.uri()
             );
-            forkVertexIfApplicable(vertexOperator);
+            forkVertexIfApplicableUsingCache(
+                    vertexOperator,
+                    subGraph.vertexWithIdentifier(
+                            vertex.uri()
+                    )
+            );
             return;
         }
-        for (Edge edge : subGraph.edges().values()) {
+        Collection<EdgePojo> edges = (Collection<EdgePojo>) subGraph.edges().values();
+        for (EdgePojo edgePojo : edges) {
             EdgeOperator edgeOperator = edgeFactory.withUriAndSourceAndDestinationVertex(
-                    edge.uri(),
-                    edge.sourceVertex(),
-                    edge.destinationVertex()
+                    edgePojo.uri(),
+                    edgePojo.sourceVertex(),
+                    edgePojo.destinationVertex()
             );
             VertexOperator sourceVertexOriginal = edgeOperator.sourceVertex();
             VertexOperator destinationVertexOriginal = edgeOperator.destinationVertex();
-            forkVertexIfApplicable(
-                    sourceVertexOriginal
+            forkVertexIfApplicableUsingCache(
+                    sourceVertexOriginal,
+                    subGraph.vertexWithIdentifier(
+                            sourceVertexOriginal.uri()
+                    )
             );
-            forkVertexIfApplicable(
-                    destinationVertexOriginal
+            forkVertexIfApplicableUsingCache(
+                    destinationVertexOriginal,
+                    subGraph.vertexWithIdentifier(
+                            destinationVertexOriginal.uri()
+                    )
             );
             if (hasForkedVertex(sourceVertexOriginal) && hasForkedVertex(destinationVertexOriginal)) {
-                edgeOperator.forkUsingSourceAndDestinationVertex(
+                edgeOperator.forkUsingSourceAndDestinationVertexAndCache(
                         getForkedVertex(sourceVertexOriginal),
-                        getForkedVertex(destinationVertexOriginal)
+                        getForkedVertex(destinationVertexOriginal),
+                        edgePojo
                 );
             }
         }
@@ -84,13 +95,16 @@ public class Neo4jSubGraphForker implements SubGraphForker {
         );
     }
 
-    private void forkVertexIfApplicable(VertexOperator originalVertex) {
+    private void forkVertexIfApplicableUsingCache(VertexOperator originalVertex, VertexInSubGraph vertexCache) {
         if (hasForkedVertex(originalVertex) || !originalVertex.isPublic()) {
             return;
         }
         forkedVertices.put(
                 originalVertex.uri(),
-                originalVertex.forkForUser(user)
+                originalVertex.forkForUserUsingCache(
+                        user,
+                        vertexCache
+                )
         );
     }
 

@@ -477,19 +477,23 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
         )).get();
     }
 
-    public GraphElementOperator cloneCommon(GraphElementOperator clone) {
+    public GraphElementOperator forkUsingCreationPropertiesAndCache(GraphElementOperator clone, Map<String, Object> additionalCreateValues, GraphElement cache) {
         FriendlyResourcePojo original = new FriendlyResourcePojo(
                 uri(),
-                label()
+                cache.label()
         );
         original.setComment(
-                comment()
+                cache.comment()
+        );
+        Map<String, Object> createValues = map(
+                Neo4jFriendlyResource.props.label.name(), original.label(),
+                Neo4jFriendlyResource.props.comment.name(), original.comment()
+        );
+        createValues.putAll(
+                additionalCreateValues
         );
         clone.createUsingInitialValues(
-                map(
-                        Neo4jFriendlyResource.props.label.name(), original.label(),
-                        Neo4jFriendlyResource.props.comment.name(), original.comment()
-                )
+                createValues
         );
         clone.addGenericIdentification(
                 new IdentificationPojo(
@@ -497,7 +501,7 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
                         original
                 )
         );
-        for (IdentificationPojo identification : getIdentifications().values()) {
+        for (IdentificationPojo identification : cache.getIdentifications().values()) {
             clone.addGenericIdentification(
                     identification
             );
