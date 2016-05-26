@@ -501,11 +501,9 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
                         original
                 )
         );
-        for (IdentificationPojo identification : cache.getIdentifications().values()) {
-            clone.addGenericIdentification(
-                    identification
-            );
-        }
+        cache.getIdentifications().values().forEach(
+                clone::addGenericIdentification
+        );
         return clone;
     }
 }

@@ -65,8 +65,12 @@ public class Neo4jSubGraphForker implements SubGraphForker {
                     edgePojo.sourceVertex(),
                     edgePojo.destinationVertex()
             );
-            VertexOperator sourceVertexOriginal = edgeOperator.sourceVertex();
-            VertexOperator destinationVertexOriginal = edgeOperator.destinationVertex();
+            VertexOperator sourceVertexOriginal = vertexFactory.withUri(
+                    edgePojo.sourceVertex().uri()
+            );
+            VertexOperator destinationVertexOriginal = vertexFactory.withUri(
+                    edgeOperator.destinationVertex().uri()
+            );
             forkVertexIfApplicableUsingCache(
                     sourceVertexOriginal,
                     subGraph.vertexWithIdentifier(
