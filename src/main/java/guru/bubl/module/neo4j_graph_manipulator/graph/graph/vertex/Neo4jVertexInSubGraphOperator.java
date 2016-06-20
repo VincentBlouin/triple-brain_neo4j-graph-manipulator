@@ -265,21 +265,25 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
 
     @Override
     public EdgeOperator acceptSuggestion(final SuggestionPojo suggestion) {
-        //todo batch
-        UserUris userUris = new UserUris(
-                getOwnerUsername()
+        return suggestion.isFromComparison() ?
+                acceptSuggestionFromComparison(suggestion) :
+                acceptSuggestionFromSchema(suggestion);
+    }
+
+    private EdgeOperator acceptSuggestionFromSchema(final SuggestionPojo suggestion) {
+        VertexOperator newVertex = vertexFactory.withUri(
+                new UserUris(
+                        getOwnerUsername()
+                ).generateVertexUri()
         );
-        URI destinationVertexUri = userUris.generateVertexUri();
         EdgeOperator newEdge = addVertexAndRelationAction(
                 this,
-                destinationVertexUri
+                newVertex.uri()
         );
         newEdge.label(
                 suggestion.label()
         );
-        VertexOperator newVertex = vertexFactory.withUri(
-                destinationVertexUri
-        );
+
         if (suggestion.getSameAs() != null) {
             newEdge.addSameAs(
                     new IdentificationPojo(
@@ -303,8 +307,39 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
             );
         }
         return newEdge;
-        //todo endbatch
     }
+
+    private EdgeOperator acceptSuggestionFromComparison(final SuggestionPojo suggestion) {
+        VertexOperator newVertex = vertexFactory.withUri(
+                new UserUris(
+                        getOwnerUsername()
+                ).generateVertexUri()
+        );
+        EdgeOperator newEdge = addVertexAndRelationAction(
+                this,
+                newVertex.uri()
+        );
+        newEdge.label(
+                suggestion.label()
+        );
+        newEdge.addGenericIdentification(
+                new IdentificationPojo(
+                        suggestion.getSameAs().uri(),
+                        suggestion.getSameAs()
+                )
+        );
+        newVertex.addGenericIdentification(
+                new IdentificationPojo(
+                        suggestion.getType().uri(),
+                        suggestion.getType()
+                )
+        );
+        newVertex.label(
+                suggestion.getType().label()
+        );
+        return newEdge;
+    }
+
 
     @Override
     public void remove() {
