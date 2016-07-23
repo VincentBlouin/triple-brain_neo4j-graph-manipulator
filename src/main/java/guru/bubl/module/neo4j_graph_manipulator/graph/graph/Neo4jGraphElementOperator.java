@@ -32,7 +32,9 @@ import static guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jRestApiUtils.m
 public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOperator {
 
     public enum props {
-        identifications
+        identifications,
+        sort_date,
+        move_date
     }
 
     protected Node node;
@@ -158,6 +160,34 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
     }
 
     @Override
+    public void setSortDate(Date sortDate, Date moveDate) {
+        String query = String.format(queryPrefix() +
+                        "SET " +
+                        "n.%s=@%s, " +
+                        "n.%s=@%s ",
+                props.sort_date,
+                props.sort_date,
+                props.move_date,
+                props.move_date
+        );
+        NoExRun.wrap(() -> {
+            NamedParameterStatement statement = new NamedParameterStatement(
+                    connection,
+                    query
+            );
+            statement.setLong(
+                    props.sort_date.name(),
+                    sortDate.getTime()
+            );
+            statement.setLong(
+                    props.move_date.name(),
+                    moveDate.getTime()
+            );
+            return statement.execute();
+        }).get();
+    }
+
+    @Override
     public void create() {
         createUsingInitialValues(
                 map()
@@ -209,7 +239,7 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
             );
         }
 
-        identificationPojo.setCreationDate(new Date());
+        identificationPojo.setCreationDate(new Date().getTime());
         identificationPojo.setType(
                 identificationType
         );
@@ -270,12 +300,9 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
                                         rs.getString("images") == null ?
                                                 new HashSet<>() : ImageJson.fromJson(rs.getString("images")),
                                         rs.getString("comment") == null ? "" : rs.getString("comment"),
-                                        new Date(
-                                                rs.getLong("creation_date")
-                                        ),
-                                        new Date(
-                                                rs.getLong("last_modification_date")
-                                        )
+
+                                        rs.getLong("creation_date"),
+                                        rs.getLong("last_modification_date")
                                 )
                         )
                 );
@@ -410,6 +437,14 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
     public Map<String, Object> addCreationProperties(Map<String, Object> map) {
         return friendlyResource.addCreationProperties(
                 map
+        );
+    }
+
+    public GraphElementPojo pojoFromCreationProperties(Map<String, Object> creationProperties) {
+        return new GraphElementPojo(
+                friendlyResource.pojoFromCreationProperties(
+                        creationProperties
+                )
         );
     }
 

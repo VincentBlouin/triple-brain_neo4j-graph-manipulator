@@ -9,11 +9,13 @@ import guru.bubl.module.model.graph.vertex.VertexInSubGraph;
 import guru.bubl.module.model.graph.vertex.VertexInSubGraphPojo;
 import guru.bubl.module.model.json.SuggestionJson;
 import guru.bubl.module.model.suggestion.SuggestionPojo;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.Neo4jGraphElementOperator;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.Neo4jVertexInSubGraphOperator;
 
 import java.net.URI;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,7 +35,7 @@ public class VertexFromExtractorQueryRow {
     }
 
     public VertexInSubGraph build() throws SQLException {
-        return new VertexInSubGraphPojo(
+        VertexInSubGraphPojo vertexInSubGraphPojo = new VertexInSubGraphPojo(
                 GraphElementFromExtractorQueryRow.usingRowAndKey(
                         row,
                         keyPrefix
@@ -44,6 +46,12 @@ public class VertexFromExtractorQueryRow {
                 getSuggestions(),
                 getIsPublic()
         );
+        vertexInSubGraphPojo.getGraphElement().setSortDate(
+                getSortDate()
+        ).setMoveDate(
+                getMoveDate()
+        );
+        return vertexInSubGraphPojo;
     }
 
     private Map<URI, VertexInSubGraphPojo> buildIncludedVertices() throws SQLException {
@@ -129,7 +137,7 @@ public class VertexFromExtractorQueryRow {
         );
     }
 
-    private Map<URI, SuggestionPojo> getSuggestions() throws SQLException{
+    private Map<URI, SuggestionPojo> getSuggestions() throws SQLException {
         Object suggestionValue = row.getObject(
                 keyPrefix + "." + Neo4jVertexInSubGraphOperator.props.suggestions
         );
@@ -138,6 +146,26 @@ public class VertexFromExtractorQueryRow {
         }
         return SuggestionJson.fromJsonArray(
                 suggestionValue.toString()
+        );
+    }
+
+    private Long getSortDate() throws SQLException {
+        String key = keyPrefix + "." + Neo4jGraphElementOperator.props.sort_date;
+        if (row.getString(key) == null) {
+            return null;
+        }
+        return row.getLong(
+                key
+        );
+    }
+
+    private Long getMoveDate() throws SQLException {
+        String key = keyPrefix + "." + Neo4jGraphElementOperator.props.move_date;
+        if (row.getString(key) == null) {
+            return null;
+        }
+        return row.getLong(
+                key
         );
     }
 }

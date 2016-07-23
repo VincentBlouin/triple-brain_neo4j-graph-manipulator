@@ -14,6 +14,7 @@ import guru.bubl.module.model.graph.vertex.VertexInSubGraph;
 import guru.bubl.module.model.graph.vertex.VertexInSubGraphPojo;
 import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jFriendlyResource;
 import guru.bubl.module.neo4j_graph_manipulator.graph.Relationships;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.Neo4jGraphElementOperator;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.Neo4jUserGraph;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.edge.Neo4jEdgeOperator;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.FriendlyResourceQueryBuilder;
@@ -185,6 +186,14 @@ public class Neo4jSubGraphExtractor {
                 QueryUtils.getPropertyUsingContainerNameQueryPart(
                         prefix,
                         Neo4jVertexInSubGraphOperator.props.suggestions.name()
+                ) +
+                QueryUtils.getPropertyUsingContainerNameQueryPart(
+                        prefix,
+                        Neo4jGraphElementOperator.props.sort_date.name()
+                ) +
+                QueryUtils.getPropertyUsingContainerNameQueryPart(
+                        prefix,
+                        Neo4jGraphElementOperator.props.move_date.name()
                 );
     }
 

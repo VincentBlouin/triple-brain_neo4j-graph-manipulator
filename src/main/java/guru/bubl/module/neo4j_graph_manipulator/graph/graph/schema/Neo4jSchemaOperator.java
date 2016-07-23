@@ -222,6 +222,14 @@ public class Neo4jSchemaOperator implements SchemaOperator, Neo4jOperator {
     }
 
     @Override
+    public void setSortDate(Date sortDate, Date moveDate) {
+        graphElementOperator.setSortDate(
+                sortDate,
+                moveDate
+        );
+    }
+
+    @Override
     public GraphElementOperator addProperty() {
         URI createdUri = UserUris.generateSchemaPropertyUri(uri());
         Neo4jGraphElementOperator property = graphElementFactory.withUri(createdUri);

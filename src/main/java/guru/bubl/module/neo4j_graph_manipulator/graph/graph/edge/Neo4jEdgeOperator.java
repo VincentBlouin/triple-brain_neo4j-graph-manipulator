@@ -10,12 +10,15 @@ import guru.bubl.module.common_utils.NamedParameterStatement;
 import guru.bubl.module.common_utils.NoExRun;
 import guru.bubl.module.model.Image;
 import guru.bubl.module.model.UserUris;
+import guru.bubl.module.model.graph.GraphElementPojo;
 import guru.bubl.module.model.graph.GraphElementType;
 import guru.bubl.module.model.graph.edge.Edge;
+import guru.bubl.module.model.graph.edge.EdgePojo;
 import guru.bubl.module.model.graph.identification.Identification;
 import guru.bubl.module.model.graph.identification.IdentificationPojo;
 import guru.bubl.module.model.graph.edge.EdgeOperator;
 import guru.bubl.module.model.graph.vertex.Vertex;
+import guru.bubl.module.model.graph.vertex.VertexInSubGraphPojo;
 import guru.bubl.module.model.graph.vertex.VertexOperator;
 import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jFriendlyResource;
 import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jOperator;
@@ -169,9 +172,9 @@ public class Neo4jEdgeOperator implements EdgeOperator, Neo4jOperator {
         );
         //todo batch
         NoExRun.wrap(() ->
-                        connection.createStatement().executeQuery(
-                                query
-                        )
+                connection.createStatement().executeQuery(
+                        query
+                )
         ).get();
         graphElementOperator.updateLastModificationDate();
         //todo endbatch
@@ -215,9 +218,9 @@ public class Neo4jEdgeOperator implements EdgeOperator, Neo4jOperator {
         );
         //todo batch
         NoExRun.wrap(() ->
-                        connection.createStatement().executeQuery(
-                                query
-                        )
+                connection.createStatement().executeQuery(
+                        query
+                )
         ).get();
         graphElementOperator.updateLastModificationDate();
         //todo endbatch
@@ -238,7 +241,7 @@ public class Neo4jEdgeOperator implements EdgeOperator, Neo4jOperator {
                     )
             );
             graphElementOperator.removeAllIdentifications();
-            return  connection.createStatement().executeQuery(
+            return connection.createStatement().executeQuery(
                     String.format(
                             "%sMATCH n-[r]-() DELETE r, n",
                             queryPrefix()
@@ -323,6 +326,14 @@ public class Neo4jEdgeOperator implements EdgeOperator, Neo4jOperator {
     }
 
     @Override
+    public void setSortDate(Date sortDate, Date moveDate) {
+        graphElementOperator.setSortDate(
+                sortDate,
+                moveDate
+        );
+    }
+
+    @Override
     public void create() {
         createUsingInitialValues(
                 map()
@@ -330,7 +341,14 @@ public class Neo4jEdgeOperator implements EdgeOperator, Neo4jOperator {
     }
 
     @Override
-    public void createUsingInitialValues(Map<String, Object> values) {
+    public EdgePojo createEdge() {
+        return createEdgeUsingInitialValues(
+                map()
+        );
+    }
+
+    @Override
+    public EdgePojo createEdgeUsingInitialValues(Map<String, Object> values) {
         String query = String.format(
                 "START source_node=node:node_auto_index(\"uri:%s\"), " +
                         "destination_node=node:node_auto_index(\"uri:%s\") " +
@@ -346,18 +364,35 @@ public class Neo4jEdgeOperator implements EdgeOperator, Neo4jOperator {
                 Neo4jVertexInSubGraphOperator.props.is_public,
                 Neo4jVertexInSubGraphOperator.props.is_public
         );
-        NoExRun.wrap(() -> {
+        return NoExRun.wrap(() -> {
             PreparedStatement statement = connection.prepareStatement(
                     query
             );
+            Map<String, Object> creationProperties = addCreationProperties(values);
             statement.setObject(
                     1,
-                    addCreationProperties(values)
+                    creationProperties
             );
             statement.execute();
             statement.close();
-            return null;
+            EdgePojo edge = new EdgePojo(
+                    graphElementOperator.pojoFromCreationProperties(
+                            creationProperties
+                    )
+            );
+            edge.setSourceVertex(new VertexInSubGraphPojo(
+                    sourceVertex.uri()
+            ));
+            edge.setDestinationVertex(new VertexInSubGraphPojo(
+                    destinationVertex.uri()
+            ));
+            return edge;
         }).get();
+    }
+
+    @Override
+    public void createUsingInitialValues(Map<String, Object> values) {
+        createEdgeUsingInitialValues(values);
     }
 
     @Override

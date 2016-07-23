@@ -129,7 +129,7 @@ public class Neo4jFriendlyResource implements FriendlyResourceOperator, Neo4jOpe
             Statement statement = connection.createStatement();
             ResultSet rs = statement.executeQuery(query);
             return rs.next() && rs.getString("label") != null ?
-                    rs.getString("label"):
+                    rs.getString("label") :
                     "";
         }).get();
     }
@@ -175,7 +175,7 @@ public class Neo4jFriendlyResource implements FriendlyResourceOperator, Neo4jOpe
             Statement statement = connection.createStatement();
             ResultSet rs = statement.executeQuery(query);
             return rs.next() && rs.getString("comment") != null ?
-                    rs.getString("comment"):
+                    rs.getString("comment") :
                     "";
         }).get();
     }
@@ -221,21 +221,42 @@ public class Neo4jFriendlyResource implements FriendlyResourceOperator, Neo4jOpe
 
     @Override
     public void createUsingInitialValues(Map<String, Object> values) {
-        Map<String, Object> props = addCreationProperties(
+        Map<String, Object> creationProps = addCreationProperties(
                 values
         );
         String query = String.format(
                 "create (n:%s {1})",
                 GraphElementType.resource
         );
-        NoExRun.wrap(()->{
+        NoExRun.wrap(() -> {
             PreparedStatement statement = connection.prepareStatement(query);
             statement.setObject(
                     1,
-                    props
+                    creationProps
             );
             return statement.execute();
         }).get();
+    }
+
+    public FriendlyResourcePojo pojoFromCreationProperties(Map<String, Object> creationProperties){
+        FriendlyResourcePojo friendlyResourcePojo = new FriendlyResourcePojo(
+                uri
+        );
+        friendlyResourcePojo.setCreationDate(
+                new Long(
+                        creationProperties.get(
+                                props.creation_date.name()
+                        ).toString()
+                )
+        );
+        friendlyResourcePojo.setLastModificationDate(
+                new Long(
+                        creationProperties.get(
+                                props.last_modification_date.name()
+                        ).toString()
+                )
+        );
+        return friendlyResourcePojo;
     }
 
     @Override
@@ -288,7 +309,7 @@ public class Neo4jFriendlyResource implements FriendlyResourceOperator, Neo4jOpe
     @Override
     public Node getNode() {
         if (null == node) {
-            node = NoExRun.wrap(()->{
+            node = NoExRun.wrap(() -> {
                 ResultSet rs = connection.createStatement().executeQuery(
                         queryPrefix() + "return n"
                 );

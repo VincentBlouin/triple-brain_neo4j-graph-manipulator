@@ -218,7 +218,7 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
     }
 
     @Override
-    public EdgeOperator addVertexAndRelation() {
+    public EdgePojo addVertexAndRelation() {
         UserUris userUris = new UserUris(
                 getOwnerUsername()
         );
@@ -228,12 +228,12 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
         );
     }
 
-    private EdgeOperator addVertexAndRelationAction(Neo4jVertexInSubGraphOperator self, URI newVertexUri) {
+    private EdgePojo addVertexAndRelationAction(Neo4jVertexInSubGraphOperator self, URI newVertexUri) {
         Neo4jVertexInSubGraphOperator newVertexOperator = vertexFactory.withUri(
                 newVertexUri
         );
         self.incrementNumberOfConnectedEdges();
-        newVertexOperator.createUsingInitialValues(
+        VertexPojo newVertex = newVertexOperator.createVertexUsingInitialValues(
                 map(
                         props.number_of_connected_edges_property_name.name(),
                         1
@@ -243,8 +243,12 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
                 self,
                 newVertexOperator
         );
-        edgeOperator.create();
-        return edgeOperator;
+        EdgePojo newEdge = edgeOperator.createEdge();
+        newEdge.setDestinationVertex(
+                new VertexInSubGraphPojo(newVertex
+                )
+        );
+        return newEdge;
     }
 
     @Override
@@ -276,16 +280,19 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
                         getOwnerUsername()
                 ).generateVertexUri()
         );
-        EdgeOperator newEdge = addVertexAndRelationAction(
+        Edge newEdge = addVertexAndRelationAction(
                 this,
                 newVertex.uri()
         );
-        newEdge.label(
+        EdgeOperator newEdgeOperator = edgeFactory.withUri(
+                newEdge.uri()
+        );
+        newEdgeOperator.label(
                 suggestion.label()
         );
 
         if (suggestion.getSameAs() != null) {
-            newEdge.addSameAs(
+            newEdgeOperator.addSameAs(
                     new IdentificationPojo(
                             suggestion.getSameAs().uri(),
                             suggestion.getSameAs()
@@ -306,7 +313,7 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
                     )
             );
         }
-        return newEdge;
+        return newEdgeOperator;
     }
 
     private EdgeOperator acceptSuggestionFromComparison(final SuggestionPojo suggestion) {
@@ -315,14 +322,17 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
                         getOwnerUsername()
                 ).generateVertexUri()
         );
-        EdgeOperator newEdge = addVertexAndRelationAction(
+        EdgePojo newEdge = addVertexAndRelationAction(
                 this,
                 newVertex.uri()
         );
-        newEdge.label(
+        EdgeOperator newEdgeOperator = edgeFactory.withUri(
+                newEdge.uri()
+        );
+        newEdgeOperator.label(
                 suggestion.label()
         );
-        newEdge.addGenericIdentification(
+        newEdgeOperator.addGenericIdentification(
                 new IdentificationPojo(
                         suggestion.getSameAs().uri(),
                         suggestion.getSameAs()
@@ -337,7 +347,7 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
         newVertex.label(
                 suggestion.getType().label()
         );
-        return newEdge;
+        return newEdgeOperator;
     }
 
 
@@ -775,6 +785,14 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
     }
 
     @Override
+    public void setSortDate(Date sortDate, Date moveDate) {
+        graphElementOperator.setSortDate(
+                sortDate,
+                moveDate
+        );
+    }
+
+    @Override
     public boolean equals(Object vertexToCompareAsObject) {
         return graphElementOperator.equals(vertexToCompareAsObject);
     }
@@ -791,8 +809,17 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
 
     @Override
     public void createUsingInitialValues(Map<String, Object> values) {
+        createVertexUsingInitialValues(
+                values
+        );
+    }
+
+    public VertexPojo createVertexUsingInitialValues(Map<String, Object> values) {
         Map<String, Object> props = addCreationProperties(
                 values
+        );
+        VertexPojo vertexPojo = pojoFromCreationProperties(
+                props
         );
         NoExRun.wrap(() -> {
             String query = String.format(
@@ -808,6 +835,7 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
             statement.close();
             return null;
         }).get();
+        return vertexPojo;
     }
 
     @Override
@@ -839,6 +867,14 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
         return newMap;
     }
 
+    public VertexPojo pojoFromCreationProperties(Map<String, Object> creationProperties) {
+        return new VertexPojo(
+                graphElementOperator.pojoFromCreationProperties(
+                        creationProperties
+                )
+        );
+    }
+
     @Override
     public void setNamedCreationProperties(NamedParameterStatement statement) throws SQLException {
         statement.setObject(
@@ -861,5 +897,4 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
                 statement
         );
     }
-
 }

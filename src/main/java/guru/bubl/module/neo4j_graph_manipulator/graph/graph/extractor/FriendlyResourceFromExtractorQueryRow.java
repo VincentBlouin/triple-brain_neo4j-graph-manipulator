@@ -48,7 +48,7 @@ public class FriendlyResourceFromExtractorQueryRow {
         this.nodeKey = nodeKey;
     }
 
-    public FriendlyResourcePojo build() throws SQLException{
+    public FriendlyResourcePojo build() throws SQLException {
         return new FriendlyResourcePojo(
                 getUri(),
                 getLabel(),
@@ -59,14 +59,14 @@ public class FriendlyResourceFromExtractorQueryRow {
         );
     }
 
-    private Set<Image> getImages(){
-        try{
+    private Set<Image> getImages() {
+        try {
             return ImageJson.fromJson(
                     row.getString(
                             nodeKey + "." + Neo4jImages.props.images
                     )
             );
-        }catch(SQLException e){
+        } catch (SQLException e) {
             return new HashSet<>();
         }
 
@@ -80,38 +80,38 @@ public class FriendlyResourceFromExtractorQueryRow {
         ) != null ? row.getString(labelKey) : "";
     }
 
-    private String getComment(){
-        try{
+    private String getComment() {
+        try {
             return row.getString(
                     nodeKey + "." + Neo4jFriendlyResource.props.comment
             );
-        }catch(SQLException e){
+        } catch (SQLException e) {
             return "";
         }
 
     }
 
-    private Date getLastModificationDate() throws SQLException{
+    private Long getLastModificationDate() throws SQLException {
         String key = nodeKey + "." + Neo4jFriendlyResource.props.last_modification_date.name();
         if (row.getString(key) == null) {
-            return new Date();
+            return new Date().getTime();
         }
-        return new Date(row.getLong(
+        return row.getLong(
                 key
-        ));
+        );
     }
 
-    private Date getCreationDate() throws SQLException {
+    private Long getCreationDate() throws SQLException {
         String key = nodeKey + "." + Neo4jFriendlyResource.props.creation_date.name();
         if (row.getString(key) == null) {
-            return new Date();
+            return new Date().getTime();
         }
-        return new Date(row.getLong(
+        return row.getLong(
                 key
-        ));
+        );
     }
 
-    public URI getUri() throws SQLException{
+    public URI getUri() throws SQLException {
         return URI.create(
                 row.getString(
                         nodeKey + "." + Neo4jUserGraph.URI_PROPERTY_NAME
