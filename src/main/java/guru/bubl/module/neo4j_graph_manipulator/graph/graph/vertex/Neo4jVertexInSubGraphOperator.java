@@ -258,15 +258,38 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
     @Override
     public EdgeOperator addRelationToVertex(final Vertex destinationVertex) {
         //todo batch
-        incrementNumberOfConnectedEdges();
-        (
-                (Neo4jVertexInSubGraphOperator) destinationVertex
-        ).incrementNumberOfConnectedEdges();
         EdgeOperator edge = edgeFactory.withSourceAndDestinationVertex(
                 this,
                 destinationVertex
         );
         edge.create();
+        String query = String.format(
+                "MATCH (s:%s {uri:'%s'}), (d:%s {uri:'%s'}) " +
+                        "SET " +
+                        "s.%s=s.%s+1, " +
+                        "d.%s=d.%s+1, " +
+                        "s.%s = CASE WHEN d.%s THEN s.%s + 1 ELSE s.%s END, " +
+                        "d.%s = CASE WHEN s.%s THEN d.%s + 1 ELSE d.%s END ",
+                GraphElementType.vertex,
+                this.uri(),
+                GraphElementType.vertex,
+                destinationVertex.uri(),
+                props.number_of_connected_edges_property_name,
+                props.number_of_connected_edges_property_name,
+                props.number_of_connected_edges_property_name,
+                props.number_of_connected_edges_property_name,
+                props.nb_public_neighbors,
+                props.is_public,
+                props.nb_public_neighbors,
+                props.nb_public_neighbors,
+                props.nb_public_neighbors,
+                props.is_public,
+                props.nb_public_neighbors,
+                props.nb_public_neighbors
+        );
+        NoExRun.wrap(() -> connection.createStatement().executeQuery(
+                query
+        )).get();
         return edge;
         //todo endbatch
     }
