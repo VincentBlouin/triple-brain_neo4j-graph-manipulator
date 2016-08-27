@@ -181,6 +181,10 @@ public class Neo4jSubGraphExtractor {
         ) +
                 QueryUtils.getPropertyUsingContainerNameQueryPart(
                         prefix,
+                        Neo4jVertexInSubGraphOperator.props.nb_public_neighbors.name()
+                ) +
+                QueryUtils.getPropertyUsingContainerNameQueryPart(
+                        prefix,
                         Neo4jVertexInSubGraphOperator.props.is_public.name()
                 ) +
                 QueryUtils.getPropertyUsingContainerNameQueryPart(

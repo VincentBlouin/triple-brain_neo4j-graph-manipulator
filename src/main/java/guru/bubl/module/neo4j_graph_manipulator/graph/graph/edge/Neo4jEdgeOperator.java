@@ -28,6 +28,7 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.graph.Neo4jGraphElementOpe
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.Neo4jVertexFactory;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.Neo4jVertexInSubGraphOperator;
 import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.Relationship;
 
 import javax.inject.Inject;
 import java.net.URI;
@@ -150,25 +151,74 @@ public class Neo4jEdgeOperator implements EdgeOperator, Neo4jOperator {
     }
 
     @Override
-    public void changeSourceVertex(Vertex vertex) {
+    public void changeSourceVertex(
+            Vertex newSourceVertex
+    ) {
+        changeEndVertex(
+                newSourceVertex,
+                Relationships.SOURCE_VERTEX
+        );
+    }
+
+    @Override
+    public void changeDestinationVertex(
+            Vertex newDestinationVertex
+    ) {
+        changeEndVertex(
+                newDestinationVertex,
+                Relationships.DESTINATION_VERTEX
+        );
+    }
+
+    private void changeEndVertex(
+            Vertex newEndVertex,
+            Relationships relationshipToChange
+    ) {
+        Relationships relationshipToKeep = Relationships.SOURCE_VERTEX == relationshipToChange ?
+                Relationships.DESTINATION_VERTEX : Relationships.SOURCE_VERTEX;
         String query = String.format(
-                "%s, new_source_vertex=node:node_auto_index('%s:%s') " +
-                        "MATCH n-[prev_source_rel:%s]->prev_source_vertex " +
-                        "CREATE (n)-[:%s]->(new_source_vertex) " +
-                        "DELETE prev_source_rel " +
-                        "SET n.%s=new_source_vertex.uri, " +
-                        "prev_source_vertex.%s = prev_source_vertex.%s - 1, " +
-                        "new_source_vertex.%s = new_source_vertex.%s + 1 ",
+                "%s, new_v=node:node_auto_index('%s:%s') " +
+                        "MATCH n-[prev_rel:%s]->prev_v, " +
+                        "n-[:%s]->kept_v " +
+                        "CREATE (n)-[:%s]->(new_v) " +
+                        "DELETE prev_rel " +
+                        "SET n.%s=new_v.uri, " +
+                        "prev_v.%s = prev_v.%s - 1, " +
+                        "new_v.%s = new_v.%s + 1, " +
+                        "kept_v.%s = CASE WHEN (not prev_v.%s AND new_v.%s) THEN kept_v.%s + 1 ELSE kept_v.%s END, " +
+                        "kept_v.%s = CASE WHEN (prev_v.%s AND not new_v.%s) THEN kept_v.%s - 1 ELSE kept_v.%s END, " +
+                        "prev_v.%s = CASE WHEN kept_v.%s THEN prev_v.%s - 1 ELSE prev_v.%s END, " +
+                        "new_v.%s = CASE WHEN kept_v.%s THEN new_v.%s + 1 ELSE new_v.%s END ",
                 queryPrefix(),
                 Neo4jFriendlyResource.props.uri,
-                vertex.uri(),
-                Relationships.SOURCE_VERTEX,
-                Relationships.SOURCE_VERTEX,
-                props.source_vertex_uri,
+                newEndVertex.uri(),
+                relationshipToChange,
+                relationshipToKeep,
+                relationshipToChange,
+                Relationships.SOURCE_VERTEX == relationshipToChange ? props.source_vertex_uri : props.destination_vertex_uri,
                 Neo4jVertexInSubGraphOperator.props.number_of_connected_edges_property_name,
                 Neo4jVertexInSubGraphOperator.props.number_of_connected_edges_property_name,
                 Neo4jVertexInSubGraphOperator.props.number_of_connected_edges_property_name,
-                Neo4jVertexInSubGraphOperator.props.number_of_connected_edges_property_name
+                Neo4jVertexInSubGraphOperator.props.number_of_connected_edges_property_name,
+                Neo4jVertexInSubGraphOperator.props.nb_public_neighbors,
+                Neo4jVertexInSubGraphOperator.props.is_public,
+                Neo4jVertexInSubGraphOperator.props.is_public,
+                Neo4jVertexInSubGraphOperator.props.nb_public_neighbors,
+                Neo4jVertexInSubGraphOperator.props.nb_public_neighbors,
+                Neo4jVertexInSubGraphOperator.props.nb_public_neighbors,
+                Neo4jVertexInSubGraphOperator.props.is_public,
+                Neo4jVertexInSubGraphOperator.props.is_public,
+                Neo4jVertexInSubGraphOperator.props.nb_public_neighbors,
+                Neo4jVertexInSubGraphOperator.props.nb_public_neighbors,
+                Neo4jVertexInSubGraphOperator.props.nb_public_neighbors,
+                Neo4jVertexInSubGraphOperator.props.is_public,
+                Neo4jVertexInSubGraphOperator.props.nb_public_neighbors,
+                Neo4jVertexInSubGraphOperator.props.nb_public_neighbors,
+                Neo4jVertexInSubGraphOperator.props.nb_public_neighbors,
+                Neo4jVertexInSubGraphOperator.props.is_public,
+                Neo4jVertexInSubGraphOperator.props.nb_public_neighbors,
+                Neo4jVertexInSubGraphOperator.props.nb_public_neighbors
+
         );
         //todo batch
         NoExRun.wrap(() ->
@@ -234,9 +284,12 @@ public class Neo4jEdgeOperator implements EdgeOperator, Neo4jOperator {
             Statement statement = connection.createStatement();
             statement.executeQuery(
                     String.format(
-                            "%sMATCH n-[:SOURCE_VERTEX]->(source_vertex), n-[:DESTINATION_VERTEX]->(destination_vertex) " +
-                                    "SET source_vertex.number_of_connected_edges_property_name = source_vertex.number_of_connected_edges_property_name - 1, " +
-                                    "destination_vertex.number_of_connected_edges_property_name = destination_vertex.number_of_connected_edges_property_name - 1 ",
+                            "%s" +
+                                    "MATCH n-[:SOURCE_VERTEX]->(s_v), n-[:DESTINATION_VERTEX]->(d_v) " +
+                                    "SET s_v.number_of_connected_edges_property_name = s_v.number_of_connected_edges_property_name - 1, " +
+                                    "d_v.number_of_connected_edges_property_name = d_v.number_of_connected_edges_property_name - 1," +
+                                    "s_v.nb_public_neighbors = CASE WHEN d_v.is_public THEN s_v.nb_public_neighbors - 1 ELSE s_v.nb_public_neighbors END, " +
+                                    "d_v.nb_public_neighbors = CASE WHEN s_v.is_public THEN d_v.nb_public_neighbors - 1 ELSE d_v.nb_public_neighbors END ",
                             queryPrefix()
                     )
             );

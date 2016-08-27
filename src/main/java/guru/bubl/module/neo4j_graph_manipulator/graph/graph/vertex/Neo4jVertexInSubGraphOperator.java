@@ -43,6 +43,7 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
 
     public enum props {
         number_of_connected_edges_property_name,
+        nb_public_neighbors,
         is_public,
         suggestions
     }
@@ -236,7 +237,9 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
         VertexPojo newVertex = newVertexOperator.createVertexUsingInitialValues(
                 map(
                         props.number_of_connected_edges_property_name.name(),
-                        1
+                        1,
+                        props.nb_public_neighbors.name(),
+                        self.isPublic() ? 1 : 0
                 )
         );
         Neo4jEdgeOperator edgeOperator = edgeFactory.withSourceAndDestinationVertex(
@@ -245,7 +248,8 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
         );
         EdgePojo newEdge = edgeOperator.createEdge();
         newEdge.setDestinationVertex(
-                new VertexInSubGraphPojo(newVertex
+                new VertexInSubGraphPojo(
+                        newVertex
                 )
         );
         return newEdge;
@@ -355,35 +359,22 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
     public void remove() {
         //todo batch
         NoExRun.wrap(() -> {
-            connection.createStatement().executeQuery(
-                    queryPrefix() +
-                            "MATCH " +
-                            "n<-[:SOURCE_VERTEX]-(edge), " +
-                            "edge-[:DESTINATION_VERTEX]->(vertex) " +
-                            "SET " +
-                            "vertex.number_of_connected_edges_property_name = " +
-                            "vertex.number_of_connected_edges_property_name - 1"
-            );
-            connection.createStatement().executeQuery(
-                    queryPrefix() +
-                            "MATCH " +
-                            "n<-[:DESTINATION_VERTEX]-(edge), " +
-                            "edge-[:SOURCE_VERTEX]->(vertex) " +
-                            "SET " +
-                            "vertex.number_of_connected_edges_property_name = " +
-                            "vertex.number_of_connected_edges_property_name - 1"
-            );
             graphElementOperator.removeAllIdentifications();
             return connection.createStatement().executeQuery(
                     queryPrefix() +
                             "OPTIONAL MATCH " +
-                            "n<-[:SOURCE_VERTEX|DESTINATION_VERTEX]-(edge), " +
-                            "edge-[edge_relation]-() " +
-                            "OPTIONAL MATCH " +
-                            "n-[vertex_relation]-() " +
+                            "n<-[:SOURCE_VERTEX|DESTINATION_VERTEX]-(e), " +
+                            "e-[:SOURCE_VERTEX|DESTINATION_VERTEX]->(v) " +
+                            "SET " +
+                            "v.number_of_connected_edges_property_name = " +
+                            "v.number_of_connected_edges_property_name - 1, " +
+                            "v.nb_public_neighbors = CASE WHEN n.is_public THEN v.nb_public_neighbors - 1 ELSE v.nb_public_neighbors END " +
+                            "WITH e, n " +
+                            "OPTIONAL MATCH e-[e_r]-(), " +
+                            "n-[v_r]-() " +
                             "DELETE " +
-                            "vertex_relation, n, " +
-                            "edge_relation, edge"
+                            "v_r, n, " +
+                            "e_r, e"
             );
         }).get();
         //todo endbatch
@@ -436,6 +427,24 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
                 "%sreturn n.%s as result",
                 queryPrefix(),
                 props.number_of_connected_edges_property_name
+        );
+        return NoExRun.wrap(() -> {
+            ResultSet rs = connection.createStatement().executeQuery(
+                    query
+            );
+            rs.next();
+            return Integer.valueOf(
+                    rs.getString("result")
+            );
+        }).get();
+    }
+
+    @Override
+    public Integer getNbPublicNeighbors() {
+        String query = String.format(
+                "%sreturn n.%s as result",
+                queryPrefix(),
+                props.nb_public_neighbors
         );
         return NoExRun.wrap(() -> {
             ResultSet rs = connection.createStatement().executeQuery(
@@ -588,15 +597,20 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
                         "SET n.%s = true " +
                         "WITH n " +
                         "MATCH n<-[:%s|%s]->e, " +
-                        "e<-[:%s|%s]->v " +
-                        "WHERE v.%s = true " +
-                        "SET e.%s = true ",
+                        "e<-[:%s|%s]->d " +
+                        "SET d.%s = " +
+                        "d.%s + 1 " +
+                        "WITH d,e " +
+                        "WHERE d.%s = true " +
+                        "SET e.%s = true",
                 queryPrefix(),
                 props.is_public,
                 Relationships.SOURCE_VERTEX,
                 Relationships.DESTINATION_VERTEX,
                 Relationships.SOURCE_VERTEX,
                 Relationships.DESTINATION_VERTEX,
+                props.nb_public_neighbors,
+                props.nb_public_neighbors,
                 props.is_public,
                 props.is_public
         );
@@ -611,14 +625,22 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
     public void makePrivate() {
         String query = String.format(
                 "%s" +
-                        "OPTIONAL MATCH n<-[:%s|%s]->e " +
+                        "WITH n " +
+                        "MATCH n<-[:%s|%s]->e, " +
+                        "e<-[:%s|%s]->d " +
                         "SET n.%s = false, " +
-                        "e.%s = false ",
+                        "e.%s = false, " +
+                        "d.%s = " +
+                        "d.%s -1 ",
                 queryPrefix(),
                 Relationships.SOURCE_VERTEX,
                 Relationships.DESTINATION_VERTEX,
+                Relationships.SOURCE_VERTEX,
+                Relationships.DESTINATION_VERTEX,
                 props.is_public,
-                props.is_public
+                props.is_public,
+                props.nb_public_neighbors,
+                props.nb_public_neighbors
         );
         NoExRun.wrap(() ->
                 connection.createStatement().executeQuery(
@@ -856,6 +878,7 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
         Map<String, Object> newMap = map(
                 props.is_public.name(), false,
                 props.number_of_connected_edges_property_name.name(), 0,
+                props.nb_public_neighbors.name(), 0,
                 Neo4jFriendlyResource.props.type.name(), GraphElementType.vertex.name()
         );
         newMap.putAll(
@@ -868,11 +891,19 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
     }
 
     public VertexPojo pojoFromCreationProperties(Map<String, Object> creationProperties) {
-        return new VertexPojo(
+        VertexPojo vertex = new VertexPojo(
                 graphElementOperator.pojoFromCreationProperties(
                         creationProperties
                 )
         );
+        if (creationProperties.containsKey(props.nb_public_neighbors.name())) {
+            vertex.setNbPublicNeighbors(
+                    (Integer) creationProperties.get(
+                            props.nb_public_neighbors.name()
+                    )
+            );
+        }
+        return vertex;
     }
 
     @Override
