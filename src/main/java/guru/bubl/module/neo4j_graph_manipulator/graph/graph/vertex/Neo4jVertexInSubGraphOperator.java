@@ -648,19 +648,19 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
     public void makePrivate() {
         String query = String.format(
                 "%s" +
+                        "SET n.%s = false " +
                         "WITH n " +
                         "MATCH n<-[:%s|%s]->e, " +
                         "e<-[:%s|%s]->d " +
-                        "SET n.%s = false, " +
-                        "e.%s = false, " +
+                        "SET e.%s = false, " +
                         "d.%s = " +
                         "d.%s -1 ",
                 queryPrefix(),
-                Relationships.SOURCE_VERTEX,
-                Relationships.DESTINATION_VERTEX,
-                Relationships.SOURCE_VERTEX,
-                Relationships.DESTINATION_VERTEX,
                 props.is_public,
+                Relationships.SOURCE_VERTEX,
+                Relationships.DESTINATION_VERTEX,
+                Relationships.SOURCE_VERTEX,
+                Relationships.DESTINATION_VERTEX,
                 props.is_public,
                 props.nb_public_neighbors,
                 props.nb_public_neighbors
