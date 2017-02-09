@@ -17,6 +17,7 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jFriendlyResource;
 import java.net.URI;
 import java.sql.Connection;
 import java.sql.ResultSet;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -54,10 +55,11 @@ public class Neo4jCenterGraphElementsOperator implements CenteredGraphElementsOp
                         "owner:%s AND %s:* " +
                         (publicOnly ? "AND is_public:true" : "") +
                         "') " +
-                        "return n.%s as numberOfVisits, n.%s as label, n.%s as uri;",
+                        "return n.%s as numberOfVisits, n.%s as lastCenterDate, n.%s as label, n.%s as uri;",
                 user.username(),
                 Neo4jCenterGraphElementOperator.props.number_of_visits,
                 Neo4jCenterGraphElementOperator.props.number_of_visits,
+                Neo4jCenterGraphElementOperator.props.last_center_date,
                 Neo4jFriendlyResource.props.label,
                 Neo4jFriendlyResource.props.uri
         );
@@ -67,9 +69,13 @@ public class Neo4jCenterGraphElementsOperator implements CenteredGraphElementsOp
                     query
             );
             while (rs.next()) {
+                Date lastCenterDate = null == rs.getString("lastCenterDate") ?
+                        null :
+                        new Date(rs.getLong("lastCenterDate"));
                 centerGraphElements.add(
                         new CenterGraphElementPojo(
                                 new Integer(rs.getString("numberOfVisits")),
+                                lastCenterDate,
                                 new GraphElementPojo(new FriendlyResourcePojo(
                                         URI.create(rs.getString("uri")),
                                         rs.getString("label")
