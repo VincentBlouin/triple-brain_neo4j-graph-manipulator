@@ -6,7 +6,6 @@ package guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph;
 
 import guru.bubl.module.model.graph.FriendlyResourcePojo;
 import guru.bubl.module.model.graph.identification.IdentificationPojo;
-import guru.bubl.module.model.graph.identification.IdentificationType;
 import guru.bubl.module.model.json.ImageJson;
 
 import java.net.URI;
@@ -70,7 +69,7 @@ public class IdentificationsFromExtractorQueryRow {
                     new Integer(properties.get(5).toString()),
                     friendlyResource
             );
-            identification.setType(IdentificationType.valueOf(
+            identification.setRelationExternalResourceUri(URI.create(
                     properties.get(6).toString()
             ));
             identifications.put(

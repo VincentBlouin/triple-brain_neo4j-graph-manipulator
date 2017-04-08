@@ -319,13 +319,13 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
         );
 
         if (suggestion.getSameAs() != null) {
-            newEdgeOperator.addSameAs(
+            newEdgeOperator.addMeta(
                     new IdentificationPojo(
                             suggestion.getSameAs().uri(),
                             suggestion.getSameAs()
                     )
             );
-            newVertex.addType(
+            newVertex.addMeta(
                     new IdentificationPojo(
                             suggestion.getSameAs().uri(),
                             suggestion.getSameAs()
@@ -333,7 +333,7 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
             );
         }
         if (suggestion.getType() != null) {
-            newVertex.addType(
+            newVertex.addMeta(
                     new IdentificationPojo(
                             suggestion.getType().uri(),
                             suggestion.getType()
@@ -359,13 +359,13 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
         newEdgeOperator.label(
                 suggestion.label()
         );
-        newEdgeOperator.addGenericIdentification(
+        newEdgeOperator.addMeta(
                 new IdentificationPojo(
                         suggestion.getSameAs().uri(),
                         suggestion.getSameAs()
                 )
         );
-        newVertex.addGenericIdentification(
+        newVertex.addMeta(
                 new IdentificationPojo(
                         suggestion.getType().uri(),
                         suggestion.getType()
@@ -563,38 +563,18 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
     }
 
     @Override
-    public Map<URI, IdentificationPojo> addType(Identification type) {
-        return graphElementOperator.addType(type);
-    }
-
-    @Override
     public void removeIdentification(Identification identification) {
         graphElementOperator.removeIdentification(identification);
     }
 
     @Override
-    public Map<URI, IdentificationPojo> getAdditionalTypes() {
-        return graphElementOperator.getAdditionalTypes();
+    public Map<URI, IdentificationPojo> addMeta(Identification friendlyResource) {
+        return graphElementOperator.addMeta(friendlyResource);
     }
 
     @Override
     public Map<URI, IdentificationPojo> getIdentifications() {
         return graphElementOperator.getIdentifications();
-    }
-
-    @Override
-    public Map<URI, IdentificationPojo> addSameAs(Identification friendlyResourceImpl) {
-        return graphElementOperator.addSameAs(friendlyResourceImpl);
-    }
-
-    @Override
-    public Map<URI, IdentificationPojo> getSameAs() {
-        return graphElementOperator.getSameAs();
-    }
-
-    @Override
-    public Map<URI, IdentificationPojo> getGenericIdentifications() {
-        return graphElementOperator.getGenericIdentifications();
     }
 
     @Override
@@ -822,11 +802,6 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
     @Override
     public boolean hasLabel() {
         return graphElementOperator.hasLabel();
-    }
-
-    @Override
-    public Map<URI, IdentificationPojo> addGenericIdentification(Identification friendlyResource) {
-        return graphElementOperator.addGenericIdentification(friendlyResource);
     }
 
     @Override

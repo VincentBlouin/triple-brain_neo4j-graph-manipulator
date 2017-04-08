@@ -10,7 +10,6 @@ import guru.bubl.module.model.graph.*;
 import guru.bubl.module.model.graph.edge.EdgeOperator;
 import guru.bubl.module.model.graph.identification.IdentificationFactory;
 import guru.bubl.module.model.graph.identification.IdentificationOperator;
-import guru.bubl.module.model.graph.identification.IdentificationType;
 import guru.bubl.module.model.graph.schema.SchemaOperator;
 import guru.bubl.module.model.graph.vertex.VertexInSubGraphOperator;
 import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jFriendlyResource;
@@ -150,7 +149,7 @@ public class Neo4jWholeGraph implements WholeGraph {
         String query = String.format(
                 "START n=node:node_auto_index('( %s:%s) ') RETURN n.%s as uri",
                 Neo4jFriendlyResource.props.type,
-                StringUtils.join(IdentificationType.names(), " OR type:"),
+                GraphElementType.meta,
                 Neo4jFriendlyResource.props.uri
         );
         Set<IdentificationOperator> identifications = new HashSet<>();

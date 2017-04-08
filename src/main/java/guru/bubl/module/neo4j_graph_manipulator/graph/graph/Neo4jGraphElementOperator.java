@@ -9,12 +9,10 @@ import com.google.inject.assistedinject.AssistedInject;
 import guru.bubl.module.common_utils.NamedParameterStatement;
 import guru.bubl.module.common_utils.NoExRun;
 import guru.bubl.module.model.Image;
-import guru.bubl.module.model.User;
 import guru.bubl.module.model.UserUris;
 import guru.bubl.module.model.graph.*;
 import guru.bubl.module.model.graph.identification.Identification;
 import guru.bubl.module.model.graph.identification.IdentificationPojo;
-import guru.bubl.module.model.graph.identification.IdentificationType;
 import guru.bubl.module.model.json.ImageJson;
 import guru.bubl.module.neo4j_graph_manipulator.graph.*;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.identification.Neo4jIdentification;
@@ -152,14 +150,6 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
     }
 
     @Override
-    public Map<URI, IdentificationPojo> addGenericIdentification(Identification genericIdentification) throws IllegalArgumentException {
-        return addIdentificationUsingType(
-                genericIdentification,
-                IdentificationType.generic
-        );
-    }
-
-    @Override
     public void setSortDate(Date sortDate, Date moveDate) {
         String query = String.format(queryPrefix() +
                         "SET " +
@@ -200,23 +190,8 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
     }
 
     @Override
-    public Map<URI, IdentificationPojo> getGenericIdentifications() {
-        return getIdentificationsUsingRelation(
-                IdentificationType.generic
-        );
-    }
-
-    @Override
-    public Map<URI, IdentificationPojo> addSameAs(Identification sameAs) throws IllegalArgumentException {
-        return addIdentificationUsingType(
-                sameAs,
-                IdentificationType.same_as
-        );
-    }
-
-    private Map<URI, IdentificationPojo> addIdentificationUsingType(
-            Identification identification,
-            IdentificationType identificationType
+    public Map<URI, IdentificationPojo> addMeta(
+            Identification identification
     ) {
         ifIdentificationIsSelfThrowException(identification);
         IdentificationPojo identificationPojo;
@@ -240,9 +215,6 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
         }
 
         identificationPojo.setCreationDate(new Date().getTime());
-        identificationPojo.setType(
-                identificationType
-        );
         final Neo4jFriendlyResource neo4jFriendlyResource = friendlyResourceFactory.withUri(
                 new UserUris(getOwnerUsername()).generateIdentificationUri()
         );
@@ -272,7 +244,11 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
             );
             statement.setString(
                     "type",
-                    identificationType.name()
+                    GraphElementType.meta.name()
+            );
+            statement.setString(
+                    "relationExternalUri",
+                    identificationPojo.getRelationExternalResourceUri().toString()
             );
             statement.setLong(
                     Neo4jFriendlyResource.props.last_modification_date.name(),
@@ -312,21 +288,6 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
     }
 
     @Override
-    public Map<URI, IdentificationPojo> getSameAs() {
-        return getIdentificationsUsingRelation(
-                IdentificationType.same_as
-        );
-    }
-
-    @Override
-    public Map<URI, IdentificationPojo> addType(Identification type) throws IllegalArgumentException {
-        return addIdentificationUsingType(
-                type,
-                IdentificationType.type
-        );
-    }
-
-    @Override
     public void removeIdentification(Identification identification) {
         String query = String.format(
                 "%s MATCH n-[r:%s]->(i {%s:'%s'}) " +
@@ -355,51 +316,9 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
     }
 
     @Override
-    public Map<URI, IdentificationPojo> getAdditionalTypes() {
-        return getIdentificationsUsingRelation(
-                IdentificationType.type
-        );
-    }
-
-    @Override
     public void remove() {
         removeAllIdentifications();
         friendlyResource.remove();
-    }
-
-    private Map<URI, IdentificationPojo> getIdentificationsUsingRelation(IdentificationType identificationType) {
-        String query = String.format(
-                "%sMATCH n-[r:%s]->identification WHERE r.type='%s' " +
-                        "RETURN identification.uri as uri, " +
-                        "identification.external_uri as external_uri",
-                queryPrefix(),
-                Relationships.IDENTIFIED_TO,
-                identificationType
-        );
-        Map<URI, IdentificationPojo> identifications = new HashMap<>();
-        return NoExRun.wrap(() -> {
-            ResultSet rs = connection.createStatement().executeQuery(
-                    query
-            );
-            while (rs.next()) {
-                URI uri = URI.create(
-                        rs.getString("uri")
-                );
-                URI externalUri = URI.create(
-                        rs.getString("external_uri")
-                );
-                identifications.put(
-                        externalUri,
-                        new IdentificationPojo(
-                                externalUri,
-                                new FriendlyResourcePojo(
-                                        uri
-                                )
-                        )
-                );
-            }
-            return identifications;
-        }).get();
     }
 
     private void ifIdentificationIsSelfThrowException(Identification identification) throws IllegalArgumentException {
@@ -462,10 +381,11 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
                         "RETURN identification.uri as uri, " +
                         "identification.external_uri as external_uri, " +
                         "identification.%s as nbReferences, " +
-                        "r.type as type",
+                        "r.%s as r_x_u",
                 queryPrefix(),
                 Relationships.IDENTIFIED_TO,
-                Neo4jIdentification.props.nb_references
+                Neo4jIdentification.props.nb_references,
+                Neo4jIdentification.props.relation_external_uri
         );
         Map<URI, IdentificationPojo> identifications = new HashMap<>();
         return NoExRun.wrap(() -> {
@@ -484,9 +404,11 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
                                 uri
                         )
                 );
-                identification.setType(
-                        IdentificationType.valueOf(
-                                rs.getString("type")
+                String relationExternalUriString =rs.getString("r_x_u");
+                identification.setRelationExternalResourceUri(
+                        relationExternalUriString == null ? Identification.DEFAULT_IDENTIFIER_RELATION_EXTERNAL_URI:
+                        URI.create(
+                                relationExternalUriString
                         )
                 );
                 identifications.put(
@@ -530,14 +452,14 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
         clone.createUsingInitialValues(
                 createValues
         );
-        clone.addGenericIdentification(
+        clone.addMeta(
                 new IdentificationPojo(
                         this.uri(),
                         original
                 )
         );
         cache.getIdentifications().values().forEach(
-                clone::addGenericIdentification
+                clone::addMeta
         );
         return clone;
     }

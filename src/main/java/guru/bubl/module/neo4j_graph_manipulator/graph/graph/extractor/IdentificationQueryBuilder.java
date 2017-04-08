@@ -50,7 +50,7 @@ public class IdentificationQueryBuilder {
                 ) +
                 QueryUtils.getLastPropertyUsingContainerNameQueryPart(
                         relationKey,
-                        "type"
+                        Neo4jIdentification.props.relation_external_uri.name()
                 ) +
                 "]) as " + identificationKey + ", ";
     }

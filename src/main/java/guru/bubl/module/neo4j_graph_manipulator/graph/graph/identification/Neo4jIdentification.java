@@ -28,7 +28,8 @@ public class Neo4jIdentification implements IdentificationOperator, Neo4jOperato
     public enum props {
         external_uri,
         identification_type,
-        nb_references
+        nb_references,
+        relation_external_uri
     }
 
     Neo4jFriendlyResource friendlyResourceOperator;
@@ -56,6 +57,22 @@ public class Neo4jIdentification implements IdentificationOperator, Neo4jOperato
                 uri
         );
         this.connection = connection;
+    }
+
+    @Override
+    public URI getRelationExternalResourceUri() {
+        String query = String.format(
+                "%s RETURN n.%s as relationExternalUri",
+                queryPrefix(),
+                props.relation_external_uri
+        );
+        return NoExRun.wrap(() -> {
+            ResultSet rs = connection.createStatement().executeQuery(query);
+            rs.next();
+            return URI.create(
+                    rs.getString("relationExternalUri")
+            );
+        }).get();
     }
 
     @Override

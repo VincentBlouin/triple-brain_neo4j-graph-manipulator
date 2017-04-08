@@ -5,8 +5,9 @@
 package guru.bubl.module.neo4j_graph_manipulator.graph.graph;
 
 import guru.bubl.module.model.UserUris;
+import guru.bubl.module.model.graph.GraphElementType;
+import guru.bubl.module.model.graph.identification.Identification;
 import guru.bubl.module.model.graph.identification.IdentificationPojo;
-import guru.bubl.module.model.graph.identification.IdentificationType;
 import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jFriendlyResource;
 import guru.bubl.module.neo4j_graph_manipulator.graph.Relationships;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.identification.Neo4jIdentification;
@@ -46,17 +47,17 @@ public class AddIdentificationQueryBuilder {
         return String.format(
                 "%sMERGE (f {%s: @external_uri, %s: @owner}) " +
                         "ON CREATE SET f.uri = @uri, " +
-                        "f.%s=@type, " +
+                        "f.%s='%s', " + // graph element type = meta
                         "f.%s=@label, " +
                         "f.%s=@comment, " +
                         "f.%s=@images, " +
                         "f.%s=@%s, " +
                         "f.%s=timestamp(), " +
                         "f.%s=timestamp(), " +
-                        "f.%s=%s " +
+                        "f.%s=%s " + //initial nb references
                         "CREATE UNIQUE n-[r:%s]->f%s " +
-                        "SET r.type=@type,%s " +
-                        "f.%s=f.%s + 1, " +
+                        "SET r.%s=@relationExternalUri,%s " +
+                        "f.%s=f.%s + 1, " + //nbReferences
                         Neo4jFriendlyResource.LAST_MODIFICATION_QUERY_PART +
                         "%s" +
                         "RETURN f.uri as uri, " +
@@ -71,6 +72,7 @@ public class AddIdentificationQueryBuilder {
                 Neo4jIdentification.props.external_uri,
                 Neo4jFriendlyResource.props.owner,
                 Neo4jFriendlyResource.props.type,
+                GraphElementType.meta,
                 Neo4jFriendlyResource.props.label,
                 Neo4jFriendlyResource.props.comment,
                 Neo4jImages.props.images,
@@ -86,10 +88,12 @@ public class AddIdentificationQueryBuilder {
                                 ", i-[r2:%s]->f ",
                                 Relationships.IDENTIFIED_TO
                         ) : " ",
+                Neo4jIdentification.props.relation_external_uri,
                 isOwnerOfIdentification ?
                         String.format(
-                                " r2.type='%s', ",
-                                IdentificationType.generic
+                                " r2.%s='%s', ",
+                                Neo4jIdentification.props.relation_external_uri,
+                                Identification.DEFAULT_IDENTIFIER_RELATION_EXTERNAL_URI
                         ) : " ",
                 Neo4jIdentification.props.nb_references,
                 Neo4jIdentification.props.nb_references,
@@ -117,14 +121,19 @@ public class AddIdentificationQueryBuilder {
                 "WITH n, i, f " +
                 "OPTIONAL MATCH i-[irg:%s]->g " +
                         "CREATE UNIQUE n-[nrg:%s]->g " +
-                        "SET g.%s = CASE WHEN nrg.type is null THEN g.%s + 1 ELSE g.%s END " +
-                        "SET nrg.type= CASE WHEN nrg.type is null THEN irg.type ELSE nrg.type END " +
+                        "SET g.%s = CASE WHEN nrg.%s is null THEN g.%s + 1 ELSE g.%s END " +
+                        "SET nrg.%s = CASE WHEN nrg.%s is null THEN irg.%s ELSE nrg.%s END " +
                 "WITH g as f ",
                 Relationships.IDENTIFIED_TO,
                 Relationships.IDENTIFIED_TO,
                 Neo4jIdentification.props.nb_references,
+                Neo4jIdentification.props.relation_external_uri,
                 Neo4jIdentification.props.nb_references,
-                Neo4jIdentification.props.nb_references
+                Neo4jIdentification.props.nb_references,
+                Neo4jIdentification.props.relation_external_uri,
+                Neo4jIdentification.props.relation_external_uri,
+                Neo4jIdentification.props.relation_external_uri,
+                Neo4jIdentification.props.relation_external_uri
         );
     }
 }

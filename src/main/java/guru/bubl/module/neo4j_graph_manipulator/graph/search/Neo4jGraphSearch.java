@@ -6,10 +6,10 @@ package guru.bubl.module.neo4j_graph_manipulator.graph.search;
 
 import guru.bubl.module.common_utils.NoExRun;
 import guru.bubl.module.model.User;
+import guru.bubl.module.model.graph.GraphElement;
 import guru.bubl.module.model.graph.GraphElementPojo;
 import guru.bubl.module.model.graph.GraphElementType;
 import guru.bubl.module.model.graph.identification.IdentificationPojo;
-import guru.bubl.module.model.graph.identification.IdentificationType;
 import guru.bubl.module.model.search.GraphElementSearchResult;
 import guru.bubl.module.model.search.GraphElementSearchResultPojo;
 import guru.bubl.module.model.search.GraphSearch;
@@ -111,10 +111,6 @@ public class Neo4jGraphSearch implements GraphSearch {
         );
     }
 
-    private static final String identifiersQueryArray = " [" + "'" + IdentificationType.generic.name() + "'," +
-            "'" + IdentificationType.type.name() + "'," +
-            "'" + IdentificationType.same_as.name() + "'] ";
-
     private class Getter<ResultType extends GraphElementSearchResult> {
         public GraphElementSearchResult getForUri(URI uri, String username) {
             String query = String.format(
@@ -200,9 +196,9 @@ public class Neo4jGraphSearch implements GraphSearch {
                     "WHERE (related_node." +
                     Neo4jVertexInSubGraphOperator.props.is_public +
                     "=true OR related_node.owner='" + username + "') " +
-                    "AND NOT related_node.type IN " + identifiersQueryArray +
+                    "AND related_node.type <> '" + GraphElementType.meta + "' " +
                     "OPTIONAL MATCH node-[]->identifier " +
-                    "WHERE identifier.type IN "  + identifiersQueryArray +
+                    "WHERE identifier.type = '" + GraphElementType.meta + "' " +
                     "RETURN " +
                     "node.uri, node.label, node.creation_date, node.last_modification_date, " +
                     "COLLECT([related_node.label, related_node.uri, type(relation)])[0..5] as related_nodes, " +

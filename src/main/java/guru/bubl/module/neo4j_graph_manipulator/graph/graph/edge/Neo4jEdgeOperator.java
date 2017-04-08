@@ -371,12 +371,6 @@ public class Neo4jEdgeOperator implements EdgeOperator, Neo4jOperator {
         return graphElementOperator.hasLabel();
     }
 
-    @Override
-    public Map<URI, IdentificationPojo> addGenericIdentification(Identification friendlyResource) {
-        return graphElementOperator.addGenericIdentification(
-                friendlyResource
-        );
-    }
 
     @Override
     public void setSortDate(Date sortDate, Date moveDate) {
@@ -449,33 +443,13 @@ public class Neo4jEdgeOperator implements EdgeOperator, Neo4jOperator {
     }
 
     @Override
-    public Map<URI, IdentificationPojo> getGenericIdentifications() {
-        return graphElementOperator.getGenericIdentifications();
-    }
-
-    @Override
-    public Map<URI, IdentificationPojo> addSameAs(Identification friendlyResourceImpl) {
-        return graphElementOperator.addSameAs(friendlyResourceImpl);
-    }
-
-    @Override
-    public Map<URI, IdentificationPojo> getSameAs() {
-        return graphElementOperator.getSameAs();
-    }
-
-    @Override
-    public Map<URI, IdentificationPojo> addType(Identification type) {
-        return graphElementOperator.addType(type);
-    }
-
-    @Override
     public void removeIdentification(Identification type) {
         graphElementOperator.removeIdentification(type);
     }
 
     @Override
-    public Map<URI, IdentificationPojo> getAdditionalTypes() {
-        return graphElementOperator.getAdditionalTypes();
+    public Map<URI, IdentificationPojo> addMeta(Identification friendlyResource) {
+        return graphElementOperator.addMeta(friendlyResource);
     }
 
     @Override
