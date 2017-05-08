@@ -7,6 +7,8 @@ package guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph;
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 import guru.bubl.module.common_utils.NoExRun;
+import guru.bubl.module.model.UserUris;
+import guru.bubl.module.model.graph.GraphElementType;
 import guru.bubl.module.model.graph.subgraph.SubGraphPojo;
 import guru.bubl.module.model.graph.edge.Edge;
 import guru.bubl.module.model.graph.edge.EdgePojo;
@@ -34,7 +36,7 @@ public class Neo4jSubGraphExtractor {
             INCLUDED_VERTEX_QUERY_KEY = "iv",
             INCLUDED_EDGE_QUERY_KEY = "ie",
             GRAPH_ELEMENT_QUERY_KEY = "ge";
-    URI centerVertexUri;
+    URI centerBubbleUri;
     Integer depth;
     Neo4jVertexFactory vertexFactory;
     protected Connection connection;
@@ -47,12 +49,12 @@ public class Neo4jSubGraphExtractor {
     protected Neo4jSubGraphExtractor(
             Neo4jVertexFactory vertexFactory,
             Connection connection,
-            @Assisted URI centerVertexUri,
+            @Assisted URI centerBubbleUri,
             @Assisted Integer depth
     ) {
         this.vertexFactory = vertexFactory;
         this.connection = connection;
-        this.centerVertexUri = centerVertexUri;
+        this.centerBubbleUri = centerBubbleUri;
         this.depth = depth;
     }
 
@@ -61,15 +63,18 @@ public class Neo4jSubGraphExtractor {
             ResultSet rs = connection.createStatement().executeQuery(
                     queryToGetGraph()
             );
-            while(rs.next()){
-                if (isVertexFromRow(rs)) {
-                    addVertexUsingRow(
-                            rs
-                    );
-                } else {
-                    addEdgeUsingRow(
-                            rs
-                    );
+            while (rs.next()) {
+                switch (getGraphElementTypeFromRow(rs)) {
+                    case vertex:
+                        addVertexUsingRow(
+                                rs
+                        );
+                        break;
+                    case edge:
+                        addEdgeUsingRow(
+                                rs
+                        );
+                        break;
                 }
             }
             return rs;
@@ -77,13 +82,13 @@ public class Neo4jSubGraphExtractor {
         return subGraph;
     }
 
-    private Boolean isVertexFromRow(ResultSet rs) throws SQLException{
-        return rs.getString(
+    private GraphElementType getGraphElementTypeFromRow(ResultSet rs) throws SQLException {
+        return GraphElementType.valueOf(rs.getString(
                 "type"
-        ).contains("vertex");
+        ));
     }
 
-    private VertexInSubGraph addVertexUsingRow(ResultSet row) throws SQLException{
+    private VertexInSubGraph addVertexUsingRow(ResultSet row) throws SQLException {
         VertexInSubGraph vertex = new VertexFromExtractorQueryRow(
                 row,
                 Neo4jSubGraphExtractor.GRAPH_ELEMENT_QUERY_KEY
@@ -95,20 +100,35 @@ public class Neo4jSubGraphExtractor {
     }
 
     private String queryToGetGraph() {
-        return "START start_node=node:node_auto_index('uri:" + centerVertexUri + "') " +
-                "MATCH path=start_node<-[:" +
-                Relationships.SOURCE_VERTEX +
-                "|" + Relationships.DESTINATION_VERTEX + "*0.." + depth * 2 +
-                "]->" + Neo4jSubGraphExtractor.GRAPH_ELEMENT_QUERY_KEY + " " +
-                "OPTIONAL MATCH (" + GRAPH_ELEMENT_QUERY_KEY + ")-[:HAS_INCLUDED_VERTEX]->(" + INCLUDED_VERTEX_QUERY_KEY + ") " +
-                "OPTIONAL MATCH(" + GRAPH_ELEMENT_QUERY_KEY + ")-[:HAS_INCLUDED_EDGE]->(" + INCLUDED_EDGE_QUERY_KEY + ") " +
-                "OPTIONAL MATCH (" + GRAPH_ELEMENT_QUERY_KEY + ")-[" + IdentificationQueryBuilder.IDENTIFICATION_RELATION_QUERY_KEY + ":" + Relationships.IDENTIFIED_TO + "]->(" + IdentificationQueryBuilder.IDENTIFICATION_QUERY_KEY + ") " +
-                "RETURN " +
-                vertexAndEdgeCommonQueryPart(GRAPH_ELEMENT_QUERY_KEY) +
-                vertexReturnQueryPart(GRAPH_ELEMENT_QUERY_KEY) +
-                edgeReturnQueryPart(GRAPH_ELEMENT_QUERY_KEY) +
-                IdentificationQueryBuilder.identificationReturnQueryPart() +
-                Neo4jSubGraphExtractor.GRAPH_ELEMENT_QUERY_KEY + ".type as type";
+        return
+                "START start_node=node:node_auto_index('uri:" + centerBubbleUri + "') " +
+                        getMatchQueryPart() +
+                        "OPTIONAL MATCH (" + GRAPH_ELEMENT_QUERY_KEY + ")-[:HAS_INCLUDED_VERTEX]->(" + INCLUDED_VERTEX_QUERY_KEY + ") " +
+                        "OPTIONAL MATCH(" + GRAPH_ELEMENT_QUERY_KEY + ")-[:HAS_INCLUDED_EDGE]->(" + INCLUDED_EDGE_QUERY_KEY + ") " +
+                        "OPTIONAL MATCH (" + GRAPH_ELEMENT_QUERY_KEY + ")-[" + IdentificationQueryBuilder.IDENTIFICATION_RELATION_QUERY_KEY + ":" + Relationships.IDENTIFIED_TO + "]->(" + IdentificationQueryBuilder.IDENTIFIER_QUERY_KEY + ") " +
+                        "RETURN " +
+                        vertexAndEdgeCommonQueryPart(GRAPH_ELEMENT_QUERY_KEY) +
+                        vertexReturnQueryPart(GRAPH_ELEMENT_QUERY_KEY) +
+                        edgeReturnQueryPart(GRAPH_ELEMENT_QUERY_KEY) +
+                        IdentificationQueryBuilder.identificationReturnQueryPart() +
+                        Neo4jSubGraphExtractor.GRAPH_ELEMENT_QUERY_KEY + ".type as type";
+    }
+
+    private String getMatchQueryPart() {
+        if (UserUris.isUriOfAnIdentifier(centerBubbleUri)) {
+            return "MATCH start_node<-[:" +
+                    Relationships.IDENTIFIED_TO +
+                    "]-it " +
+                    "MATCH it<-[:" +
+                        Relationships.DESTINATION_VERTEX + "*0.." + depth +
+                    "]->" + Neo4jSubGraphExtractor.GRAPH_ELEMENT_QUERY_KEY + " ";
+
+        } else {
+            return "MATCH path=start_node<-[:" +
+                    Relationships.SOURCE_VERTEX +
+                    "|" + Relationships.DESTINATION_VERTEX + "*0.." + depth * 2 +
+                    "]->" + Neo4jSubGraphExtractor.GRAPH_ELEMENT_QUERY_KEY + " ";
+        }
     }
 
     private String vertexAndEdgeCommonQueryPart(String prefix) {
@@ -201,7 +221,7 @@ public class Neo4jSubGraphExtractor {
                 );
     }
 
-    private Edge addEdgeUsingRow(ResultSet row) throws SQLException{
+    private Edge addEdgeUsingRow(ResultSet row) throws SQLException {
         EdgePojo edge = (EdgePojo) EdgeFromExtractorQueryRow.usingRow(
                 row
         ).build();

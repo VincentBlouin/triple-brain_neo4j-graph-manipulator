@@ -10,12 +10,11 @@ import guru.bubl.module.common_utils.NamedParameterStatement;
 import guru.bubl.module.common_utils.NoExRun;
 import guru.bubl.module.model.Image;
 import guru.bubl.module.model.UserUris;
-import guru.bubl.module.model.graph.GraphElementPojo;
 import guru.bubl.module.model.graph.GraphElementType;
 import guru.bubl.module.model.graph.edge.Edge;
 import guru.bubl.module.model.graph.edge.EdgePojo;
-import guru.bubl.module.model.graph.identification.Identification;
-import guru.bubl.module.model.graph.identification.IdentificationPojo;
+import guru.bubl.module.model.graph.identification.Identifier;
+import guru.bubl.module.model.graph.identification.IdentifierPojo;
 import guru.bubl.module.model.graph.edge.EdgeOperator;
 import guru.bubl.module.model.graph.vertex.Vertex;
 import guru.bubl.module.model.graph.vertex.VertexInSubGraphPojo;
@@ -28,7 +27,6 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.graph.Neo4jGraphElementOpe
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.Neo4jVertexFactory;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.Neo4jVertexInSubGraphOperator;
 import org.neo4j.graphdb.Node;
-import org.neo4j.graphdb.Relationship;
 
 import javax.inject.Inject;
 import java.net.URI;
@@ -443,17 +441,17 @@ public class Neo4jEdgeOperator implements EdgeOperator, Neo4jOperator {
     }
 
     @Override
-    public void removeIdentification(Identification type) {
+    public void removeIdentification(Identifier type) {
         graphElementOperator.removeIdentification(type);
     }
 
     @Override
-    public Map<URI, IdentificationPojo> addMeta(Identification friendlyResource) {
+    public Map<URI, IdentifierPojo> addMeta(Identifier friendlyResource) {
         return graphElementOperator.addMeta(friendlyResource);
     }
 
     @Override
-    public Map<URI, IdentificationPojo> getIdentifications() {
+    public Map<URI, IdentifierPojo> getIdentifications() {
         return graphElementOperator.getIdentifications();
     }
 

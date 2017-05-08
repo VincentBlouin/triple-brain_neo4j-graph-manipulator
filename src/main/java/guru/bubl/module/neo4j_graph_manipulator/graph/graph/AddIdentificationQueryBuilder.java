@@ -6,8 +6,8 @@ package guru.bubl.module.neo4j_graph_manipulator.graph.graph;
 
 import guru.bubl.module.model.UserUris;
 import guru.bubl.module.model.graph.GraphElementType;
-import guru.bubl.module.model.graph.identification.Identification;
-import guru.bubl.module.model.graph.identification.IdentificationPojo;
+import guru.bubl.module.model.graph.identification.Identifier;
+import guru.bubl.module.model.graph.identification.IdentifierPojo;
 import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jFriendlyResource;
 import guru.bubl.module.neo4j_graph_manipulator.graph.Relationships;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.identification.Neo4jIdentification;
@@ -15,13 +15,13 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.image.Neo4jImages;
 
 public class AddIdentificationQueryBuilder {
 
-    private IdentificationPojo identification;
+    private IdentifierPojo identification;
     private Neo4jGraphElementOperator graphElement;
     private Boolean isOwnerOfIdentification,
             isIdentifyingToAnIdentification;
 
     public static AddIdentificationQueryBuilder usingIdentificationForGraphElement(
-            IdentificationPojo identification, Neo4jGraphElementOperator graphElement
+            IdentifierPojo identification, Neo4jGraphElementOperator graphElement
     ) {
         return new AddIdentificationQueryBuilder(
                 identification,
@@ -30,7 +30,7 @@ public class AddIdentificationQueryBuilder {
     }
 
     protected AddIdentificationQueryBuilder(
-            IdentificationPojo identification,
+            IdentifierPojo identification,
             Neo4jGraphElementOperator graphElement
     ) {
         this.identification = identification;
@@ -38,7 +38,7 @@ public class AddIdentificationQueryBuilder {
         isOwnerOfIdentification = UserUris.ownerUserNameFromUri(
                 identification.getExternalResourceUri()
         ).equals(graphElement.getOwnerUsername());
-        isIdentifyingToAnIdentification = UserUris.isUriOfAnIdentification(
+        isIdentifyingToAnIdentification = UserUris.isUriOfAnIdentifier(
                 identification.getExternalResourceUri()
         );
     }
@@ -93,7 +93,7 @@ public class AddIdentificationQueryBuilder {
                         String.format(
                                 " r2.%s='%s', ",
                                 Neo4jIdentification.props.relation_external_uri,
-                                Identification.DEFAULT_IDENTIFIER_RELATION_EXTERNAL_URI
+                                Identifier.DEFAULT_IDENTIFIER_RELATION_EXTERNAL_URI
                         ) : " ",
                 Neo4jIdentification.props.nb_references,
                 Neo4jIdentification.props.nb_references,

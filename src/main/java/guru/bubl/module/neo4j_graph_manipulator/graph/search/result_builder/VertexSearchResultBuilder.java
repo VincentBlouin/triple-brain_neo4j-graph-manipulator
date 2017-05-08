@@ -9,6 +9,7 @@ import guru.bubl.module.model.graph.GraphElementPojo;
 import guru.bubl.module.model.graph.GraphElementType;
 import guru.bubl.module.model.search.GraphElementSearchResult;
 import guru.bubl.module.model.search.VertexSearchResult;
+import guru.bubl.module.neo4j_graph_manipulator.graph.center_graph_element.Neo4jCenterGraphElementOperator;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph.GraphElementFromExtractorQueryRow;
 import guru.bubl.module.neo4j_graph_manipulator.graph.search.SearchResultGetter;
 
@@ -44,6 +45,9 @@ public class VertexSearchResultBuilder implements SearchResultBuilder {
                             row
                     )
             );
+            searchResult.setNbVisits(
+                    getNbVisits()
+            );
             return searchResult;
         }).get();
     }
@@ -74,5 +78,11 @@ public class VertexSearchResultBuilder implements SearchResultBuilder {
                 property.uri(),
                 property
         );
+    }
+    private Integer getNbVisits() throws SQLException{
+        String numberOfVisits = row.getString(
+                prefix  + "." + Neo4jCenterGraphElementOperator.props.number_of_visits.name()
+        );
+        return numberOfVisits == null ? 0 : new Integer(numberOfVisits);
     }
 }

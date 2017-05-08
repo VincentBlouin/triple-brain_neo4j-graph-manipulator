@@ -11,8 +11,8 @@ import guru.bubl.module.common_utils.NoExRun;
 import guru.bubl.module.model.Image;
 import guru.bubl.module.model.UserUris;
 import guru.bubl.module.model.graph.*;
-import guru.bubl.module.model.graph.identification.Identification;
-import guru.bubl.module.model.graph.identification.IdentificationPojo;
+import guru.bubl.module.model.graph.identification.Identifier;
+import guru.bubl.module.model.graph.identification.IdentifierPojo;
 import guru.bubl.module.model.graph.schema.SchemaOperator;
 import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jFriendlyResource;
 import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jOperator;
@@ -202,12 +202,12 @@ public class Neo4jSchemaOperator implements SchemaOperator, Neo4jOperator {
     }
 
     @Override
-    public void removeIdentification(Identification type) {
+    public void removeIdentification(Identifier type) {
         graphElementOperator.removeIdentification(type);
     }
 
     @Override
-    public Map<URI, IdentificationPojo> addMeta(Identification friendlyResource) {
+    public Map<URI, IdentifierPojo> addMeta(Identifier friendlyResource) {
         return graphElementOperator.addMeta(friendlyResource);
     }
 
@@ -279,7 +279,7 @@ public class Neo4jSchemaOperator implements SchemaOperator, Neo4jOperator {
     }
 
     @Override
-    public Map<URI, IdentificationPojo> getIdentifications() {
+    public Map<URI, IdentifierPojo> getIdentifications() {
         return graphElementOperator.getIdentifications();
     }
 

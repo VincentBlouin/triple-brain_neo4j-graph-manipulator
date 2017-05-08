@@ -8,8 +8,8 @@ import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 import guru.bubl.module.common_utils.NoExRun;
 import guru.bubl.module.model.User;
+import guru.bubl.module.model.UserUris;
 import guru.bubl.module.model.graph.GraphElementType;
-import guru.bubl.module.model.graph.subgraph.SubGraph;
 import guru.bubl.module.model.graph.subgraph.SubGraphPojo;
 import guru.bubl.module.model.graph.subgraph.UserGraph;
 import guru.bubl.module.model.graph.edge.EdgeOperator;
@@ -17,7 +17,6 @@ import guru.bubl.module.model.graph.exceptions.InvalidDepthOfSubVerticesExceptio
 import guru.bubl.module.model.graph.exceptions.NonExistingResourceException;
 import guru.bubl.module.model.graph.schema.SchemaOperator;
 import guru.bubl.module.model.graph.schema.SchemaPojo;
-import guru.bubl.module.model.graph.vertex.Vertex;
 import guru.bubl.module.model.graph.vertex.VertexOperator;
 import guru.bubl.module.model.graph.vertex.VertexPojo;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.edge.Neo4jEdgeFactory;
@@ -87,20 +86,20 @@ public class Neo4jUserGraph implements UserGraph {
     }
 
     @Override
-    public SubGraphPojo graphWithDepthAndCenterVertexId(Integer depthOfSubVertices, URI centerVertexURI) throws NonExistingResourceException {
+    public SubGraphPojo graphWithDepthAndCenterBubbleUri(Integer depthOfSubVertices, URI centerBubbleUri) throws NonExistingResourceException {
         if (depthOfSubVertices < 0) {
             throw new InvalidDepthOfSubVerticesException(
                     depthOfSubVertices,
-                    centerVertexURI
+                    centerBubbleUri
             );
         }
         SubGraphPojo subGraph = subGraphExtractorFactory.withCenterVertexAndDepth(
-                centerVertexURI,
+                centerBubbleUri,
                 depthOfSubVertices
         ).load();
-        if (subGraph.vertices().isEmpty()) {
+        if (subGraph.vertices().isEmpty() && !UserUris.isUriOfAnIdentifier(centerBubbleUri)) {
             throw new NonExistingResourceException(
-                    centerVertexURI
+                    centerBubbleUri
             );
         }
         return subGraph;
@@ -108,7 +107,7 @@ public class Neo4jUserGraph implements UserGraph {
 
     @Override
     public SubGraphPojo graphWithAnyVertexAndDepth(Integer depth) throws InvalidDepthOfSubVerticesException {
-        return graphWithDepthAndCenterVertexId(
+        return graphWithDepthAndCenterBubbleUri(
                 depth,
                 getAnyVertex().uri()
         );

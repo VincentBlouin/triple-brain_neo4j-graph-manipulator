@@ -6,7 +6,7 @@ package guru.bubl.module.neo4j_graph_manipulator.graph;
 
 import guru.bubl.module.model.IdentifiedTo;
 import guru.bubl.module.model.User;
-import guru.bubl.module.model.graph.identification.Identification;
+import guru.bubl.module.model.graph.identification.Identifier;
 import guru.bubl.module.model.search.GraphElementSearchResult;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.identification.Neo4jIdentification;
 import guru.bubl.module.neo4j_graph_manipulator.graph.search.SearchResultGetter;
@@ -23,7 +23,7 @@ public class IdentifiedToNeo4J implements IdentifiedTo {
 
     @Override
     public Set<GraphElementSearchResult> getForIdentificationAndUser(
-            Identification identification,
+            Identifier identification,
             User user
     ) {
         String query = String.format(
@@ -32,7 +32,7 @@ public class IdentifiedToNeo4J implements IdentifiedTo {
                         "OPTIONAL MATCH node<-[relation]->related_node " +
                         "WHERE not(node-[:%s]->related_node) " +
                         "RETURN " +
-                        "node.uri, node.label, node.creation_date, node.last_modification_date, " +
+                        "node.uri, node.label, node.creation_date, node.number_of_visits, node.last_modification_date, " +
                         "COLLECT([related_node.label, related_node.uri, type(relation)])[0..5] as related_nodes, " +
                         "node.external_uri as external_uri, " +
                         "node.type as type limit 10",

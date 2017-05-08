@@ -4,6 +4,7 @@
 
 package guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor;
 
+import guru.bubl.module.common_utils.NoExRun;
 import guru.bubl.module.model.Image;
 import guru.bubl.module.model.graph.FriendlyResourcePojo;
 import guru.bubl.module.model.json.ImageJson;
@@ -48,15 +49,15 @@ public class FriendlyResourceFromExtractorQueryRow {
         this.nodeKey = nodeKey;
     }
 
-    public FriendlyResourcePojo build() throws SQLException {
-        return new FriendlyResourcePojo(
+    public FriendlyResourcePojo build() {
+        return NoExRun.wrap(() -> new FriendlyResourcePojo(
                 getUri(),
                 getLabel(),
                 getImages(),
                 getComment(),
                 getCreationDate(),
                 getLastModificationDate()
-        );
+        )).get();
     }
 
     private Set<Image> getImages() {

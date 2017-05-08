@@ -5,7 +5,7 @@
 package guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph;
 
 import guru.bubl.module.model.graph.FriendlyResourcePojo;
-import guru.bubl.module.model.graph.identification.IdentificationPojo;
+import guru.bubl.module.model.graph.identification.IdentifierPojo;
 import guru.bubl.module.model.json.ImageJson;
 
 import java.net.URI;
@@ -15,22 +15,22 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class IdentificationsFromExtractorQueryRow {
+public class IdentifiersFromExtractorQueryRowAsArray {
 
     private ResultSet row;
     private String key;
 
-    public static IdentificationsFromExtractorQueryRow usingRowAndKey(
+    public static IdentifiersFromExtractorQueryRowAsArray usingRowAndKey(
             ResultSet row,
             String key
     ) {
-        return new IdentificationsFromExtractorQueryRow(
+        return new IdentifiersFromExtractorQueryRowAsArray(
                 row,
                 key
         );
     }
 
-    protected IdentificationsFromExtractorQueryRow(
+    protected IdentifiersFromExtractorQueryRowAsArray(
             ResultSet row,
             String key
     ) {
@@ -38,8 +38,8 @@ public class IdentificationsFromExtractorQueryRow {
         this.key = key;
     }
 
-    public Map<URI, IdentificationPojo> build() throws SQLException {
-        Map<URI, IdentificationPojo> identifications = new HashMap<>();
+    public Map<URI, IdentifierPojo> build() throws SQLException {
+        Map<URI, IdentifierPojo> identifications = new HashMap<>();
         if (!isInQuery()) {
             return identifications;
         }
@@ -64,7 +64,7 @@ public class IdentificationsFromExtractorQueryRow {
                             properties.get(4).toString()
                     )
             );
-            IdentificationPojo identification = new IdentificationPojo(
+            IdentifierPojo identification = new IdentifierPojo(
                     externalUri,
                     new Integer(properties.get(5).toString()),
                     friendlyResource

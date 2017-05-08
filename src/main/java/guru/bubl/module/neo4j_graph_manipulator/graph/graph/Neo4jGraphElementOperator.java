@@ -11,8 +11,8 @@ import guru.bubl.module.common_utils.NoExRun;
 import guru.bubl.module.model.Image;
 import guru.bubl.module.model.UserUris;
 import guru.bubl.module.model.graph.*;
-import guru.bubl.module.model.graph.identification.Identification;
-import guru.bubl.module.model.graph.identification.IdentificationPojo;
+import guru.bubl.module.model.graph.identification.Identifier;
+import guru.bubl.module.model.graph.identification.IdentifierPojo;
 import guru.bubl.module.model.json.ImageJson;
 import guru.bubl.module.neo4j_graph_manipulator.graph.*;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.identification.Neo4jIdentification;
@@ -190,16 +190,16 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
     }
 
     @Override
-    public Map<URI, IdentificationPojo> addMeta(
-            Identification identification
+    public Map<URI, IdentifierPojo> addMeta(
+            Identifier identification
     ) {
         ifIdentificationIsSelfThrowException(identification);
-        IdentificationPojo identificationPojo;
-        Boolean isIdentifyingToAnIdentification = UserUris.isUriOfAnIdentification(
+        IdentifierPojo identificationPojo;
+        Boolean isIdentifyingToAnIdentification = UserUris.isUriOfAnIdentifier(
                 identification.getExternalResourceUri()
         );
         if (isIdentifyingToAnIdentification) {
-            identificationPojo = new IdentificationPojo(
+            identificationPojo = new IdentifierPojo(
                     identificationFactory.withUri(
                             identification.getExternalResourceUri()
                     ).getExternalResourceUri(),
@@ -208,7 +208,7 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
                     )
             );
         } else {
-            identificationPojo = new IdentificationPojo(
+            identificationPojo = new IdentifierPojo(
                     new UserUris(getOwnerUsername()).generateIdentificationUri(),
                     identification
             );
@@ -218,7 +218,7 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
         final Neo4jFriendlyResource neo4jFriendlyResource = friendlyResourceFactory.withUri(
                 new UserUris(getOwnerUsername()).generateIdentificationUri()
         );
-        Map<URI, IdentificationPojo> identifications = new HashMap<>();
+        Map<URI, IdentifierPojo> identifications = new HashMap<>();
         return NoExRun.wrap(() -> {
             NamedParameterStatement statement = new NamedParameterStatement(
                     connection,
@@ -264,7 +264,7 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
                 );
                 identifications.put(
                         externalUri,
-                        new IdentificationPojo(
+                        new IdentifierPojo(
                                 externalUri,
                                 new Integer(rs.getString("nbReferences")),
                                 new FriendlyResourcePojo(
@@ -288,7 +288,7 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
     }
 
     @Override
-    public void removeIdentification(Identification identification) {
+    public void removeIdentification(Identifier identification) {
         String query = String.format(
                 "%s MATCH n-[r:%s]->(i {%s:'%s'}) " +
                         "DELETE r " +
@@ -321,7 +321,7 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
         friendlyResource.remove();
     }
 
-    private void ifIdentificationIsSelfThrowException(Identification identification) throws IllegalArgumentException {
+    private void ifIdentificationIsSelfThrowException(Identifier identification) throws IllegalArgumentException {
         if (identification.getExternalResourceUri().equals(this.uri())) {
             throw new IllegalArgumentException(
                     "identification cannot be the same"
@@ -375,7 +375,7 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
     }
 
     @Override
-    public Map<URI, IdentificationPojo> getIdentifications() {
+    public Map<URI, IdentifierPojo> getIdentifications() {
         String query = String.format(
                 "%sMATCH n-[r:%s]->identification " +
                         "RETURN identification.uri as uri, " +
@@ -387,7 +387,7 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
                 Neo4jIdentification.props.nb_references,
                 Neo4jIdentification.props.relation_external_uri
         );
-        Map<URI, IdentificationPojo> identifications = new HashMap<>();
+        Map<URI, IdentifierPojo> identifications = new HashMap<>();
         return NoExRun.wrap(() -> {
             ResultSet rs = connection.createStatement().executeQuery(query);
             while (rs.next()) {
@@ -397,7 +397,7 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
                 URI externalUri = URI.create(
                         rs.getString("external_uri")
                 );
-                IdentificationPojo identification = new IdentificationPojo(
+                IdentifierPojo identification = new IdentifierPojo(
                         externalUri,
                         new Integer(rs.getString("nbReferences")),
                         new FriendlyResourcePojo(
@@ -406,7 +406,7 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
                 );
                 String relationExternalUriString =rs.getString("r_x_u");
                 identification.setRelationExternalResourceUri(
-                        relationExternalUriString == null ? Identification.DEFAULT_IDENTIFIER_RELATION_EXTERNAL_URI:
+                        relationExternalUriString == null ? Identifier.DEFAULT_IDENTIFIER_RELATION_EXTERNAL_URI:
                         URI.create(
                                 relationExternalUriString
                         )
@@ -453,7 +453,7 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
                 createValues
         );
         clone.addMeta(
-                new IdentificationPojo(
+                new IdentifierPojo(
                         this.uri(),
                         original
                 )

@@ -6,10 +6,9 @@ package guru.bubl.module.neo4j_graph_manipulator.graph.search;
 
 import guru.bubl.module.common_utils.NoExRun;
 import guru.bubl.module.model.User;
-import guru.bubl.module.model.graph.GraphElement;
 import guru.bubl.module.model.graph.GraphElementPojo;
 import guru.bubl.module.model.graph.GraphElementType;
-import guru.bubl.module.model.graph.identification.IdentificationPojo;
+import guru.bubl.module.model.graph.identification.IdentifierPojo;
 import guru.bubl.module.model.search.GraphElementSearchResult;
 import guru.bubl.module.model.search.GraphElementSearchResultPojo;
 import guru.bubl.module.model.search.GraphSearch;
@@ -47,7 +46,8 @@ public class Neo4jGraphSearch implements GraphSearch {
                 false,
                 user.username(),
                 GraphElementType.vertex,
-                GraphElementType.schema
+                GraphElementType.schema,
+                GraphElementType.meta
         );
     }
 
@@ -58,7 +58,8 @@ public class Neo4jGraphSearch implements GraphSearch {
                 true,
                 user.username(),
                 GraphElementType.vertex,
-                GraphElementType.schema
+                GraphElementType.schema,
+                GraphElementType.meta
         );
     }
 
@@ -68,7 +69,8 @@ public class Neo4jGraphSearch implements GraphSearch {
                 searchTerm,
                 true,
                 user.username(),
-                GraphElementType.vertex
+                GraphElementType.vertex,
+                GraphElementType.meta
         );
     }
 
@@ -80,7 +82,8 @@ public class Neo4jGraphSearch implements GraphSearch {
                 user.username(),
                 GraphElementType.schema,
                 GraphElementType.property,
-                GraphElementType.edge
+                GraphElementType.edge,
+                GraphElementType.meta
         );
     }
 
@@ -99,7 +102,8 @@ public class Neo4jGraphSearch implements GraphSearch {
                 false,
                 "",
                 GraphElementType.vertex,
-                GraphElementType.schema
+                GraphElementType.schema,
+                GraphElementType.meta
         );
     }
 
@@ -121,7 +125,7 @@ public class Neo4jGraphSearch implements GraphSearch {
                     StringUtils.isEmpty(username) ? "" : " OR owner:" + username,
                     IdentificationQueryBuilder.IDENTIFICATION_RELATION_QUERY_KEY,
                     Relationships.IDENTIFIED_TO,
-                    IdentificationQueryBuilder.IDENTIFICATION_QUERY_KEY,
+                    IdentificationQueryBuilder.IDENTIFIER_QUERY_KEY,
                     FriendlyResourceQueryBuilder.returnQueryPartUsingPrefix("node"),
                     FriendlyResourceQueryBuilder.imageReturnQueryPart("node"),
                     IdentificationQueryBuilder.identificationReturnQueryPart()
@@ -150,7 +154,7 @@ public class Neo4jGraphSearch implements GraphSearch {
                 graphElement.removeAllIdentifications();
                 return graphElement;
             }
-            for (IdentificationPojo identification : graphElement.getIdentifications().values()) {
+            for (IdentifierPojo identification : graphElement.getIdentifications().values()) {
                 if (identification.gotImages()) {
                     graphElement.addImage(
                             identification.images().iterator().next()
@@ -196,14 +200,12 @@ public class Neo4jGraphSearch implements GraphSearch {
                     "WHERE (related_node." +
                     Neo4jVertexInSubGraphOperator.props.is_public +
                     "=true OR related_node.owner='" + username + "') " +
-                    "AND related_node.type <> '" + GraphElementType.meta + "' " +
-                    "OPTIONAL MATCH node-[]->identifier " +
-                    "WHERE identifier.type = '" + GraphElementType.meta + "' " +
+                    "AND related_node.type <>'" + GraphElementType.meta + "' " +
+                    "OPTIONAL MATCH node-[idr:IDENTIFIED_TO]->id " +
                     "RETURN " +
-                    "node.uri, node.label, node.creation_date, node.last_modification_date, " +
+                    "node.uri, node.label, node.external_uri, node.nb_references, node.number_of_visits, node.creation_date, node.last_modification_date, " +
                     "COLLECT([related_node.label, related_node.uri, type(relation)])[0..5] as related_nodes, " +
-                    "identifier.nb_references as nb_references, " +
-                    "identifier.external_uri as external_uri, " +
+                    IdentificationQueryBuilder.identificationReturnQueryPart() +
                     "node.type as type limit 10";
         }
 

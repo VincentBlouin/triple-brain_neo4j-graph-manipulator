@@ -45,14 +45,8 @@ public class SearchResultGetter<ResultType extends GraphElementSearchResult> {
     }
 
     private void addResult(ResultSet row) throws SQLException {
-//            printRow(row);
         SearchResultBuilder searchResultBuilder = getFromRow(row);
         GraphElementSearchResult graphElementSearchResult = searchResultBuilder.build();
-        if(isIdentifierTheSame(row, graphElementSearchResult.getGraphElement())){
-            graphElementSearchResult.setNbReferences(
-                    getNbReferenceInRow(row)
-            );
-        }
         searchResults.add(
                 (ResultType) graphElementSearchResult
         );
@@ -73,31 +67,29 @@ public class SearchResultGetter<ResultType extends GraphElementSearchResult> {
 
     private SearchResultBuilder getFromRow(ResultSet row) throws SQLException{
         switch (nodeTypeInRow(row)) {
-            case "vertex":
+            case vertex:
                 return new VertexSearchResultBuilder(row, nodePrefix);
-            case "edge":
+            case edge:
                 return new RelationSearchResultBuilder(row, nodePrefix);
-            case "schema":
+            case schema:
                 return new SchemaSearchResultBuilder(row, nodePrefix);
-            case "property":
+            case property:
                 return new PropertySearchResultBuilder(row, nodePrefix);
+            case meta:
+                return new IdentifierSearchResultBuilder(row, nodePrefix);
             default:
                 return null;
         }
     }
 
-    public static String nodeTypeInRow(ResultSet row) throws SQLException{
-        return row.getString("type");
+    public static GraphElementType nodeTypeInRow(ResultSet row) throws SQLException{
+        return GraphElementType.valueOf(
+                row.getString("type")
+        );
     }
 
     private Integer getNbReferenceInRow(ResultSet row) throws SQLException{
         String nbReferencesStr = row.getString("nb_references");
         return nbReferencesStr == null ? 0 : new Integer(nbReferencesStr);
     }
-
-    private Boolean isIdentifierTheSame(ResultSet row, GraphElement graphElement) throws SQLException{
-        String externalUri = row.getString("external_uri");
-        return externalUri != null && externalUri.equals(graphElement.uri().toString());
-    }
-
 }

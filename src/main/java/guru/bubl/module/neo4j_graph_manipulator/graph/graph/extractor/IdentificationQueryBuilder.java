@@ -11,12 +11,12 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.graph.Neo4jUserGraph;
 public class IdentificationQueryBuilder {
 
     public static final String
-            IDENTIFICATION_QUERY_KEY = "id",
+            IDENTIFIER_QUERY_KEY = "id",
             IDENTIFICATION_RELATION_QUERY_KEY = "idr";
 
     public static String identificationReturnQueryPart() {
         return identificationReturnQueryPartUsingKeysForIdentificationRelationAndAlias(
-                IDENTIFICATION_QUERY_KEY,
+                IDENTIFIER_QUERY_KEY,
                 IDENTIFICATION_RELATION_QUERY_KEY
         );
     }
