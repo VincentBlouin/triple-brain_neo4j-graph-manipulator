@@ -2,12 +2,14 @@
  * Copyright Vincent Blouin under the GPL License version 3
  */
 
-package guru.bubl.module.neo4j_graph_manipulator.graph;
+package guru.bubl.module.neo4j_graph_manipulator.graph.meta;
 
-import guru.bubl.module.model.IdentifiedTo;
+import guru.bubl.module.model.meta.IdentifiedTo;
 import guru.bubl.module.model.User;
 import guru.bubl.module.model.graph.identification.Identifier;
 import guru.bubl.module.model.search.GraphElementSearchResult;
+import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jFriendlyResource;
+import guru.bubl.module.neo4j_graph_manipulator.graph.Relationships;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.identification.Neo4jIdentification;
 import guru.bubl.module.neo4j_graph_manipulator.graph.search.SearchResultGetter;
 

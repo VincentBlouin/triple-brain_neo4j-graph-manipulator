@@ -2,7 +2,7 @@
  * Copyright Vincent Blouin under the GPL License version 3
  */
 
-package guru.bubl.module.neo4j_graph_manipulator.graph;
+package guru.bubl.module.neo4j_graph_manipulator.graph.meta;
 
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.identification.Neo4jIdentification;
 import org.neo4j.graphdb.Node;

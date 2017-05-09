@@ -17,6 +17,7 @@ import guru.bubl.module.model.json.ImageJson;
 import guru.bubl.module.neo4j_graph_manipulator.graph.*;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.identification.Neo4jIdentification;
 import guru.bubl.module.neo4j_graph_manipulator.graph.image.Neo4jImages;
+import guru.bubl.module.neo4j_graph_manipulator.graph.meta.Neo4jIdentificationFactory;
 import org.neo4j.graphdb.Node;
 
 import java.net.URI;

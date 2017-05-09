@@ -25,6 +25,9 @@ import guru.bubl.module.model.graph.subgraph.SubGraphForker;
 import guru.bubl.module.model.graph.subgraph.SubGraphForkerFactory;
 import guru.bubl.module.model.graph.vertex.VertexFactory;
 import guru.bubl.module.model.graph.vertex.VertexInSubGraphOperator;
+import guru.bubl.module.model.meta.IdentifiedTo;
+import guru.bubl.module.model.meta.UserMetasOperator;
+import guru.bubl.module.model.meta.UserMetasOperatorFactory;
 import guru.bubl.module.model.test.GraphComponentTest;
 import guru.bubl.module.neo4j_graph_manipulator.graph.admin.Neo4jWholeGraphAdmin;
 import guru.bubl.module.neo4j_graph_manipulator.graph.center_graph_element.Neo4jCenterGraphElementOperator;
@@ -42,6 +45,9 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.graph.subgraph.Neo4jSubGra
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.Neo4jVertexFactory;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.Neo4jVertexInSubGraphOperator;
 import guru.bubl.module.neo4j_graph_manipulator.graph.image.Neo4jImageFactory;
+import guru.bubl.module.neo4j_graph_manipulator.graph.meta.IdentifiedToNeo4J;
+import guru.bubl.module.neo4j_graph_manipulator.graph.meta.Neo4jIdentificationFactory;
+import guru.bubl.module.neo4j_graph_manipulator.graph.meta.Neo4jUserMetasOperator;
 import guru.bubl.module.neo4j_graph_manipulator.graph.test.Neo4JGraphComponentTest;
 import org.neo4j.graphdb.*;
 import org.neo4j.graphdb.event.KernelEventHandler;
@@ -120,6 +126,10 @@ public class Neo4jModule extends AbstractModule {
         install(factoryModuleBuilder
                 .implement(CenterGraphElementOperator.class, Neo4jCenterGraphElementOperator.class)
                 .build(CenterGraphElementOperatorFactory.class));
+
+        install(factoryModuleBuilder
+                .implement(UserMetasOperator.class, Neo4jUserMetasOperator.class)
+                .build(UserMetasOperatorFactory.class));
 
         install(factoryModuleBuilder
                 .build(Neo4jEdgeFactory.class));
