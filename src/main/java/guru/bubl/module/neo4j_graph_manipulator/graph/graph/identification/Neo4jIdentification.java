@@ -8,8 +8,11 @@ import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 import guru.bubl.module.common_utils.NamedParameterStatement;
 import guru.bubl.module.common_utils.NoExRun;
+import guru.bubl.module.model.FriendlyResource;
 import guru.bubl.module.model.Image;
+import guru.bubl.module.model.graph.FriendlyResourcePojo;
 import guru.bubl.module.model.graph.identification.IdentificationOperator;
+import guru.bubl.module.model.graph.identification.IdentifierPojo;
 import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jFriendlyResource;
 import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jFriendlyResourceFactory;
 import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jOperator;
@@ -124,6 +127,39 @@ public class Neo4jIdentification implements IdentificationOperator, Neo4jOperato
                     nb
             );
             return namedParameterStatement.execute();
+        }).get();
+    }
+
+    @Override
+    public IdentifierPojo buildPojo() {
+        String query = queryPrefix() +
+                String.format(
+                        "RETURN n.%s as uri," +
+                        "n.%s as label," +
+                        "n.%s as comment," +
+                        "n.%s as externalUri," +
+                        "n.%s as nbReferences",
+                        Neo4jFriendlyResource.props.uri,
+                        Neo4jFriendlyResource.props.label,
+                        Neo4jFriendlyResource.props.comment,
+                        props.external_uri,
+                        Neo4jIdentification.props.nb_references
+                );
+        return NoExRun.wrap(() -> {
+            ResultSet rs = connection.createStatement().executeQuery(query);
+            rs.next();
+            FriendlyResourcePojo friendlyResourcePojo = new FriendlyResourcePojo(
+                    URI.create(rs.getString("uri")),
+                    rs.getString("label")
+            );
+            friendlyResourcePojo.setComment(
+                    rs.getString("comment")
+            );
+            return new IdentifierPojo(
+                    URI.create(rs.getString("externalUri")),
+                    new Integer(rs.getString("nbReferences")),
+                    friendlyResourcePojo
+            );
         }).get();
     }
 
