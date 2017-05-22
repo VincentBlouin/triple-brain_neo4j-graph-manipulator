@@ -36,6 +36,13 @@ public class Neo4jWholeGraphAdmin implements WholeGraphAdmin {
     }
 
     @Override
+    public void removeMetasHavingZeroReferences() {
+        wholeGraph.getAllIdentifications().forEach(
+                this::removeMetaIfNoReference
+        );
+    }
+
+    @Override
     public WholeGraph getWholeGraph() {
         return wholeGraph;
     }
@@ -43,12 +50,17 @@ public class Neo4jWholeGraphAdmin implements WholeGraphAdmin {
     private void refreshNumberOfReferencesToIdentification(IdentificationOperator identification) {
         Neo4jIdentification neo4jIdentification = (Neo4jIdentification) identification;
         String query = String.format(
-                "%s MATCH n<-[r]-() " +
+                "%s OPTIONAL MATCH n<-[r]-() " +
                         "WITH n, count(r) as nbReferences " +
                         "SET n.%s=nbReferences",
                 neo4jIdentification.queryPrefix(),
                 Neo4jIdentification.props.nb_references
         );
         NoExRun.wrap(() -> connection.createStatement().execute(query)).get();
+    }
+    private void removeMetaIfNoReference(IdentificationOperator identification) {
+        if(0 == identification.getNbReferences()){
+            identification.remove();
+        }
     }
 }
