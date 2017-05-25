@@ -12,7 +12,7 @@ import guru.bubl.module.common_utils.NoExRun;
 import guru.bubl.module.model.Image;
 import guru.bubl.module.model.User;
 import guru.bubl.module.model.UserUris;
-import guru.bubl.module.model.graph.*;
+import guru.bubl.module.model.graph.GraphElementType;
 import guru.bubl.module.model.graph.edge.Edge;
 import guru.bubl.module.model.graph.edge.EdgeOperator;
 import guru.bubl.module.model.graph.edge.EdgePojo;
@@ -383,6 +383,14 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
         //todo batch
         NoExRun.wrap(() -> {
             graphElementOperator.removeAllIdentifications();
+            connection.createStatement().executeQuery(
+                    queryPrefix() +
+                            "MATCH " +
+                            "n<-[:SOURCE_VERTEX|DESTINATION_VERTEX]-(e),  " +
+                            "e-[:IDENTIFIED_TO]->(i) " +
+                            "SET " +
+                            "i.nb_references = i.nb_references - 1"
+            );
             return connection.createStatement().executeQuery(
                     queryPrefix() +
                             "OPTIONAL MATCH " +
