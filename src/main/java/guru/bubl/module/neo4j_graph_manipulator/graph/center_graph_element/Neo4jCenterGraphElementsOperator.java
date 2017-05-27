@@ -12,6 +12,7 @@ import guru.bubl.module.model.center_graph_element.CenterGraphElementPojo;
 import guru.bubl.module.model.center_graph_element.CenteredGraphElementsOperator;
 import guru.bubl.module.model.graph.FriendlyResourcePojo;
 import guru.bubl.module.model.graph.GraphElementPojo;
+import guru.bubl.module.model.graph.GraphElementType;
 import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jFriendlyResource;
 
 import java.net.URI;
@@ -43,7 +44,7 @@ public class Neo4jCenterGraphElementsOperator implements CenteredGraphElementsOp
     }
 
     @Override
-    public Set<CenterGraphElementPojo> getPublicOnly() {
+    public Set<CenterGraphElementPojo> getPublicOnlyOfType() {
         return getPublicOnlyOrNot(
                 true
         );
@@ -57,7 +58,7 @@ public class Neo4jCenterGraphElementsOperator implements CenteredGraphElementsOp
                         "') " +
                         "return n.%s as numberOfVisits, n.%s as lastCenterDate, n.%s as label, n.%s as uri;",
                 user.username(),
-                Neo4jCenterGraphElementOperator.props.number_of_visits,
+                Neo4jCenterGraphElementOperator.props.last_center_date,
                 Neo4jCenterGraphElementOperator.props.number_of_visits,
                 Neo4jCenterGraphElementOperator.props.last_center_date,
                 Neo4jFriendlyResource.props.label,
@@ -72,9 +73,12 @@ public class Neo4jCenterGraphElementsOperator implements CenteredGraphElementsOp
                 Date lastCenterDate = null == rs.getString("lastCenterDate") ?
                         null :
                         new Date(rs.getLong("lastCenterDate"));
+                Integer numberOfVisits = null == rs.getString("numberOfVisits") ?
+                        null :
+                        new Integer(rs.getString("numberOfVisits"));
                 centerGraphElements.add(
                         new CenterGraphElementPojo(
-                                new Integer(rs.getString("numberOfVisits")),
+                                numberOfVisits,
                                 lastCenterDate,
                                 new GraphElementPojo(new FriendlyResourcePojo(
                                         URI.create(rs.getString("uri")),

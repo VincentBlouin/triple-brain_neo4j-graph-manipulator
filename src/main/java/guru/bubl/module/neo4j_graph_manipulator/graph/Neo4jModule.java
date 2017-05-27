@@ -213,7 +213,7 @@ public class Neo4jModule extends AbstractModule {
                                 Neo4jFriendlyResource.props.owner + "," +
                                 Neo4jFriendlyResource.props.type + "," +
                                 Neo4jVertexInSubGraphOperator.props.is_public + "," +
-                                Neo4jCenterGraphElementOperator.props.number_of_visits + "," +
+                                Neo4jCenterGraphElementOperator.props.last_center_date + "," +
                                 "email"
                 ).setConfig(
                         GraphDatabaseSettings.node_auto_indexing,

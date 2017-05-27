@@ -7,6 +7,7 @@ package guru.bubl.module.neo4j_graph_manipulator.graph.center_graph_element;
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 import guru.bubl.module.common_utils.NoExRun;
+import guru.bubl.module.model.FriendlyResource;
 import guru.bubl.module.model.center_graph_element.CenterGraphElementOperator;
 import guru.bubl.module.model.graph.GraphElement;
 import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jFriendlyResource;
@@ -30,11 +31,11 @@ public class Neo4jCenterGraphElementOperator implements CenterGraphElementOperat
     protected Neo4jCenterGraphElementOperator(
             Connection connection,
             Neo4jFriendlyResourceFactory friendlyResourceFactory,
-            @Assisted GraphElement graphElement
+            @Assisted FriendlyResource friendlyResource
     ) {
         this.connection = connection;
         this.neo4jFriendlyResource = friendlyResourceFactory.withUri(
-                graphElement.uri()
+                friendlyResource.uri()
         );
     }
 

@@ -32,7 +32,7 @@ public class Neo4jGraphFactory implements GraphFactory {
                 new UserUris(user).generateVertexUri()
         );
         vertex.create();
-        CenterGraphElementOperator centerGraphElementOperator = centerGraphElementOperatorFactory.usingGraphElement(
+        CenterGraphElementOperator centerGraphElementOperator = centerGraphElementOperatorFactory.usingFriendlyResource(
                 vertex
         );
         centerGraphElementOperator.incrementNumberOfVisits();
