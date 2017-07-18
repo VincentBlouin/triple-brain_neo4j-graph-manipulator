@@ -6,17 +6,21 @@ package guru.bubl.module.neo4j_graph_manipulator.graph;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
-import guru.bubl.module.model.*;
+import guru.bubl.module.model.EmptyGraphTransaction;
+import guru.bubl.module.model.FriendlyResourceFactory;
+import guru.bubl.module.model.GraphTransaction;
+import guru.bubl.module.model.WholeGraph;
 import guru.bubl.module.model.admin.WholeGraphAdmin;
-import guru.bubl.module.model.admin.WholeGraphAdminFactory;
 import guru.bubl.module.model.center_graph_element.CenterGraphElementOperator;
 import guru.bubl.module.model.center_graph_element.CenterGraphElementOperatorFactory;
 import guru.bubl.module.model.center_graph_element.CenterGraphElementsOperatorFactory;
 import guru.bubl.module.model.center_graph_element.CenteredGraphElementsOperator;
-import guru.bubl.module.model.graph.*;
+import guru.bubl.module.model.graph.FriendlyResourceOperator;
+import guru.bubl.module.model.graph.GraphElementOperator;
+import guru.bubl.module.model.graph.GraphElementOperatorFactory;
+import guru.bubl.module.model.graph.GraphFactory;
 import guru.bubl.module.model.graph.edge.EdgeFactory;
 import guru.bubl.module.model.graph.edge.EdgeOperator;
-import guru.bubl.module.model.graph.GraphFactory;
 import guru.bubl.module.model.graph.identification.IdentificationFactory;
 import guru.bubl.module.model.graph.identification.IdentificationOperator;
 import guru.bubl.module.model.graph.schema.SchemaList;
@@ -25,7 +29,6 @@ import guru.bubl.module.model.graph.subgraph.SubGraphForker;
 import guru.bubl.module.model.graph.subgraph.SubGraphForkerFactory;
 import guru.bubl.module.model.graph.vertex.VertexFactory;
 import guru.bubl.module.model.graph.vertex.VertexInSubGraphOperator;
-import guru.bubl.module.model.meta.IdentifiedTo;
 import guru.bubl.module.model.meta.UserMetasOperator;
 import guru.bubl.module.model.meta.UserMetasOperatorFactory;
 import guru.bubl.module.model.test.GraphComponentTest;
@@ -45,9 +48,9 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.graph.subgraph.Neo4jSubGra
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.Neo4jVertexFactory;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.Neo4jVertexInSubGraphOperator;
 import guru.bubl.module.neo4j_graph_manipulator.graph.image.Neo4jImageFactory;
-import guru.bubl.module.neo4j_graph_manipulator.graph.meta.IdentifiedToNeo4J;
 import guru.bubl.module.neo4j_graph_manipulator.graph.meta.Neo4jIdentificationFactory;
 import guru.bubl.module.neo4j_graph_manipulator.graph.meta.Neo4jUserMetasOperator;
+import guru.bubl.module.neo4j_graph_manipulator.graph.search.Neo4jGraphSearchModule;
 import guru.bubl.module.neo4j_graph_manipulator.graph.test.Neo4JGraphComponentTest;
 import org.neo4j.graphdb.*;
 import org.neo4j.graphdb.event.KernelEventHandler;
@@ -108,16 +111,11 @@ public class Neo4jModule extends AbstractModule {
             bind(GraphComponentTest.class).to(Neo4JGraphComponentTest.class);
         }
 
+        install(new Neo4jGraphSearchModule());
+
         bind(WholeGraph.class).to(Neo4jWholeGraph.class);
-
-        bind(IdentifiedTo.class).to(IdentifiedToNeo4J.class);
-
-
+        bind(WholeGraphAdmin.class).to(Neo4jWholeGraphAdmin.class);
         FactoryModuleBuilder factoryModuleBuilder = new FactoryModuleBuilder();
-
-        install(factoryModuleBuilder
-                .implement(WholeGraphAdmin.class, Neo4jWholeGraphAdmin.class)
-                .build(WholeGraphAdminFactory.class));
 
         install(factoryModuleBuilder
                 .implement(CenteredGraphElementsOperator.class, Neo4jCenterGraphElementsOperator.class)

@@ -19,6 +19,7 @@ import java.net.URI;
 import java.sql.Connection;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Map;
 
 public class Neo4jSubGraphForker implements SubGraphForker {
 
@@ -43,7 +44,7 @@ public class Neo4jSubGraphForker implements SubGraphForker {
     }
 
     @Override
-    public void fork(SubGraph subGraph) {
+    public Map<URI, VertexOperator> fork(SubGraph subGraph) {
         forkedVertices = new HashMap<>();
         if (subGraph.edges().isEmpty()) {
             Vertex vertex = subGraph.vertices().values().iterator().next();
@@ -56,7 +57,7 @@ public class Neo4jSubGraphForker implements SubGraphForker {
                             vertex.uri()
                     )
             );
-            return;
+            return forkedVertices;
         }
         Collection<EdgePojo> edges = (Collection<EdgePojo>) subGraph.edges().values();
         for (EdgePojo edgePojo : edges) {
@@ -91,6 +92,7 @@ public class Neo4jSubGraphForker implements SubGraphForker {
                 );
             }
         }
+        return forkedVertices;
     }
 
     private Boolean hasForkedVertex(Vertex vertex) {

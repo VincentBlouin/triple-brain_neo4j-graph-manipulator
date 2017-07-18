@@ -87,15 +87,24 @@ public class Neo4jUserGraph implements UserGraph {
 
     @Override
     public SubGraphPojo graphWithDepthAndCenterBubbleUri(Integer depthOfSubVertices, URI centerBubbleUri) throws NonExistingResourceException {
+        return graphWithDepthResultsLimitAndCenterBubbleUri(depthOfSubVertices, null, centerBubbleUri);
+    }
+
+    @Override
+    public SubGraphPojo graphWithDepthResultsLimitAndCenterBubbleUri(Integer depthOfSubVertices, Integer resultsLimit, URI centerBubbleUri) throws NonExistingResourceException {
         if (depthOfSubVertices < 0) {
             throw new InvalidDepthOfSubVerticesException(
                     depthOfSubVertices,
                     centerBubbleUri
             );
         }
-        SubGraphPojo subGraph = subGraphExtractorFactory.withCenterVertexAndDepth(
+        SubGraphPojo subGraph = resultsLimit == null ? subGraphExtractorFactory.withCenterVertexAndDepth(
                 centerBubbleUri,
                 depthOfSubVertices
+        ).load() : subGraphExtractorFactory.withCenterVertexDepthAndResultsLimit(
+                centerBubbleUri,
+                depthOfSubVertices,
+                resultsLimit
         ).load();
         if (subGraph.vertices().isEmpty() && !UserUris.isUriOfAnIdentifier(centerBubbleUri)) {
             throw new NonExistingResourceException(

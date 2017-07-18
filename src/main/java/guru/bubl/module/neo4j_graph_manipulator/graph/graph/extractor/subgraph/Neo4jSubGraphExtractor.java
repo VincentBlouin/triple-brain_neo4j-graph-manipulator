@@ -36,9 +36,9 @@ public class Neo4jSubGraphExtractor {
             INCLUDED_VERTEX_QUERY_KEY = "iv",
             INCLUDED_EDGE_QUERY_KEY = "ie",
             GRAPH_ELEMENT_QUERY_KEY = "ge";
-    URI centerBubbleUri;
-    Integer depth;
-    Neo4jVertexFactory vertexFactory;
+    private URI centerBubbleUri;
+    private Integer depth;
+    private Integer resultsLimit;
     protected Connection connection;
     private SubGraphPojo subGraph = SubGraphPojo.withVerticesAndEdges(
             new HashMap<>(),
@@ -47,15 +47,29 @@ public class Neo4jSubGraphExtractor {
 
     @AssistedInject
     protected Neo4jSubGraphExtractor(
-            Neo4jVertexFactory vertexFactory,
             Connection connection,
             @Assisted URI centerBubbleUri,
-            @Assisted Integer depth
+            @Assisted("depth") Integer depth
     ) {
-        this.vertexFactory = vertexFactory;
+        this(
+                connection,
+                centerBubbleUri,
+                depth,
+                null
+        );
+    }
+
+    @AssistedInject
+    protected Neo4jSubGraphExtractor(
+            Connection connection,
+            @Assisted URI centerBubbleUri,
+            @Assisted("depth") Integer depth,
+            @Assisted("resultsLimit") Integer resultsLimit
+    ) {
         this.connection = connection;
         this.centerBubbleUri = centerBubbleUri;
         this.depth = depth;
+        this.resultsLimit = resultsLimit;
     }
 
     public SubGraphPojo load() {
@@ -111,7 +125,7 @@ public class Neo4jSubGraphExtractor {
                         vertexReturnQueryPart(GRAPH_ELEMENT_QUERY_KEY) +
                         edgeReturnQueryPart(GRAPH_ELEMENT_QUERY_KEY) +
                         IdentificationQueryBuilder.identificationReturnQueryPart() +
-                        Neo4jSubGraphExtractor.GRAPH_ELEMENT_QUERY_KEY + ".type as type";
+                        Neo4jSubGraphExtractor.GRAPH_ELEMENT_QUERY_KEY + ".type as type ";
     }
 
     private String getMatchQueryPart() {
@@ -120,7 +134,7 @@ public class Neo4jSubGraphExtractor {
                     Relationships.IDENTIFIED_TO +
                     "]-it " +
                     "MATCH it<-[:" +
-                        Relationships.DESTINATION_VERTEX + "*0.." + depth +
+                    Relationships.DESTINATION_VERTEX + "*0.." + depth +
                     "]->" + Neo4jSubGraphExtractor.GRAPH_ELEMENT_QUERY_KEY + " ";
 
         } else {

@@ -7,9 +7,8 @@ package guru.bubl.module.neo4j_graph_manipulator.graph.search.result_builder;
 import guru.bubl.module.common_utils.NoExRun;
 import guru.bubl.module.model.graph.GraphElementType;
 import guru.bubl.module.model.search.GraphElementSearchResult;
-import guru.bubl.module.model.search.VertexSearchResult;
+import guru.bubl.module.model.search.GraphElementSearchResultPojo;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph.GraphElementFromExtractorQueryRow;
-import guru.bubl.module.neo4j_graph_manipulator.graph.search.SearchResultGetter;
 
 import java.sql.ResultSet;
 
@@ -25,17 +24,16 @@ public class SchemaSearchResultBuilder implements SearchResultBuilder{
 
     @Override
     public GraphElementSearchResult build() {
-        return NoExRun.wrap(()->{
-            VertexSearchResult searchResult = new VertexSearchResult(
-                    GraphElementFromExtractorQueryRow.usingRowAndKey(row, prefix).build(),
-                    GraphElementType.schema
-            );
-            searchResult.getProperties().putAll(
-                    VertexSearchResultBuilder.buildPropertiesFromRow(
-                            row
-                    )
-            );
-            return searchResult;
-        }).get();
+        return NoExRun.wrap(()-> new GraphElementSearchResultPojo(
+                GraphElementType.schema,
+                GraphElementFromExtractorQueryRow.usingRowAndKey(row, prefix).build(),
+                getContext()
+        )).get();
     }
+
+    @Override
+    public ResultSet getRow() {
+        return row;
+    }
+
 }

@@ -4,15 +4,20 @@
 
 package guru.bubl.module.neo4j_graph_manipulator.graph.search.result_builder;
 
+import com.google.common.collect.ImmutableMap;
 import guru.bubl.module.common_utils.NoExRun;
 import guru.bubl.module.model.graph.FriendlyResourcePojo;
+import guru.bubl.module.model.graph.GraphElementPojo;
+import guru.bubl.module.model.graph.GraphElementType;
 import guru.bubl.module.model.graph.identification.IdentifierPojo;
 import guru.bubl.module.model.search.GraphElementSearchResult;
-import guru.bubl.module.model.search.IdentifierSearchResult;
+import guru.bubl.module.model.search.GraphElementSearchResultPojo;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.FriendlyResourceFromExtractorQueryRow;
 
 import java.net.URI;
 import java.sql.ResultSet;
+import java.util.HashMap;
+import java.util.HashSet;
 
 public class IdentifierSearchResultBuilder implements SearchResultBuilder {
 
@@ -46,8 +51,24 @@ public class IdentifierSearchResultBuilder implements SearchResultBuilder {
                     )
             );
         }).get();
-        return new IdentifierSearchResult(
-                identifierPojo
+
+        GraphElementPojo identifierAsGraphElement = new GraphElementPojo(
+                identifierPojo.getFriendlyResource(),
+                ImmutableMap.of(
+                        identifierPojo.getExternalResourceUri(),
+                        identifierPojo
+                )
         );
+
+        return new GraphElementSearchResultPojo(
+                GraphElementType.meta,
+                identifierAsGraphElement,
+                new HashMap<>()
+        );
+    }
+
+    @Override
+    public ResultSet getRow() {
+        return row;
     }
 }

@@ -12,7 +12,6 @@ import guru.bubl.module.model.graph.identification.IdentifierPojo;
 import guru.bubl.module.model.search.GraphElementSearchResult;
 import guru.bubl.module.model.search.GraphElementSearchResultPojo;
 import guru.bubl.module.model.search.GraphSearch;
-import guru.bubl.module.model.search.VertexSearchResult;
 import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jFriendlyResource;
 import guru.bubl.module.neo4j_graph_manipulator.graph.Relationships;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.Neo4jGraphElementFactory;
@@ -27,6 +26,7 @@ import javax.inject.Inject;
 import java.net.URI;
 import java.sql.Connection;
 import java.sql.ResultSet;
+import java.util.HashMap;
 import java.util.List;
 
 public class Neo4jGraphSearch implements GraphSearch {
@@ -41,7 +41,7 @@ public class Neo4jGraphSearch implements GraphSearch {
 
     @Override
     public List<GraphElementSearchResult> searchForAnyResourceThatCanBeUsedAsAnIdentifier(String searchTerm, User user) {
-        return new Getter<GraphElementSearchResult>().get(
+        return new Getter<>().get(
                 searchTerm,
                 false,
                 user.username(),
@@ -52,8 +52,8 @@ public class Neo4jGraphSearch implements GraphSearch {
     }
 
     @Override
-    public List<VertexSearchResult> searchOnlyForOwnVerticesOrSchemasForAutoCompletionByLabel(String searchTerm, User user) {
-        return new Getter<VertexSearchResult>().get(
+    public List<GraphElementSearchResult> searchOnlyForOwnVerticesOrSchemasForAutoCompletionByLabel(String searchTerm, User user) {
+        return new Getter<>().get(
                 searchTerm,
                 true,
                 user.username(),
@@ -64,8 +64,8 @@ public class Neo4jGraphSearch implements GraphSearch {
     }
 
     @Override
-    public List<VertexSearchResult> searchOnlyForOwnVerticesForAutoCompletionByLabel(String searchTerm, User user) {
-        return new Getter<VertexSearchResult>().get(
+    public List<GraphElementSearchResult> searchOnlyForOwnVerticesForAutoCompletionByLabel(String searchTerm, User user) {
+        return new Getter<GraphElementSearchResult>().get(
                 searchTerm,
                 true,
                 user.username(),
@@ -96,8 +96,8 @@ public class Neo4jGraphSearch implements GraphSearch {
     }
 
     @Override
-    public List<VertexSearchResult> searchPublicVerticesOnly(String searchTerm) {
-        return new Getter<VertexSearchResult>().get(
+    public List<GraphElementSearchResult> searchPublicVerticesOnly(String searchTerm) {
+        return new Getter<GraphElementSearchResult>().get(
                 searchTerm,
                 false,
                 "",
@@ -137,13 +137,14 @@ public class Neo4jGraphSearch implements GraphSearch {
                     return null;
                 }
                 return new GraphElementSearchResultPojo(
+                        SearchResultGetter.nodeTypeInRow(rs),
                         setupGraphElementForDetailedResult(
                                 GraphElementFromExtractorQueryRow.usingRowAndKey(
                                         rs,
                                         "node"
                                 ).build()
                         ),
-                        SearchResultGetter.nodeTypeInRow(rs)
+                        new HashMap<>()
                 );
             }).get();
         }
@@ -204,6 +205,7 @@ public class Neo4jGraphSearch implements GraphSearch {
                     "OPTIONAL MATCH node-[idr:IDENTIFIED_TO]->id " +
                     "RETURN " +
                     "node.uri, node.label, node.external_uri, node.nb_references, node.number_of_visits, node.creation_date, node.last_modification_date, " +
+                    "(CASE WHEN node.owner='"+username+"' THEN node.private_context ELSE node.public_context END) as context, " +
                     "COLLECT([related_node.label, related_node.uri, type(relation)])[0..5] as related_nodes, " +
                     IdentificationQueryBuilder.identificationReturnQueryPart() +
                     "node.type as type limit 10";
