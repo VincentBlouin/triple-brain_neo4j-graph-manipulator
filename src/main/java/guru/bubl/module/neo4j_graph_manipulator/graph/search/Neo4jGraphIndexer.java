@@ -5,12 +5,12 @@
 package guru.bubl.module.neo4j_graph_manipulator.graph.search;
 
 import com.google.inject.Inject;
+import guru.bubl.module.common_utils.NamedParameterStatement;
 import guru.bubl.module.common_utils.NoExRun;
 import guru.bubl.module.model.FriendlyResource;
 import guru.bubl.module.model.graph.GraphElement;
 import guru.bubl.module.model.graph.GraphElementPojo;
 import guru.bubl.module.model.graph.edge.Edge;
-import guru.bubl.module.model.graph.edge.EdgePojo;
 import guru.bubl.module.model.graph.schema.SchemaPojo;
 import guru.bubl.module.model.graph.subgraph.SubGraphPojo;
 import guru.bubl.module.model.graph.vertex.Vertex;
@@ -23,7 +23,9 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph.N
 
 import java.net.URI;
 import java.sql.Connection;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 public class Neo4jGraphIndexer implements GraphIndexer {
 
@@ -104,21 +106,45 @@ public class Neo4jGraphIndexer implements GraphIndexer {
 
     }
 
+    private void filterTheContext(Map<URI, ? extends GraphElement> context){
+        Integer numberOfContextElement = 0;
+        Iterator it = context.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry pair = (Map.Entry)it.next();
+            FriendlyResource friendlyResource = (FriendlyResource) pair.getValue();
+            if(numberOfContextElement >= CONTEXT_LIMIT){
+                it.remove();
+            }
+            else if(friendlyResource.label().isEmpty()){
+                it.remove();
+            }else{
+                numberOfContextElement++;
+            }
+        }
+    }
+
     private void setPrivateAndPublicSearchContextToFriendlyResource(Map<URI, ? extends GraphElement> privateContext, Map<URI, ? extends GraphElement> publicContext, FriendlyResource friendlyResource) {
         Neo4jFriendlyResource neo4jFriendlyResource = neo4jFriendlyResourceFactory.withUri(
                 friendlyResource.uri()
         );
+        filterTheContext(privateContext);
+        filterTheContext(publicContext);
         NoExRun.wrap(() -> {
             String query = String.format(
-                    "%s SET n.private_context='%s', " +
-                            "n.public_context='%s'",
-                    neo4jFriendlyResource.queryPrefix(),
-                    convertGraphElementsToContextJsonString(privateContext),
+                    "%s SET n.private_context=@privateContext, " +
+                            "n.public_context=@publicContext",
+                    neo4jFriendlyResource.queryPrefix()
+            );
+            NamedParameterStatement statement = new NamedParameterStatement(connection, query);
+            statement.setString(
+                    "privateContext",
+                    convertGraphElementsToContextJsonString(privateContext)
+            );
+            statement.setString(
+                    "publicContext",
                     convertGraphElementsToContextJsonString(publicContext)
             );
-            return connection.createStatement().execute(
-                    query
-            );
+            return statement.execute();
         }).get();
     }
 
