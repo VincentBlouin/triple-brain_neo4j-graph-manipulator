@@ -4,6 +4,7 @@
 
 package guru.bubl.module.neo4j_graph_manipulator.graph.center_graph_element;
 
+import com.google.gson.reflect.TypeToken;
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 import guru.bubl.module.common_utils.NoExRun;
@@ -13,14 +14,14 @@ import guru.bubl.module.model.center_graph_element.CenteredGraphElementsOperator
 import guru.bubl.module.model.graph.FriendlyResourcePojo;
 import guru.bubl.module.model.graph.GraphElementPojo;
 import guru.bubl.module.model.graph.GraphElementType;
+import guru.bubl.module.model.json.JsonUtils;
 import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jFriendlyResource;
 
 import java.net.URI;
 import java.sql.Connection;
 import java.sql.ResultSet;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
+import java.sql.SQLException;
+import java.util.*;
 
 public class Neo4jCenterGraphElementsOperator implements CenteredGraphElementsOperator {
 
@@ -56,9 +57,10 @@ public class Neo4jCenterGraphElementsOperator implements CenteredGraphElementsOp
                         "owner:%s AND %s:* " +
                         (publicOnly ? "AND is_public:true" : "") +
                         "') " +
-                        "return n.%s as numberOfVisits, n.%s as lastCenterDate, n.%s as label, n.%s as uri;",
+                        "return n.%s as context, n.%s as numberOfVisits, n.%s as lastCenterDate, n.%s as label, n.%s as uri;",
                 user.username(),
                 Neo4jCenterGraphElementOperator.props.last_center_date,
+                publicOnly ? "public_context" : "private_context",
                 Neo4jCenterGraphElementOperator.props.number_of_visits,
                 Neo4jCenterGraphElementOperator.props.last_center_date,
                 Neo4jFriendlyResource.props.label,
@@ -83,11 +85,24 @@ public class Neo4jCenterGraphElementsOperator implements CenteredGraphElementsOp
                                 new GraphElementPojo(new FriendlyResourcePojo(
                                         URI.create(rs.getString("uri")),
                                         rs.getString("label")
-                                ))
+                                )),
+                                getContextFromRow(rs)
                         )
                 );
             }
             return centerGraphElements;
         }).get();
+    }
+
+    private Map<URI, String> getContextFromRow(ResultSet row) throws SQLException {
+        String contextStr = row.getString("context");
+        if(null == contextStr){
+            return new HashMap<>();
+        }
+        return JsonUtils.getGson().fromJson(
+                contextStr,
+                new TypeToken<Map<URI, String>>() {
+                }.getType()
+        );
     }
 }
