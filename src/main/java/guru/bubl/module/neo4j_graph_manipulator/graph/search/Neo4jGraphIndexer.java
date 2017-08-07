@@ -14,6 +14,7 @@ import guru.bubl.module.model.graph.edge.Edge;
 import guru.bubl.module.model.graph.schema.SchemaPojo;
 import guru.bubl.module.model.graph.subgraph.SubGraphPojo;
 import guru.bubl.module.model.graph.vertex.Vertex;
+import guru.bubl.module.model.graph.vertex.VertexInSubGraphPojo;
 import guru.bubl.module.model.graph.vertex.VertexOperator;
 import guru.bubl.module.model.json.JsonUtils;
 import guru.bubl.module.model.search.GraphIndexer;
@@ -23,9 +24,7 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph.N
 
 import java.net.URI;
 import java.sql.Connection;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 
 public class Neo4jGraphIndexer implements GraphIndexer {
 
@@ -38,6 +37,9 @@ public class Neo4jGraphIndexer implements GraphIndexer {
     @Inject
     Connection connection;
 
+    private Comparator vertexContextComparator = (Comparator<VertexInSubGraphPojo>)
+            (vertexA, vertexB) -> vertexA.getNumberOfConnectedEdges() - vertexB.getNumberOfConnectedEdges();
+
     @Override
     public void indexVertex(VertexOperator vertex) {
         SubGraphPojo subGraph = subGraphExtractorFactory.withCenterVertexDepthAndResultsLimit(
@@ -47,8 +49,8 @@ public class Neo4jGraphIndexer implements GraphIndexer {
         ).load();
         subGraph.vertices().remove(vertex.uri());
         setPrivateAndPublicSearchContextToFriendlyResource(
-                subGraph.vertices(),
-                subGraph.getPublicVertices(),
+                sortVerticesByNumberOfChild(subGraph.vertices()),
+                sortVerticesByNumberOfChild(subGraph.getPublicVertices()),
                 vertex
         );
     }
@@ -149,7 +151,7 @@ public class Neo4jGraphIndexer implements GraphIndexer {
     }
 
     private Map<URI, String> mapOfGraphElementsToMapOfLabels(Map<URI, ? extends GraphElement> mapOfGraphElements) {
-        Map<URI, String> mapOfLabels = new HashMap<>();
+        Map<URI, String> mapOfLabels = new LinkedHashMap<>();
         for (GraphElement graphElement : mapOfGraphElements.values()) {
             mapOfLabels.put(
                     graphElement.uri(),
@@ -171,5 +173,39 @@ public class Neo4jGraphIndexer implements GraphIndexer {
                         mapOfGraphElements
                 )
         );
+    }
+
+    private Map<URI, VertexInSubGraphPojo> sortVerticesByNumberOfChild(Map<URI, VertexInSubGraphPojo> vertices){
+        List<Map.Entry<URI, VertexInSubGraphPojo>> list =
+                new LinkedList<>(vertices.entrySet());
+
+        Collections.sort(list, new Comparator<Map.Entry<URI, VertexInSubGraphPojo>>() {
+            public int compare(Map.Entry<URI, VertexInSubGraphPojo> o1,
+                               Map.Entry<URI, VertexInSubGraphPojo> o2) {
+                if(o1.getValue().getNumberOfConnectedEdges() > o2.getValue().getNumberOfConnectedEdges()){
+                    return -1;
+                }else if(o1.getValue().getNumberOfConnectedEdges() == o2.getValue().getNumberOfConnectedEdges()){
+                    return 0;
+                }else{
+                    return 1;
+                }
+            }
+        });
+
+        // 3. Loop the sorted list and put it into a new insertion order Map LinkedHashMap
+        Map<URI, VertexInSubGraphPojo> sortedMap = new LinkedHashMap<>();
+        for (Map.Entry<URI, VertexInSubGraphPojo> entry : list) {
+            sortedMap.put(entry.getKey(), entry.getValue());
+        }
+
+        /*
+        //classic iterator example
+        for (Iterator<Map.Entry<String, Integer>> it = list.iterator(); it.hasNext(); ) {
+            Map.Entry<String, Integer> entry = it.next();
+            sortedMap.put(entry.getKey(), entry.getValue());
+        }*/
+
+
+        return sortedMap;
     }
 }
