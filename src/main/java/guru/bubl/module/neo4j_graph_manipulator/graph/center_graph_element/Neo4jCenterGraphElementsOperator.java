@@ -22,6 +22,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class Neo4jCenterGraphElementsOperator implements CenteredGraphElementsOperator {
 
@@ -49,6 +50,25 @@ public class Neo4jCenterGraphElementsOperator implements CenteredGraphElementsOp
         return getPublicOnlyOrNot(
                 true
         );
+    }
+
+    @Override
+    public void removeCenterGraphElements(Set<CenterGraphElementPojo> centers) {
+        String uris = centers.stream()
+                .map(center -> "'" + center.getGraphElement().uri().toString() + "'")
+                .collect(Collectors.joining(", "));
+        String query = String.format(
+                "START n=node:node_auto_index('" +
+                        "owner:%s" +
+                        "') " +
+                        "WHERE n.uri IN %s " +
+                        "REMOVE n.last_center_date, n.number_of_visits",
+                user.username(),
+                "[" + uris + "]"
+        );
+        NoExRun.wrap(() -> connection.createStatement().execute(
+                query
+        )).get();
     }
 
     private Set<CenterGraphElementPojo> getPublicOnlyOrNot(Boolean publicOnly) {
