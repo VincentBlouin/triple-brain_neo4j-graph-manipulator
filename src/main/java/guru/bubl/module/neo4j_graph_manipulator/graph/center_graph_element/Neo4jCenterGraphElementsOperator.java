@@ -16,6 +16,7 @@ import guru.bubl.module.model.graph.GraphElementPojo;
 import guru.bubl.module.model.graph.GraphElementType;
 import guru.bubl.module.model.json.JsonUtils;
 import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jFriendlyResource;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.identification.Neo4jIdentification;
 
 import java.net.URI;
 import java.sql.Connection;
@@ -77,14 +78,15 @@ public class Neo4jCenterGraphElementsOperator implements CenteredGraphElementsOp
                         "owner:%s AND %s:* " +
                         (publicOnly ? "AND is_public:true" : "") +
                         "') " +
-                        "return n.%s as context, n.%s as numberOfVisits, n.%s as lastCenterDate, n.%s as label, n.%s as uri;",
+                        "return n.%s as context, n.%s as numberOfVisits, n.%s as lastCenterDate, n.%s as label, n.%s as uri, n.%s as nbReferences",
                 user.username(),
                 Neo4jCenterGraphElementOperator.props.last_center_date,
                 publicOnly ? "public_context" : "private_context",
                 Neo4jCenterGraphElementOperator.props.number_of_visits,
                 Neo4jCenterGraphElementOperator.props.last_center_date,
                 Neo4jFriendlyResource.props.label,
-                Neo4jFriendlyResource.props.uri
+                Neo4jFriendlyResource.props.uri,
+                Neo4jIdentification.props.nb_references
         );
         Set<CenterGraphElementPojo> centerGraphElements = new HashSet<>();
         return NoExRun.wrap(() -> {
@@ -98,6 +100,9 @@ public class Neo4jCenterGraphElementsOperator implements CenteredGraphElementsOp
                 Integer numberOfVisits = null == rs.getString("numberOfVisits") ?
                         null :
                         new Integer(rs.getString("numberOfVisits"));
+                Integer nbReferences = null == rs.getString("nbReferences") ?
+                        null :
+                        new Integer(rs.getString("nbReferences"));
                 centerGraphElements.add(
                         new CenterGraphElementPojo(
                                 numberOfVisits,
@@ -106,7 +111,8 @@ public class Neo4jCenterGraphElementsOperator implements CenteredGraphElementsOp
                                         URI.create(rs.getString("uri")),
                                         rs.getString("label")
                                 )),
-                                getContextFromRow(rs)
+                                getContextFromRow(rs),
+                                nbReferences
                         )
                 );
             }
