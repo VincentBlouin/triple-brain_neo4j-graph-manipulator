@@ -11,6 +11,7 @@ import guru.bubl.module.model.FriendlyResource;
 import guru.bubl.module.model.graph.GraphElement;
 import guru.bubl.module.model.graph.GraphElementPojo;
 import guru.bubl.module.model.graph.edge.Edge;
+import guru.bubl.module.model.graph.identification.IdentifierPojo;
 import guru.bubl.module.model.graph.schema.SchemaPojo;
 import guru.bubl.module.model.graph.subgraph.SubGraphPojo;
 import guru.bubl.module.model.graph.vertex.Vertex;
@@ -37,20 +38,9 @@ public class Neo4jGraphIndexer implements GraphIndexer {
     @Inject
     Connection connection;
 
-    private Comparator vertexContextComparator = (Comparator<VertexInSubGraphPojo>)
-            (vertexA, vertexB) -> vertexA.getNumberOfConnectedEdges() - vertexB.getNumberOfConnectedEdges();
-
     @Override
     public void indexVertex(VertexOperator vertex) {
-        SubGraphPojo subGraph = subGraphExtractorFactory.withCenterVertexDepthAndResultsLimit(
-                vertex.uri(),
-                1,
-                10
-        ).load();
-        subGraph.vertices().remove(vertex.uri());
-        setPrivateAndPublicSearchContextToFriendlyResource(
-                sortVerticesByNumberOfChild(subGraph.vertices()),
-                sortVerticesByNumberOfChild(subGraph.getPublicVertices()),
+        indexWhereContextIsSurroundVertices(
                 vertex
         );
     }
@@ -99,6 +89,11 @@ public class Neo4jGraphIndexer implements GraphIndexer {
     }
 
     @Override
+    public void indexMeta(IdentifierPojo identifier) {
+        indexWhereContextIsSurroundVertices(identifier);
+    }
+
+    @Override
     public void deleteGraphElement(GraphElement graphElement) {
 
     }
@@ -106,6 +101,19 @@ public class Neo4jGraphIndexer implements GraphIndexer {
     @Override
     public void commit() {
 
+    }
+
+    private void indexWhereContextIsSurroundVertices(FriendlyResource friendlyResource){
+        SubGraphPojo subGraph = subGraphExtractorFactory.withCenterVertexAndDepth(
+                friendlyResource.uri(),
+                1
+        ).load();
+        subGraph.vertices().remove(friendlyResource.uri());
+        setPrivateAndPublicSearchContextToFriendlyResource(
+                sortVerticesByNumberOfChild(subGraph.vertices()),
+                sortVerticesByNumberOfChild(subGraph.getPublicVertices()),
+                friendlyResource
+        );
     }
 
     private void filterTheContext(Map<URI, ? extends GraphElement> context){

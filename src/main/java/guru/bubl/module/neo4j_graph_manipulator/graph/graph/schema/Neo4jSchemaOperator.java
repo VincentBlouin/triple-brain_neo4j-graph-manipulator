@@ -111,11 +111,6 @@ public class Neo4jSchemaOperator implements SchemaOperator, Neo4jOperator {
     }
 
     @Override
-    public String getOwnerUsername() {
-        return graphElementOperator.getOwnerUsername();
-    }
-
-    @Override
     public String queryPrefix() {
         return graphElementOperator.queryPrefix();
     }

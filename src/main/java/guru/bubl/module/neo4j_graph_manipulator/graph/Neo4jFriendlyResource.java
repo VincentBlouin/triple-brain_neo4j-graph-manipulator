@@ -287,10 +287,6 @@ public class Neo4jFriendlyResource implements FriendlyResourceOperator, Neo4jOpe
         ));
     }
 
-    @Override
-    public String getOwnerUsername() {
-        return UserUris.ownerUserNameFromUri(uri);
-    }
 
     public void updateLastModificationDate() {
         String query = queryPrefix() +

@@ -7,6 +7,7 @@ package guru.bubl.module.neo4j_graph_manipulator.graph.graph;
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 import guru.bubl.module.common_utils.NoExRun;
+import guru.bubl.module.model.FriendlyResource;
 import guru.bubl.module.model.User;
 import guru.bubl.module.model.UserUris;
 import guru.bubl.module.model.graph.GraphElementType;

@@ -313,11 +313,6 @@ public class Neo4jEdgeOperator implements EdgeOperator, Neo4jOperator {
     }
 
     @Override
-    public String getOwnerUsername() {
-        return graphElementOperator.getOwnerUsername();
-    }
-
-    @Override
     public URI uri() {
         return graphElementOperator.uri();
     }

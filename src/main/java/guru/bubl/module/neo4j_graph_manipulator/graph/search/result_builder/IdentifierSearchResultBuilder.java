@@ -59,12 +59,11 @@ public class IdentifierSearchResultBuilder implements SearchResultBuilder {
                         identifierPojo
                 )
         );
-
-        return new GraphElementSearchResultPojo(
+        return NoExRun.wrap(() -> new GraphElementSearchResultPojo(
                 GraphElementType.meta,
                 identifierAsGraphElement,
-                new HashMap<>()
-        );
+                getContext()
+        )).get();
     }
 
     @Override

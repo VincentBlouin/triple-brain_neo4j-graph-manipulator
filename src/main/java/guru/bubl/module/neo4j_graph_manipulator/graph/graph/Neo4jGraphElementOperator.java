@@ -85,11 +85,6 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
         return friendlyResource.lastModificationDate();
     }
 
-    @Override
-    public String getOwnerUsername() {
-        return friendlyResource.getOwnerUsername();
-    }
-
     public void updateLastModificationDate() {
         friendlyResource.updateLastModificationDate();
     }

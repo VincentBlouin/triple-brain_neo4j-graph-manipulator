@@ -209,11 +209,6 @@ public class Neo4jIdentification implements IdentificationOperator, Neo4jOperato
     }
 
     @Override
-    public String getOwnerUsername() {
-        return friendlyResourceOperator.getOwnerUsername();
-    }
-
-    @Override
     public void comment(String comment) {
         friendlyResourceOperator.comment(
                 comment
