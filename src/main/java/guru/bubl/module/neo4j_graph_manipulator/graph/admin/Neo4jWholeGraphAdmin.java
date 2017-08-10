@@ -10,9 +10,12 @@ import com.google.inject.assistedinject.AssistedInject;
 import guru.bubl.module.common_utils.NoExRun;
 import guru.bubl.module.model.WholeGraph;
 import guru.bubl.module.model.admin.WholeGraphAdmin;
+import guru.bubl.module.model.graph.FriendlyResourcePojo;
 import guru.bubl.module.model.graph.GraphElementPojo;
 import guru.bubl.module.model.graph.edge.EdgeOperator;
 import guru.bubl.module.model.graph.identification.IdentificationOperator;
+import guru.bubl.module.model.graph.identification.Identifier;
+import guru.bubl.module.model.graph.identification.IdentifierPojo;
 import guru.bubl.module.model.graph.schema.SchemaOperator;
 import guru.bubl.module.model.graph.schema.SchemaPojo;
 import guru.bubl.module.model.graph.vertex.Vertex;
@@ -61,6 +64,15 @@ public class Neo4jWholeGraphAdmin implements WholeGraphAdmin {
             for(GraphElementPojo property : schemaPojo.getProperties().values()){
                 graphIndexer.indexProperty(property, schemaPojo);
             }
+        }
+        for(Identifier identifier: wholeGraph.getAllIdentifications()){
+            graphIndexer.indexMeta(
+                    new IdentifierPojo(
+                            new FriendlyResourcePojo(
+                                    identifier.uri()
+                            )
+                    )
+            );
         }
     }
 
