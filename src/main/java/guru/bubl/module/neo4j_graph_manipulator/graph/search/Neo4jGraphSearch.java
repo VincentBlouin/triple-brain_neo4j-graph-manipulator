@@ -14,10 +14,12 @@ import guru.bubl.module.model.search.GraphElementSearchResultPojo;
 import guru.bubl.module.model.search.GraphSearch;
 import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jFriendlyResource;
 import guru.bubl.module.neo4j_graph_manipulator.graph.Relationships;
+import guru.bubl.module.neo4j_graph_manipulator.graph.center_graph_element.Neo4jCenterGraphElementOperator;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.Neo4jGraphElementFactory;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.FriendlyResourceQueryBuilder;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.IdentificationQueryBuilder;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph.GraphElementFromExtractorQueryRow;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.identification.Neo4jIdentification;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.Neo4jVertexInSubGraphOperator;
 import org.apache.commons.lang.StringUtils;
 import org.apache.lucene.queryParser.QueryParser;
@@ -197,18 +199,15 @@ public class Neo4jGraphSearch implements GraphSearch {
                             (StringUtils.isEmpty(username) ? "" : " OR owner:" + username) + ")") + " AND " +
                     "( " + Neo4jFriendlyResource.props.type + ":" + StringUtils.join(graphElementTypes, " OR type:") + ") " +
                     "') " +
-                    "OPTIONAL MATCH node<-[relation]->related_node " +
-                    "WHERE (related_node." +
-                    Neo4jVertexInSubGraphOperator.props.is_public +
-                    "=true OR related_node.owner='" + username + "') " +
-                    "AND related_node.type <>'" + GraphElementType.meta + "' " +
                     "OPTIONAL MATCH node-[idr:IDENTIFIED_TO]->id " +
                     "RETURN " +
                     "node.uri, node.label, node.external_uri, node.nb_references, node.number_of_visits, node.creation_date, node.last_modification_date, " +
                     "(CASE WHEN node.owner='"+username+"' THEN node.private_context ELSE node.public_context END) as context, " +
-                    "COLLECT([related_node.label, related_node.uri, type(relation)])[0..5] as related_nodes, " +
                     IdentificationQueryBuilder.identificationReturnQueryPart() +
-                    "node.type as type limit 10";
+                    "node.type as type " +
+                    "ORDER BY node." + Neo4jIdentification.props.nb_references + " DESC, " +
+                    "node." + Neo4jCenterGraphElementOperator.props.number_of_visits + " DESC " +
+                    "limit 10";
         }
 
         private String formatSearchTerm(String searchTerm) {
