@@ -42,12 +42,12 @@ public class IdentifierSearchResultBuilder implements SearchResultBuilder {
         NoExRun.wrap(() -> {
             identifierPojo.setExternalResourceUri(
                     URI.create(
-                            row.getString("node.external_uri")
+                            row.getString("n.external_uri")
                     )
             );
             return identifierPojo.setNbRefences(
                     new Integer(
-                            row.getString("node.nb_references")
+                            row.getString("n.nb_references")
                     )
             );
         }).get();

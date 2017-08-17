@@ -120,16 +120,16 @@ public class Neo4jGraphSearch implements GraphSearch {
     private class Getter<ResultType extends GraphElementSearchResult> {
         public GraphElementSearchResult getForUri(URI uri, String username) {
             String query = String.format(
-                    "START node=node:node_auto_index('uri:%s AND (is_public:true %s)') " +
-                            "OPTIONAL MATCH (node)-[%s:%s]->(%s) " +
-                            "RETURN %s%s%snode.type as type",
+                    "START n=node:node_auto_index('uri:%s AND (is_public:true %s)') " +
+                            "OPTIONAL MATCH (n)-[%s:%s]->(%s) " +
+                            "RETURN %s%s%sn.type as type",
                     uri,
                     StringUtils.isEmpty(username) ? "" : " OR owner:" + username,
                     IdentificationQueryBuilder.IDENTIFICATION_RELATION_QUERY_KEY,
                     Relationships.IDENTIFIED_TO,
                     IdentificationQueryBuilder.IDENTIFIER_QUERY_KEY,
-                    FriendlyResourceQueryBuilder.returnQueryPartUsingPrefix("node"),
-                    FriendlyResourceQueryBuilder.imageReturnQueryPart("node"),
+                    FriendlyResourceQueryBuilder.returnQueryPartUsingPrefix("n"),
+                    FriendlyResourceQueryBuilder.imageReturnQueryPart("n"),
                     IdentificationQueryBuilder.identificationReturnQueryPart()
             );
 
@@ -143,7 +143,7 @@ public class Neo4jGraphSearch implements GraphSearch {
                         setupGraphElementForDetailedResult(
                                 GraphElementFromExtractorQueryRow.usingRowAndKey(
                                         rs,
-                                        "node"
+                                        "n"
                                 ).build()
                         ),
                         new HashMap<>()
@@ -193,20 +193,23 @@ public class Neo4jGraphSearch implements GraphSearch {
                 String username,
                 GraphElementType... graphElementTypes
         ) {
-            return "START node=node:node_auto_index('" +
+            return "START n=node:node_auto_index('" +
                     Neo4jFriendlyResource.props.label + ":(" + formatSearchTerm(searchTerm) + "*) AND " +
                     (forPersonal ? "owner:" + username : "(is_public:true " +
                             (StringUtils.isEmpty(username) ? "" : " OR owner:" + username) + ")") + " AND " +
                     "( " + Neo4jFriendlyResource.props.type + ":" + StringUtils.join(graphElementTypes, " OR type:") + ") " +
                     "') " +
-                    "OPTIONAL MATCH node-[idr:IDENTIFIED_TO]->id " +
+                    "OPTIONAL MATCH n-[idr:IDENTIFIED_TO]->id " +
                     "RETURN " +
-                    "node.uri, node.label, node.external_uri, node.nb_references, node.number_of_visits, node.creation_date, node.last_modification_date, " +
-                    "(CASE WHEN node.owner='"+username+"' THEN node.private_context ELSE node.public_context END) as context, " +
+                    "n.uri, n.label, n.external_uri, n.nb_references, n.number_of_visits, n.creation_date, n.last_modification_date, " +
+                    "(CASE WHEN n.owner='" + username + "' THEN n.private_context ELSE n.public_context END) as context, " +
                     IdentificationQueryBuilder.identificationReturnQueryPart() +
-                    "node.type as type " +
-                    "ORDER BY node." + Neo4jIdentification.props.nb_references + " DESC, " +
-                    "node." + Neo4jCenterGraphElementOperator.props.number_of_visits + " DESC " +
+                    "n.type as type " +
+                    "ORDER BY COALESCE(" +
+                    "n." + Neo4jIdentification.props.nb_references + "," +
+                    "0) DESC, COALESCE(" +
+                    "n." + Neo4jCenterGraphElementOperator.props.number_of_visits + "," +
+                    "0) DESC " +
                     "limit 10";
         }
 

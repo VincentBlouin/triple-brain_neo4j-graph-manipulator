@@ -21,7 +21,7 @@ import java.util.Map;
 
 public class SearchResultGetter<ResultType extends GraphElementSearchResult> {
 
-    public static final String nodePrefix = "node";
+    public static final String nodePrefix = "n";
 
     private List<ResultType> searchResults = new ArrayList<>();
 
