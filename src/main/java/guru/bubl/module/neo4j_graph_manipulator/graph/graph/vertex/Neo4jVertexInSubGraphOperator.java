@@ -506,6 +506,24 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
         }).get();
     }
 
+    @Override
+    public void setNumberOfPublicConnectedEdges(Integer numberOfPublicConnectedEdges) {
+        NoExRun.wrap(() -> {
+            String query = String.format(
+                    "%s SET n.%s={1}",
+                    queryPrefix(),
+                    props.nb_public_neighbors
+            );
+            PreparedStatement statement = connection.prepareStatement(
+                    query
+            );
+            statement.setInt(
+                    1, numberOfPublicConnectedEdges
+            );
+            return statement.execute();
+        }).get();
+    }
+
     protected void incrementNumberOfConnectedEdges() {
         NoExRun.wrap(() -> {
             Statement statement = connection.createStatement();
