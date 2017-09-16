@@ -42,6 +42,19 @@ public class Neo4jGraphSearch implements GraphSearch {
 
 
     @Override
+    public List<GraphElementSearchResult> searchForAllOwnResources(String searchTerm, User user) {
+        return new Getter<>().get(
+                searchTerm,
+                true,
+                user.username(),
+                GraphElementType.vertex,
+                GraphElementType.schema,
+                GraphElementType.edge,
+                GraphElementType.meta
+        );
+    }
+
+    @Override
     public List<GraphElementSearchResult> searchForAnyResourceThatCanBeUsedAsAnIdentifier(String searchTerm, User user) {
         return new Getter<>().get(
                 searchTerm,
