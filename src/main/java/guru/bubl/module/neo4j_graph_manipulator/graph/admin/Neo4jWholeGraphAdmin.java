@@ -5,9 +5,8 @@
 package guru.bubl.module.neo4j_graph_manipulator.graph.admin;
 
 import com.google.inject.Inject;
-import com.google.inject.assistedinject.Assisted;
-import com.google.inject.assistedinject.AssistedInject;
 import guru.bubl.module.common_utils.NoExRun;
+import guru.bubl.module.model.User;
 import guru.bubl.module.model.WholeGraph;
 import guru.bubl.module.model.admin.WholeGraphAdmin;
 import guru.bubl.module.model.graph.FriendlyResourcePojo;
@@ -18,7 +17,6 @@ import guru.bubl.module.model.graph.identification.Identifier;
 import guru.bubl.module.model.graph.identification.IdentifierPojo;
 import guru.bubl.module.model.graph.schema.SchemaOperator;
 import guru.bubl.module.model.graph.schema.SchemaPojo;
-import guru.bubl.module.model.graph.vertex.Vertex;
 import guru.bubl.module.model.graph.vertex.VertexOperator;
 import guru.bubl.module.model.search.GraphIndexer;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.identification.Neo4jIdentification;
@@ -38,14 +36,14 @@ public class Neo4jWholeGraphAdmin implements WholeGraphAdmin {
 
     @Override
     public void refreshNumberOfReferencesToAllIdentifications() {
-        wholeGraph.getAllIdentifications().forEach(
+        wholeGraph.getAllTags().forEach(
                 this::refreshNumberOfReferencesToIdentification
         );
     }
 
     @Override
     public void removeMetasHavingZeroReferences() {
-        wholeGraph.getAllIdentifications().forEach(
+        wholeGraph.getAllTags().forEach(
                 this::removeMetaIfNoReference
         );
     }
@@ -65,7 +63,26 @@ public class Neo4jWholeGraphAdmin implements WholeGraphAdmin {
                 graphIndexer.indexProperty(property, schemaPojo);
             }
         }
-        for(Identifier identifier: wholeGraph.getAllIdentifications()){
+        for(Identifier identifier: wholeGraph.getAllTags()){
+            graphIndexer.indexMeta(
+                    new IdentifierPojo(
+                            new FriendlyResourcePojo(
+                                    identifier.uri()
+                            )
+                    )
+            );
+        }
+    }
+
+    @Override
+    public void reindexAllForUser(User user) {
+        for(VertexOperator vertex : wholeGraph.getAllVerticesOfUser(user)){
+            graphIndexer.indexVertex(vertex);
+        }
+        for(EdgeOperator edge : wholeGraph.getAllEdgesOfUser(user)){
+            graphIndexer.indexRelation(edge);
+        }
+        for(Identifier identifier: wholeGraph.getAllTagsOfUser(user)){
             graphIndexer.indexMeta(
                     new IdentifierPojo(
                             new FriendlyResourcePojo(

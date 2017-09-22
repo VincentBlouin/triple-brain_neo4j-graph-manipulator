@@ -23,23 +23,6 @@ public class Neo4jGraphFactory implements GraphFactory {
     @Inject
     protected Neo4jVertexFactory vertexFactory;
 
-    @Inject
-    protected CenterGraphElementOperatorFactory centerGraphElementOperatorFactory;
-
-    @Override
-    public UserGraph createForUser(User user) {
-        VertexOperator vertex = vertexFactory.withUri(
-                new UserUris(user).generateVertexUri()
-        );
-        vertex.create();
-        CenterGraphElementOperator centerGraphElementOperator = centerGraphElementOperatorFactory.usingFriendlyResource(
-                vertex
-        );
-        centerGraphElementOperator.incrementNumberOfVisits();
-        centerGraphElementOperator.updateLastCenterDate();
-        return neo4jUserGraphFactory.withUser(user);
-    }
-
     @Override
     public UserGraph loadForUser(User user) {
         return neo4jUserGraphFactory.withUser(user);

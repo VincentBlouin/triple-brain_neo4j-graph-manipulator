@@ -5,6 +5,7 @@
 package guru.bubl.module.neo4j_graph_manipulator.graph.graph;
 
 import guru.bubl.module.common_utils.NoExRun;
+import guru.bubl.module.model.User;
 import guru.bubl.module.model.WholeGraph;
 import guru.bubl.module.model.graph.*;
 import guru.bubl.module.model.graph.edge.EdgeOperator;
@@ -48,16 +49,26 @@ public class Neo4jWholeGraph implements WholeGraph {
 
     @Override
     public Set<VertexInSubGraphOperator> getAllVertices() {
+        return getAllVerticesOfUserOrNot(null);
+    }
+
+    @Override
+    public Set<VertexInSubGraphOperator> getAllVerticesOfUser(User user) {
+        return getAllVerticesOfUserOrNot(user);
+    }
+
+    private Set<VertexInSubGraphOperator> getAllVerticesOfUserOrNot(User user) {
         String query = String.format(
-                "START n=node:node_auto_index('%s:%s') RETURN n.uri as uri",
+                "START n=node:node_auto_index('%s:%s%s') RETURN n.uri as uri",
                 Neo4jFriendlyResource.props.type,
-                GraphElementType.vertex
+                GraphElementType.vertex,
+                user == null ? "" : " AND owner:" + user.username()
         );
         Set<VertexInSubGraphOperator> vertices = new HashSet<>();
-        return NoExRun.wrap(()->{
+        return NoExRun.wrap(() -> {
             Statement statement = connection.createStatement();
             ResultSet rs = statement.executeQuery(query);
-            while(rs.next()){
+            while (rs.next()) {
                 vertices.add(
                         neo4jVertexFactory.withUri(
                                 URI.create(
@@ -72,16 +83,26 @@ public class Neo4jWholeGraph implements WholeGraph {
 
     @Override
     public Set<EdgeOperator> getAllEdges() {
+        return getAllEdgesOfUserOrNot(null);
+    }
+
+    @Override
+    public Set<EdgeOperator> getAllEdgesOfUser(User user) {
+        return getAllEdgesOfUserOrNot(user);
+    }
+
+    private Set<EdgeOperator> getAllEdgesOfUserOrNot(User user) {
         String query = String.format(
-                "START n=node:node_auto_index('%s:%s') RETURN n.uri as uri",
+                "START n=node:node_auto_index('%s:%s%s') RETURN n.uri as uri",
                 Neo4jFriendlyResource.props.type,
-                GraphElementType.edge
+                GraphElementType.edge,
+                user == null ? "" : " AND owner:" + user.username()
         );
         Set<EdgeOperator> edges = new HashSet<>();
-        return NoExRun.wrap(()->{
+        return NoExRun.wrap(() -> {
             Statement statement = connection.createStatement();
             ResultSet rs = statement.executeQuery(query);
-            while(rs.next()){
+            while (rs.next()) {
                 edges.add(
                         neo4jEdgeFactory.withUri(
                                 URI.create(
@@ -103,10 +124,10 @@ public class Neo4jWholeGraph implements WholeGraph {
                 Neo4jFriendlyResource.props.uri
         );
         Set<SchemaOperator> schemas = new HashSet<>();
-        return NoExRun.wrap(()->{
+        return NoExRun.wrap(() -> {
             Statement statement = connection.createStatement();
             ResultSet rs = statement.executeQuery(query);
-            while(rs.next()){
+            while (rs.next()) {
                 schemas.add(
                         schemaFactory.withUri(
                                 URI.create(
@@ -121,6 +142,10 @@ public class Neo4jWholeGraph implements WholeGraph {
 
     @Override
     public Set<GraphElementOperator> getAllGraphElements() {
+        return getAllGraphElementsOfUserOrNot(null);
+    }
+
+    Set<GraphElementOperator> getAllGraphElementsOfUserOrNot(User user) {
         String query = String.format(
                 "START n=node:node_auto_index('( %s:%s) ') RETURN n.%s as uri",
                 Neo4jFriendlyResource.props.type,
@@ -128,10 +153,10 @@ public class Neo4jWholeGraph implements WholeGraph {
                 Neo4jFriendlyResource.props.uri
         );
         Set<GraphElementOperator> graphElements = new HashSet<>();
-        return NoExRun.wrap(()->{
+        return NoExRun.wrap(() -> {
             Statement statement = connection.createStatement();
             ResultSet rs = statement.executeQuery(query);
-            while(rs.next()){
+            while (rs.next()) {
                 graphElements.add(
                         graphElementFactory.withUri(
                                 URI.create(
@@ -145,18 +170,28 @@ public class Neo4jWholeGraph implements WholeGraph {
     }
 
     @Override
-    public Set<IdentificationOperator> getAllIdentifications() {
+    public Set<IdentificationOperator> getAllTags() {
+        return getAllTagsOfUserOrNot(null);
+    }
+
+    @Override
+    public Set<IdentificationOperator> getAllTagsOfUser(User user) {
+        return getAllTagsOfUserOrNot(user);
+    }
+
+    private Set<IdentificationOperator> getAllTagsOfUserOrNot(User user) {
         String query = String.format(
-                "START n=node:node_auto_index('( %s:%s) ') RETURN n.%s as uri",
+                "START n=node:node_auto_index('( %s:%s%s) ') RETURN n.%s as uri",
                 Neo4jFriendlyResource.props.type,
                 GraphElementType.meta,
+                user == null ? "" : " AND owner:" + user.username(),
                 Neo4jFriendlyResource.props.uri
         );
         Set<IdentificationOperator> identifications = new HashSet<>();
-        return NoExRun.wrap(()->{
+        return NoExRun.wrap(() -> {
             Statement statement = connection.createStatement();
             ResultSet rs = statement.executeQuery(query);
-            while(rs.next()){
+            while (rs.next()) {
                 identifications.add(
                         identificationFactory.withUri(
                                 URI.create(
