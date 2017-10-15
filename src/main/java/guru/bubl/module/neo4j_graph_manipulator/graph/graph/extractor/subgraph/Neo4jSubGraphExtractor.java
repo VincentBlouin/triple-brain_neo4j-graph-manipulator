@@ -134,6 +134,7 @@ public class Neo4jSubGraphExtractor {
                     Relationships.IDENTIFIED_TO +
                     "]-it " +
                     "MATCH it<-[:" +
+                    Relationships.SOURCE_VERTEX + "|" +
                     Relationships.DESTINATION_VERTEX + "*0.." + depth +
                     "]->" + Neo4jSubGraphExtractor.GRAPH_ELEMENT_QUERY_KEY + " ";
 
