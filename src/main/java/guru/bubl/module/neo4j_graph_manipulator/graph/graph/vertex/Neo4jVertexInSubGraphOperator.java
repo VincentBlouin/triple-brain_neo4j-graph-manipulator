@@ -12,6 +12,7 @@ import guru.bubl.module.common_utils.NoExRun;
 import guru.bubl.module.model.Image;
 import guru.bubl.module.model.User;
 import guru.bubl.module.model.UserUris;
+import guru.bubl.module.model.graph.GraphElementOperator;
 import guru.bubl.module.model.graph.GraphElementType;
 import guru.bubl.module.model.graph.edge.Edge;
 import guru.bubl.module.model.graph.edge.EdgeOperator;
@@ -412,8 +413,8 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
     }
 
     @Override
-    public Set<EdgeOperator> connectedEdges() {
-        Set<EdgeOperator> edges = new HashSet<>();
+    public Map<URI, EdgeOperator> connectedEdges() {
+        Map<URI, EdgeOperator> edges = new HashMap<>();
         String query = queryPrefix() +
                 "MATCH n<-[:SOURCE_VERTEX|DESTINATION_VERTEX]-(edge) " +
                 "RETURN edge.uri as uri";
@@ -422,13 +423,17 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
                     query
             );
             while (rs.next()) {
-                edges.add(edgeFactory.withUri(
-                        URI.create(
-                                rs.getString(
-                                        "uri"
-                                )
+                URI edgeUri = URI.create(
+                        rs.getString(
+                                "uri"
                         )
-                ));
+                );
+                edges.put(
+                        edgeUri,
+                        edgeFactory.withUri(
+                                edgeUri
+                        )
+                );
             }
             return edges;
         }).get();
@@ -858,6 +863,20 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
         createVertexUsingInitialValues(
                 values
         );
+    }
+
+    @Override
+    public void mergeTo(VertexOperator vertexOperator) {
+        this.connectedEdges().values().forEach(
+                (edge) -> {
+                    if (edge.destinationVertex().equals(this)) {
+                        edge.changeDestinationVertex(vertexOperator);
+                    } else {
+                        edge.changeSourceVertex(vertexOperator);
+                    }
+                }
+        );
+        this.remove();
     }
 
     public VertexPojo createVertexUsingInitialValues(Map<String, Object> values) {
