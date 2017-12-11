@@ -4,6 +4,7 @@
 
 package guru.bubl.module.neo4j_graph_manipulator.graph.graph;
 
+import com.google.common.reflect.TypeToken;
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 import guru.bubl.module.common_utils.NamedParameterStatement;
@@ -14,11 +15,13 @@ import guru.bubl.module.model.graph.*;
 import guru.bubl.module.model.graph.identification.Identifier;
 import guru.bubl.module.model.graph.identification.IdentifierPojo;
 import guru.bubl.module.model.json.ImageJson;
+import guru.bubl.module.model.json.JsonUtils;
 import guru.bubl.module.neo4j_graph_manipulator.graph.*;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.identification.Neo4jIdentification;
 import guru.bubl.module.neo4j_graph_manipulator.graph.image.Neo4jImages;
 import guru.bubl.module.neo4j_graph_manipulator.graph.meta.Neo4jIdentificationFactory;
 import org.neo4j.graphdb.Node;
+import scala.util.parsing.json.JSON;
 
 import java.net.URI;
 import java.sql.Connection;
@@ -169,6 +172,39 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
                     props.move_date.name(),
                     moveDate.getTime()
             );
+            return statement.execute();
+        }).get();
+    }
+
+    @Override
+    public Map<colorProps, String> getColors() {
+        String query = queryPrefix() + "RETURN n.colors as colors" ;
+        return NoExRun.wrap(() -> {
+            ResultSet rs = connection.createStatement().executeQuery(
+                    query
+            );
+            rs.next();
+            String colorsStr = rs.getString("colors");
+            if (colorsStr == null) {
+                return new HashMap<colorProps, String>();
+            }
+            Map<colorProps, String> colors = JsonUtils.getGson().fromJson(
+                    colorsStr,
+                    new TypeToken<Map<colorProps, String>>(){}.getType()
+            );
+            return colors;
+        }).get();
+    }
+
+    @Override
+    public void setColors(Map<colorProps, String> colors) {
+        String query = queryPrefix()
+        + "SET n.colors = @colors";
+        NoExRun.wrap(() -> {
+            NamedParameterStatement statement = new NamedParameterStatement(
+                    connection, query
+            );
+            statement.setString("colors", JsonUtils.getGson().toJson(colors));
             return statement.execute();
         }).get();
     }

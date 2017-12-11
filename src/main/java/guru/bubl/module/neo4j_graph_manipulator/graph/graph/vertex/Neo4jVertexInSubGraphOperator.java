@@ -844,6 +844,16 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
     }
 
     @Override
+    public Map<colorProps, String> getColors() {
+        return graphElementOperator.getColors();
+    }
+
+    @Override
+    public void setColors(Map<colorProps, String> colors) {
+        graphElementOperator.setColors(colors);
+    }
+
+    @Override
     public boolean equals(Object vertexToCompareAsObject) {
         return graphElementOperator.equals(vertexToCompareAsObject);
     }

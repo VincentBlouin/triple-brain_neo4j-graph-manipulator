@@ -215,6 +215,16 @@ public class Neo4jSchemaOperator implements SchemaOperator, Neo4jOperator {
     }
 
     @Override
+    public Map<colorProps, String> getColors() {
+        return graphElementOperator.getColors();
+    }
+
+    @Override
+    public void setColors(Map<colorProps, String> colors) {
+        graphElementOperator.setColors(colors);
+    }
+
+    @Override
     public GraphElementOperator addProperty() {
         URI createdUri = UserUris.generateSchemaPropertyUri(uri());
         Neo4jGraphElementOperator property = graphElementFactory.withUri(createdUri);

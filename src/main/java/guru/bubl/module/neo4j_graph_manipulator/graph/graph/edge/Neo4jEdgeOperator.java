@@ -10,6 +10,7 @@ import guru.bubl.module.common_utils.NamedParameterStatement;
 import guru.bubl.module.common_utils.NoExRun;
 import guru.bubl.module.model.Image;
 import guru.bubl.module.model.UserUris;
+import guru.bubl.module.model.graph.GraphElementOperator;
 import guru.bubl.module.model.graph.GraphElementType;
 import guru.bubl.module.model.graph.edge.Edge;
 import guru.bubl.module.model.graph.edge.EdgePojo;
@@ -371,6 +372,16 @@ public class Neo4jEdgeOperator implements EdgeOperator, Neo4jOperator {
                 sortDate,
                 moveDate
         );
+    }
+
+    @Override
+    public Map<colorProps, String> getColors() {
+        return graphElementOperator.getColors();
+    }
+
+    @Override
+    public void setColors(Map<colorProps, String> colors) {
+        graphElementOperator.setColors(colors);
     }
 
     @Override
