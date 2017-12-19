@@ -41,16 +41,12 @@ public class VertexFromExtractorQueryRow {
                 ).build(),
                 getNumberOfConnectedEdges(),
                 getNbPublicNeighbors(),
-                buildIncludedVertices(),
-                buildIncludedEdges(),
+                null,
+                null,
                 getSuggestions(),
                 getIsPublic()
         );
-        vertexInSubGraphPojo.getGraphElement().setSortDate(
-                getSortDate()
-        ).setMoveDate(
-                getMoveDate()
-        ).setChildrenIndex(
+        vertexInSubGraphPojo.getGraphElement().setChildrenIndex(
                 getChildrenIndexes()
         );
         return vertexInSubGraphPojo;

@@ -156,8 +156,8 @@ public class Neo4jSubGraphExtractor {
 
     private String vertexReturnQueryPart(String prefix) {
         return vertexSpecificPropertiesQueryPartUsingPrefix(prefix) +
-                includedVertexQueryPart(INCLUDED_VERTEX_QUERY_KEY) +
-                includedEdgeQueryPart(INCLUDED_EDGE_QUERY_KEY) +
+//                includedVertexQueryPart(INCLUDED_VERTEX_QUERY_KEY) +
+//                includedEdgeQueryPart(INCLUDED_EDGE_QUERY_KEY) +
                 FriendlyResourceQueryBuilder.imageReturnQueryPart(prefix);
     }
 
@@ -225,14 +225,6 @@ public class Neo4jSubGraphExtractor {
                 QueryUtils.getPropertyUsingContainerNameQueryPart(
                         prefix,
                         Neo4jVertexInSubGraphOperator.props.suggestions.name()
-                ) +
-                QueryUtils.getPropertyUsingContainerNameQueryPart(
-                        prefix,
-                        Neo4jGraphElementOperator.props.sort_date.name()
-                ) +
-                QueryUtils.getPropertyUsingContainerNameQueryPart(
-                        prefix,
-                        Neo4jGraphElementOperator.props.move_date.name()
                 ) +
                 QueryUtils.getPropertyUsingContainerNameQueryPart(
                         prefix,
