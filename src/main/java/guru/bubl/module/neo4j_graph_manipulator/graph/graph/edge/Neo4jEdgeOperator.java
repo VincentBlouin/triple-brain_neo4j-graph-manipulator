@@ -10,7 +10,6 @@ import guru.bubl.module.common_utils.NamedParameterStatement;
 import guru.bubl.module.common_utils.NoExRun;
 import guru.bubl.module.model.Image;
 import guru.bubl.module.model.UserUris;
-import guru.bubl.module.model.graph.GraphElementOperator;
 import guru.bubl.module.model.graph.GraphElementType;
 import guru.bubl.module.model.graph.edge.Edge;
 import guru.bubl.module.model.graph.edge.EdgePojo;
@@ -382,6 +381,18 @@ public class Neo4jEdgeOperator implements EdgeOperator, Neo4jOperator {
     @Override
     public void setColors(Map<colorProps, String> colors) {
         graphElementOperator.setColors(colors);
+    }
+
+    @Override
+    public void setChildrenIndex(String childrenIndex) {
+        graphElementOperator.setChildrenIndex(
+                childrenIndex
+        );
+    }
+
+    @Override
+    public String getChildrenIndex() {
+        return graphElementOperator.getChildrenIndex();
     }
 
     @Override

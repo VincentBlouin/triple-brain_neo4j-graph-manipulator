@@ -15,7 +15,6 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.Neo4jVertexIn
 import java.net.URI;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -51,6 +50,8 @@ public class VertexFromExtractorQueryRow {
                 getSortDate()
         ).setMoveDate(
                 getMoveDate()
+        ).setChildrenIndex(
+                getChildrenIndexes()
         );
         return vertexInSubGraphPojo;
     }
@@ -174,6 +175,16 @@ public class VertexFromExtractorQueryRow {
             return null;
         }
         return row.getLong(
+                key
+        );
+    }
+
+    private String getChildrenIndexes() throws SQLException {
+        String key = keyPrefix + "." + "childrenIndexes";
+        if (row.getString(key) == null) {
+            return null;
+        }
+        return row.getString(
                 key
         );
     }

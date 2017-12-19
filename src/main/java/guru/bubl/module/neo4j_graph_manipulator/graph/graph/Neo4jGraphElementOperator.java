@@ -178,7 +178,7 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
 
     @Override
     public Map<colorProps, String> getColors() {
-        String query = queryPrefix() + "RETURN n.colors as colors" ;
+        String query = queryPrefix() + "RETURN n.colors as colors";
         return NoExRun.wrap(() -> {
             ResultSet rs = connection.createStatement().executeQuery(
                     query
@@ -190,7 +190,8 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
             }
             Map<colorProps, String> colors = JsonUtils.getGson().fromJson(
                     colorsStr,
-                    new TypeToken<Map<colorProps, String>>(){}.getType()
+                    new TypeToken<Map<colorProps, String>>() {
+                    }.getType()
             );
             return colors;
         }).get();
@@ -199,13 +200,39 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
     @Override
     public void setColors(Map<colorProps, String> colors) {
         String query = queryPrefix()
-        + "SET n.colors = @colors";
+                + "SET n.colors = @colors";
         NoExRun.wrap(() -> {
             NamedParameterStatement statement = new NamedParameterStatement(
                     connection, query
             );
             statement.setString("colors", JsonUtils.getGson().toJson(colors));
             return statement.execute();
+        }).get();
+    }
+
+    @Override
+    public void setChildrenIndex(String childrenIndex) {
+        String query = queryPrefix()
+                + "SET n.childrenIndexes = @childrenIndexes";
+        NoExRun.wrap(() -> {
+            NamedParameterStatement statement = new NamedParameterStatement(
+                    connection, query
+            );
+            statement.setString("childrenIndexes", childrenIndex);
+            return statement.execute();
+        }).get();
+    }
+
+    @Override
+    public String getChildrenIndex() {
+        String query = queryPrefix() + "RETURN n.childrenIndexes as childrenIndexes";
+        return NoExRun.wrap(() -> {
+            ResultSet rs = connection.createStatement().executeQuery(
+                    query
+            );
+            rs.next();
+            String childrenIndexes = rs.getString("childrenIndexes");
+            return childrenIndexes == null ? "" : childrenIndexes;
         }).get();
     }
 
@@ -436,12 +463,12 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
                                 uri
                         )
                 );
-                String relationExternalUriString =rs.getString("r_x_u");
+                String relationExternalUriString = rs.getString("r_x_u");
                 identification.setRelationExternalResourceUri(
-                        relationExternalUriString == null ? Identifier.DEFAULT_IDENTIFIER_RELATION_EXTERNAL_URI:
-                        URI.create(
-                                relationExternalUriString
-                        )
+                        relationExternalUriString == null ? Identifier.DEFAULT_IDENTIFIER_RELATION_EXTERNAL_URI :
+                                URI.create(
+                                        relationExternalUriString
+                                )
                 );
                 identifications.put(
                         externalUri,

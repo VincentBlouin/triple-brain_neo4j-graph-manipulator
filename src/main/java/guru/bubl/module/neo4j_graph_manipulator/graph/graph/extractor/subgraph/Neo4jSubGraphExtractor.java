@@ -233,6 +233,10 @@ public class Neo4jSubGraphExtractor {
                 QueryUtils.getPropertyUsingContainerNameQueryPart(
                         prefix,
                         Neo4jGraphElementOperator.props.move_date.name()
+                ) +
+                QueryUtils.getPropertyUsingContainerNameQueryPart(
+                        prefix,
+                        "childrenIndexes"
                 );
     }
 

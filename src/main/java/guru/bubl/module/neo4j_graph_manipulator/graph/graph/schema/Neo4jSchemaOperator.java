@@ -225,6 +225,18 @@ public class Neo4jSchemaOperator implements SchemaOperator, Neo4jOperator {
     }
 
     @Override
+    public void setChildrenIndex(String childrenIndex) {
+        graphElementOperator.setChildrenIndex(
+                childrenIndex
+        );
+    }
+
+    @Override
+    public String getChildrenIndex() {
+        return graphElementOperator.getChildrenIndex();
+    }
+
+    @Override
     public GraphElementOperator addProperty() {
         URI createdUri = UserUris.generateSchemaPropertyUri(uri());
         Neo4jGraphElementOperator property = graphElementFactory.withUri(createdUri);

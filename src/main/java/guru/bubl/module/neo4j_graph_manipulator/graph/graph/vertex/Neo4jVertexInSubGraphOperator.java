@@ -12,7 +12,6 @@ import guru.bubl.module.common_utils.NoExRun;
 import guru.bubl.module.model.Image;
 import guru.bubl.module.model.User;
 import guru.bubl.module.model.UserUris;
-import guru.bubl.module.model.graph.GraphElementOperator;
 import guru.bubl.module.model.graph.GraphElementType;
 import guru.bubl.module.model.graph.edge.Edge;
 import guru.bubl.module.model.graph.edge.EdgeOperator;
@@ -851,6 +850,18 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
     @Override
     public void setColors(Map<colorProps, String> colors) {
         graphElementOperator.setColors(colors);
+    }
+
+    @Override
+    public void setChildrenIndex(String childrenIndex) {
+        graphElementOperator.setChildrenIndex(
+                childrenIndex
+        );
+    }
+
+    @Override
+    public String getChildrenIndex() {
+        return graphElementOperator.getChildrenIndex();
     }
 
     @Override
