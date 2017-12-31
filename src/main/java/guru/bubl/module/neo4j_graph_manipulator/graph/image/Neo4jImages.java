@@ -6,7 +6,7 @@ package guru.bubl.module.neo4j_graph_manipulator.graph.image;
 
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
-import guru.bubl.module.common_utils.NoExRun;
+import guru.bubl.module.common_utils.NoEx;
 import guru.bubl.module.model.Image;
 import guru.bubl.module.model.json.ImageJson;
 import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jFriendlyResource;
@@ -45,7 +45,7 @@ public class Neo4jImages {
                 friendlyResource.queryPrefix(),
                 props.images
         );
-        NoExRun.wrap(() -> {
+        NoEx.wrap(() -> {
             PreparedStatement statement = connection.prepareStatement(
                     query
             );
@@ -65,7 +65,7 @@ public class Neo4jImages {
                 friendlyResource.queryPrefix(),
                 props.images
         );
-        return NoExRun.wrap(() -> {
+        return NoEx.wrap(() -> {
             Statement statement = connection.createStatement();
             ResultSet rs = statement.executeQuery(
                     query

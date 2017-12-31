@@ -7,13 +7,12 @@ package guru.bubl.module.neo4j_graph_manipulator.graph.center_graph_element;
 import com.google.gson.reflect.TypeToken;
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
-import guru.bubl.module.common_utils.NoExRun;
+import guru.bubl.module.common_utils.NoEx;
 import guru.bubl.module.model.User;
 import guru.bubl.module.model.center_graph_element.CenterGraphElementPojo;
 import guru.bubl.module.model.center_graph_element.CenteredGraphElementsOperator;
 import guru.bubl.module.model.graph.FriendlyResourcePojo;
 import guru.bubl.module.model.graph.GraphElementPojo;
-import guru.bubl.module.model.graph.GraphElementType;
 import guru.bubl.module.model.json.JsonUtils;
 import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jFriendlyResource;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.identification.Neo4jIdentification;
@@ -67,7 +66,7 @@ public class Neo4jCenterGraphElementsOperator implements CenteredGraphElementsOp
                 user.username(),
                 "[" + uris + "]"
         );
-        NoExRun.wrap(() -> connection.createStatement().execute(
+        NoEx.wrap(() -> connection.createStatement().execute(
                 query
         )).get();
     }
@@ -89,7 +88,7 @@ public class Neo4jCenterGraphElementsOperator implements CenteredGraphElementsOp
                 Neo4jIdentification.props.nb_references
         );
         Set<CenterGraphElementPojo> centerGraphElements = new HashSet<>();
-        return NoExRun.wrap(() -> {
+        return NoEx.wrap(() -> {
             ResultSet rs = connection.createStatement().executeQuery(
                     query
             );

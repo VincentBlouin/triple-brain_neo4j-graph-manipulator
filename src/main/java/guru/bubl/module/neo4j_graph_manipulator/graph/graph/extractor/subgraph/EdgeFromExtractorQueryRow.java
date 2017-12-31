@@ -47,13 +47,17 @@ public class EdgeFromExtractorQueryRow {
     }
 
     private EdgePojo init() throws SQLException {
-        return new EdgePojo(
+        EdgePojo edge = new EdgePojo(
                 GraphElementFromExtractorQueryRow.usingRowAndKey(
                         row, key
                 ).build(),
                 new VertexInSubGraphPojo(getSourceVertexUri()),
                 new VertexInSubGraphPojo(getDestinationVertexUri())
         );
+        edge.setIsToTheLeft(
+                isToTheLeft()
+        );
+        return edge;
     }
 
     public URI getSourceVertexUri() throws SQLException{
@@ -75,5 +79,13 @@ public class EdgeFromExtractorQueryRow {
 
                 )
         );
+    }
+
+    private Boolean isToTheLeft() throws SQLException{
+        String toTheLeftStr = row.getString(
+                key + "." + "toTheLeft"
+
+        );
+        return toTheLeftStr == null ? null : Boolean.valueOf(toTheLeftStr);
     }
 }

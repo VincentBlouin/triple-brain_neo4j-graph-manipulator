@@ -4,7 +4,7 @@
 
 package guru.bubl.module.neo4j_graph_manipulator.graph.test;
 
-import guru.bubl.module.common_utils.NoExRun;
+import guru.bubl.module.common_utils.NoEx;
 import guru.bubl.module.model.User;
 import guru.bubl.module.model.graph.GraphElementType;
 import guru.bubl.module.model.graph.GraphFactory;
@@ -141,7 +141,7 @@ public class Neo4JGraphComponentTest implements GraphComponentTest {
 
     @Override
     public void removeWholeGraph() {
-        NoExRun.wrap(() -> {
+        NoEx.wrap(() -> {
                     Statement stmt = connection.createStatement();
                     return stmt.executeQuery(
                             String.format(

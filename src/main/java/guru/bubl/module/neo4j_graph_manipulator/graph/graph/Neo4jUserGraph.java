@@ -6,8 +6,7 @@ package guru.bubl.module.neo4j_graph_manipulator.graph.graph;
 
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
-import guru.bubl.module.common_utils.NoExRun;
-import guru.bubl.module.model.FriendlyResource;
+import guru.bubl.module.common_utils.NoEx;
 import guru.bubl.module.model.User;
 import guru.bubl.module.model.UserUris;
 import guru.bubl.module.model.graph.GraphElementType;
@@ -79,7 +78,7 @@ public class Neo4jUserGraph implements UserGraph {
                 "START n=node:node_auto_index('uri:%s') return n.uri as uri",
                 uri
         );
-        return NoExRun.wrap(() ->
+        return NoEx.wrap(() ->
                 connection.createStatement().executeQuery(
                         query
                 ).next()
@@ -151,7 +150,7 @@ public class Neo4jUserGraph implements UserGraph {
 
     @Override
     public VertexPojo createVertex() {
-        VertexOperator operator = vertexFactory.createForOwnerUsername(
+        VertexOperator operator = vertexFactory.createForOwner(
                 user.username()
         );
         return new VertexPojo(
@@ -175,7 +174,7 @@ public class Neo4jUserGraph implements UserGraph {
                 GraphElementType.vertex,
                 user.username()
         );
-        URI uri = NoExRun.wrap(() -> {
+        URI uri = NoEx.wrap(() -> {
             Statement statement = connection.createStatement();
             ResultSet rs = statement.executeQuery(
                     query

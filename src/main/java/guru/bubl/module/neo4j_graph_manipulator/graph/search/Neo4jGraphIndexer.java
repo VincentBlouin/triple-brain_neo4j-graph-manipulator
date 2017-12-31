@@ -6,7 +6,7 @@ package guru.bubl.module.neo4j_graph_manipulator.graph.search;
 
 import com.google.inject.Inject;
 import guru.bubl.module.common_utils.NamedParameterStatement;
-import guru.bubl.module.common_utils.NoExRun;
+import guru.bubl.module.common_utils.NoEx;
 import guru.bubl.module.model.FriendlyResource;
 import guru.bubl.module.model.graph.GraphElement;
 import guru.bubl.module.model.graph.GraphElementPojo;
@@ -139,7 +139,7 @@ public class Neo4jGraphIndexer implements GraphIndexer {
         );
         filterTheContext(privateContext);
         filterTheContext(publicContext);
-        NoExRun.wrap(() -> {
+        NoEx.wrap(() -> {
             String query = String.format(
                     "%s SET n.private_context=@privateContext, " +
                             "n.public_context=@publicContext",

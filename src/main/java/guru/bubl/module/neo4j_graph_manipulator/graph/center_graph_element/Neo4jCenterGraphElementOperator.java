@@ -6,10 +6,9 @@ package guru.bubl.module.neo4j_graph_manipulator.graph.center_graph_element;
 
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
-import guru.bubl.module.common_utils.NoExRun;
+import guru.bubl.module.common_utils.NoEx;
 import guru.bubl.module.model.FriendlyResource;
 import guru.bubl.module.model.center_graph_element.CenterGraphElementOperator;
-import guru.bubl.module.model.graph.GraphElement;
 import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jFriendlyResource;
 import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jFriendlyResourceFactory;
 
@@ -48,7 +47,7 @@ public class Neo4jCenterGraphElementOperator implements CenterGraphElementOperat
                 props.number_of_visits,
                 props.number_of_visits
         );
-        NoExRun.wrap(() -> connection.createStatement().execute(query)).get();
+        NoEx.wrap(() -> connection.createStatement().execute(query)).get();
     }
 
     @Override
@@ -58,7 +57,7 @@ public class Neo4jCenterGraphElementOperator implements CenterGraphElementOperat
                 neo4jFriendlyResource.queryPrefix(),
                 props.number_of_visits
         );
-        return NoExRun.wrap(() -> {
+        return NoEx.wrap(() -> {
             ResultSet rs = connection.createStatement().executeQuery(query);
             rs.next();
             return new Integer(
@@ -75,7 +74,7 @@ public class Neo4jCenterGraphElementOperator implements CenterGraphElementOperat
                 props.last_center_date,
                 new Date().getTime()
         );
-        NoExRun.wrap(() -> connection.createStatement().execute(query)).get();
+        NoEx.wrap(() -> connection.createStatement().execute(query)).get();
     }
 
     @Override
@@ -85,7 +84,7 @@ public class Neo4jCenterGraphElementOperator implements CenterGraphElementOperat
                 neo4jFriendlyResource.queryPrefix(),
                 props.last_center_date
         );
-        return NoExRun.wrap(() -> {
+        return NoEx.wrap(() -> {
             ResultSet rs = connection.createStatement().executeQuery(query);
             rs.next();
             if(null == rs.getString("date")){

@@ -4,7 +4,7 @@
 
 package guru.bubl.module.neo4j_graph_manipulator.graph.search;
 
-import guru.bubl.module.common_utils.NoExRun;
+import guru.bubl.module.common_utils.NoEx;
 import guru.bubl.module.model.User;
 import guru.bubl.module.model.graph.GraphElementPojo;
 import guru.bubl.module.model.graph.GraphElementType;
@@ -20,7 +20,6 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.FriendlyRe
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.IdentificationQueryBuilder;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph.GraphElementFromExtractorQueryRow;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.identification.Neo4jIdentification;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.Neo4jVertexInSubGraphOperator;
 import org.apache.commons.lang.StringUtils;
 import org.apache.lucene.queryParser.QueryParser;
 
@@ -146,7 +145,7 @@ public class Neo4jGraphSearch implements GraphSearch {
                     IdentificationQueryBuilder.identificationReturnQueryPart()
             );
 
-            return NoExRun.wrap(() -> {
+            return NoEx.wrap(() -> {
                 ResultSet rs = connection.createStatement().executeQuery(query);
                 if (!rs.next()) {
                     return null;

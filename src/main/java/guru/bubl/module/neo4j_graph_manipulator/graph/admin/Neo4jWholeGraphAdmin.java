@@ -5,7 +5,7 @@
 package guru.bubl.module.neo4j_graph_manipulator.graph.admin;
 
 import com.google.inject.Inject;
-import guru.bubl.module.common_utils.NoExRun;
+import guru.bubl.module.common_utils.NoEx;
 import guru.bubl.module.model.User;
 import guru.bubl.module.model.WholeGraph;
 import guru.bubl.module.model.admin.WholeGraphAdmin;
@@ -107,7 +107,7 @@ public class Neo4jWholeGraphAdmin implements WholeGraphAdmin {
                 neo4jIdentification.queryPrefix(),
                 Neo4jIdentification.props.nb_references
         );
-        NoExRun.wrap(() -> connection.createStatement().execute(query)).get();
+        NoEx.wrap(() -> connection.createStatement().execute(query)).get();
     }
     private void removeMetaIfNoReference(IdentificationOperator identification) {
         if(0 == identification.getNbReferences()){

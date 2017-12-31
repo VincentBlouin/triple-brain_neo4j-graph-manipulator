@@ -8,7 +8,7 @@ import com.google.common.reflect.TypeToken;
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 import guru.bubl.module.common_utils.NamedParameterStatement;
-import guru.bubl.module.common_utils.NoExRun;
+import guru.bubl.module.common_utils.NoEx;
 import guru.bubl.module.model.Image;
 import guru.bubl.module.model.UserUris;
 import guru.bubl.module.model.graph.*;
@@ -163,7 +163,7 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
                 props.move_date,
                 props.move_date
         );
-        NoExRun.wrap(() -> {
+        NoEx.wrap(() -> {
             NamedParameterStatement statement = new NamedParameterStatement(
                     connection,
                     query
@@ -183,7 +183,7 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
     @Override
     public Map<colorProps, String> getColors() {
         String query = queryPrefix() + "RETURN n.colors as colors";
-        return NoExRun.wrap(() -> {
+        return NoEx.wrap(() -> {
             ResultSet rs = connection.createStatement().executeQuery(
                     query
             );
@@ -205,7 +205,7 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
     public void setColors(Map<colorProps, String> colors) {
         String query = queryPrefix()
                 + "SET n.colors = @colors";
-        NoExRun.wrap(() -> {
+        NoEx.wrap(() -> {
             NamedParameterStatement statement = new NamedParameterStatement(
                     connection, query
             );
@@ -218,7 +218,7 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
     public void setChildrenIndex(String childrenIndex) {
         String query = queryPrefix()
                 + "SET n.childrenIndexes = @childrenIndexes";
-        NoExRun.wrap(() -> {
+        NoEx.wrap(() -> {
             NamedParameterStatement statement = new NamedParameterStatement(
                     connection, query
             );
@@ -230,7 +230,7 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
     @Override
     public String getChildrenIndex() {
         String query = queryPrefix() + "RETURN n.childrenIndexes as childrenIndexes";
-        return NoExRun.wrap(() -> {
+        return NoEx.wrap(() -> {
             ResultSet rs = connection.createStatement().executeQuery(
                     query
             );
@@ -289,7 +289,7 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
         );
         Map<URI, IdentifierPojo> identifications = new HashMap<>();
         Date tagCreationDate = new Date();
-        return NoExRun.wrap(() -> {
+        return NoEx.wrap(() -> {
             NamedParameterStatement statement = new NamedParameterStatement(
                     connection,
                     AddIdentificationQueryBuilder.usingIdentificationForGraphElement(
@@ -409,7 +409,7 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
                 Neo4jIdentification.props.nb_references,
                 Neo4jIdentification.props.nb_references
         );
-        NoExRun.wrap(() -> {
+        NoEx.wrap(() -> {
             NamedParameterStatement statement = new NamedParameterStatement(
                     connection,
                     query
@@ -487,7 +487,7 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
                 Neo4jIdentification.props.relation_external_uri
         );
         Map<URI, IdentifierPojo> identifications = new HashMap<>();
-        return NoExRun.wrap(() -> {
+        return NoEx.wrap(() -> {
             ResultSet rs = connection.createStatement().executeQuery(query);
             while (rs.next()) {
                 URI uri = URI.create(
@@ -520,7 +520,7 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
     }
 
     public void removeAllIdentifications() {
-        NoExRun.wrap(() -> connection.createStatement().executeQuery(
+        NoEx.wrap(() -> connection.createStatement().executeQuery(
                 String.format(
                         "%s MATCH n-[r:%s]->i " +
                                 "DELETE r " +

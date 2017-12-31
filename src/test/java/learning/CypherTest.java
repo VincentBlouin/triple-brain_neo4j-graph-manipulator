@@ -4,7 +4,7 @@
 
 package learning;
 
-import guru.bubl.module.common_utils.NoExRun;
+import guru.bubl.module.common_utils.NoEx;
 import guru.bubl.module.common_utils.Uris;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.Neo4jUserGraph;
 import org.junit.Test;
@@ -47,7 +47,7 @@ public class CypherTest extends Neo4jServerTestGeneric {
                 "START n=node:node_auto_index(\"uri:%s\") SET n.name={1}",
                 uri.toString()
         );
-        NoExRun.wrap(() -> {
+        NoEx.wrap(() -> {
             PreparedStatement statement = connection.prepareStatement(
                     query
             );
@@ -73,7 +73,7 @@ public class CypherTest extends Neo4jServerTestGeneric {
         assertTrue(
                 nodeWithUriExists(uri)
         );
-        NoExRun.wrap(
+        NoEx.wrap(
                 () -> {
                     String query = String.format(
                             "START n=node:node_auto_index(\"uri:%s\") SET n = {1}",
@@ -105,7 +105,7 @@ public class CypherTest extends Neo4jServerTestGeneric {
         assertFalse(
                 nodeWithUriExists(middleNodeUri)
         );
-        NoExRun.wrap(
+        NoEx.wrap(
                 () -> {
                     String query = String.format(
                             "START source_node=node:node_auto_index(\"uri:%s\"), " +
@@ -164,7 +164,7 @@ public class CypherTest extends Neo4jServerTestGeneric {
         assertTrue(
                 nodeWithUriExists(startNodeUri)
         );
-        NoExRun.wrap(
+        NoEx.wrap(
                 () -> {
                     String query = String.format(
                             "START " +
@@ -190,7 +190,7 @@ public class CypherTest extends Neo4jServerTestGeneric {
                 "pomme",
                 "avion"
         );
-        NoExRun.wrap(
+        NoEx.wrap(
                 () -> {
                     String query = "MERGE (f {" +
                             "uri: {1} " +
@@ -235,7 +235,7 @@ public class CypherTest extends Neo4jServerTestGeneric {
         assertFalse(
                 nodeWithUriExists(uri2)
         );
-        NoExRun.wrap(
+        NoEx.wrap(
                 () -> {
                     String query = "MERGE (f {" +
                             "uri: {1} " +
@@ -267,7 +267,7 @@ public class CypherTest extends Neo4jServerTestGeneric {
     }
 
     private Boolean nodeWithUriExists(URI uri) {
-        return NoExRun.wrap(() -> {
+        return NoEx.wrap(() -> {
             Statement stm = connection.createStatement();
             ResultSet rs = stm.executeQuery(
                     "START n=node:node_auto_index('uri:" + uri + "') "
@@ -278,7 +278,7 @@ public class CypherTest extends Neo4jServerTestGeneric {
     }
 
     private Node getNodeWithUri(URI uri) {
-        return NoExRun.wrap(
+        return NoEx.wrap(
                 () -> {
                     String query = "START n=node:node_auto_index(\"uri:" + uri.toString() + "\") return n";
                     Statement stm = connection.createStatement();
@@ -290,7 +290,7 @@ public class CypherTest extends Neo4jServerTestGeneric {
     }
 
     private void createNodeWithUri(URI uri) {
-        NoExRun.wrap(
+        NoEx.wrap(
                 () -> {
                     String query = String.format(
                             "CREATE (n {%s:{1}})",

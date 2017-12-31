@@ -6,22 +6,18 @@ package guru.bubl.module.neo4j_graph_manipulator.graph.meta;
 
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
-import guru.bubl.module.common_utils.NoExRun;
+import guru.bubl.module.common_utils.NoEx;
 import guru.bubl.module.model.User;
-import guru.bubl.module.model.center_graph_element.CenterGraphElementPojo;
 import guru.bubl.module.model.graph.FriendlyResourcePojo;
-import guru.bubl.module.model.graph.GraphElementPojo;
 import guru.bubl.module.model.graph.GraphElementType;
 import guru.bubl.module.model.graph.identification.IdentifierPojo;
 import guru.bubl.module.model.meta.UserMetasOperator;
 import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jFriendlyResource;
-import guru.bubl.module.neo4j_graph_manipulator.graph.center_graph_element.Neo4jCenterGraphElementOperator;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.identification.Neo4jIdentification;
 
 import java.net.URI;
 import java.sql.Connection;
 import java.sql.ResultSet;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -54,7 +50,7 @@ public class Neo4jUserMetasOperator implements UserMetasOperator {
                 Neo4jFriendlyResource.props.uri
         );
         Set<IdentifierPojo> userMetas = new HashSet<>();
-        return NoExRun.wrap(() -> {
+        return NoEx.wrap(() -> {
             ResultSet rs = connection.createStatement().executeQuery(
                     query
             );

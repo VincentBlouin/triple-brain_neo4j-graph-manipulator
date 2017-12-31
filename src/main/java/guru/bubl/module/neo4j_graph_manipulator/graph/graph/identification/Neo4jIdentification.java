@@ -7,8 +7,7 @@ package guru.bubl.module.neo4j_graph_manipulator.graph.graph.identification;
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 import guru.bubl.module.common_utils.NamedParameterStatement;
-import guru.bubl.module.common_utils.NoExRun;
-import guru.bubl.module.model.FriendlyResource;
+import guru.bubl.module.common_utils.NoEx;
 import guru.bubl.module.model.Image;
 import guru.bubl.module.model.graph.FriendlyResourcePojo;
 import guru.bubl.module.model.graph.identification.IdentificationOperator;
@@ -69,7 +68,7 @@ public class Neo4jIdentification implements IdentificationOperator, Neo4jOperato
                 queryPrefix(),
                 props.relation_external_uri
         );
-        return NoExRun.wrap(() -> {
+        return NoEx.wrap(() -> {
             ResultSet rs = connection.createStatement().executeQuery(query);
             rs.next();
             return URI.create(
@@ -85,7 +84,7 @@ public class Neo4jIdentification implements IdentificationOperator, Neo4jOperato
                 queryPrefix(),
                 props.external_uri
         );
-        return NoExRun.wrap(() -> {
+        return NoEx.wrap(() -> {
             ResultSet rs = connection.createStatement().executeQuery(query);
             rs.next();
             return URI.create(
@@ -101,7 +100,7 @@ public class Neo4jIdentification implements IdentificationOperator, Neo4jOperato
                 queryPrefix(),
                 Neo4jIdentification.props.nb_references
         );
-        return NoExRun.wrap(() -> {
+        return NoEx.wrap(() -> {
             ResultSet rs = connection.createStatement().executeQuery(query);
             rs.next();
             return new Integer(
@@ -117,7 +116,7 @@ public class Neo4jIdentification implements IdentificationOperator, Neo4jOperato
                 queryPrefix(),
                 Neo4jIdentification.props.nb_references
         );
-        NoExRun.wrap(() -> {
+        NoEx.wrap(() -> {
             NamedParameterStatement namedParameterStatement = new NamedParameterStatement(
                     connection,
                     query
@@ -145,7 +144,7 @@ public class Neo4jIdentification implements IdentificationOperator, Neo4jOperato
                         props.external_uri,
                         Neo4jIdentification.props.nb_references
                 );
-        return NoExRun.wrap(() -> {
+        return NoEx.wrap(() -> {
             ResultSet rs = connection.createStatement().executeQuery(query);
             rs.next();
             FriendlyResourcePojo friendlyResourcePojo = new FriendlyResourcePojo(

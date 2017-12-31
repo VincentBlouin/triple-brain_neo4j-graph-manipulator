@@ -4,14 +4,11 @@
 
 package guru.bubl.module.neo4j_graph_manipulator.graph.search;
 
-import guru.bubl.module.common_utils.NoExRun;
-import guru.bubl.module.model.graph.GraphElement;
+import guru.bubl.module.common_utils.NoEx;
 import guru.bubl.module.model.graph.GraphElementType;
 import guru.bubl.module.model.search.GraphElementSearchResult;
 import guru.bubl.module.neo4j_graph_manipulator.graph.search.result_builder.*;
-import org.neo4j.jdbc.IteratorResultSet;
 
-import javax.inject.Inject;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -35,7 +32,7 @@ public class SearchResultGetter<ResultType extends GraphElementSearchResult> {
     }
 
     public List<ResultType> get(){
-        return NoExRun.wrap(() -> {
+        return NoEx.wrap(() -> {
             ResultSet rs = connection.createStatement().executeQuery(query);
             while (rs.next()) {
                 addResult(rs);

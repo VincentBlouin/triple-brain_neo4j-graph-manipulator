@@ -4,12 +4,11 @@
 
 package guru.bubl.module.neo4j_graph_manipulator.graph.graph.schema;
 
-import guru.bubl.module.common_utils.NoExRun;
+import guru.bubl.module.common_utils.NoEx;
 import guru.bubl.module.model.UserUris;
 import guru.bubl.module.model.graph.FriendlyResourcePojo;
 import guru.bubl.module.model.graph.GraphElementPojo;
 import guru.bubl.module.model.graph.GraphElementType;
-import guru.bubl.module.model.graph.schema.Schema;
 import guru.bubl.module.model.graph.schema.SchemaList;
 import guru.bubl.module.model.graph.schema.SchemaPojo;
 import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jFriendlyResource;
@@ -18,12 +17,10 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.Relationships;
 import javax.inject.Inject;
 import java.net.URI;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.*;
 
 import static guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.schema.Neo4jSchemaExtractor.PROPERTY_QUERY_KEY;
-import static guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.schema.Neo4jSchemaExtractor.SCHEMA_QUERY_KEY;
 
 public class Neo4jSchemaList implements SchemaList {
 
@@ -42,7 +39,7 @@ public class Neo4jSchemaList implements SchemaList {
                 GraphElementType.schema
         );
         Set<SchemaPojo> schemas = new HashSet<>();
-        return NoExRun.wrap(() -> {
+        return NoEx.wrap(() -> {
             ResultSet rs = connection.prepareStatement(query).executeQuery();
             while (rs.next()) {
                 List<List<String>> propertiesResult = (List) rs.getObject("properties");

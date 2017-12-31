@@ -4,7 +4,7 @@
 
 package guru.bubl.module.neo4j_graph_manipulator.graph.graph;
 
-import guru.bubl.module.common_utils.NoExRun;
+import guru.bubl.module.common_utils.NoEx;
 import guru.bubl.module.model.User;
 import guru.bubl.module.model.WholeGraph;
 import guru.bubl.module.model.graph.*;
@@ -65,7 +65,7 @@ public class Neo4jWholeGraph implements WholeGraph {
                 user == null ? "" : " AND owner:" + user.username()
         );
         Set<VertexInSubGraphOperator> vertices = new HashSet<>();
-        return NoExRun.wrap(() -> {
+        return NoEx.wrap(() -> {
             Statement statement = connection.createStatement();
             ResultSet rs = statement.executeQuery(query);
             while (rs.next()) {
@@ -99,7 +99,7 @@ public class Neo4jWholeGraph implements WholeGraph {
                 user == null ? "" : " AND owner:" + user.username()
         );
         Set<EdgeOperator> edges = new HashSet<>();
-        return NoExRun.wrap(() -> {
+        return NoEx.wrap(() -> {
             Statement statement = connection.createStatement();
             ResultSet rs = statement.executeQuery(query);
             while (rs.next()) {
@@ -124,7 +124,7 @@ public class Neo4jWholeGraph implements WholeGraph {
                 Neo4jFriendlyResource.props.uri
         );
         Set<SchemaOperator> schemas = new HashSet<>();
-        return NoExRun.wrap(() -> {
+        return NoEx.wrap(() -> {
             Statement statement = connection.createStatement();
             ResultSet rs = statement.executeQuery(query);
             while (rs.next()) {
@@ -153,7 +153,7 @@ public class Neo4jWholeGraph implements WholeGraph {
                 Neo4jFriendlyResource.props.uri
         );
         Set<GraphElementOperator> graphElements = new HashSet<>();
-        return NoExRun.wrap(() -> {
+        return NoEx.wrap(() -> {
             Statement statement = connection.createStatement();
             ResultSet rs = statement.executeQuery(query);
             while (rs.next()) {
@@ -188,7 +188,7 @@ public class Neo4jWholeGraph implements WholeGraph {
                 Neo4jFriendlyResource.props.uri
         );
         Set<IdentificationOperator> identifications = new HashSet<>();
-        return NoExRun.wrap(() -> {
+        return NoEx.wrap(() -> {
             Statement statement = connection.createStatement();
             ResultSet rs = statement.executeQuery(query);
             while (rs.next()) {

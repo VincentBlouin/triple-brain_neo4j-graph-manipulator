@@ -7,7 +7,7 @@ package guru.bubl.module.neo4j_graph_manipulator.graph.graph.schema;
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 import guru.bubl.module.common_utils.NamedParameterStatement;
-import guru.bubl.module.common_utils.NoExRun;
+import guru.bubl.module.common_utils.NoEx;
 import guru.bubl.module.model.Image;
 import guru.bubl.module.model.UserUris;
 import guru.bubl.module.model.graph.*;
@@ -181,7 +181,7 @@ public class Neo4jSchemaOperator implements SchemaOperator, Neo4jOperator {
                 "create (n:%s{1})",
                 GraphElementType.resource
         );
-        NoExRun.wrap(() -> {
+        NoEx.wrap(() -> {
             PreparedStatement statement = connection.prepareStatement(query);
             statement.setObject(
                     1,
@@ -244,7 +244,7 @@ public class Neo4jSchemaOperator implements SchemaOperator, Neo4jOperator {
                 "CREATE (p:" + GraphElementType.resource + " {1}) " +
                 "CREATE UNIQUE " +
                 "n-[:" + Relationships.HAS_PROPERTY + "]->p ";
-        NoExRun.wrap(() -> {
+        NoEx.wrap(() -> {
             PreparedStatement statement = connection.prepareStatement(query);
             statement.setObject(
                     1,
@@ -274,7 +274,7 @@ public class Neo4jSchemaOperator implements SchemaOperator, Neo4jOperator {
         String query = queryPrefix() +
                 "MATCH n-[:" + Relationships.HAS_PROPERTY + "]->(property) " +
                 "RETURN property.uri as uri";
-        return NoExRun.wrap(() -> {
+        return NoEx.wrap(() -> {
             ResultSet rs = connection.createStatement().executeQuery(
                     query
             );

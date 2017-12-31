@@ -7,7 +7,7 @@ package guru.bubl.module.neo4j_graph_manipulator.graph.graph.edge;
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 import guru.bubl.module.common_utils.NamedParameterStatement;
-import guru.bubl.module.common_utils.NoExRun;
+import guru.bubl.module.common_utils.NoEx;
 import guru.bubl.module.model.Image;
 import guru.bubl.module.model.UserUris;
 import guru.bubl.module.model.graph.GraphElementType;
@@ -124,7 +124,7 @@ public class Neo4jEdgeOperator implements EdgeOperator, Neo4jOperator {
     }
 
     private VertexOperator vertexUsingProperty(Enum prop) {
-        return NoExRun.wrap(() -> {
+        return NoEx.wrap(() -> {
             String query = String.format(
                     "%sRETURN n.%s",
                     queryPrefix(),
@@ -146,6 +146,30 @@ public class Neo4jEdgeOperator implements EdgeOperator, Neo4jOperator {
         return sourceVertex().equals(vertex) ?
                 destinationVertex() :
                 sourceVertex();
+    }
+
+    @Override
+    public Boolean isToTheLeft() {
+        Boolean isToTheLeft = getIsToTheLeft();
+        return isToTheLeft != null && isToTheLeft;
+    }
+
+    @Override
+    public Boolean isToTheRight() {
+        Boolean isToTheLeft = getIsToTheLeft();
+        return isToTheLeft != null && !isToTheLeft;
+    }
+
+    private Boolean getIsToTheLeft(){
+        String query = queryPrefix() + "RETURN n.toTheLeft as toTheLeft";
+        return NoEx.wrap(() -> {
+            ResultSet rs = connection.createStatement().executeQuery(
+                    query
+            );
+            rs.next();
+            String toTheLeftStr = rs.getString("toTheLeft");
+            return toTheLeftStr == null ? null : Boolean.valueOf(toTheLeftStr);
+        }).get();
     }
 
     @Override
@@ -219,7 +243,7 @@ public class Neo4jEdgeOperator implements EdgeOperator, Neo4jOperator {
 
         );
         //todo batch
-        NoExRun.wrap(() ->
+        NoEx.wrap(() ->
                 connection.createStatement().executeQuery(
                         query
                 )
@@ -265,7 +289,7 @@ public class Neo4jEdgeOperator implements EdgeOperator, Neo4jOperator {
                 props.destination_vertex_uri
         );
         //todo batch
-        NoExRun.wrap(() ->
+        NoEx.wrap(() ->
                 connection.createStatement().executeQuery(
                         query
                 )
@@ -278,7 +302,7 @@ public class Neo4jEdgeOperator implements EdgeOperator, Neo4jOperator {
     @Override
     public void remove() {
         //todo batch
-        NoExRun.wrap(() -> {
+        NoEx.wrap(() -> {
             Statement statement = connection.createStatement();
             statement.executeQuery(
                     String.format(
@@ -410,6 +434,34 @@ public class Neo4jEdgeOperator implements EdgeOperator, Neo4jOperator {
     }
 
     @Override
+    public void setToTheLeft() {
+        setToTheLeftOrNot(true);
+    }
+
+    @Override
+    public void setToTheRight() {
+        setToTheLeftOrNot(false);
+    }
+
+    @Override
+    public void unsetToTheLeftOrRight() {
+        setToTheLeftOrNot(null);
+    }
+
+    private void setToTheLeftOrNot(Boolean isToTheLeft){
+        String query = queryPrefix()
+                + "SET n.toTheLeft = @toTheLeft";
+        String isToTheLeftStr = isToTheLeft == null ? null : isToTheLeft.toString();
+        NoEx.wrap(() -> {
+            NamedParameterStatement statement = new NamedParameterStatement(
+                    connection, query
+            );
+            statement.setString("toTheLeft", isToTheLeftStr);
+            return statement.execute();
+        }).get();
+    }
+
+    @Override
     public EdgePojo createEdgeUsingInitialValues(Map<String, Object> values) {
         String query = String.format(
                 "START source_node=node:node_auto_index(\"uri:%s\"), " +
@@ -426,7 +478,7 @@ public class Neo4jEdgeOperator implements EdgeOperator, Neo4jOperator {
                 Neo4jVertexInSubGraphOperator.props.is_public,
                 Neo4jVertexInSubGraphOperator.props.is_public
         );
-        return NoExRun.wrap(() -> {
+        return NoEx.wrap(() -> {
             PreparedStatement statement = connection.prepareStatement(
                     query
             );
@@ -535,7 +587,7 @@ public class Neo4jEdgeOperator implements EdgeOperator, Neo4jOperator {
                 queryPrefix(),
                 Neo4jVertexInSubGraphOperator.props.is_public
         );
-        return NoExRun.wrap(() -> {
+        return NoEx.wrap(() -> {
             ResultSet rs = connection.createStatement().executeQuery(
                     query
             );

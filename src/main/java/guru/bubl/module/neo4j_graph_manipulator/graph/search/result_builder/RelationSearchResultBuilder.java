@@ -4,7 +4,7 @@
 
 package guru.bubl.module.neo4j_graph_manipulator.graph.search.result_builder;
 
-import guru.bubl.module.common_utils.NoExRun;
+import guru.bubl.module.common_utils.NoEx;
 import guru.bubl.module.model.graph.GraphElementType;
 import guru.bubl.module.model.search.GraphElementSearchResult;
 import guru.bubl.module.model.search.GraphElementSearchResultPojo;
@@ -24,7 +24,7 @@ public class RelationSearchResultBuilder implements SearchResultBuilder {
 
     @Override
     public GraphElementSearchResult build() {
-        return NoExRun.wrap(() -> new GraphElementSearchResultPojo(
+        return NoEx.wrap(() -> new GraphElementSearchResultPojo(
                 GraphElementType.edge,
                 GraphElementFromExtractorQueryRow.usingRowAndKey(
                         row,

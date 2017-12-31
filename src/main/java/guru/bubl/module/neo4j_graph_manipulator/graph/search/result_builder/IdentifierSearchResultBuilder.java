@@ -5,7 +5,7 @@
 package guru.bubl.module.neo4j_graph_manipulator.graph.search.result_builder;
 
 import com.google.common.collect.ImmutableMap;
-import guru.bubl.module.common_utils.NoExRun;
+import guru.bubl.module.common_utils.NoEx;
 import guru.bubl.module.model.graph.FriendlyResourcePojo;
 import guru.bubl.module.model.graph.GraphElementPojo;
 import guru.bubl.module.model.graph.GraphElementType;
@@ -16,8 +16,6 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.FriendlyRe
 
 import java.net.URI;
 import java.sql.ResultSet;
-import java.util.HashMap;
-import java.util.HashSet;
 
 public class IdentifierSearchResultBuilder implements SearchResultBuilder {
 
@@ -39,7 +37,7 @@ public class IdentifierSearchResultBuilder implements SearchResultBuilder {
         IdentifierPojo identifierPojo = new IdentifierPojo(
                 friendlyResourcePojo
         );
-        NoExRun.wrap(() -> {
+        NoEx.wrap(() -> {
             identifierPojo.setExternalResourceUri(
                     URI.create(
                             row.getString("n.external_uri")
@@ -59,7 +57,7 @@ public class IdentifierSearchResultBuilder implements SearchResultBuilder {
                         identifierPojo
                 )
         );
-        return NoExRun.wrap(() -> new GraphElementSearchResultPojo(
+        return NoEx.wrap(() -> new GraphElementSearchResultPojo(
                 GraphElementType.meta,
                 identifierAsGraphElement,
                 getContext()

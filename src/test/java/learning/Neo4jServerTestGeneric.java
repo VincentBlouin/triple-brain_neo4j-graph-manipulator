@@ -6,7 +6,7 @@ package learning;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import guru.bubl.module.common_utils.NoExRun;
+import guru.bubl.module.common_utils.NoEx;
 import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jModule;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -59,7 +59,7 @@ public class Neo4jServerTestGeneric {
     }
 
     private void removeEverything() {
-        NoExRun.wrap(() -> {
+        NoEx.wrap(() -> {
                     String query = "START n = node(*) OPTIONAL MATCH n-[r]-() DELETE n, r;";
                     Statement stmt = connection.createStatement();
                     return stmt.executeQuery(

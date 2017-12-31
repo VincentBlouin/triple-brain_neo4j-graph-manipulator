@@ -7,7 +7,7 @@ package guru.bubl.module.neo4j_graph_manipulator.graph;
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 import guru.bubl.module.common_utils.NamedParameterStatement;
-import guru.bubl.module.common_utils.NoExRun;
+import guru.bubl.module.common_utils.NoEx;
 import guru.bubl.module.common_utils.Uris;
 import guru.bubl.module.model.FriendlyResource;
 import guru.bubl.module.model.Image;
@@ -22,7 +22,6 @@ import org.apache.commons.lang.StringUtils;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 
-import javax.inject.Inject;
 import java.net.URI;
 import java.sql.*;
 import java.util.Date;
@@ -120,7 +119,7 @@ public class Neo4jFriendlyResource implements FriendlyResourceOperator, Neo4jOpe
 
     @Override
     public String label() {
-        return NoExRun.wrap(() -> {
+        return NoEx.wrap(() -> {
             String query = String.format(
                     "%s return n.%s as label",
                     queryPrefix(),
@@ -146,7 +145,7 @@ public class Neo4jFriendlyResource implements FriendlyResourceOperator, Neo4jOpe
                 "label", label
         );
         addUpdatedLastModificationDate(props);
-        NoExRun.wrap(() -> {
+        NoEx.wrap(() -> {
             NamedParameterStatement statement = new NamedParameterStatement(connection, query);
             statement.setString("label", label);
             setLastUpdatedDateInStatement(statement);
@@ -171,7 +170,7 @@ public class Neo4jFriendlyResource implements FriendlyResourceOperator, Neo4jOpe
                 queryPrefix(),
                 props.comment
         );
-        return NoExRun.wrap(() -> {
+        return NoEx.wrap(() -> {
             Statement statement = connection.createStatement();
             ResultSet rs = statement.executeQuery(query);
             return rs.next() && rs.getString("comment") != null ?
@@ -192,7 +191,7 @@ public class Neo4jFriendlyResource implements FriendlyResourceOperator, Neo4jOpe
                 "comment", comment
         );
         addUpdatedLastModificationDate(props);
-        NoExRun.wrap(() -> {
+        NoEx.wrap(() -> {
             NamedParameterStatement statement = new NamedParameterStatement(connection, query);
             statement.setString("comment", comment);
             setLastUpdatedDateInStatement(statement);
@@ -228,7 +227,7 @@ public class Neo4jFriendlyResource implements FriendlyResourceOperator, Neo4jOpe
                 "create (n:%s {1})",
                 GraphElementType.resource
         );
-        NoExRun.wrap(() -> {
+        NoEx.wrap(() -> {
             PreparedStatement statement = connection.prepareStatement(query);
             statement.setObject(
                     1,
@@ -292,7 +291,7 @@ public class Neo4jFriendlyResource implements FriendlyResourceOperator, Neo4jOpe
         String query = queryPrefix() +
                 " SET " +
                 LAST_MODIFICATION_QUERY_PART;
-        NoExRun.wrap(() -> {
+        NoEx.wrap(() -> {
             NamedParameterStatement statement = new NamedParameterStatement(
                     connection,
                     query
@@ -305,7 +304,7 @@ public class Neo4jFriendlyResource implements FriendlyResourceOperator, Neo4jOpe
     @Override
     public Node getNode() {
         if (null == node) {
-            node = NoExRun.wrap(() -> {
+            node = NoEx.wrap(() -> {
                 ResultSet rs = connection.createStatement().executeQuery(
                         queryPrefix() + "return n"
                 );

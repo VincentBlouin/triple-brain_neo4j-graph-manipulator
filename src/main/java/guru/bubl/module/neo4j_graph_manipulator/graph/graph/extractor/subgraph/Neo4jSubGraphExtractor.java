@@ -6,7 +6,7 @@ package guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph;
 
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
-import guru.bubl.module.common_utils.NoExRun;
+import guru.bubl.module.common_utils.NoEx;
 import guru.bubl.module.model.UserUris;
 import guru.bubl.module.model.graph.GraphElementType;
 import guru.bubl.module.model.graph.subgraph.SubGraphPojo;
@@ -16,13 +16,11 @@ import guru.bubl.module.model.graph.vertex.VertexInSubGraph;
 import guru.bubl.module.model.graph.vertex.VertexInSubGraphPojo;
 import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jFriendlyResource;
 import guru.bubl.module.neo4j_graph_manipulator.graph.Relationships;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.Neo4jGraphElementOperator;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.Neo4jUserGraph;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.edge.Neo4jEdgeOperator;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.FriendlyResourceQueryBuilder;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.IdentificationQueryBuilder;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.QueryUtils;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.Neo4jVertexFactory;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.Neo4jVertexInSubGraphOperator;
 
 import java.net.URI;
@@ -73,7 +71,7 @@ public class Neo4jSubGraphExtractor {
     }
 
     public SubGraphPojo load() {
-        NoExRun.wrap(() -> {
+        NoEx.wrap(() -> {
             ResultSet rs = connection.createStatement().executeQuery(
                     queryToGetGraph()
             );
@@ -206,6 +204,10 @@ public class Neo4jSubGraphExtractor {
                 QueryUtils.getPropertyUsingContainerNameQueryPart(
                         prefix,
                         Neo4jEdgeOperator.props.destination_vertex_uri.toString()
+                ) +
+                QueryUtils.getPropertyUsingContainerNameQueryPart(
+                        prefix,
+                        "toTheLeft"
                 );
     }
 
