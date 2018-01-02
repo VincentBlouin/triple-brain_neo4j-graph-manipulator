@@ -28,7 +28,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
-
+//test commit
 public class Neo4jSubGraphExtractor {
     public final static String
             INCLUDED_VERTEX_QUERY_KEY = "iv",
