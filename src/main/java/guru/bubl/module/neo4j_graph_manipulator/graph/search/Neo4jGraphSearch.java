@@ -83,8 +83,7 @@ public class Neo4jGraphSearch implements GraphSearch {
                 searchTerm,
                 true,
                 user.username(),
-                GraphElementType.vertex,
-                GraphElementType.meta
+                GraphElementType.vertex
         );
     }
 
