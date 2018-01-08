@@ -10,11 +10,15 @@ import guru.bubl.module.common_utils.NamedParameterStatement;
 import guru.bubl.module.common_utils.NoEx;
 import guru.bubl.module.model.Image;
 import guru.bubl.module.model.graph.FriendlyResourcePojo;
+import guru.bubl.module.model.graph.GraphElementOperatorFactory;
+import guru.bubl.module.model.graph.identification.IdentificationFactory;
 import guru.bubl.module.model.graph.identification.IdentificationOperator;
+import guru.bubl.module.model.graph.identification.Identifier;
 import guru.bubl.module.model.graph.identification.IdentifierPojo;
 import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jFriendlyResource;
 import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jFriendlyResourceFactory;
 import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jOperator;
+import guru.bubl.module.neo4j_graph_manipulator.graph.Relationships;
 import org.neo4j.graphdb.Node;
 
 import java.net.URI;
@@ -34,31 +38,41 @@ public class Neo4jIdentification implements IdentificationOperator, Neo4jOperato
         relation_external_uri
     }
 
-    Neo4jFriendlyResource friendlyResourceOperator;
-    Connection connection;
+    private Neo4jFriendlyResource friendlyResourceOperator;
+    private Connection connection;
+    private GraphElementOperatorFactory graphElementOperatorFactory;
+    private IdentificationFactory identificationFactory;
 
     @AssistedInject
     protected Neo4jIdentification(
             Neo4jFriendlyResourceFactory friendlyResourceFactory,
             Connection connection,
+            GraphElementOperatorFactory graphElementOperatorFactory,
+            IdentificationFactory identificationFactory,
             @Assisted Node node
     ) {
         this.friendlyResourceOperator = friendlyResourceFactory.withNode(
                 node
         );
         this.connection = connection;
+        this.graphElementOperatorFactory = graphElementOperatorFactory;
+        this.identificationFactory = identificationFactory;
     }
 
     @AssistedInject
     protected Neo4jIdentification(
             Neo4jFriendlyResourceFactory friendlyResourceFactory,
             Connection connection,
+            GraphElementOperatorFactory graphElementOperatorFactory,
+            IdentificationFactory identificationFactory,
             @Assisted URI uri
     ) {
         this.friendlyResourceOperator = friendlyResourceFactory.withUri(
                 uri
         );
         this.connection = connection;
+        this.graphElementOperatorFactory = graphElementOperatorFactory;
+        this.identificationFactory = identificationFactory;
     }
 
     @Override
@@ -134,10 +148,10 @@ public class Neo4jIdentification implements IdentificationOperator, Neo4jOperato
         String query = queryPrefix() +
                 String.format(
                         "RETURN n.%s as uri," +
-                        "n.%s as label," +
-                        "n.%s as comment," +
-                        "n.%s as externalUri," +
-                        "n.%s as nbReferences",
+                                "n.%s as label," +
+                                "n.%s as comment," +
+                                "n.%s as externalUri," +
+                                "n.%s as nbReferences",
                         Neo4jFriendlyResource.props.uri,
                         Neo4jFriendlyResource.props.label,
                         Neo4jFriendlyResource.props.comment,
@@ -160,6 +174,31 @@ public class Neo4jIdentification implements IdentificationOperator, Neo4jOperato
                     friendlyResourcePojo
             );
         }).get();
+    }
+
+    @Override
+    public void mergeTo(Identifier identifier) {
+        String query = queryPrefix() +
+                "MATCH n<-[:" +
+                Relationships.IDENTIFIED_TO +
+                "]-tagged " +
+                "RETURN tagged.uri";
+        NoEx.wrap(() -> {
+            ResultSet rs = connection.createStatement().executeQuery(query);
+            IdentifierPojo mergeWithPojo = identificationFactory.withUri(
+                    identifier.uri()
+            ).buildPojo();
+            while (rs.next()) {
+                graphElementOperatorFactory.withUri(
+                        URI.create(rs.getString("tagged.uri"))
+                ).addMeta(
+                        mergeWithPojo
+                );
+            }
+            this.remove();
+            return rs;
+        }).get();
+
     }
 
     @Override

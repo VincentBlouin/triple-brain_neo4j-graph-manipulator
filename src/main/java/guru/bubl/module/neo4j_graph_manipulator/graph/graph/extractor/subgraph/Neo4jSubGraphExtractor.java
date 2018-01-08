@@ -115,8 +115,8 @@ public class Neo4jSubGraphExtractor {
         return
                 "START start_node=node:node_auto_index('uri:" + centerBubbleUri + "') " +
                         getMatchQueryPart() +
-                        "OPTIONAL MATCH (" + GRAPH_ELEMENT_QUERY_KEY + ")-[:HAS_INCLUDED_VERTEX]->(" + INCLUDED_VERTEX_QUERY_KEY + ") " +
-                        "OPTIONAL MATCH(" + GRAPH_ELEMENT_QUERY_KEY + ")-[:HAS_INCLUDED_EDGE]->(" + INCLUDED_EDGE_QUERY_KEY + ") " +
+//                        "OPTIONAL MATCH (" + GRAPH_ELEMENT_QUERY_KEY + ")-[:HAS_INCLUDED_VERTEX]->(" + INCLUDED_VERTEX_QUERY_KEY + ") " +
+//                        "OPTIONAL MATCH(" + GRAPH_ELEMENT_QUERY_KEY + ")-[:HAS_INCLUDED_EDGE]->(" + INCLUDED_EDGE_QUERY_KEY + ") " +
                         "OPTIONAL MATCH (" + GRAPH_ELEMENT_QUERY_KEY + ")-[" + IdentificationQueryBuilder.IDENTIFICATION_RELATION_QUERY_KEY + ":" + Relationships.IDENTIFIED_TO + "]->(" + IdentificationQueryBuilder.IDENTIFIER_QUERY_KEY + ") " +
                         "RETURN " +
                         vertexAndEdgeCommonQueryPart(GRAPH_ELEMENT_QUERY_KEY) +
