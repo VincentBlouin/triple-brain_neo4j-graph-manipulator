@@ -79,11 +79,21 @@ public class Neo4jGraphSearch implements GraphSearch {
 
     @Override
     public List<GraphElementSearchResult> searchOnlyForOwnVerticesForAutoCompletionByLabel(String searchTerm, User user) {
-        return new Getter<GraphElementSearchResult>().get(
+        return new Getter<>().get(
                 searchTerm,
                 true,
                 user.username(),
                 GraphElementType.vertex
+        );
+    }
+
+    @Override
+    public List<GraphElementSearchResult> searchOwnTagsForAutoCompletionByLabel(String searchTerm, User user) {
+        return new Getter<>().get(
+                searchTerm,
+                true,
+                user.username(),
+                GraphElementType.meta
         );
     }
 
