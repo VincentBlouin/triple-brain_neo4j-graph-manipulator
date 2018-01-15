@@ -181,35 +181,27 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
     }
 
     @Override
-    public Map<colorProps, String> getColors() {
+    public String getColors() {
         String query = queryPrefix() + "RETURN n.colors as colors";
         return NoEx.wrap(() -> {
             ResultSet rs = connection.createStatement().executeQuery(
                     query
             );
             rs.next();
-            String colorsStr = rs.getString("colors");
-            if (colorsStr == null) {
-                return new HashMap<colorProps, String>();
-            }
-            Map<colorProps, String> colors = JsonUtils.getGson().fromJson(
-                    colorsStr,
-                    new TypeToken<Map<colorProps, String>>() {
-                    }.getType()
-            );
-            return colors;
+            String colors = rs.getString("colors");
+            return colors == null ? "" : colors;
         }).get();
     }
 
     @Override
-    public void setColors(Map<colorProps, String> colors) {
+    public void setColors(String colors) {
         String query = queryPrefix()
                 + "SET n.colors = @colors";
         NoEx.wrap(() -> {
             NamedParameterStatement statement = new NamedParameterStatement(
                     connection, query
             );
-            statement.setString("colors", JsonUtils.getGson().toJson(colors));
+            statement.setString("colors", colors);
             return statement.execute();
         }).get();
     }

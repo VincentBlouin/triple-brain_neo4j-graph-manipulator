@@ -398,12 +398,12 @@ public class Neo4jEdgeOperator implements EdgeOperator, Neo4jOperator {
     }
 
     @Override
-    public Map<colorProps, String> getColors() {
+    public String getColors() {
         return graphElementOperator.getColors();
     }
 
     @Override
-    public void setColors(Map<colorProps, String> colors) {
+    public void setColors(String colors) {
         graphElementOperator.setColors(colors);
     }
 

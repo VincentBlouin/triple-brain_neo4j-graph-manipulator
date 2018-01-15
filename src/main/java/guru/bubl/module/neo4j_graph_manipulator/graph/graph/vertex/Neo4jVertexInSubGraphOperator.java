@@ -872,12 +872,12 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
     }
 
     @Override
-    public Map<colorProps, String> getColors() {
+    public String getColors() {
         return graphElementOperator.getColors();
     }
 
     @Override
-    public void setColors(Map<colorProps, String> colors) {
+    public void setColors(String colors) {
         graphElementOperator.setColors(colors);
     }
 

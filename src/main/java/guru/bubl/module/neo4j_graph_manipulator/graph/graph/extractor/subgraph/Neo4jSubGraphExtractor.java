@@ -231,6 +231,10 @@ public class Neo4jSubGraphExtractor {
                 QueryUtils.getPropertyUsingContainerNameQueryPart(
                         prefix,
                         "childrenIndexes"
+                )+
+                QueryUtils.getPropertyUsingContainerNameQueryPart(
+                        prefix,
+                        "colors"
                 );
     }
 

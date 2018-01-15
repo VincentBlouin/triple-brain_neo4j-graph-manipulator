@@ -49,6 +49,9 @@ public class VertexFromExtractorQueryRow {
         vertexInSubGraphPojo.getGraphElement().setChildrenIndex(
                 getChildrenIndexes()
         );
+        vertexInSubGraphPojo.getGraphElement().setColors(
+                getColors()
+        );
         return vertexInSubGraphPojo;
     }
 
@@ -177,6 +180,16 @@ public class VertexFromExtractorQueryRow {
 
     private String getChildrenIndexes() throws SQLException {
         String key = keyPrefix + "." + "childrenIndexes";
+        if (row.getString(key) == null) {
+            return null;
+        }
+        return row.getString(
+                key
+        );
+    }
+
+    private String getColors() throws SQLException {
+        String key = keyPrefix + "." + "colors";
         if (row.getString(key) == null) {
             return null;
         }
