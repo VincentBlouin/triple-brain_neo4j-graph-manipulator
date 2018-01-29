@@ -108,6 +108,26 @@ public class Neo4jIdentification implements IdentificationOperator, Neo4jOperato
     }
 
     @Override
+    public void setExternalResourceUri(URI uri) {
+        String query = String.format(
+                "%s SET n.%s=@external_uri",
+                queryPrefix(),
+                props.external_uri
+        );
+        NoEx.wrap(() -> {
+            NamedParameterStatement statement = new NamedParameterStatement(
+                    connection,
+                    query
+            );
+            statement.setString(
+                    "external_uri",
+                    uri.toString()
+            );
+            return statement.executeQuery();
+        }).get();
+    }
+
+    @Override
     public Integer getNbReferences() {
         String query = String.format(
                 "%s RETURN n.%s as nbReferences",

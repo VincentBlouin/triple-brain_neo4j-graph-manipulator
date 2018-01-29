@@ -12,6 +12,7 @@ import guru.bubl.module.common_utils.NoEx;
 import guru.bubl.module.model.Image;
 import guru.bubl.module.model.UserUris;
 import guru.bubl.module.model.graph.*;
+import guru.bubl.module.model.graph.identification.IdentificationFactory;
 import guru.bubl.module.model.graph.identification.Identifier;
 import guru.bubl.module.model.graph.identification.IdentifierPojo;
 import guru.bubl.module.model.json.ImageJson;
@@ -412,6 +413,11 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
             );
             return statement.executeQuery();
         }).get();
+        if (identification.getExternalResourceUri() != null && identification.getExternalResourceUri().equals(this.uri())) {
+            identificationFactory.withUri(identification.uri()).setExternalResourceUri(
+                    identification.uri()
+            );
+        }
     }
 
     @Override
