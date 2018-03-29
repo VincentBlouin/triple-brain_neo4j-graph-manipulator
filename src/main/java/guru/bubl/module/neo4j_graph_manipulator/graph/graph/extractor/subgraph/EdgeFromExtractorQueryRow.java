@@ -12,7 +12,6 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.graph.edge.Neo4jEdgeOperat
 import java.net.URI;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Map;
 
 public class EdgeFromExtractorQueryRow {
 
@@ -54,9 +53,6 @@ public class EdgeFromExtractorQueryRow {
                 new VertexInSubGraphPojo(getSourceVertexUri()),
                 new VertexInSubGraphPojo(getDestinationVertexUri())
         );
-        edge.setIsToTheLeft(
-                isToTheLeft()
-        );
         return edge;
     }
 
@@ -79,13 +75,5 @@ public class EdgeFromExtractorQueryRow {
 
                 )
         );
-    }
-
-    private Boolean isToTheLeft() throws SQLException{
-        String toTheLeftStr = row.getString(
-                key + "." + "toTheLeft"
-
-        );
-        return toTheLeftStr == null ? null : Boolean.valueOf(toTheLeftStr);
     }
 }

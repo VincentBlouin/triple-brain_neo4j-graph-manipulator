@@ -204,10 +204,6 @@ public class Neo4jSubGraphExtractor {
                 QueryUtils.getPropertyUsingContainerNameQueryPart(
                         prefix,
                         Neo4jEdgeOperator.props.destination_vertex_uri.toString()
-                ) +
-                QueryUtils.getPropertyUsingContainerNameQueryPart(
-                        prefix,
-                        "toTheLeft"
                 );
     }
 
@@ -231,7 +227,7 @@ public class Neo4jSubGraphExtractor {
                 QueryUtils.getPropertyUsingContainerNameQueryPart(
                         prefix,
                         "childrenIndexes"
-                )+
+                ) +
                 QueryUtils.getPropertyUsingContainerNameQueryPart(
                         prefix,
                         "colors"

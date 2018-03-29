@@ -149,30 +149,6 @@ public class Neo4jEdgeOperator implements EdgeOperator, Neo4jOperator {
     }
 
     @Override
-    public Boolean isToTheLeft() {
-        Boolean isToTheLeft = getIsToTheLeft();
-        return isToTheLeft != null && isToTheLeft;
-    }
-
-    @Override
-    public Boolean isToTheRight() {
-        Boolean isToTheLeft = getIsToTheLeft();
-        return isToTheLeft != null && !isToTheLeft;
-    }
-
-    private Boolean getIsToTheLeft(){
-        String query = queryPrefix() + "RETURN n.toTheLeft as toTheLeft";
-        return NoEx.wrap(() -> {
-            ResultSet rs = connection.createStatement().executeQuery(
-                    query
-            );
-            rs.next();
-            String toTheLeftStr = rs.getString("toTheLeft");
-            return toTheLeftStr == null ? null : Boolean.valueOf(toTheLeftStr);
-        }).get();
-    }
-
-    @Override
     public void changeSourceVertex(
             Vertex newSourceVertex
     ) {
@@ -431,34 +407,6 @@ public class Neo4jEdgeOperator implements EdgeOperator, Neo4jOperator {
         return createEdgeUsingInitialValues(
                 map()
         );
-    }
-
-    @Override
-    public void setToTheLeft() {
-        setToTheLeftOrNot(true);
-    }
-
-    @Override
-    public void setToTheRight() {
-        setToTheLeftOrNot(false);
-    }
-
-    @Override
-    public void unsetToTheLeftOrRight() {
-        setToTheLeftOrNot(null);
-    }
-
-    private void setToTheLeftOrNot(Boolean isToTheLeft){
-        String query = queryPrefix()
-                + "SET n.toTheLeft = @toTheLeft";
-        String isToTheLeftStr = isToTheLeft == null ? null : isToTheLeft.toString();
-        NoEx.wrap(() -> {
-            NamedParameterStatement statement = new NamedParameterStatement(
-                    connection, query
-            );
-            statement.setString("toTheLeft", isToTheLeftStr);
-            return statement.execute();
-        }).get();
     }
 
     @Override
