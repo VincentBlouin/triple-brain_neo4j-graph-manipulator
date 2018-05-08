@@ -231,6 +231,10 @@ public class Neo4jSubGraphExtractor {
                 QueryUtils.getPropertyUsingContainerNameQueryPart(
                         prefix,
                         "colors"
+                ) +
+                QueryUtils.getPropertyUsingContainerNameQueryPart(
+                        prefix,
+                        "font"
                 );
     }
 

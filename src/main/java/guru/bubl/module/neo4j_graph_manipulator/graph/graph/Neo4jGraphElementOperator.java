@@ -195,6 +195,19 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
     }
 
     @Override
+    public String getFont() {
+        String query = queryPrefix() + "RETURN n.font as font";
+        return NoEx.wrap(() -> {
+            ResultSet rs = connection.createStatement().executeQuery(
+                    query
+            );
+            rs.next();
+            String font = rs.getString("font");
+            return font == null ? "" : font;
+        }).get();
+    }
+
+    @Override
     public void setColors(String colors) {
         String query = queryPrefix()
                 + "SET n.colors = @colors";
@@ -203,6 +216,19 @@ public class Neo4jGraphElementOperator implements GraphElementOperator, Neo4jOpe
                     connection, query
             );
             statement.setString("colors", colors);
+            return statement.execute();
+        }).get();
+    }
+
+    @Override
+    public void setFont(String font) {
+        String query = queryPrefix()
+                + "SET n.font = @font";
+        NoEx.wrap(() -> {
+            NamedParameterStatement statement = new NamedParameterStatement(
+                    connection, query
+            );
+            statement.setString("font", font);
             return statement.execute();
         }).get();
     }

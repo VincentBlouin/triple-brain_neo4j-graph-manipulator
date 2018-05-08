@@ -52,6 +52,9 @@ public class VertexFromExtractorQueryRow {
         vertexInSubGraphPojo.getGraphElement().setColors(
                 getColors()
         );
+        vertexInSubGraphPojo.getGraphElement().setFont(
+                getFont()
+        );
         return vertexInSubGraphPojo;
     }
 
@@ -190,6 +193,16 @@ public class VertexFromExtractorQueryRow {
 
     private String getColors() throws SQLException {
         String key = keyPrefix + "." + "colors";
+        if (row.getString(key) == null) {
+            return null;
+        }
+        return row.getString(
+                key
+        );
+    }
+
+    private String getFont() throws SQLException {
+        String key = keyPrefix + "." + "font";
         if (row.getString(key) == null) {
             return null;
         }

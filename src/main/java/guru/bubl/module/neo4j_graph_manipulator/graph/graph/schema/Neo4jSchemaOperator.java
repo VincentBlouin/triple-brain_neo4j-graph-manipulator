@@ -220,8 +220,18 @@ public class Neo4jSchemaOperator implements SchemaOperator, Neo4jOperator {
     }
 
     @Override
+    public String getFont() {
+        return graphElementOperator.getFont();
+    }
+
+    @Override
     public void setColors(String colors) {
         graphElementOperator.setColors(colors);
+    }
+
+    @Override
+    public void setFont(String font) {
+        graphElementOperator.setFont(font);
     }
 
     @Override
