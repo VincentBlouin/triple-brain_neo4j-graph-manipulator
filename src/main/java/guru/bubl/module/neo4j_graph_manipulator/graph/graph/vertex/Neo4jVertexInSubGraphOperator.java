@@ -222,37 +222,15 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
 
     @Override
     public EdgePojo addVertexAndRelation() {
-        return addVertexAndRelationToTheLeftOrNot(
-                null
-        );
-    }
-
-    @Override
-    public EdgePojo addVertexAndRelationToTheLeft() {
-        return addVertexAndRelationToTheLeftOrNot(
-                true
-        );
-    }
-
-    @Override
-    public EdgePojo addVertexAndRelationToTheRight() {
-        return addVertexAndRelationToTheLeftOrNot(
-                false
-        );
-    }
-
-    private EdgePojo addVertexAndRelationToTheLeftOrNot(Boolean toTheLeft) {
-        UserUris userUris = new UserUris(
-                getOwnerUsername()
-        );
         return addVertexAndRelationToTheLeftOrNotAction(
                 this,
-                userUris.generateVertexUri(),
-                toTheLeft
+                new UserUris(
+                        getOwnerUsername()
+                ).generateVertexUri()
         );
     }
 
-    private EdgePojo addVertexAndRelationToTheLeftOrNotAction(Neo4jVertexInSubGraphOperator self, URI newVertexUri, Boolean toTheLeft) {
+    private EdgePojo addVertexAndRelationToTheLeftOrNotAction(Neo4jVertexInSubGraphOperator self, URI newVertexUri) {
         Neo4jVertexInSubGraphOperator newVertexOperator = vertexFactory.withUri(
                 newVertexUri
         );
@@ -269,11 +247,7 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
                 self,
                 newVertexOperator
         );
-        EdgePojo newEdge = toTheLeft == null ? edgeOperator.createEdge() : edgeOperator.createEdgeUsingInitialValues(
-                map(
-                        "toTheLeft", toTheLeft.toString()
-                )
-        );
+        EdgePojo newEdge = edgeOperator.createEdge();
         newEdge.setDestinationVertex(
                 new VertexInSubGraphPojo(
                         newVertex
@@ -336,8 +310,7 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
         );
         Edge newEdge = addVertexAndRelationToTheLeftOrNotAction(
                 this,
-                newVertex.uri(),
-                null
+                newVertex.uri()
         );
         EdgeOperator newEdgeOperator = edgeFactory.withUri(
                 newEdge.uri()
@@ -379,8 +352,7 @@ public class Neo4jVertexInSubGraphOperator implements VertexInSubGraphOperator, 
         );
         EdgePojo newEdge = addVertexAndRelationToTheLeftOrNotAction(
                 this,
-                newVertex.uri(),
-                null
+                newVertex.uri()
         );
         EdgeOperator newEdgeOperator = edgeFactory.withUri(
                 newEdge.uri()
