@@ -233,11 +233,10 @@ public class Neo4jGraphSearch implements GraphSearch {
                     "0) DESC " +
                     "limit 10";
         }
-
-        private String formatSearchTerm(String searchTerm) {
-            return QueryParser.escape(searchTerm).replace(
-                    "\\", "\\\\"
-            ).replace("'", "\\'").replace(" ", " AND ");
-        }
+    }
+    public static String formatSearchTerm(String searchTerm) {
+        return QueryParser.escape(searchTerm).replace(
+                "\\", "\\\\"
+        ).replace("'", "\\'").replace(" ", " AND ");
     }
 }
