@@ -4,13 +4,14 @@
 
 package guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph;
 
+import guru.bubl.module.model.graph.ShareLevel;
 import guru.bubl.module.model.graph.edge.EdgePojo;
 import guru.bubl.module.model.graph.vertex.VertexInSubGraph;
 import guru.bubl.module.model.graph.vertex.VertexInSubGraphPojo;
 import guru.bubl.module.model.json.SuggestionJson;
 import guru.bubl.module.model.suggestion.SuggestionPojo;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.Neo4jGraphElementOperator;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.Neo4jVertexInSubGraphOperator;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.GraphElementOperatorNeo4j;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.VertexInSubGraphOperatorNeo4j;
 
 import java.net.URI;
 import java.sql.ResultSet;
@@ -33,7 +34,7 @@ public class VertexFromExtractorQueryRow {
         this.keyPrefix = keyPrefix;
     }
 
-    public VertexInSubGraph build() throws SQLException {
+    public VertexInSubGraph build(ShareLevel shareLevel) throws SQLException {
         VertexInSubGraphPojo vertexInSubGraphPojo = new VertexInSubGraphPojo(
                 GraphElementFromExtractorQueryRow.usingRowAndKey(
                         row,
@@ -44,7 +45,7 @@ public class VertexFromExtractorQueryRow {
                 null,
                 null,
                 getSuggestions(),
-                getIsPublic()
+                shareLevel
         );
         vertexInSubGraphPojo.getGraphElement().setChildrenIndex(
                 getChildrenIndexes()
@@ -61,7 +62,7 @@ public class VertexFromExtractorQueryRow {
     private Map<URI, VertexInSubGraphPojo> buildIncludedVertices() throws SQLException {
         IncludedGraphElementFromExtractorQueryRow includedVertexExtractor = new IncludedGraphElementFromExtractorQueryRow(
                 row,
-                Neo4jSubGraphExtractor.INCLUDED_VERTEX_QUERY_KEY
+                SubGraphExtractorNeo4j.INCLUDED_VERTEX_QUERY_KEY
         );
         Map<URI, VertexInSubGraphPojo> includedVertices = new HashMap<>();
         if (!includedVertexExtractor.hasResult()) {
@@ -87,7 +88,7 @@ public class VertexFromExtractorQueryRow {
     private Map<URI, EdgePojo> buildIncludedEdges() throws SQLException {
         IncludedGraphElementFromExtractorQueryRow includedEdgeExtractor = new IncludedGraphElementFromExtractorQueryRow(
                 row,
-                Neo4jSubGraphExtractor.INCLUDED_EDGE_QUERY_KEY
+                SubGraphExtractorNeo4j.INCLUDED_EDGE_QUERY_KEY
         );
         Map<URI, EdgePojo> includedEdges = new HashMap<>();
         if (!includedEdgeExtractor.hasResult()) {
@@ -128,7 +129,7 @@ public class VertexFromExtractorQueryRow {
     private Integer getNumberOfConnectedEdges() throws SQLException {
         return Integer.valueOf(
                 row.getString(
-                        keyPrefix + "." + Neo4jVertexInSubGraphOperator.props.number_of_connected_edges_property_name
+                        keyPrefix + "." + VertexInSubGraphOperatorNeo4j.props.number_of_connected_edges_property_name
                 )
         );
     }
@@ -136,22 +137,14 @@ public class VertexFromExtractorQueryRow {
     private Integer getNbPublicNeighbors() throws SQLException {
         return Integer.valueOf(
                 row.getString(
-                        keyPrefix + "." + Neo4jVertexInSubGraphOperator.props.nb_public_neighbors
-                )
-        );
-    }
-
-    private Boolean getIsPublic() throws SQLException {
-        return Boolean.valueOf(
-                row.getString(
-                        keyPrefix + "." + Neo4jVertexInSubGraphOperator.props.is_public
+                        keyPrefix + "." + VertexInSubGraphOperatorNeo4j.props.nb_public_neighbors
                 )
         );
     }
 
     private Map<URI, SuggestionPojo> getSuggestions() throws SQLException {
         Object suggestionValue = row.getObject(
-                keyPrefix + "." + Neo4jVertexInSubGraphOperator.props.suggestions
+                keyPrefix + "." + VertexInSubGraphOperatorNeo4j.props.suggestions
         );
         if (suggestionValue == null) {
             return new HashMap<>();
@@ -162,7 +155,7 @@ public class VertexFromExtractorQueryRow {
     }
 
     private Long getSortDate() throws SQLException {
-        String key = keyPrefix + "." + Neo4jGraphElementOperator.props.sort_date;
+        String key = keyPrefix + "." + GraphElementOperatorNeo4j.props.sort_date;
         if (row.getString(key) == null) {
             return null;
         }
@@ -172,7 +165,7 @@ public class VertexFromExtractorQueryRow {
     }
 
     private Long getMoveDate() throws SQLException {
-        String key = keyPrefix + "." + Neo4jGraphElementOperator.props.move_date;
+        String key = keyPrefix + "." + GraphElementOperatorNeo4j.props.move_date;
         if (row.getString(key) == null) {
             return null;
         }

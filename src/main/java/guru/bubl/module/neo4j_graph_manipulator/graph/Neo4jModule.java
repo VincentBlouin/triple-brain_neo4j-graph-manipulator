@@ -32,26 +32,26 @@ import guru.bubl.module.model.graph.vertex.VertexInSubGraphOperator;
 import guru.bubl.module.model.meta.UserMetasOperator;
 import guru.bubl.module.model.meta.UserMetasOperatorFactory;
 import guru.bubl.module.model.test.GraphComponentTest;
-import guru.bubl.module.neo4j_graph_manipulator.graph.admin.Neo4jWholeGraphAdmin;
-import guru.bubl.module.neo4j_graph_manipulator.graph.center_graph_element.Neo4jCenterGraphElementOperator;
-import guru.bubl.module.neo4j_graph_manipulator.graph.center_graph_element.Neo4jCenterGraphElementsOperator;
+import guru.bubl.module.neo4j_graph_manipulator.graph.admin.WholeGraphAdminNeo4j;
+import guru.bubl.module.neo4j_graph_manipulator.graph.center_graph_element.CenterGraphElementOperatorNeo4j;
+import guru.bubl.module.neo4j_graph_manipulator.graph.center_graph_element.CenterGraphElementsOperatorNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.*;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.edge.Neo4jEdgeFactory;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.edge.Neo4jEdgeOperator;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.schema.Neo4jSchemaExtractorFactory;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph.Neo4jSubGraphExtractorFactory;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.identification.Neo4jIdentification;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.schema.Neo4jSchemaList;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.schema.Neo4jSchemaOperator;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.edge.EdgeFactoryNeo4j;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.edge.EdgeOperatorNeo4j;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.schema.SchemaExtractorFactoryNeo4j;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph.SubGraphExtractorFactoryNeo4j;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.identification.IdentificationNeo4j;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.schema.SchemaListNeo4j;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.schema.SchemaOperatorNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.schema.SchemaFactory;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.subgraph.Neo4jSubGraphForker;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.Neo4jVertexFactory;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.Neo4jVertexInSubGraphOperator;
-import guru.bubl.module.neo4j_graph_manipulator.graph.image.Neo4jImageFactory;
-import guru.bubl.module.neo4j_graph_manipulator.graph.meta.Neo4jIdentificationFactory;
-import guru.bubl.module.neo4j_graph_manipulator.graph.meta.Neo4jUserMetasOperator;
-import guru.bubl.module.neo4j_graph_manipulator.graph.search.Neo4jGraphSearchModule;
-import guru.bubl.module.neo4j_graph_manipulator.graph.test.Neo4JGraphComponentTest;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.subgraph.SubGraphForkerNeo4j;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.VertexFactoryNeo4j;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.VertexInSubGraphOperatorNeo4j;
+import guru.bubl.module.neo4j_graph_manipulator.graph.image.ImageFactoryNeo4j;
+import guru.bubl.module.neo4j_graph_manipulator.graph.meta.IdentificationFactoryNeo4j;
+import guru.bubl.module.neo4j_graph_manipulator.graph.meta.UserMetasOperatorNeo4j;
+import guru.bubl.module.neo4j_graph_manipulator.graph.search.GraphSearchModuleNeo4j;
+import guru.bubl.module.neo4j_graph_manipulator.graph.test.GraphComponentTestNeo4j;
 import org.neo4j.graphdb.*;
 import org.neo4j.graphdb.event.KernelEventHandler;
 import org.neo4j.graphdb.event.TransactionEventHandler;
@@ -108,110 +108,110 @@ public class Neo4jModule extends AbstractModule {
             bindForRestApi();
         }
         if (test) {
-            bind(GraphComponentTest.class).to(Neo4JGraphComponentTest.class);
+            bind(GraphComponentTest.class).to(GraphComponentTestNeo4j.class);
         }
 
-        install(new Neo4jGraphSearchModule());
+        install(new GraphSearchModuleNeo4j());
 
-        bind(WholeGraph.class).to(Neo4jWholeGraph.class);
-        bind(WholeGraphAdmin.class).to(Neo4jWholeGraphAdmin.class);
+        bind(WholeGraph.class).to(WholeGraphNeo4j.class);
+        bind(WholeGraphAdmin.class).to(WholeGraphAdminNeo4j.class);
         FactoryModuleBuilder factoryModuleBuilder = new FactoryModuleBuilder();
 
         install(factoryModuleBuilder
-                .implement(CenteredGraphElementsOperator.class, Neo4jCenterGraphElementsOperator.class)
+                .implement(CenteredGraphElementsOperator.class, CenterGraphElementsOperatorNeo4j.class)
                 .build(CenterGraphElementsOperatorFactory.class));
 
         install(factoryModuleBuilder
-                .implement(CenterGraphElementOperator.class, Neo4jCenterGraphElementOperator.class)
+                .implement(CenterGraphElementOperator.class, CenterGraphElementOperatorNeo4j.class)
                 .build(CenterGraphElementOperatorFactory.class));
 
         install(factoryModuleBuilder
-                .implement(UserMetasOperator.class, Neo4jUserMetasOperator.class)
+                .implement(UserMetasOperator.class, UserMetasOperatorNeo4j.class)
                 .build(UserMetasOperatorFactory.class));
 
         install(factoryModuleBuilder
-                .build(Neo4jEdgeFactory.class));
+                .build(EdgeFactoryNeo4j.class));
 
         install(factoryModuleBuilder
-                .build(Neo4jUserGraphFactory.class));
+                .build(UserGraphFactoryNeo4j.class));
 
         install(factoryModuleBuilder
-                .implement(VertexInSubGraphOperator.class, Neo4jVertexInSubGraphOperator.class)
+                .implement(VertexInSubGraphOperator.class, VertexInSubGraphOperatorNeo4j.class)
                 .build(VertexFactory.class));
 
         bind(
                 SchemaList.class
         ).to(
-                Neo4jSchemaList.class
+                SchemaListNeo4j.class
         ).in(
                 Singleton.class
         );
         install(factoryModuleBuilder
-                .implement(SchemaOperator.class, Neo4jSchemaOperator.class)
+                .implement(SchemaOperator.class, SchemaOperatorNeo4j.class)
                 .build(SchemaFactory.class));
 
         install(factoryModuleBuilder
-                .build(Neo4jVertexFactory.class));
+                .build(VertexFactoryNeo4j.class));
 
         install(factoryModuleBuilder
-                .implement(SubGraphForker.class, Neo4jSubGraphForker.class)
+                .implement(SubGraphForker.class, SubGraphForkerNeo4j.class)
                 .build(SubGraphForkerFactory.class));
 
         install(factoryModuleBuilder
-                .build(Neo4jSubGraphExtractorFactory.class));
+                .build(SubGraphExtractorFactoryNeo4j.class));
 
         install(factoryModuleBuilder
-                .build(Neo4jSchemaExtractorFactory.class));
+                .build(SchemaExtractorFactoryNeo4j.class));
 
 
         install(factoryModuleBuilder
-                .implement(EdgeOperator.class, Neo4jEdgeOperator.class)
+                .implement(EdgeOperator.class, EdgeOperatorNeo4j.class)
                 .build(EdgeFactory.class));
 
         install(factoryModuleBuilder
-                .implement(GraphElementOperator.class, Neo4jGraphElementOperator.class)
+                .implement(GraphElementOperator.class, GraphElementOperatorNeo4j.class)
                 .build(GraphElementOperatorFactory.class)
         );
 
         install(factoryModuleBuilder
-                .build(Neo4jGraphElementFactory.class));
+                .build(GraphElementFactoryNeo4j.class));
 
         install(factoryModuleBuilder
-                .implement(FriendlyResourceOperator.class, Neo4jFriendlyResource.class)
+                .implement(FriendlyResourceOperator.class, FriendlyResourceNeo4j.class)
                 .build(FriendlyResourceFactory.class)
         );
         install(factoryModuleBuilder
-                .build(Neo4jFriendlyResourceFactory.class)
+                .build(FriendlyResourceFactoryNeo4j.class)
         );
         install(factoryModuleBuilder
-                .build(Neo4jImageFactory.class)
+                .build(ImageFactoryNeo4j.class)
         );
 
         install(factoryModuleBuilder
-                .implement(IdentificationOperator.class, Neo4jIdentification.class)
+                .implement(IdentificationOperator.class, IdentificationNeo4j.class)
                 .build(IdentificationFactory.class)
         );
         install(factoryModuleBuilder
-                .build(Neo4jIdentificationFactory.class)
+                .build(IdentificationFactoryNeo4j.class)
         );
-        bind(GraphFactory.class).to(Neo4jGraphFactory.class).in(Singleton.class);
+        bind(GraphFactory.class).to(GraphFactoryNeo4j.class).in(Singleton.class);
     }
 
     private void bindForEmbedded() {
-        bind(GraphTransaction.class).to(Neo4jGraphTransaction.class);
+        bind(GraphTransaction.class).to(GraphTransactionNeo4j.class);
         // Make sure Neo4j Driver is registered
         GraphDatabaseService graphDb = new GraphDatabaseFactory().newEmbeddedDatabaseBuilder(
                 test ? DB_PATH_FOR_TESTS : DB_PATH
         )
                 .setConfig(
                         GraphDatabaseSettings.node_keys_indexable,
-                        Neo4jFriendlyResource.props.uri + "," +
-                                Neo4jFriendlyResource.props.label + "," +
-                                Neo4jIdentification.props.external_uri + "," +
-                                Neo4jFriendlyResource.props.owner + "," +
-                                Neo4jFriendlyResource.props.type + "," +
-                                Neo4jVertexInSubGraphOperator.props.is_public + "," +
-                                Neo4jCenterGraphElementOperator.props.last_center_date + "," +
+                        FriendlyResourceNeo4j.props.uri + "," +
+                                FriendlyResourceNeo4j.props.label + "," +
+                                IdentificationNeo4j.props.external_uri + "," +
+                                FriendlyResourceNeo4j.props.owner + "," +
+                                FriendlyResourceNeo4j.props.type + "," +
+                                VertexInSubGraphOperatorNeo4j.props.shareLevel + "," +
+                                CenterGraphElementOperatorNeo4j.props.last_center_date + "," +
                                 "email"
                 ).setConfig(
                         GraphDatabaseSettings.node_auto_indexing,

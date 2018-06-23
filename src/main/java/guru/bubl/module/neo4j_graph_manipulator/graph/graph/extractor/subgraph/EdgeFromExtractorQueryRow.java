@@ -7,7 +7,7 @@ package guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph;
 import guru.bubl.module.model.graph.edge.Edge;
 import guru.bubl.module.model.graph.edge.EdgePojo;
 import guru.bubl.module.model.graph.vertex.VertexInSubGraphPojo;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.edge.Neo4jEdgeOperator;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.edge.EdgeOperatorNeo4j;
 
 import java.net.URI;
 import java.sql.ResultSet;
@@ -32,7 +32,7 @@ public class EdgeFromExtractorQueryRow {
     protected EdgeFromExtractorQueryRow(ResultSet row) {
         this(
                 row,
-                Neo4jSubGraphExtractor.GRAPH_ELEMENT_QUERY_KEY
+                SubGraphExtractorNeo4j.GRAPH_ELEMENT_QUERY_KEY
         );
     }
 
@@ -58,13 +58,13 @@ public class EdgeFromExtractorQueryRow {
 
     public URI getSourceVertexUri() throws SQLException{
         return vertexUriFromProp(
-                Neo4jEdgeOperator.props.source_vertex_uri
+                EdgeOperatorNeo4j.props.source_vertex_uri
         );
     }
 
     public URI getDestinationVertexUri() throws SQLException{
         return vertexUriFromProp(
-                Neo4jEdgeOperator.props.destination_vertex_uri
+                EdgeOperatorNeo4j.props.destination_vertex_uri
         );
     }
 

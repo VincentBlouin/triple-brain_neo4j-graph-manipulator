@@ -6,7 +6,7 @@ package learning;
 
 import guru.bubl.module.common_utils.NoEx;
 import guru.bubl.module.common_utils.Uris;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.Neo4jUserGraph;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.UserGraphNeo4j;
 import org.junit.Test;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
@@ -20,7 +20,7 @@ import java.sql.Statement;
 import java.util.Map;
 import java.util.UUID;
 
-import static guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jRestApiUtils.map;
+import static guru.bubl.module.neo4j_graph_manipulator.graph.RestApiUtilsNeo4j.map;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.*;
 
@@ -294,7 +294,7 @@ public class CypherTest extends Neo4jServerTestGeneric {
                 () -> {
                     String query = String.format(
                             "CREATE (n {%s:{1}})",
-                            Neo4jUserGraph.URI_PROPERTY_NAME
+                            UserGraphNeo4j.URI_PROPERTY_NAME
                     );
                     PreparedStatement stm = connection.prepareStatement(
                             query

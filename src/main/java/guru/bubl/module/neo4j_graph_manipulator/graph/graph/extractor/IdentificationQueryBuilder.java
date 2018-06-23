@@ -4,9 +4,9 @@
 
 package guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor;
 
-import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jFriendlyResource;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.identification.Neo4jIdentification;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.Neo4jUserGraph;
+import guru.bubl.module.neo4j_graph_manipulator.graph.FriendlyResourceNeo4j;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.identification.IdentificationNeo4j;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.UserGraphNeo4j;
 
 public class IdentificationQueryBuilder {
 
@@ -27,30 +27,30 @@ public class IdentificationQueryBuilder {
         return "COLLECT([" +
                 QueryUtils.getPropertyUsingContainerNameQueryPart(
                         identificationKey,
-                        Neo4jIdentification.props.external_uri.name()
+                        IdentificationNeo4j.props.external_uri.name()
                 ) +
                 QueryUtils.getPropertyUsingContainerNameQueryPart(
                         identificationKey,
-                        Neo4jUserGraph.URI_PROPERTY_NAME
+                        UserGraphNeo4j.URI_PROPERTY_NAME
                 ) +
                 QueryUtils.getPropertyUsingContainerNameQueryPart(
                         identificationKey,
-                        Neo4jFriendlyResource.props.label.toString()
+                        FriendlyResourceNeo4j.props.label.toString()
                 ) +
                 QueryUtils.getPropertyUsingContainerNameQueryPart(
                         identificationKey,
-                        Neo4jFriendlyResource.props.comment.toString()
+                        FriendlyResourceNeo4j.props.comment.toString()
                 ) +
                 FriendlyResourceQueryBuilder.imageReturnQueryPart(
                         identificationKey
                 ) +
                 QueryUtils.getPropertyUsingContainerNameQueryPart(
                         identificationKey,
-                        Neo4jIdentification.props.nb_references.name()
+                        IdentificationNeo4j.props.nb_references.name()
                 ) +
                 QueryUtils.getLastPropertyUsingContainerNameQueryPart(
                         relationKey,
-                        Neo4jIdentification.props.relation_external_uri.name()
+                        IdentificationNeo4j.props.relation_external_uri.name()
                 ) +
                 "]) as " + identificationKey + ", ";
     }

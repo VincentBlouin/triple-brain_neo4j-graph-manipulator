@@ -4,24 +4,21 @@
 
 package guru.bubl.module.neo4j_graph_manipulator.graph.graph;
 
-import guru.bubl.module.model.UserUris;
 import guru.bubl.module.model.graph.GraphElementType;
 import guru.bubl.module.model.graph.identification.IdentifierPojo;
-import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jFriendlyResource;
+import guru.bubl.module.neo4j_graph_manipulator.graph.FriendlyResourceNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.Relationships;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.identification.Neo4jIdentification;
-import guru.bubl.module.neo4j_graph_manipulator.graph.image.Neo4jImages;
-
-import java.util.Date;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.identification.IdentificationNeo4j;
+import guru.bubl.module.neo4j_graph_manipulator.graph.image.ImagesNeo4j;
 
 public class AddIdentificationQueryBuilder {
 
     private IdentifierPojo identification;
-    private Neo4jGraphElementOperator graphElement;
+    private GraphElementOperatorNeo4j graphElement;
     private Boolean isOriginalReference;
 
     public static AddIdentificationQueryBuilder usingIdentificationForGraphElement(
-            IdentifierPojo identification, Neo4jGraphElementOperator graphElement
+            IdentifierPojo identification, GraphElementOperatorNeo4j graphElement
     ) {
         return new AddIdentificationQueryBuilder(
                 identification,
@@ -31,7 +28,7 @@ public class AddIdentificationQueryBuilder {
 
     protected AddIdentificationQueryBuilder(
             IdentifierPojo identification,
-            Neo4jGraphElementOperator graphElement
+            GraphElementOperatorNeo4j graphElement
     ) {
         this.identification = identification;
         this.graphElement = graphElement;
@@ -52,7 +49,7 @@ public class AddIdentificationQueryBuilder {
                         "CREATE UNIQUE n-[r :%s]->f " +
                         "SET r.%s=@relationExternalUri, " +
                         "f.nb_references=f.nb_references + 1, " +
-                        Neo4jFriendlyResource.LAST_MODIFICATION_QUERY_PART +
+                        FriendlyResourceNeo4j.LAST_MODIFICATION_QUERY_PART +
                         "RETURN f.uri as uri, " +
                         "f.external_uri as external_uri, " +
                         "f.%s as label, " +
@@ -62,26 +59,26 @@ public class AddIdentificationQueryBuilder {
                         "f.%s as last_modification_date, " +
                         "f.%s as nbReferences",
                 this.graphElement.queryPrefix(),
-                Neo4jIdentification.props.external_uri,
-                Neo4jFriendlyResource.props.owner,
-                Neo4jFriendlyResource.props.type,
+                IdentificationNeo4j.props.external_uri,
+                FriendlyResourceNeo4j.props.owner,
+                FriendlyResourceNeo4j.props.type,
                 GraphElementType.meta,
-                Neo4jFriendlyResource.props.label,
-                Neo4jFriendlyResource.props.comment,
-                Neo4jImages.props.images,
-                Neo4jFriendlyResource.props.type,
-                Neo4jFriendlyResource.props.type,
-                Neo4jFriendlyResource.props.creation_date,
-                Neo4jFriendlyResource.props.last_modification_date,
-                Neo4jIdentification.props.nb_references,
+                FriendlyResourceNeo4j.props.label,
+                FriendlyResourceNeo4j.props.comment,
+                ImagesNeo4j.props.images,
+                FriendlyResourceNeo4j.props.type,
+                FriendlyResourceNeo4j.props.type,
+                FriendlyResourceNeo4j.props.creation_date,
+                FriendlyResourceNeo4j.props.last_modification_date,
+                IdentificationNeo4j.props.nb_references,
                 Relationships.IDENTIFIED_TO,
-                Neo4jIdentification.props.relation_external_uri,
-                Neo4jFriendlyResource.props.label,
-                Neo4jFriendlyResource.props.comment,
-                Neo4jImages.props.images,
-                Neo4jFriendlyResource.props.creation_date,
-                Neo4jFriendlyResource.props.last_modification_date,
-                Neo4jIdentification.props.nb_references
+                IdentificationNeo4j.props.relation_external_uri,
+                FriendlyResourceNeo4j.props.label,
+                FriendlyResourceNeo4j.props.comment,
+                ImagesNeo4j.props.images,
+                FriendlyResourceNeo4j.props.creation_date,
+                FriendlyResourceNeo4j.props.last_modification_date,
+                IdentificationNeo4j.props.nb_references
         );
     }
 }

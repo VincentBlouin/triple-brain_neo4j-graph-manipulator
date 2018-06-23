@@ -8,7 +8,7 @@ import guru.bubl.module.common_utils.NoEx;
 import guru.bubl.module.model.graph.GraphElementType;
 import guru.bubl.module.model.search.GraphElementSearchResult;
 import guru.bubl.module.model.search.GraphElementSearchResultPojo;
-import guru.bubl.module.neo4j_graph_manipulator.graph.center_graph_element.Neo4jCenterGraphElementOperator;
+import guru.bubl.module.neo4j_graph_manipulator.graph.center_graph_element.CenterGraphElementOperatorNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph.GraphElementFromExtractorQueryRow;
 
 import java.sql.ResultSet;
@@ -49,7 +49,7 @@ public class VertexSearchResultBuilder implements SearchResultBuilder {
 
     private Integer getNbVisits() throws SQLException {
         String numberOfVisits = row.getString(
-                prefix + "." + Neo4jCenterGraphElementOperator.props.number_of_visits.name()
+                prefix + "." + CenterGraphElementOperatorNeo4j.props.number_of_visits.name()
         );
         return numberOfVisits == null ? 0 : new Integer(numberOfVisits);
     }

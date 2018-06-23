@@ -4,13 +4,12 @@
 
 package guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph;
 
-import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jFriendlyResource;
+import guru.bubl.module.neo4j_graph_manipulator.graph.FriendlyResourceNeo4j;
 
 import java.net.URI;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
-import java.util.Map;
 
 public class IncludedGraphElementFromExtractorQueryRow {
 
@@ -46,7 +45,7 @@ public class IncludedGraphElementFromExtractorQueryRow {
     }
 
     public String getLabel() throws SQLException{
-        String labelKey = key+ "." + Neo4jFriendlyResource.props.label;
+        String labelKey = key+ "." + FriendlyResourceNeo4j.props.label;
         return row.getString(
                 labelKey
         ) != null ? row.getString(labelKey) : "";

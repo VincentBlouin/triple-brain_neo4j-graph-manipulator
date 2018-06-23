@@ -8,9 +8,9 @@ import guru.bubl.module.common_utils.NoEx;
 import guru.bubl.module.model.Image;
 import guru.bubl.module.model.graph.FriendlyResourcePojo;
 import guru.bubl.module.model.json.ImageJson;
-import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jFriendlyResource;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.Neo4jUserGraph;
-import guru.bubl.module.neo4j_graph_manipulator.graph.image.Neo4jImages;
+import guru.bubl.module.neo4j_graph_manipulator.graph.FriendlyResourceNeo4j;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.UserGraphNeo4j;
+import guru.bubl.module.neo4j_graph_manipulator.graph.image.ImagesNeo4j;
 
 import java.net.URI;
 import java.sql.ResultSet;
@@ -64,7 +64,7 @@ public class FriendlyResourceFromExtractorQueryRow {
         try {
             return ImageJson.fromJson(
                     row.getString(
-                            nodeKey + "." + Neo4jImages.props.images
+                            nodeKey + "." + ImagesNeo4j.props.images
                     )
             );
         } catch (SQLException e) {
@@ -75,7 +75,7 @@ public class FriendlyResourceFromExtractorQueryRow {
     }
 
     public String getLabel() throws SQLException {
-        String labelKey = nodeKey + "." + Neo4jFriendlyResource.props.label + "";
+        String labelKey = nodeKey + "." + FriendlyResourceNeo4j.props.label + "";
         return row.getString(
                 labelKey
         ) != null ? row.getString(labelKey) : "";
@@ -84,7 +84,7 @@ public class FriendlyResourceFromExtractorQueryRow {
     private String getComment() {
         try {
             return row.getString(
-                    nodeKey + "." + Neo4jFriendlyResource.props.comment
+                    nodeKey + "." + FriendlyResourceNeo4j.props.comment
             );
         } catch (SQLException e) {
             return "";
@@ -93,7 +93,7 @@ public class FriendlyResourceFromExtractorQueryRow {
     }
 
     private Long getLastModificationDate() throws SQLException {
-        String key = nodeKey + "." + Neo4jFriendlyResource.props.last_modification_date.name();
+        String key = nodeKey + "." + FriendlyResourceNeo4j.props.last_modification_date.name();
         if (row.getString(key) == null) {
             return new Date().getTime();
         }
@@ -103,7 +103,7 @@ public class FriendlyResourceFromExtractorQueryRow {
     }
 
     private Long getCreationDate() throws SQLException {
-        String key = nodeKey + "." + Neo4jFriendlyResource.props.creation_date.name();
+        String key = nodeKey + "." + FriendlyResourceNeo4j.props.creation_date.name();
         if (row.getString(key) == null) {
             return new Date().getTime();
         }
@@ -115,7 +115,7 @@ public class FriendlyResourceFromExtractorQueryRow {
     public URI getUri() throws SQLException {
         return URI.create(
                 row.getString(
-                        nodeKey + "." + Neo4jUserGraph.URI_PROPERTY_NAME
+                        nodeKey + "." + UserGraphNeo4j.URI_PROPERTY_NAME
                 )
         );
     }

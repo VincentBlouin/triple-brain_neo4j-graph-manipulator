@@ -4,9 +4,9 @@
 
 package guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor;
 
-import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jFriendlyResource;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.Neo4jUserGraph;
-import guru.bubl.module.neo4j_graph_manipulator.graph.image.Neo4jImages;
+import guru.bubl.module.neo4j_graph_manipulator.graph.FriendlyResourceNeo4j;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.UserGraphNeo4j;
+import guru.bubl.module.neo4j_graph_manipulator.graph.image.ImagesNeo4j;
 
 public class FriendlyResourceQueryBuilder {
 
@@ -14,30 +14,30 @@ public class FriendlyResourceQueryBuilder {
         return
                 QueryUtils.getPropertyUsingContainerNameQueryPart(
                         prefix,
-                        Neo4jUserGraph.URI_PROPERTY_NAME
+                        UserGraphNeo4j.URI_PROPERTY_NAME
                 ) +
                         QueryUtils.getPropertyUsingContainerNameQueryPart(
                                 prefix,
-                                Neo4jFriendlyResource.props.label.toString()
+                                FriendlyResourceNeo4j.props.label.toString()
                         ) +
                         QueryUtils.getPropertyUsingContainerNameQueryPart(
                                 prefix,
-                                Neo4jFriendlyResource.props.comment.toString()
+                                FriendlyResourceNeo4j.props.comment.toString()
                         ) +
                         QueryUtils.getPropertyUsingContainerNameQueryPart(
                                 prefix,
-                                Neo4jFriendlyResource.props.creation_date.name()
+                                FriendlyResourceNeo4j.props.creation_date.name()
                         ) +
                         QueryUtils.getPropertyUsingContainerNameQueryPart(
                                 prefix,
-                                Neo4jFriendlyResource.props.last_modification_date.name()
+                                FriendlyResourceNeo4j.props.last_modification_date.name()
                         );
     }
 
     public static String imageReturnQueryPart(String key) {
         return QueryUtils.getPropertyUsingContainerNameQueryPart(
                 key,
-                Neo4jImages.props.images.name()
+                ImagesNeo4j.props.images.name()
         );
     }
 }
