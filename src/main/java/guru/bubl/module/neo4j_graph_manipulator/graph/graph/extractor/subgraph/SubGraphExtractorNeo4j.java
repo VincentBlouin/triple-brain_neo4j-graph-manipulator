@@ -269,7 +269,7 @@ public class SubGraphExtractorNeo4j {
                 ) +
                 QueryUtils.getPropertyUsingContainerNameQueryPart(
                         prefix,
-                        VertexInSubGraphOperatorNeo4j.props.is_public.name()
+                        VertexInSubGraphOperatorNeo4j.props.nb_friend_neighbors.name()
                 ) +
                 QueryUtils.getPropertyUsingContainerNameQueryPart(
                         prefix,

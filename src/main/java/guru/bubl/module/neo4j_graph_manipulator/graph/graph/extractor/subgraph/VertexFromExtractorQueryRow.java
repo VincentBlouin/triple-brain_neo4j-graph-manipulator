@@ -42,6 +42,7 @@ public class VertexFromExtractorQueryRow {
                 ).build(),
                 getNumberOfConnectedEdges(),
                 getNbPublicNeighbors(),
+                getNbFriendNeighbors(),
                 null,
                 null,
                 getSuggestions(),
@@ -138,6 +139,14 @@ public class VertexFromExtractorQueryRow {
         return Integer.valueOf(
                 row.getString(
                         keyPrefix + "." + VertexInSubGraphOperatorNeo4j.props.nb_public_neighbors
+                )
+        );
+    }
+
+    private Integer getNbFriendNeighbors() throws SQLException {
+        return Integer.valueOf(
+                row.getString(
+                        keyPrefix + "." + VertexInSubGraphOperatorNeo4j.props.nb_friend_neighbors
                 )
         );
     }
