@@ -538,7 +538,7 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
     }
 
     @Override
-    public void setNumberOfPublicConnectedEdges(Integer numberOfPublicConnectedEdges) {
+    public void setNumberOfPublicConnectedEdges(Integer nbPublicNeighbors) {
         NoEx.wrap(() -> {
             String query = String.format(
                     "%s SET n.%s={1}",
@@ -549,7 +549,25 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
                     query
             );
             statement.setInt(
-                    1, numberOfPublicConnectedEdges
+                    1, nbPublicNeighbors
+            );
+            return statement.execute();
+        }).get();
+    }
+
+    @Override
+    public void setNbFriendNeighbors(Integer nbFriendNeighbors) {
+        NoEx.wrap(() -> {
+            String query = String.format(
+                    "%s SET n.%s={1}",
+                    queryPrefix(),
+                    props.nb_friend_neighbors
+            );
+            PreparedStatement statement = connection.prepareStatement(
+                    query
+            );
+            statement.setInt(
+                    1, nbFriendNeighbors
             );
             return statement.execute();
         }).get();
@@ -879,15 +897,16 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
 
     @Override
     public void setShareLevel(ShareLevel shareLevel) {
-        String incrementOrDecrementNbNeighborsQueryPart = shareLevel == ShareLevel.PRIVATE ?
-                decrementNbFriendsOrPublicQueryPart(shareLevel, "d", "SET ") :
-                incrementNbFriendsOrPublicQueryPart(shareLevel, "d", "SET ");
+        ShareLevel previousShareLevel = this.getShareLevel();
+        String decrementQueryPart = decrementNbFriendsOrPublicQueryPart(previousShareLevel, "d", "SET ");
+        String incrementQueryPart = incrementNbFriendsOrPublicQueryPart(shareLevel, "d", "SET ");
         String query = queryPrefix()
                 + "SET n.shareLevel=@shareLevel " +
                 "WITH n " +
                 "MATCH n<-[:SOURCE_VERTEX|DESTINATION_VERTEX]->e, " +
                 "e<-[:SOURCE_VERTEX|DESTINATION_VERTEX]->d " +
-                incrementOrDecrementNbNeighborsQueryPart + " " +
+                decrementQueryPart + " " +
+                incrementQueryPart + " " +
                 "WITH d,n,e " +
                 "SET e.shareLevel = CASE WHEN (n.shareLevel <= d.shareLevel) THEN n.shareLevel ELSE d.shareLevel END";
         NoEx.wrap(() -> {

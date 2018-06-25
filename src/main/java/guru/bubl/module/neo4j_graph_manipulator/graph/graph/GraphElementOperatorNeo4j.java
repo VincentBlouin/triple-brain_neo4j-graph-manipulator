@@ -69,7 +69,7 @@ public class GraphElementOperatorNeo4j implements GraphElementOperator, Operator
         String queryPart = "";
         if (shareLevel == ShareLevel.FRIENDS) {
             queryPart = prefix + "%s.nb_friend_neighbors = %s.nb_friend_neighbors " + (decrement ? "-" : "+") + "1 ";
-        } else if (shareLevel.isPublic() || (decrement && shareLevel == ShareLevel.PRIVATE)) {
+        } else if (shareLevel.isPublic()) {
             queryPart = prefix + "%s.nb_public_neighbors = %s.nb_public_neighbors " + (decrement ? "-" : "+") + "1 ";
         } else {
             return queryPart;
