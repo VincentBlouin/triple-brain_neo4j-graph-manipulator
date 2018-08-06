@@ -77,7 +77,7 @@ public class CenterGraphElementsOperatorNeo4j implements CenteredGraphElementsOp
                         "owner:%s AND %s:* " +
                         (publicOnly ? "AND shareLevel:40" : "") +
                         "') " +
-                        "return n.%s as context, n.%s as numberOfVisits, n.%s as lastCenterDate, n.%s as label, n.%s as uri, n.%s as nbReferences",
+                        "return n.%s as context, n.%s as numberOfVisits, n.%s as lastCenterDate, n.%s as label, n.%s as uri, n.%s as nbReferences, n.colors as colors",
                 user.username(),
                 CenterGraphElementOperatorNeo4j.props.last_center_date,
                 publicOnly ? "public_context" : "private_context",
@@ -102,14 +102,17 @@ public class CenterGraphElementsOperatorNeo4j implements CenteredGraphElementsOp
                 Integer nbReferences = null == rs.getString("nbReferences") ?
                         null :
                         new Integer(rs.getString("nbReferences"));
+                String colors = rs.getString("colors");
+                GraphElementPojo graphElement = new GraphElementPojo(new FriendlyResourcePojo(
+                        URI.create(rs.getString("uri")),
+                        rs.getString("label")
+                ));
+                graphElement.setColors(colors);
                 centerGraphElements.add(
                         new CenterGraphElementPojo(
                                 numberOfVisits,
                                 lastCenterDate,
-                                new GraphElementPojo(new FriendlyResourcePojo(
-                                        URI.create(rs.getString("uri")),
-                                        rs.getString("label")
-                                )),
+                                graphElement,
                                 getContextFromRow(rs),
                                 nbReferences
                         )
