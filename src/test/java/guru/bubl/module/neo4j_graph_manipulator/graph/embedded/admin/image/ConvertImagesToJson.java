@@ -65,7 +65,7 @@
 //        Set<Image> images = new HashSet<>();
 //        for (Map<String, Object> result : results) {
 //            images.add(
-//                    Image.withBase64ForSmallAndUriForBigger(
+//                    Image.withUrlForSmallAndUriForBigger(
 //                            result.get(
 //                                    "base_64_for_small"
 //                            ).toString(),
