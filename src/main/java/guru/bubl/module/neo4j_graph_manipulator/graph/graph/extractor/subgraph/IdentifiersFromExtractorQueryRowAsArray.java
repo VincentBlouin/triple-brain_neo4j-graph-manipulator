@@ -11,6 +11,7 @@ import guru.bubl.module.model.json.ImageJson;
 import java.net.URI;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -63,6 +64,9 @@ public class IdentifiersFromExtractorQueryRowAsArray {
                     ImageJson.fromJson(
                             properties.get(4).toString()
                     )
+            );
+            friendlyResource.setCreationDate(
+                    new Long(properties.get(7).toString())
             );
             IdentifierPojo identification = new IdentifierPojo(
                     externalUri,

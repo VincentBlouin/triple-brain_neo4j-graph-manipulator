@@ -4,6 +4,7 @@
 
 package guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor;
 
+import guru.bubl.module.model.FriendlyResource;
 import guru.bubl.module.neo4j_graph_manipulator.graph.FriendlyResourceNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.identification.IdentificationNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.UserGraphNeo4j;
@@ -48,9 +49,13 @@ public class IdentificationQueryBuilder {
                         identificationKey,
                         IdentificationNeo4j.props.nb_references.name()
                 ) +
-                QueryUtils.getLastPropertyUsingContainerNameQueryPart(
+                QueryUtils.getPropertyUsingContainerNameQueryPart(
                         relationKey,
                         IdentificationNeo4j.props.relation_external_uri.name()
+                ) +
+                QueryUtils.getLastPropertyUsingContainerNameQueryPart(
+                        identificationKey,
+                        FriendlyResourceNeo4j.props.creation_date.name()
                 ) +
                 "]) as " + identificationKey + ", ";
     }
