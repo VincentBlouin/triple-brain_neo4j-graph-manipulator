@@ -18,6 +18,7 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.*;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.identification.IdentificationNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.image.ImagesNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.meta.IdentificationFactoryNeo4j;
+import guru.bubl.module.neo4j_graph_manipulator.graph.search.GraphIndexerNeo4j;
 import org.neo4j.graphdb.Node;
 
 import java.net.URI;
@@ -364,6 +365,9 @@ public class GraphElementOperatorNeo4j implements GraphElementOperator, Operator
                             identificationPojo, this
                     ).build()
             );
+            String searchContext = GraphIndexerNeo4j.descriptionToContext(
+                    tag.comment()
+            );
             statement.setString(
                     "label",
                     tag.label()
@@ -374,11 +378,11 @@ public class GraphElementOperatorNeo4j implements GraphElementOperator, Operator
             );
             statement.setString(
                     "privateContext",
-                    tag.comment()
+                    searchContext
             );
             statement.setString(
                     "publicContext",
-                    tag.comment()
+                    searchContext
             );
             statement.setString(
                     ImagesNeo4j.props.images.name(),

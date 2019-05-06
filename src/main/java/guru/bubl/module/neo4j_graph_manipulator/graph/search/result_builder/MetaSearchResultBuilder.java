@@ -70,20 +70,6 @@ public class MetaSearchResultBuilder implements SearchResultBuilder {
     }
 
     @Override
-    public Map<URI, String> getContext() throws SQLException {
-        String contextStr = getRow().getString("context");
-        if (null == contextStr) {
-            return new HashMap<>();
-        }
-        Map<URI, String> justDescription = new HashMap<>();
-        justDescription.put(
-                URI.create("description"),
-                contextStr
-        );
-        return justDescription;
-    }
-
-    @Override
     public ResultSet getRow() {
         return row;
     }

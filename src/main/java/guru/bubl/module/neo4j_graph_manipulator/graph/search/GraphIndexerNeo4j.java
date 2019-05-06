@@ -94,7 +94,19 @@ public class GraphIndexerNeo4j implements GraphIndexer {
 
     @Override
     public void indexMeta(IdentifierPojo identifier) {
-        indexWhereContextIsSurroundVertices(identifier);
+        if (identifier.gotComments()) {
+            String descriptionAsContext = descriptionToContext(
+                    identifier.comment()
+            );
+            setPrivatePublicContext(
+                    descriptionAsContext,
+                    descriptionAsContext,
+                    descriptionAsContext,
+                    identifier
+            );
+        } else {
+            indexWhereContextIsSurroundVertices(identifier);
+        }
     }
 
     @Override
@@ -142,11 +154,20 @@ public class GraphIndexerNeo4j implements GraphIndexer {
             Map<URI, ? extends GraphElement> friendsContext,
             Map<URI, ? extends GraphElement> publicContext,
             FriendlyResource friendlyResource) {
+        filterTheContext(privateContext);
+        filterTheContext(publicContext);
+        setPrivatePublicContext(
+                convertGraphElementsToContextJsonString(privateContext),
+                convertGraphElementsToContextJsonString(friendsContext),
+                convertGraphElementsToContextJsonString(publicContext),
+                friendlyResource
+        );
+    }
+
+    private void setPrivatePublicContext(String privateContext, String friendsContext, String publicContext, FriendlyResource friendlyResource) {
         FriendlyResourceNeo4j neo4jFriendlyResource = neo4jFriendlyResourceFactory.withUri(
                 friendlyResource.uri()
         );
-        filterTheContext(privateContext);
-        filterTheContext(publicContext);
         NoEx.wrap(() -> {
             String query = String.format(
                     "%s SET n.private_context=@privateContext, " +
@@ -156,11 +177,11 @@ public class GraphIndexerNeo4j implements GraphIndexer {
             NamedParameterStatement statement = new NamedParameterStatement(connection, query);
             statement.setString(
                     "privateContext",
-                    convertGraphElementsToContextJsonString(privateContext)
+                    privateContext
             );
             statement.setString(
                     "publicContext",
-                    convertGraphElementsToContextJsonString(publicContext)
+                    publicContext
             );
             return statement.execute();
         }).get();
@@ -175,6 +196,17 @@ public class GraphIndexerNeo4j implements GraphIndexer {
             );
         }
         return mapOfLabels;
+    }
+
+    public static String descriptionToContext(String description) {
+        Map<URI, String> context = new HashMap<>();
+        context.put(
+                URI.create("description"),
+                description
+        );
+        return JsonUtils.getGson().toJson(
+                context
+        );
     }
 
     private String mapOfUrisAndLabelToJsonString(Map<URI, String> mapOfGraphElements) {
