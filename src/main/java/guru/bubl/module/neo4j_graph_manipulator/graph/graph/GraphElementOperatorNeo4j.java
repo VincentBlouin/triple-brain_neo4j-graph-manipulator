@@ -373,6 +373,14 @@ public class GraphElementOperatorNeo4j implements GraphElementOperator, Operator
                     tag.comment()
             );
             statement.setString(
+                    "privateContext",
+                    tag.comment()
+            );
+            statement.setString(
+                    "publicContext",
+                    tag.comment()
+            );
+            statement.setString(
                     ImagesNeo4j.props.images.name(),
                     ImageJson.toJsonArray(tag.images())
             );

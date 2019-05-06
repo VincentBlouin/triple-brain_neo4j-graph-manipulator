@@ -41,6 +41,8 @@ public class AddIdentificationQueryBuilder {
                         "f.%s='%s', " + // graph element type = meta
                         "f.%s=@label, " +
                         "f.%s=@comment, " +
+                        "f.private_context=@privateContext, " +
+                        "f.public_context=@publicContext, " +
                         "f.%s=@images, " +
                         "f.%s=@%s, " +
                         "f.%s=@creationDate, " +

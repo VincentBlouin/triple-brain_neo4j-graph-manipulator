@@ -5,24 +5,29 @@
 package guru.bubl.module.neo4j_graph_manipulator.graph.search.result_builder;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.gson.reflect.TypeToken;
 import guru.bubl.module.common_utils.NoEx;
 import guru.bubl.module.model.graph.FriendlyResourcePojo;
 import guru.bubl.module.model.graph.GraphElementPojo;
 import guru.bubl.module.model.graph.GraphElementType;
 import guru.bubl.module.model.graph.identification.IdentifierPojo;
+import guru.bubl.module.model.json.JsonUtils;
 import guru.bubl.module.model.search.GraphElementSearchResult;
 import guru.bubl.module.model.search.GraphElementSearchResultPojo;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.FriendlyResourceFromExtractorQueryRow;
 
 import java.net.URI;
 import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
 
-public class IdentifierSearchResultBuilder implements SearchResultBuilder {
+public class MetaSearchResultBuilder implements SearchResultBuilder {
 
     private ResultSet row;
     private String prefix;
 
-    public IdentifierSearchResultBuilder(ResultSet row, String prefix) {
+    public MetaSearchResultBuilder(ResultSet row, String prefix) {
         this.row = row;
         this.prefix = prefix;
     }
@@ -62,6 +67,20 @@ public class IdentifierSearchResultBuilder implements SearchResultBuilder {
                 identifierAsGraphElement,
                 getContext()
         )).get();
+    }
+
+    @Override
+    public Map<URI, String> getContext() throws SQLException {
+        String contextStr = getRow().getString("context");
+        if (null == contextStr) {
+            return new HashMap<>();
+        }
+        Map<URI, String> justDescription = new HashMap<>();
+        justDescription.put(
+                URI.create("description"),
+                contextStr
+        );
+        return justDescription;
     }
 
     @Override

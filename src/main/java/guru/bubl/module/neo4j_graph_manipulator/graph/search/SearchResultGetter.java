@@ -73,7 +73,7 @@ public class SearchResultGetter<ResultType extends GraphElementSearchResult> {
             case property:
                 return new PropertySearchResultBuilder(row, nodePrefix);
             case meta:
-                return new IdentifierSearchResultBuilder(row, nodePrefix);
+                return new MetaSearchResultBuilder(row, nodePrefix);
             default:
                 return null;
         }
