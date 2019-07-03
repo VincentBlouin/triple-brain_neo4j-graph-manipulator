@@ -41,14 +41,32 @@ public class CenterGraphElementsOperatorNeo4j implements CenteredGraphElementsOp
     @Override
     public Set<CenterGraphElementPojo> getPublicAndPrivate() {
         return getPublicOnlyOrNot(
-                false
+                false,
+                null
+        );
+    }
+
+    @Override
+    public Set<CenterGraphElementPojo> getPublicAndPrivateWithLimit(Integer limit) {
+        return getPublicOnlyOrNot(
+                false,
+                limit
         );
     }
 
     @Override
     public Set<CenterGraphElementPojo> getPublicOnlyOfType() {
         return getPublicOnlyOrNot(
-                true
+                true,
+                null
+        );
+    }
+
+    @Override
+    public Set<CenterGraphElementPojo> getPublicOnlyOfTypeWithLimit(Integer limit) {
+        return getPublicOnlyOrNot(
+                true,
+                limit
         );
     }
 
@@ -71,13 +89,14 @@ public class CenterGraphElementsOperatorNeo4j implements CenteredGraphElementsOp
         )).get();
     }
 
-    private Set<CenterGraphElementPojo> getPublicOnlyOrNot(Boolean publicOnly) {
+    private Set<CenterGraphElementPojo> getPublicOnlyOrNot(Boolean publicOnly, Integer limit) {
         String query = String.format(
                 "START n=node:node_auto_index('" +
                         "owner:%s AND %s:* " +
                         (publicOnly ? "AND shareLevel:40" : "") +
                         "') " +
-                        "return n.%s as context, n.%s as numberOfVisits, n.%s as lastCenterDate, n.%s as label, n.%s as uri, n.%s as nbReferences, n.colors as colors",
+                        "return n.%s as context, n.%s as numberOfVisits, n.%s as lastCenterDate, n.%s as label, n.%s as uri, n.%s as nbReferences, n.colors as colors " +
+                        "%s",
                 user.username(),
                 CenterGraphElementOperatorNeo4j.props.last_center_date,
                 publicOnly ? "public_context" : "private_context",
@@ -85,7 +104,8 @@ public class CenterGraphElementsOperatorNeo4j implements CenteredGraphElementsOp
                 CenterGraphElementOperatorNeo4j.props.last_center_date,
                 FriendlyResourceNeo4j.props.label,
                 FriendlyResourceNeo4j.props.uri,
-                IdentificationNeo4j.props.nb_references
+                IdentificationNeo4j.props.nb_references,
+                limit == null ? "" : "LIMIT " + limit
         );
         Set<CenterGraphElementPojo> centerGraphElements = new HashSet<>();
         return NoEx.wrap(() -> {
@@ -124,7 +144,7 @@ public class CenterGraphElementsOperatorNeo4j implements CenteredGraphElementsOp
 
     private Map<URI, String> getContextFromRow(ResultSet row) throws SQLException {
         String contextStr = row.getString("context");
-        if(null == contextStr){
+        if (null == contextStr) {
             return new HashMap<>();
         }
         return JsonUtils.getGson().fromJson(
