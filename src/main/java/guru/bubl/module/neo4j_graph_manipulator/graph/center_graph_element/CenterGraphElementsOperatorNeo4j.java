@@ -106,7 +106,7 @@ public class CenterGraphElementsOperatorNeo4j implements CenteredGraphElementsOp
                 FriendlyResourceNeo4j.props.label,
                 FriendlyResourceNeo4j.props.uri,
                 IdentificationNeo4j.props.nb_references,
-                limit == null ? "" : "ORDER BY n.last_center_date",
+                limit == null ? "" : "ORDER BY n.last_center_date DESC",
                 limit == null ? "" : "LIMIT " + limit
         );
         Set<CenterGraphElementPojo> centerGraphElements = new HashSet<>();
