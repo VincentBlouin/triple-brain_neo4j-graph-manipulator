@@ -227,13 +227,14 @@ public class GraphSearchNeo4j implements GraphSearch {
                     IdentificationQueryBuilder.identificationReturnQueryPart() +
                     "n.type as type " +
                     "ORDER BY COALESCE(" +
-                    "n." + IdentificationNeo4j.props.nb_references + "," +
-                    "0) DESC, COALESCE(" +
                     "n." + CenterGraphElementOperatorNeo4j.props.number_of_visits + "," +
+                    "0) DESC, COALESCE(" +
+                    "n." + IdentificationNeo4j.props.nb_references + "," +
                     "0) DESC " +
                     "limit 10";
         }
     }
+
     public static String formatSearchTerm(String searchTerm) {
         return QueryParser.escape(searchTerm).replace(
                 "\\", "\\\\"
