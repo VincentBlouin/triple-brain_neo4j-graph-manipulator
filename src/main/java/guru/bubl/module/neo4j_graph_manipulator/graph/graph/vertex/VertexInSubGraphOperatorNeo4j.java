@@ -22,8 +22,8 @@ import guru.bubl.module.model.graph.identification.IdentifierPojo;
 import guru.bubl.module.model.graph.vertex.*;
 import guru.bubl.module.model.json.SuggestionJson;
 import guru.bubl.module.model.suggestion.SuggestionPojo;
-import guru.bubl.module.neo4j_graph_manipulator.graph.FriendlyResourceNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.FriendlyResourceFactoryNeo4j;
+import guru.bubl.module.neo4j_graph_manipulator.graph.FriendlyResourceNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.OperatorNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.Relationships;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.GraphElementFactoryNeo4j;
@@ -36,9 +36,7 @@ import org.neo4j.graphdb.Node;
 import java.net.URI;
 import java.sql.*;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import static guru.bubl.module.neo4j_graph_manipulator.graph.RestApiUtilsNeo4j.map;
 import static guru.bubl.module.neo4j_graph_manipulator.graph.graph.GraphElementOperatorNeo4j.decrementNbFriendsOrPublicQueryPart;
@@ -231,24 +229,47 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
                 this,
                 new UserUris(
                         getOwnerUsername()
-                ).generateVertexUri()
+                ).generateVertexUri(),
+                null
         );
     }
 
-    private EdgePojo addVertexAndRelationToTheLeftOrNotAction(VertexInSubGraphOperatorNeo4j self, URI newVertexUri) {
+    @Override
+    public EdgePojo addVertexAndRelationWithIds(UUID vertexId, UUID edgeId) {
+        UserUris userUri = new UserUris(
+                getOwnerUsername()
+        );
+        URI vertexUri = userUri.vertexUriFromShortId(vertexId.toString());
+        if (FriendlyResourceNeo4j.haveElementWithUri(vertexUri, connection)) {
+            vertexUri = userUri.generateVertexUri();
+        }
+        URI edgeUri = userUri.edgeUriFromShortId(edgeId.toString());
+        if (FriendlyResourceNeo4j.haveElementWithUri(edgeUri, connection)) {
+            edgeUri = userUri.generateEdgeUri();
+        }
+        return this.addVertexAndRelationToTheLeftOrNotAction(
+                this,
+                vertexUri,
+                edgeUri
+        );
+    }
+
+    private EdgePojo addVertexAndRelationToTheLeftOrNotAction(VertexInSubGraphOperatorNeo4j self, URI newVertexUri, URI newEdgeUri) {
         VertexInSubGraphOperatorNeo4j newVertexOperator = vertexFactory.withUri(
                 newVertexUri
         );
         self.incrementNumberOfConnectedEdges();
         VertexPojo newVertex = newVertexOperator.createVertexUsingInitialValues(
                 map(
-                        props.number_of_connected_edges_property_name.name(),
-                        1,
-                        props.nb_public_neighbors.name(),
-                        self.isPublic() ? 1 : 0
+                        props.number_of_connected_edges_property_name.name(), 1,
+                        props.nb_public_neighbors.name(), self.isPublic() ? 1 : 0
                 )
         );
-        EdgeOperatorNeo4j edgeOperator = edgeFactory.withSourceAndDestinationVertex(
+        EdgeOperatorNeo4j edgeOperator = newEdgeUri == null ? edgeFactory.withSourceAndDestinationVertex(
+                self,
+                newVertexOperator
+        ) : edgeFactory.withUriAndSourceAndDestinationVertex(
+                newEdgeUri,
                 self,
                 newVertexOperator
         );
@@ -315,7 +336,8 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
         );
         Edge newEdge = addVertexAndRelationToTheLeftOrNotAction(
                 this,
-                newVertex.uri()
+                newVertex.uri(),
+                null
         );
         EdgeOperator newEdgeOperator = edgeFactory.withUri(
                 newEdge.uri()
@@ -357,7 +379,8 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
         );
         EdgePojo newEdge = addVertexAndRelationToTheLeftOrNotAction(
                 this,
-                newVertex.uri()
+                newVertex.uri(),
+                null
         );
         EdgeOperator newEdgeOperator = edgeFactory.withUri(
                 newEdge.uri()

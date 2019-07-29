@@ -20,6 +20,7 @@ import guru.bubl.module.model.graph.schema.SchemaOperator;
 import guru.bubl.module.model.graph.schema.SchemaPojo;
 import guru.bubl.module.model.graph.vertex.VertexOperator;
 import guru.bubl.module.model.graph.vertex.VertexPojo;
+import guru.bubl.module.neo4j_graph_manipulator.graph.FriendlyResourceNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.edge.EdgeFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.schema.SchemaExtractorFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph.SubGraphExtractorFactoryNeo4j;
@@ -76,15 +77,7 @@ public class UserGraphNeo4j implements UserGraph {
 
     @Override
     public Boolean haveElementWithId(URI uri) {
-        String query = String.format(
-                "START n=node:node_auto_index('uri:%s') return n.uri as uri",
-                uri
-        );
-        return NoEx.wrap(() ->
-                connection.createStatement().executeQuery(
-                        query
-                ).next()
-        ).get();
+        return FriendlyResourceNeo4j.haveElementWithUri(uri, connection);
     }
 
     @Override

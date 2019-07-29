@@ -61,6 +61,18 @@ public class FriendlyResourceNeo4j implements FriendlyResourceOperator, Operator
 
     protected Connection connection;
 
+    public static Boolean haveElementWithUri(URI uri, Connection connection) {
+        String query = String.format(
+                "START n=node:node_auto_index('uri:%s') return n.uri as uri",
+                uri
+        );
+        return NoEx.wrap(() ->
+                connection.createStatement().executeQuery(
+                        query
+                ).next()
+        ).get();
+    }
+
     @AssistedInject
     protected FriendlyResourceNeo4j(
             ImageFactoryNeo4j imageFactory,
@@ -237,7 +249,7 @@ public class FriendlyResourceNeo4j implements FriendlyResourceOperator, Operator
         }).get();
     }
 
-    public FriendlyResourcePojo pojoFromCreationProperties(Map<String, Object> creationProperties){
+    public FriendlyResourcePojo pojoFromCreationProperties(Map<String, Object> creationProperties) {
         FriendlyResourcePojo friendlyResourcePojo = new FriendlyResourcePojo(
                 uri
         );
@@ -326,9 +338,9 @@ public class FriendlyResourceNeo4j implements FriendlyResourceOperator, Operator
                 UserUris.ownerUserNameFromUri(uri())
         );
         /*
-        *  not setting creation date and last modification date because it
-        *  can be easily done in neo4j using timestamp()
-        */
+         *  not setting creation date and last modification date because it
+         *  can be easily done in neo4j using timestamp()
+         */
     }
 
     @Override
