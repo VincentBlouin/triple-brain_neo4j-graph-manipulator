@@ -235,15 +235,15 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
     }
 
     @Override
-    public EdgePojo addVertexAndRelationWithIds(UUID vertexId, UUID edgeId) {
+    public EdgePojo addVertexAndRelationWithIds(String vertexId, String edgeId) {
         UserUris userUri = new UserUris(
                 getOwnerUsername()
         );
-        URI vertexUri = userUri.vertexUriFromShortId(vertexId.toString());
+        URI vertexUri = userUri.vertexUriFromShortId(vertexId);
         if (FriendlyResourceNeo4j.haveElementWithUri(vertexUri, connection)) {
             vertexUri = userUri.generateVertexUri();
         }
-        URI edgeUri = userUri.edgeUriFromShortId(edgeId.toString());
+        URI edgeUri = userUri.edgeUriFromShortId(edgeId);
         if (FriendlyResourceNeo4j.haveElementWithUri(edgeUri, connection)) {
             edgeUri = userUri.generateEdgeUri();
         }
