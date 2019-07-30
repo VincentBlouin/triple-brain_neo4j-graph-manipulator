@@ -358,7 +358,7 @@ public class GraphElementOperatorNeo4j implements GraphElementOperator, Operator
         );
         Map<URI, IdentifierPojo> identifications = new HashMap<>();
         Date tagCreationDate = new Date();
-        return NoEx.wrap(() -> {
+        try {
             NamedParameterStatement statement = new NamedParameterStatement(
                     connection,
                     AddIdentificationQueryBuilder.usingIdentificationForGraphElement(
@@ -471,7 +471,10 @@ public class GraphElementOperatorNeo4j implements GraphElementOperator, Operator
                 );
             }
             return identifications;
-        }).get();
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
