@@ -13,6 +13,7 @@ import guru.bubl.module.model.center_graph_element.CenterGraphElementPojo;
 import guru.bubl.module.model.center_graph_element.CenteredGraphElementsOperator;
 import guru.bubl.module.model.graph.FriendlyResourcePojo;
 import guru.bubl.module.model.graph.GraphElementPojo;
+import guru.bubl.module.model.graph.ShareLevel;
 import guru.bubl.module.model.json.JsonUtils;
 import guru.bubl.module.neo4j_graph_manipulator.graph.FriendlyResourceNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.identification.IdentificationNeo4j;
@@ -95,7 +96,7 @@ public class CenterGraphElementsOperatorNeo4j implements CenteredGraphElementsOp
                         "owner:%s AND %s:* " +
                         (publicOnly ? "AND shareLevel:40" : "") +
                         "') " +
-                        "return n.%s as context, n.%s as numberOfVisits, n.%s as lastCenterDate, n.%s as label, n.%s as uri, n.%s as nbReferences, n.colors as colors " +
+                        "return n.%s as context, n.%s as numberOfVisits, n.%s as lastCenterDate, n.%s as label, n.%s as uri, n.%s as nbReferences, n.colors as colors, n.shareLevel " +
                         "%s " +
                         "%s",
                 user.username(),
@@ -125,6 +126,7 @@ public class CenterGraphElementsOperatorNeo4j implements CenteredGraphElementsOp
                         null :
                         new Integer(rs.getString("nbReferences"));
                 String colors = rs.getString("colors");
+                ShareLevel shareLevel = ShareLevel.get(rs.getInt("n.shareLevel"));
                 GraphElementPojo graphElement = new GraphElementPojo(new FriendlyResourcePojo(
                         URI.create(rs.getString("uri")),
                         rs.getString("label")
@@ -136,7 +138,8 @@ public class CenterGraphElementsOperatorNeo4j implements CenteredGraphElementsOp
                                 lastCenterDate,
                                 graphElement,
                                 getContextFromRow(rs),
-                                nbReferences
+                                nbReferences,
+                                shareLevel
                         )
                 );
             }
