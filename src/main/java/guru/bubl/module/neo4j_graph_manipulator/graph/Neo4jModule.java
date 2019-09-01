@@ -69,6 +69,7 @@ public class Neo4jModule extends AbstractModule {
             DB_PATH_FOR_TESTS = "/tmp/triple_brain/neo4j/db";
 
     private Boolean useEmbedded, test;
+    private String dbUser, dbPassword;
 
     public static Neo4jModule forTestingUsingRest() {
         return new Neo4jModule(false, true);
@@ -78,7 +79,7 @@ public class Neo4jModule extends AbstractModule {
         return new Neo4jModule(false, false);
     }
 
-    public static Neo4jModule notForTestingUsingEmbedded() {
+    public static Neo4jModule notForTestingUsingEmbedded(String dbUser, String dbPassword) {
         return new Neo4jModule(true, false);
     }
 
@@ -89,6 +90,13 @@ public class Neo4jModule extends AbstractModule {
     protected Neo4jModule(Boolean useEmbedded, Boolean test) {
         this.useEmbedded = useEmbedded;
         this.test = test;
+    }
+
+    protected Neo4jModule(Boolean useEmbedded, Boolean test, String dbUser, String dbPassword) {
+        this.useEmbedded = useEmbedded;
+        this.test = test;
+        this.dbUser = dbUser;
+        this.dbPassword = dbPassword;
     }
 
     @Override
@@ -186,15 +194,18 @@ public class Neo4jModule extends AbstractModule {
 
     private void bindForEmbedded() {
         BoltConnector boltConnector = new BoltConnector("bolt");
-        GraphDatabaseService graphDb = new GraphDatabaseFactory().newEmbeddedDatabaseBuilder(
-                new File(test ? DB_PATH_FOR_TESTS : DB_PATH)
-        )
-                .setConfig(boltConnector.enabled, "true")
-                .setConfig(boltConnector.type, "BOLT")
-                .setConfig(boltConnector.listen_address, "localhost:7687")
-                .newGraphDatabase();
-        Transaction tx = graphDb.beginTx();
+        GraphDatabaseService graphDb;
+        Driver driver;
         if (test) {
+            graphDb = new GraphDatabaseFactory().newEmbeddedDatabaseBuilder(
+                    new File(test ? DB_PATH_FOR_TESTS : DB_PATH)
+            )
+                    .setConfig(boltConnector.enabled, "true")
+                    .setConfig(boltConnector.type, "BOLT")
+                    .setConfig(boltConnector.listen_address, "localhost:7687")
+                    .newGraphDatabase();
+            bind(GraphDatabaseService.class).toInstance(graphDb);
+            Transaction tx = graphDb.beginTx();
             graphDb.execute("CREATE CONSTRAINT ON (n:Resource) ASSERT n.uri IS UNIQUE");
             graphDb.execute("CREATE CONSTRAINT ON (n:User) ASSERT n.email IS UNIQUE");
             graphDb.execute("CREATE INDEX ON :GraphElement(owner)");
@@ -204,21 +215,23 @@ public class Neo4jModule extends AbstractModule {
             graphDb.execute("CREATE INDEX ON :GraphElement(shareLevel)");
             graphDb.execute("CREATE INDEX ON :GraphElement(last_center_date)");
             graphDb.execute("CREATE INDEX ON :Meta(external_uri)");
+            tx.success();
+            tx.close();
+            registerShutdownHook(graphDb);
+            driver = GraphDatabase.driver(
+                    "bolt://localhost:7687",
+                    AuthTokens.basic("user", "password")
+            );
+        } else {
+            driver = GraphDatabase.driver(
+                    "bolt://localhost:7687",
+                    AuthTokens.basic(this.dbUser, this.dbPassword)
+            );
         }
 
-        Driver driver = GraphDatabase.driver(
-                "bolt://localhost:7687",
-                AuthTokens.basic("user", "password")
-        );
         bind(Session.class).toInstance(
                 driver.session()
         );
-        bind(GraphDatabaseService.class).toInstance(graphDb);
-        if (test) {
-            registerShutdownHook(graphDb);
-        }
-        tx.success();
-        tx.close();
     }
 
     private void registerShutdownHook(final GraphDatabaseService graphDb) {

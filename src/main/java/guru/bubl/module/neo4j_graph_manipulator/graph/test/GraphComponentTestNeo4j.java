@@ -78,7 +78,6 @@ public class GraphComponentTestNeo4j implements GraphComponentTest {
 
     @Override
     public void before() {
-        transaction = graphDatabaseService.beginTx();
         user = User.withEmail(
                 "roger.lamothe@example.org"
         ).setUsername("roger_lamothe");
