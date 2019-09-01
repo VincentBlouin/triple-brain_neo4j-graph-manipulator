@@ -80,7 +80,7 @@ public class Neo4jModule extends AbstractModule {
     }
 
     public static Neo4jModule notForTestingUsingEmbedded(String dbUser, String dbPassword) {
-        return new Neo4jModule(true, false);
+        return new Neo4jModule(true, false, dbUser, dbPassword);
     }
 
     public static Neo4jModule forTestingUsingEmbedded() {
