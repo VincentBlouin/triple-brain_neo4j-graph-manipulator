@@ -8,8 +8,9 @@ import guru.bubl.module.common_utils.NoEx;
 import guru.bubl.module.model.graph.GraphElementType;
 import guru.bubl.module.model.search.GraphElementSearchResult;
 import guru.bubl.module.neo4j_graph_manipulator.graph.search.result_builder.*;
+import org.neo4j.driver.v1.Record;
+import org.neo4j.driver.v1.StatementResult;
 
-import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -22,26 +23,23 @@ public class SearchResultGetter<ResultType extends GraphElementSearchResult> {
 
     private List<ResultType> searchResults = new ArrayList<>();
 
-    Connection connection;
+    private StatementResult result;
 
-    private String query;
 
-    public SearchResultGetter(String query, Connection connection){
-        this.query = query;
-        this.connection = connection;
+    public SearchResultGetter(StatementResult result) {
+        this.result = result;
     }
 
-    public List<ResultType> get(){
+    public List<ResultType> get() {
         return NoEx.wrap(() -> {
-            ResultSet rs = connection.createStatement().executeQuery(query);
-            while (rs.next()) {
-                addResult(rs);
+            while (result.hasNext()) {
+                addResult(result.next());
             }
             return searchResults;
         }).get();
     }
 
-    private void addResult(ResultSet row) throws SQLException {
+    private void addResult(Record row) {
         SearchResultBuilder searchResultBuilder = getFromRow(row);
         GraphElementSearchResult graphElementSearchResult = searchResultBuilder.build();
         searchResults.add(
@@ -62,30 +60,36 @@ public class SearchResultGetter<ResultType extends GraphElementSearchResult> {
         }
     }
 
-    private SearchResultBuilder getFromRow(ResultSet row) throws SQLException{
-        switch (nodeTypeInRow(row)) {
-            case vertex:
-                return new VertexSearchResultBuilder(row, nodePrefix);
-            case edge:
-                return new RelationSearchResultBuilder(row, nodePrefix);
-            case schema:
-                return new SchemaSearchResultBuilder(row, nodePrefix);
-            case property:
-                return new PropertySearchResultBuilder(row, nodePrefix);
-            case meta:
-                return new MetaSearchResultBuilder(row, nodePrefix);
+    private SearchResultBuilder getFromRow(Record record) {
+        switch (nodeTypeInRow(record)) {
+            case Vertex:
+                return new VertexSearchResultBuilder(record, nodePrefix);
+            case Edge:
+                return new RelationSearchResultBuilder(record, nodePrefix);
+            case Schema:
+                return new SchemaSearchResultBuilder(record, nodePrefix);
+            case Property:
+                return new PropertySearchResultBuilder(record, nodePrefix);
+            case Meta:
+                return new MetaSearchResultBuilder(record, nodePrefix);
             default:
                 return null;
         }
     }
 
-    public static GraphElementType nodeTypeInRow(ResultSet row) throws SQLException{
-        return GraphElementType.valueOf(
-                row.getString("type")
-        );
+    public static GraphElementType nodeTypeInRow(Record record) {
+        List<String> types = (List) record.get("type").asList();
+        GraphElementType type = null;
+        for (String typeStr : types) {
+            GraphElementType graphElementType = GraphElementType.valueOf(typeStr);
+            if (!GraphElementType.commonTypes.contains(graphElementType)) {
+                type = graphElementType;
+            }
+        }
+        return type;
     }
 
-    private Integer getNbReferenceInRow(ResultSet row) throws SQLException{
+    private Integer getNbReferenceInRow(ResultSet row) throws SQLException {
         String nbReferencesStr = row.getString("nb_references");
         return nbReferencesStr == null ? 0 : new Integer(nbReferencesStr);
     }

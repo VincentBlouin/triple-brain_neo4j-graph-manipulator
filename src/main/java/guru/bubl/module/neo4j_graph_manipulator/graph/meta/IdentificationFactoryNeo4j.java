@@ -4,9 +4,9 @@
 
 package guru.bubl.module.neo4j_graph_manipulator.graph.meta;
 
+import guru.bubl.module.model.graph.identification.IdentificationFactory;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.identification.IdentificationNeo4j;
 import org.neo4j.graphdb.Node;
-import guru.bubl.module.model.graph.identification.IdentificationFactory;
 
 import java.net.URI;
 

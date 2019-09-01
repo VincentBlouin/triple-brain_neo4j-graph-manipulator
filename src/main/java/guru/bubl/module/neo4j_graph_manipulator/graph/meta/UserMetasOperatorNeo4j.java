@@ -6,66 +6,55 @@ package guru.bubl.module.neo4j_graph_manipulator.graph.meta;
 
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
-import guru.bubl.module.common_utils.NoEx;
 import guru.bubl.module.model.User;
 import guru.bubl.module.model.graph.FriendlyResourcePojo;
-import guru.bubl.module.model.graph.GraphElementType;
 import guru.bubl.module.model.graph.identification.IdentifierPojo;
 import guru.bubl.module.model.meta.UserMetasOperator;
-import guru.bubl.module.neo4j_graph_manipulator.graph.FriendlyResourceNeo4j;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.identification.IdentificationNeo4j;
+import org.neo4j.driver.v1.Record;
+import org.neo4j.driver.v1.Session;
+import org.neo4j.driver.v1.StatementResult;
 
 import java.net.URI;
-import java.sql.Connection;
-import java.sql.ResultSet;
 import java.util.HashSet;
 import java.util.Set;
 
+import static org.neo4j.driver.v1.Values.parameters;
+
 public class UserMetasOperatorNeo4j implements UserMetasOperator {
 
-    private Connection connection;
+    private Session session;
     private User user;
 
     @AssistedInject
     protected UserMetasOperatorNeo4j(
-            Connection connection,
+            Session session,
             @Assisted User user
     ) {
-        this.connection = connection;
+        this.session = session;
         this.user = user;
     }
 
     @Override
     public Set<IdentifierPojo> get() {
-        String query = String.format(
-                "START n=node:node_auto_index('" +
-                        "owner:%s AND " +
-                        FriendlyResourceNeo4j.props.type + ":%s " +
-                        "') " +
-                        "return n.%s as label, n.%s as nbReferences, n.%s as uri;",
-                user.username(),
-                GraphElementType.meta,
-                FriendlyResourceNeo4j.props.label,
-                IdentificationNeo4j.props.nb_references,
-                FriendlyResourceNeo4j.props.uri
-        );
         Set<IdentifierPojo> userMetas = new HashSet<>();
-        return NoEx.wrap(() -> {
-            ResultSet rs = connection.createStatement().executeQuery(
-                    query
+        StatementResult rs = session.run(
+                "MATCH (n:Meta{owner:$owner}) RETURN n.label as label, n.nb_references as nbReferences, n.uri as uri;",
+                parameters(
+                        "owner", user.username()
+                )
+        );
+        while (rs.hasNext()) {
+            Record record = rs.next();
+            userMetas.add(
+                    new IdentifierPojo(
+                            record.get("nbReferences").asInt(),
+                            new FriendlyResourcePojo(
+                                    URI.create(record.get("uri").asString()),
+                                    record.get("label").asString()
+                            )
+                    )
             );
-            while (rs.next()) {
-                userMetas.add(
-                        new IdentifierPojo(
-                                new Integer(rs.getString("nbReferences")),
-                                new FriendlyResourcePojo(
-                                        URI.create(rs.getString("uri")),
-                                        rs.getString("label")
-                                )
-                        )
-                );
-            }
-            return userMetas;
-        }).get();
+        }
+        return userMetas;
     }
 }

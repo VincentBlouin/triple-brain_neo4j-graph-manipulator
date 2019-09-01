@@ -4,15 +4,13 @@
 
 package guru.bubl.module.neo4j_graph_manipulator.graph.test;
 
-import guru.bubl.module.common_utils.NoEx;
 import guru.bubl.module.model.User;
-import guru.bubl.module.model.graph.GraphElementType;
 import guru.bubl.module.model.graph.GraphFactory;
-import guru.bubl.module.model.graph.subgraph.SubGraphPojo;
-import guru.bubl.module.model.graph.subgraph.UserGraph;
 import guru.bubl.module.model.graph.edge.Edge;
 import guru.bubl.module.model.graph.edge.EdgeFactory;
 import guru.bubl.module.model.graph.edge.EdgePojo;
+import guru.bubl.module.model.graph.subgraph.SubGraphPojo;
+import guru.bubl.module.model.graph.subgraph.UserGraph;
 import guru.bubl.module.model.graph.vertex.Vertex;
 import guru.bubl.module.model.graph.vertex.VertexInSubGraphPojo;
 import guru.bubl.module.model.graph.vertex.VertexOperator;
@@ -25,12 +23,11 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.graph.UserGraphFactoryNeo4
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.WholeGraphNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph.SubGraphExtractorFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.VertexFactoryNeo4j;
+import org.neo4j.driver.v1.Session;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Transaction;
 
 import javax.inject.Inject;
-import java.sql.Connection;
-import java.sql.Statement;
 
 public class GraphComponentTestNeo4j implements GraphComponentTest {
 
@@ -59,7 +56,7 @@ public class GraphComponentTestNeo4j implements GraphComponentTest {
     protected GraphFactory graphFactory;
 
     @Inject
-    Connection connection;
+    Session session;
 
     protected VertexOperator vertexA;
     protected VertexOperator vertexB;
@@ -141,20 +138,9 @@ public class GraphComponentTestNeo4j implements GraphComponentTest {
 
     @Override
     public void removeWholeGraph() {
-        NoEx.wrap(() -> {
-                    Statement stmt = connection.createStatement();
-                    return stmt.executeQuery(
-                            String.format(
-                                    "START n=node:node_auto_index('type:%s OR type:%s OR type:%s OR type:%s'), " +
-                                            "r=relationship(*) DELETE n, r;",
-                                    GraphElementType.vertex,
-                                    GraphElementType.edge,
-                                    GraphElementType.schema,
-                                    GraphElementType.property
-                            )
-                    );
-                }
-        ).get();
+        session.run(
+                "MATCH (n:GraphElement) DETACH DELETE n"
+        );
     }
 
     @Override

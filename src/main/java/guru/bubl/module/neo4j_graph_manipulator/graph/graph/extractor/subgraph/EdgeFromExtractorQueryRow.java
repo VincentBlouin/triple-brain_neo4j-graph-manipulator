@@ -8,44 +8,43 @@ import guru.bubl.module.model.graph.edge.Edge;
 import guru.bubl.module.model.graph.edge.EdgePojo;
 import guru.bubl.module.model.graph.vertex.VertexInSubGraphPojo;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.edge.EdgeOperatorNeo4j;
+import org.neo4j.driver.v1.Record;
 
 import java.net.URI;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 
 public class EdgeFromExtractorQueryRow {
 
-    private ResultSet row;
+    private Record row;
     private String key;
 
-    public static EdgeFromExtractorQueryRow usingRowAndKey(ResultSet row, String key) {
+    public static EdgeFromExtractorQueryRow usingRowAndKey(Record row, String key) {
         return new EdgeFromExtractorQueryRow(
                 row,
                 key
         );
     }
 
-    public static EdgeFromExtractorQueryRow usingRow(ResultSet row) {
+    public static EdgeFromExtractorQueryRow usingRow(Record row) {
         return new EdgeFromExtractorQueryRow(row);
     }
 
-    protected EdgeFromExtractorQueryRow(ResultSet row) {
+    protected EdgeFromExtractorQueryRow(Record row) {
         this(
                 row,
                 SubGraphExtractorNeo4j.GRAPH_ELEMENT_QUERY_KEY
         );
     }
 
-    protected EdgeFromExtractorQueryRow(ResultSet row, String key) {
+    protected EdgeFromExtractorQueryRow(Record row, String key) {
         this.row = row;
         this.key = key;
     }
 
-    public Edge build() throws SQLException {
+    public Edge build() {
         return init();
     }
 
-    private EdgePojo init() throws SQLException {
+    private EdgePojo init() {
         EdgePojo edge = new EdgePojo(
                 GraphElementFromExtractorQueryRow.usingRowAndKey(
                         row, key
@@ -56,24 +55,24 @@ public class EdgeFromExtractorQueryRow {
         return edge;
     }
 
-    public URI getSourceVertexUri() throws SQLException{
+    public URI getSourceVertexUri() {
         return vertexUriFromProp(
                 EdgeOperatorNeo4j.props.source_vertex_uri
         );
     }
 
-    public URI getDestinationVertexUri() throws SQLException{
+    public URI getDestinationVertexUri() {
         return vertexUriFromProp(
                 EdgeOperatorNeo4j.props.destination_vertex_uri
         );
     }
 
-    private URI vertexUriFromProp(Enum prop) throws SQLException{
+    private URI vertexUriFromProp(Enum prop) {
         return URI.create(
-                row.getString(
+                row.get(
                         key + "." + prop
 
-                )
+                ).asString()
         );
     }
 }

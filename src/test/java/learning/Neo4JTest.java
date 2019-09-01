@@ -4,11 +4,11 @@
 
 package learning;
 
+import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jModule;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.neo4j.graphdb.*;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
-import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jModule;
 
 import java.io.File;
 
@@ -40,7 +40,7 @@ public class Neo4JTest {
     void createDb() {
         clearDb();
         // START SNIPPET: startDb
-        graphDb = new GraphDatabaseFactory().newEmbeddedDatabase(DB_PATH);
+        graphDb = new GraphDatabaseFactory().newEmbeddedDatabase(new File(DB_PATH));
         registerShutdownHook(graphDb);
         // END SNIPPET: startDb
 
@@ -72,7 +72,7 @@ public class Neo4JTest {
             // START SNIPPET: transaction
             tx.success();
         } finally {
-            tx.finish();
+            tx.close();
         }
         // END SNIPPET: transaction
     }
@@ -95,7 +95,7 @@ public class Neo4JTest {
 
             tx.success();
         } finally {
-            tx.finish();
+            tx.close();
         }
     }
 

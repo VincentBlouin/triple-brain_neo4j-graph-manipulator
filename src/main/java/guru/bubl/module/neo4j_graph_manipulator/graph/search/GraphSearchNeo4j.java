@@ -4,7 +4,6 @@
 
 package guru.bubl.module.neo4j_graph_manipulator.graph.search;
 
-import guru.bubl.module.common_utils.NoEx;
 import guru.bubl.module.model.User;
 import guru.bubl.module.model.graph.GraphElementPojo;
 import guru.bubl.module.model.graph.GraphElementType;
@@ -12,23 +11,21 @@ import guru.bubl.module.model.graph.identification.IdentifierPojo;
 import guru.bubl.module.model.search.GraphElementSearchResult;
 import guru.bubl.module.model.search.GraphElementSearchResultPojo;
 import guru.bubl.module.model.search.GraphSearch;
-import guru.bubl.module.neo4j_graph_manipulator.graph.FriendlyResourceNeo4j;
-import guru.bubl.module.neo4j_graph_manipulator.graph.Relationships;
-import guru.bubl.module.neo4j_graph_manipulator.graph.center_graph_element.CenterGraphElementOperatorNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.GraphElementFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.FriendlyResourceQueryBuilder;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.IdentificationQueryBuilder;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph.GraphElementFromExtractorQueryRow;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.identification.IdentificationNeo4j;
 import org.apache.commons.lang.StringUtils;
-import org.apache.lucene.queryParser.QueryParser;
+import org.neo4j.driver.v1.Record;
+import org.neo4j.driver.v1.Session;
+import org.neo4j.driver.v1.StatementResult;
 
 import javax.inject.Inject;
 import java.net.URI;
-import java.sql.Connection;
-import java.sql.ResultSet;
 import java.util.HashMap;
 import java.util.List;
+
+import static org.neo4j.driver.v1.Values.parameters;
 
 public class GraphSearchNeo4j implements GraphSearch {
 
@@ -37,7 +34,7 @@ public class GraphSearchNeo4j implements GraphSearch {
 
 
     @Inject
-    Connection connection;
+    Session session;
 
 
     @Override
@@ -46,10 +43,10 @@ public class GraphSearchNeo4j implements GraphSearch {
                 searchTerm,
                 true,
                 user.username(),
-                GraphElementType.vertex,
-                GraphElementType.schema,
-                GraphElementType.edge,
-                GraphElementType.meta
+                GraphElementType.Vertex,
+                GraphElementType.Schema,
+                GraphElementType.Edge,
+                GraphElementType.Meta
         );
     }
 
@@ -59,9 +56,10 @@ public class GraphSearchNeo4j implements GraphSearch {
                 searchTerm,
                 false,
                 user.username(),
-                GraphElementType.vertex,
-                GraphElementType.schema,
-                GraphElementType.meta
+                GraphElementType.Vertex,
+                GraphElementType.Schema,
+                GraphElementType.Meta,
+                GraphElementType.Edge
         );
     }
 
@@ -71,9 +69,9 @@ public class GraphSearchNeo4j implements GraphSearch {
                 searchTerm,
                 true,
                 user.username(),
-                GraphElementType.vertex,
-                GraphElementType.schema,
-                GraphElementType.meta
+                GraphElementType.Vertex,
+                GraphElementType.Schema,
+                GraphElementType.Meta
         );
     }
 
@@ -83,7 +81,7 @@ public class GraphSearchNeo4j implements GraphSearch {
                 searchTerm,
                 true,
                 user.username(),
-                GraphElementType.vertex
+                GraphElementType.Vertex
         );
     }
 
@@ -93,7 +91,7 @@ public class GraphSearchNeo4j implements GraphSearch {
                 searchTerm,
                 true,
                 user.username(),
-                GraphElementType.meta
+                GraphElementType.Meta
         );
     }
 
@@ -103,10 +101,10 @@ public class GraphSearchNeo4j implements GraphSearch {
                 searchTerm,
                 false,
                 user.username(),
-                GraphElementType.schema,
-                GraphElementType.property,
-                GraphElementType.edge,
-                GraphElementType.meta
+                GraphElementType.Schema,
+                GraphElementType.Property,
+                GraphElementType.Edge,
+                GraphElementType.Meta
         );
     }
 
@@ -124,9 +122,7 @@ public class GraphSearchNeo4j implements GraphSearch {
                 searchTerm,
                 false,
                 "",
-                GraphElementType.vertex,
-                GraphElementType.schema,
-                GraphElementType.meta
+                GraphElementType.Vertex
         );
     }
 
@@ -140,36 +136,46 @@ public class GraphSearchNeo4j implements GraphSearch {
 
     private class Getter<ResultType extends GraphElementSearchResult> {
         public GraphElementSearchResult getForUri(URI uri, String username) {
-            String query = String.format(
-                    "START n=node:node_auto_index('uri:%s AND (shareLevel:40 %s)') " +
-                            "OPTIONAL MATCH (n)-[%s:%s]->(%s) " +
-                            "RETURN %s%s%sn.type as type",
-                    uri,
-                    StringUtils.isEmpty(username) ? "" : " OR owner:" + username,
-                    IdentificationQueryBuilder.IDENTIFICATION_RELATION_QUERY_KEY,
-                    Relationships.IDENTIFIED_TO,
-                    IdentificationQueryBuilder.IDENTIFIER_QUERY_KEY,
-                    FriendlyResourceQueryBuilder.returnQueryPartUsingPrefix("n"),
-                    FriendlyResourceQueryBuilder.imageReturnQueryPart("n"),
-                    IdentificationQueryBuilder.identificationReturnQueryPart()
+            StatementResult rs = session.run(
+                    String.format(
+                            "MATCH (n:GraphElement{uri:$uri}) " +
+                                    "WHERE %s " +
+                                    "OPTIONAL MATCH (n)-[%s:IDENTIFIED_TO]->(%s) " +
+                                    "RETURN %s%s%s labels(n) as type",
+                            StringUtils.isEmpty(username) ? "n.shareLevel=40" : "n.owner=$owner",
+                            IdentificationQueryBuilder.IDENTIFICATION_RELATION_QUERY_KEY,
+                            IdentificationQueryBuilder.IDENTIFIER_QUERY_KEY,
+                            FriendlyResourceQueryBuilder.returnQueryPartUsingPrefix("n"),
+                            FriendlyResourceQueryBuilder.imageReturnQueryPart("n"),
+                            IdentificationQueryBuilder.identificationReturnQueryPart()
+                    ),
+                    parameters(
+                            "uri",
+                            uri.toString(),
+                            "owner",
+                            username
+                    )
             );
-
-            return NoEx.wrap(() -> {
-                ResultSet rs = connection.createStatement().executeQuery(query);
-                if (!rs.next()) {
-                    return null;
-                }
-                return new GraphElementSearchResultPojo(
-                        SearchResultGetter.nodeTypeInRow(rs),
-                        setupGraphElementForDetailedResult(
-                                GraphElementFromExtractorQueryRow.usingRowAndKey(
-                                        rs,
-                                        "n"
-                                ).build()
-                        ),
-                        new HashMap<>()
-                );
-            }).get();
+//            if (!StringUtils.isEmpty(username)) {
+//                statement.setString(
+//                        "owner",
+//                        username
+//                );
+//            }
+            if (!rs.hasNext()) {
+                return null;
+            }
+            Record record = rs.next();
+            return new GraphElementSearchResultPojo(
+                    SearchResultGetter.nodeTypeInRow(record),
+                    setupGraphElementForDetailedResult(
+                            GraphElementFromExtractorQueryRow.usingRowAndKey(
+                                    record,
+                                    "n"
+                            ).build()
+                    ),
+                    new HashMap<>()
+            );
         }
 
 
@@ -197,47 +203,40 @@ public class GraphSearchNeo4j implements GraphSearch {
                 String username,
                 GraphElementType... graphElementTypes
         ) {
-            return new SearchResultGetter<ResultType>(
-                    buildQuery(
-                            searchTerm,
-                            forPersonal,
-                            username,
-                            graphElementTypes
-                    ),
-                    connection
-            ).get();
+            StatementResult rs = session.run(
+                    buildQuery(forPersonal, username, graphElementTypes),
+                    parameters(
+                            "label", formatSearchTerm(searchTerm) + "*",
+                            "owner", username
+                    )
+            );
+            return new SearchResultGetter<ResultType>(rs).get();
         }
 
         private String buildQuery(
-                String searchTerm,
                 Boolean forPersonal,
                 String username,
                 GraphElementType... graphElementTypes
         ) {
-            return "START n=node:node_auto_index('" +
-                    FriendlyResourceNeo4j.props.label + ":(" + formatSearchTerm(searchTerm) + "*) AND " +
-                    (forPersonal ? "owner:" + username : "(shareLevel:40 " +
-                            (StringUtils.isEmpty(username) ? "" : " OR owner:" + username) + ")") + " AND " +
-                    "( " + FriendlyResourceNeo4j.props.type + ":" + StringUtils.join(graphElementTypes, " OR type:") + ") " +
-                    "') " +
-                    "OPTIONAL MATCH n-[idr:IDENTIFIED_TO]->id " +
-                    "RETURN " +
-                    "n.uri, n.label, n.external_uri, n.nb_references, n.number_of_visits, n.creation_date, n.last_modification_date, " +
-                    "(CASE WHEN n.owner='" + username + "' THEN n.private_context ELSE n.public_context END) as context, " +
-                    IdentificationQueryBuilder.identificationReturnQueryPart() +
-                    "n.type as type " +
-                    "ORDER BY COALESCE(" +
-                    "n." + CenterGraphElementOperatorNeo4j.props.number_of_visits + "," +
-                    "0) DESC, COALESCE(" +
-                    "n." + IdentificationNeo4j.props.nb_references + "," +
-                    "0) DESC " +
-                    "limit 10";
+            String indexDomain = graphElementTypes.length == 4 ? "graphElementLabel" : "vertexLabel";
+            return
+                    String.format(
+                            "CALL db.index.fulltext.queryNodes('%s', $label) YIELD node as n " +
+                                    "WHERE n." + (forPersonal ? "owner=$owner" : "shareLevel=40 ") +
+                                    (!forPersonal && !StringUtils.isEmpty(username) ? "OR n.owner=$owner " : " ") +
+                                    "OPTIONAL MATCH (n)-[idr:IDENTIFIED_TO]->(id) " +
+                                    "RETURN " +
+                                    "n.uri, n.label, n.external_uri, n.nb_references, n.number_of_visits, n.creation_date, n.last_modification_date, " +
+                                    "(CASE WHEN n.owner=$owner THEN n.private_context ELSE n.public_context END) as context, " +
+                                    IdentificationQueryBuilder.identificationReturnQueryPart() +
+                                    "labels(n) as type ",
+                            indexDomain
+                    );
+
         }
     }
 
     public static String formatSearchTerm(String searchTerm) {
-        return QueryParser.escape(searchTerm).replace(
-                "\\", "\\\\"
-        ).replace("'", "\\'").replace(" ", " AND ");
+        return searchTerm.replaceAll("[^a-zA-Z0-9\\s]", " ");
     }
 }

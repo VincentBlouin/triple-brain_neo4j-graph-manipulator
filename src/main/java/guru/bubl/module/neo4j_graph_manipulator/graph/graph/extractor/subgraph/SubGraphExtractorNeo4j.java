@@ -6,13 +6,12 @@ package guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph;
 
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
-import guru.bubl.module.common_utils.NoEx;
 import guru.bubl.module.model.UserUris;
 import guru.bubl.module.model.graph.GraphElementType;
 import guru.bubl.module.model.graph.ShareLevel;
-import guru.bubl.module.model.graph.subgraph.SubGraphPojo;
 import guru.bubl.module.model.graph.edge.Edge;
 import guru.bubl.module.model.graph.edge.EdgePojo;
+import guru.bubl.module.model.graph.subgraph.SubGraphPojo;
 import guru.bubl.module.model.graph.vertex.VertexInSubGraph;
 import guru.bubl.module.model.graph.vertex.VertexInSubGraphPojo;
 import guru.bubl.module.neo4j_graph_manipulator.graph.FriendlyResourceNeo4j;
@@ -23,17 +22,17 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.FriendlyRe
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.IdentificationQueryBuilder;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.QueryUtils;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.VertexInSubGraphOperatorNeo4j;
+import org.neo4j.driver.v1.Record;
+import org.neo4j.driver.v1.Session;
+import org.neo4j.driver.v1.StatementResult;
 
 import java.net.URI;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
+import java.util.*;
+
+import static org.neo4j.driver.v1.Values.parameters;
 
 public class SubGraphExtractorNeo4j {
+
     public final static String
             INCLUDED_VERTEX_QUERY_KEY = "iv",
             INCLUDED_EDGE_QUERY_KEY = "ie",
@@ -41,7 +40,6 @@ public class SubGraphExtractorNeo4j {
     private URI centerBubbleUri;
     private Integer depth;
     private Integer resultsLimit;
-    protected Connection connection;
     private SubGraphPojo subGraph = SubGraphPojo.withVerticesAndEdges(
             new HashMap<>(),
             new HashMap<>()
@@ -49,14 +47,16 @@ public class SubGraphExtractorNeo4j {
 
     private Set<ShareLevel> inShareLevels = new HashSet<>();
 
+    protected Session session;
+
     @AssistedInject
     protected SubGraphExtractorNeo4j(
-            Connection connection,
+            Session session,
             @Assisted URI centerBubbleUri,
             @Assisted("depth") Integer depth
     ) {
         this(
-                connection,
+                session,
                 centerBubbleUri,
                 depth,
                 null
@@ -65,12 +65,12 @@ public class SubGraphExtractorNeo4j {
 
     @AssistedInject
     protected SubGraphExtractorNeo4j(
-            Connection connection,
+            Session session,
             @Assisted URI centerBubbleUri,
             @Assisted("depth") Integer depth,
             @Assisted("resultsLimit") Integer resultsLimit
     ) {
-        this.connection = connection;
+        this.session = session;
         this.centerBubbleUri = centerBubbleUri;
         this.depth = depth;
         this.resultsLimit = resultsLimit;
@@ -80,11 +80,11 @@ public class SubGraphExtractorNeo4j {
 
     @AssistedInject
     protected SubGraphExtractorNeo4j(
-            Connection connection,
+            Session session,
             @Assisted URI centerBubbleUri,
             @Assisted Set<ShareLevel> inShareLevels
     ) {
-        this.connection = connection;
+        this.session = session;
         this.centerBubbleUri = centerBubbleUri;
         this.depth = 1;
         this.inShareLevels = inShareLevels;
@@ -92,43 +92,44 @@ public class SubGraphExtractorNeo4j {
 
     @AssistedInject
     protected SubGraphExtractorNeo4j(
-            Connection connection,
+            Session session,
             @Assisted URI centerBubbleUri,
             @Assisted Set<ShareLevel> inShareLevels,
             @Assisted Integer depth
     ) {
-        this.connection = connection;
+        this.session = session;
         this.centerBubbleUri = centerBubbleUri;
         this.depth = depth;
         this.inShareLevels = inShareLevels;
     }
 
     public SubGraphPojo load() {
-        NoEx.wrap(() -> {
-            ResultSet rs = connection.createStatement().executeQuery(
-                    queryToGetGraph()
-            );
-            while (rs.next()) {
-                switch (getGraphElementTypeFromRow(rs)) {
-                    case vertex:
-                        ShareLevel shareLevel = ShareLevel.get(rs.getInt("ge.shareLevel"));
-                        if (!inShareLevels.contains(shareLevel)) {
-                            break;
-                        }
-                        addVertexUsingRow(
-                                rs,
-                                shareLevel
-                        );
+        StatementResult rs = session.run(
+                queryToGetGraph(),
+                parameters(
+                        "centerUri", centerBubbleUri.toString()
+                )
+        );
+        while (rs.hasNext()) {
+            Record record = rs.next();
+            switch (getGraphElementTypeFromRow(record)) {
+                case Vertex:
+                    ShareLevel shareLevel = ShareLevel.get(record.get("ge.shareLevel").asInt());
+                    if (!inShareLevels.contains(shareLevel)) {
                         break;
-                    case edge:
-                        addEdgeUsingRow(
-                                rs
-                        );
-                        break;
-                }
+                    }
+                    addVertexUsingRow(
+                            record,
+                            shareLevel
+                    );
+                    break;
+                case Edge:
+                    addEdgeUsingRow(
+                            record
+                    );
+                    break;
             }
-            return rs;
-        }).get();
+        }
         Iterator<EdgePojo> it = subGraph.edges().values().iterator();
         while (it.hasNext()) {
             EdgePojo edge = it.next();
@@ -145,13 +146,19 @@ public class SubGraphExtractorNeo4j {
         return subGraph;
     }
 
-    private GraphElementType getGraphElementTypeFromRow(ResultSet rs) throws SQLException {
-        return GraphElementType.valueOf(rs.getString(
-                "type"
-        ));
+    private GraphElementType getGraphElementTypeFromRow(Record record) {
+        List<String> types = (List) record.get("type").asList();
+        GraphElementType type = null;
+        for (String typeStr : types) {
+            GraphElementType graphElementType = GraphElementType.valueOf(typeStr);
+            if (!GraphElementType.commonTypes.contains(graphElementType)) {
+                type = graphElementType;
+            }
+        }
+        return type;
     }
 
-    private VertexInSubGraph addVertexUsingRow(ResultSet row, ShareLevel shareLevel) throws SQLException {
+    private VertexInSubGraph addVertexUsingRow(Record row, ShareLevel shareLevel) {
         VertexInSubGraph vertex = new VertexFromExtractorQueryRow(
                 row,
                 SubGraphExtractorNeo4j.GRAPH_ELEMENT_QUERY_KEY
@@ -164,34 +171,34 @@ public class SubGraphExtractorNeo4j {
 
     private String queryToGetGraph() {
         return
-                "START start_node=node:node_auto_index('uri:" + centerBubbleUri + "') " +
+                "MATCH(start_node:Resource{uri:$centerUri}) " +
                         getMatchQueryPart() +
 //                        "OPTIONAL MATCH (" + GRAPH_ELEMENT_QUERY_KEY + ")-[:HAS_INCLUDED_VERTEX]->(" + INCLUDED_VERTEX_QUERY_KEY + ") " +
 //                        "OPTIONAL MATCH(" + GRAPH_ELEMENT_QUERY_KEY + ")-[:HAS_INCLUDED_EDGE]->(" + INCLUDED_EDGE_QUERY_KEY + ") " +
-                        "OPTIONAL MATCH (" + GRAPH_ELEMENT_QUERY_KEY + ")-[" + IdentificationQueryBuilder.IDENTIFICATION_RELATION_QUERY_KEY + ":" + Relationships.IDENTIFIED_TO + "]->(" + IdentificationQueryBuilder.IDENTIFIER_QUERY_KEY + ") " +
+                        "OPTIONAL MATCH (ge)-[idr:IDENTIFIED_TO]->(id) " +
                         "RETURN " +
                         vertexAndEdgeCommonQueryPart(GRAPH_ELEMENT_QUERY_KEY) +
                         vertexReturnQueryPart(GRAPH_ELEMENT_QUERY_KEY) +
                         edgeReturnQueryPart(GRAPH_ELEMENT_QUERY_KEY) +
                         IdentificationQueryBuilder.identificationReturnQueryPart() +
-                        SubGraphExtractorNeo4j.GRAPH_ELEMENT_QUERY_KEY + ".type as type ";
+                        "labels(ge) as type ";
     }
 
     private String getMatchQueryPart() {
         if (UserUris.isUriOfAnIdentifier(centerBubbleUri)) {
-            return "MATCH start_node<-[:" +
+            return "MATCH (start_node)<-[:" +
                     Relationships.IDENTIFIED_TO +
-                    "]-it " +
-                    "MATCH it<-[:" +
+                    "]-(it) " +
+                    "MATCH (it)<-[:" +
                     Relationships.SOURCE_VERTEX + "|" +
                     Relationships.DESTINATION_VERTEX + "*0.." + depth +
-                    "]->" + SubGraphExtractorNeo4j.GRAPH_ELEMENT_QUERY_KEY + " ";
+                    "]->(" + SubGraphExtractorNeo4j.GRAPH_ELEMENT_QUERY_KEY + ") ";
 
         } else {
-            return "MATCH path=start_node<-[:" +
+            return "MATCH (start_node)<-[:" +
                     Relationships.SOURCE_VERTEX +
                     "|" + Relationships.DESTINATION_VERTEX + "*0.." + depth * 2 +
-                    "]->" + SubGraphExtractorNeo4j.GRAPH_ELEMENT_QUERY_KEY + " ";
+                    "]->(" + SubGraphExtractorNeo4j.GRAPH_ELEMENT_QUERY_KEY + ") ";
         }
     }
 
@@ -293,7 +300,7 @@ public class SubGraphExtractorNeo4j {
                 );
     }
 
-    private Edge addEdgeUsingRow(ResultSet row) throws SQLException {
+    private Edge addEdgeUsingRow(Record row) {
         EdgePojo edge = (EdgePojo) EdgeFromExtractorQueryRow.usingRow(
                 row
         ).build();

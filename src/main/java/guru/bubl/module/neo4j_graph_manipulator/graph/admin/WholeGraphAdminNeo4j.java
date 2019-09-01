@@ -5,7 +5,6 @@
 package guru.bubl.module.neo4j_graph_manipulator.graph.admin;
 
 import com.google.inject.Inject;
-import guru.bubl.module.common_utils.NoEx;
 import guru.bubl.module.model.User;
 import guru.bubl.module.model.WholeGraph;
 import guru.bubl.module.model.admin.WholeGraphAdmin;
@@ -20,13 +19,14 @@ import guru.bubl.module.model.graph.schema.SchemaPojo;
 import guru.bubl.module.model.graph.vertex.VertexOperator;
 import guru.bubl.module.model.search.GraphIndexer;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.identification.IdentificationNeo4j;
+import org.neo4j.driver.v1.Session;
 
-import java.sql.Connection;
+import static org.neo4j.driver.v1.Values.parameters;
 
 public class WholeGraphAdminNeo4j implements WholeGraphAdmin {
 
     @Inject
-    protected Connection connection;
+    protected Session session;
 
     @Inject
     protected WholeGraph wholeGraph;
@@ -49,21 +49,21 @@ public class WholeGraphAdminNeo4j implements WholeGraphAdmin {
     }
 
     @Override
-    public void reindexAll(){
-        for(VertexOperator vertex : wholeGraph.getAllVertices()){
+    public void reindexAll() {
+        for (VertexOperator vertex : wholeGraph.getAllVertices()) {
             graphIndexer.indexVertex(vertex);
         }
-        for(EdgeOperator edge : wholeGraph.getAllEdges()){
+        for (EdgeOperator edge : wholeGraph.getAllEdges()) {
             graphIndexer.indexRelation(edge);
         }
-        for(SchemaOperator schemaOperator : wholeGraph.getAllSchemas()){
+        for (SchemaOperator schemaOperator : wholeGraph.getAllSchemas()) {
             SchemaPojo schemaPojo = new SchemaPojo(schemaOperator);
             graphIndexer.indexSchema(schemaPojo);
-            for(GraphElementPojo property : schemaPojo.getProperties().values()){
+            for (GraphElementPojo property : schemaPojo.getProperties().values()) {
                 graphIndexer.indexProperty(property, schemaPojo);
             }
         }
-        for(Identifier identifier: wholeGraph.getAllTags()){
+        for (Identifier identifier : wholeGraph.getAllTags()) {
             graphIndexer.indexMeta(
                     new IdentifierPojo(
                             new FriendlyResourcePojo(
@@ -76,13 +76,13 @@ public class WholeGraphAdminNeo4j implements WholeGraphAdmin {
 
     @Override
     public void reindexAllForUser(User user) {
-        for(VertexOperator vertex : wholeGraph.getAllVerticesOfUser(user)){
+        for (VertexOperator vertex : wholeGraph.getAllVerticesOfUser(user)) {
             graphIndexer.indexVertex(vertex);
         }
-        for(EdgeOperator edge : wholeGraph.getAllEdgesOfUser(user)){
+        for (EdgeOperator edge : wholeGraph.getAllEdgesOfUser(user)) {
             graphIndexer.indexRelation(edge);
         }
-        for(Identifier identifier: wholeGraph.getAllTagsOfUser(user)){
+        for (Identifier identifier : wholeGraph.getAllTagsOfUser(user)) {
             graphIndexer.indexMeta(
                     new IdentifierPojo(
                             new FriendlyResourcePojo(
@@ -100,17 +100,18 @@ public class WholeGraphAdminNeo4j implements WholeGraphAdmin {
 
     private void refreshNumberOfReferencesToIdentification(IdentificationOperator identification) {
         IdentificationNeo4j neo4jIdentification = (IdentificationNeo4j) identification;
-        String query = String.format(
-                "%s OPTIONAL MATCH n<-[r]-() " +
+        session.run(
+                neo4jIdentification.queryPrefix() + "OPTIONAL MATCH (n)<-[r]-() " +
                         "WITH n, count(r) as nbReferences " +
-                        "SET n.%s=nbReferences",
-                neo4jIdentification.queryPrefix(),
-                IdentificationNeo4j.props.nb_references
+                        "SET n.nb_references=nbReferences",
+                parameters(
+                        "uri", identification.uri().toString()
+                )
         );
-        NoEx.wrap(() -> connection.createStatement().execute(query)).get();
     }
+
     private void removeMetaIfNoReference(IdentificationOperator identification) {
-        if(0 == identification.getNbReferences()){
+        if (0 == identification.getNbReferences()) {
             identification.remove();
         }
     }

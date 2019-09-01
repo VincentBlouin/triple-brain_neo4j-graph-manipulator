@@ -7,7 +7,6 @@ package guru.bubl.module.neo4j_graph_manipulator.graph.center_graph_element;
 import com.google.gson.reflect.TypeToken;
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
-import guru.bubl.module.common_utils.NoEx;
 import guru.bubl.module.model.User;
 import guru.bubl.module.model.center_graph_element.CenterGraphElementPojo;
 import guru.bubl.module.model.center_graph_element.CenteredGraphElementsOperator;
@@ -15,27 +14,26 @@ import guru.bubl.module.model.graph.FriendlyResourcePojo;
 import guru.bubl.module.model.graph.GraphElementPojo;
 import guru.bubl.module.model.graph.ShareLevel;
 import guru.bubl.module.model.json.JsonUtils;
-import guru.bubl.module.neo4j_graph_manipulator.graph.FriendlyResourceNeo4j;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.identification.IdentificationNeo4j;
+import org.neo4j.driver.v1.Record;
+import org.neo4j.driver.v1.Session;
+import org.neo4j.driver.v1.StatementResult;
 
 import java.net.URI;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.*;
-import java.util.stream.Collectors;
+
+import static org.neo4j.driver.v1.Values.parameters;
 
 public class CenterGraphElementsOperatorNeo4j implements CenteredGraphElementsOperator {
 
-    private Connection connection;
+    private Session session;
     private User user;
 
     @AssistedInject
     protected CenterGraphElementsOperatorNeo4j(
-            Connection connection,
+            Session session,
             @Assisted User user
     ) {
-        this.connection = connection;
+        this.session = session;
         this.user = user;
     }
 
@@ -71,84 +69,60 @@ public class CenterGraphElementsOperatorNeo4j implements CenteredGraphElementsOp
         );
     }
 
-    @Override
-    public void removeCenterGraphElements(Set<CenterGraphElementPojo> centers) {
-        String uris = centers.stream()
-                .map(center -> "'" + center.getGraphElement().uri().toString() + "'")
-                .collect(Collectors.joining(", "));
-        String query = String.format(
-                "START n=node:node_auto_index('" +
-                        "owner:%s" +
-                        "') " +
-                        "WHERE n.uri IN %s " +
-                        "REMOVE n.last_center_date, n.number_of_visits",
-                user.username(),
-                "[" + uris + "]"
-        );
-        NoEx.wrap(() -> connection.createStatement().execute(
-                query
-        )).get();
-    }
-
     private Set<CenterGraphElementPojo> getPublicOnlyOrNot(Boolean publicOnly, Integer limit) {
-        String query = String.format(
-                "START n=node:node_auto_index('" +
-                        "owner:%s AND %s:* " +
-                        (publicOnly ? "AND shareLevel:40" : "") +
-                        "') " +
-                        "return n.%s as context, n.%s as numberOfVisits, n.%s as lastCenterDate, n.%s as label, n.%s as uri, n.%s as nbReferences, n.colors as colors, n.shareLevel " +
-                        "%s " +
-                        "%s",
-                user.username(),
-                CenterGraphElementOperatorNeo4j.props.last_center_date,
-                publicOnly ? "public_context" : "private_context",
-                CenterGraphElementOperatorNeo4j.props.number_of_visits,
-                CenterGraphElementOperatorNeo4j.props.last_center_date,
-                FriendlyResourceNeo4j.props.label,
-                FriendlyResourceNeo4j.props.uri,
-                IdentificationNeo4j.props.nb_references,
-                limit == null ? "" : "ORDER BY n.last_center_date DESC",
-                limit == null ? "" : "LIMIT " + limit
-        );
         Set<CenterGraphElementPojo> centerGraphElements = new HashSet<>();
-        return NoEx.wrap(() -> {
-            ResultSet rs = connection.createStatement().executeQuery(
-                    query
+        StatementResult rs = session.run(
+                String.format(
+                        "MATCH(n:GraphElement) " +
+                                "WHERE n.owner=$owner AND EXISTS(n.last_center_date) " +
+                                (publicOnly ? "AND n.shareLevel=40 " : "") +
+                                "RETURN n.%s as context, n.number_of_visits as numberOfVisits, n.last_center_date as lastCenterDate, n.label as label, n.uri as uri, n.nb_references as nbReferences, n.colors as colors, n.shareLevel " +
+                                "%s " +
+                                "%s",
+                        publicOnly ? "public_context" : "private_context",
+                        limit == null ? "" : "ORDER BY n.last_center_date DESC",
+                        limit == null ? "" : "LIMIT " + limit
+                ),
+                parameters(
+                        "owner", user.username()
+                )
+        );
+        while (rs.hasNext()) {
+            Record record = rs.next();
+            Date lastCenterDate = null == record.get("lastCenterDate").asObject() ?
+                    null :
+                    new Date(record.get("lastCenterDate").asLong());
+            Integer numberOfVisits = null == record.get("numberOfVisits").asObject() ?
+                    null :
+                    record.get("numberOfVisits").asInt();
+            Integer nbReferences = null == record.get("nbReferences").asObject() ?
+                    null :
+                    record.get("nbReferences").asInt();
+            String colors = record.get("colors").asString();
+            ShareLevel shareLevel = record.get("n.shareLevel").asObject() == null ? ShareLevel.PRIVATE : ShareLevel.get(
+                    record.get("n.shareLevel").asInt()
             );
-            while (rs.next()) {
-                Date lastCenterDate = null == rs.getString("lastCenterDate") ?
-                        null :
-                        new Date(rs.getLong("lastCenterDate"));
-                Integer numberOfVisits = null == rs.getString("numberOfVisits") ?
-                        null :
-                        new Integer(rs.getString("numberOfVisits"));
-                Integer nbReferences = null == rs.getString("nbReferences") ?
-                        null :
-                        new Integer(rs.getString("nbReferences"));
-                String colors = rs.getString("colors");
-                ShareLevel shareLevel = ShareLevel.get(rs.getInt("n.shareLevel"));
-                GraphElementPojo graphElement = new GraphElementPojo(new FriendlyResourcePojo(
-                        URI.create(rs.getString("uri")),
-                        rs.getString("label")
-                ));
-                graphElement.setColors(colors);
-                centerGraphElements.add(
-                        new CenterGraphElementPojo(
-                                numberOfVisits,
-                                lastCenterDate,
-                                graphElement,
-                                getContextFromRow(rs),
-                                nbReferences,
-                                shareLevel
-                        )
-                );
-            }
-            return centerGraphElements;
-        }).get();
+            GraphElementPojo graphElement = new GraphElementPojo(new FriendlyResourcePojo(
+                    URI.create(record.get("uri").asString()),
+                    record.get("label").asString()
+            ));
+            graphElement.setColors(colors);
+            centerGraphElements.add(
+                    new CenterGraphElementPojo(
+                            numberOfVisits,
+                            lastCenterDate,
+                            graphElement,
+                            getContextFromRow(record),
+                            nbReferences,
+                            shareLevel
+                    )
+            );
+        }
+        return centerGraphElements;
     }
 
-    private Map<URI, String> getContextFromRow(ResultSet row) throws SQLException {
-        String contextStr = row.getString("context");
+    private Map<URI, String> getContextFromRow(Record record) {
+        String contextStr = record.get("context").asString();
         if (null == contextStr) {
             return new HashMap<>();
         }

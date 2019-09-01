@@ -11,12 +11,15 @@ import guru.bubl.module.model.graph.edge.EdgeOperator;
 import guru.bubl.module.model.graph.edge.EdgePojo;
 import guru.bubl.module.model.graph.subgraph.SubGraph;
 import guru.bubl.module.model.graph.subgraph.SubGraphForker;
-import guru.bubl.module.model.graph.vertex.*;
+import guru.bubl.module.model.graph.vertex.Vertex;
+import guru.bubl.module.model.graph.vertex.VertexFactory;
+import guru.bubl.module.model.graph.vertex.VertexInSubGraph;
+import guru.bubl.module.model.graph.vertex.VertexOperator;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.edge.EdgeFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.VertexFactoryNeo4j;
+import org.neo4j.driver.v1.Session;
 
 import java.net.URI;
-import java.sql.Connection;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -25,7 +28,7 @@ public class SubGraphForkerNeo4j implements SubGraphForker {
 
     EdgeFactoryNeo4j edgeFactory;
     VertexFactory vertexFactory;
-    Connection connection;
+    Session session;
     User user;
 
     private HashMap<URI, VertexOperator> forkedVertices;
@@ -34,13 +37,13 @@ public class SubGraphForkerNeo4j implements SubGraphForker {
     protected SubGraphForkerNeo4j(
             EdgeFactoryNeo4j edgeFactory,
             VertexFactoryNeo4j vertexFactory,
-            Connection connection,
+            Session session,
             @Assisted User user
     ) {
         this.user = user;
         this.edgeFactory = edgeFactory;
         this.vertexFactory = vertexFactory;
-        this.connection = connection;
+        this.session = session;
     }
 
     @Override

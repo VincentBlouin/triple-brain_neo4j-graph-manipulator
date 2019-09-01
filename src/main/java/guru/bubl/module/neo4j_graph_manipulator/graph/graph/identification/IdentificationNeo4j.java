@@ -6,8 +6,6 @@ package guru.bubl.module.neo4j_graph_manipulator.graph.graph.identification;
 
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
-import guru.bubl.module.common_utils.NamedParameterStatement;
-import guru.bubl.module.common_utils.NoEx;
 import guru.bubl.module.model.Image;
 import guru.bubl.module.model.graph.FriendlyResourcePojo;
 import guru.bubl.module.model.graph.GraphElementOperatorFactory;
@@ -15,19 +13,20 @@ import guru.bubl.module.model.graph.identification.IdentificationFactory;
 import guru.bubl.module.model.graph.identification.IdentificationOperator;
 import guru.bubl.module.model.graph.identification.Identifier;
 import guru.bubl.module.model.graph.identification.IdentifierPojo;
-import guru.bubl.module.neo4j_graph_manipulator.graph.FriendlyResourceNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.FriendlyResourceFactoryNeo4j;
+import guru.bubl.module.neo4j_graph_manipulator.graph.FriendlyResourceNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.OperatorNeo4j;
-import guru.bubl.module.neo4j_graph_manipulator.graph.Relationships;
+import org.neo4j.driver.v1.Record;
+import org.neo4j.driver.v1.Session;
+import org.neo4j.driver.v1.StatementResult;
 import org.neo4j.graphdb.Node;
 
 import java.net.URI;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.Date;
 import java.util.Map;
 import java.util.Set;
+
+import static org.neo4j.driver.v1.Values.parameters;
 
 public class IdentificationNeo4j implements IdentificationOperator, OperatorNeo4j {
 
@@ -39,14 +38,14 @@ public class IdentificationNeo4j implements IdentificationOperator, OperatorNeo4
     }
 
     private FriendlyResourceNeo4j friendlyResourceOperator;
-    private Connection connection;
+    private Session session;
     private GraphElementOperatorFactory graphElementOperatorFactory;
     private IdentificationFactory identificationFactory;
 
     @AssistedInject
     protected IdentificationNeo4j(
             FriendlyResourceFactoryNeo4j friendlyResourceFactory,
-            Connection connection,
+            Session session,
             GraphElementOperatorFactory graphElementOperatorFactory,
             IdentificationFactory identificationFactory,
             @Assisted Node node
@@ -54,7 +53,7 @@ public class IdentificationNeo4j implements IdentificationOperator, OperatorNeo4
         this.friendlyResourceOperator = friendlyResourceFactory.withNode(
                 node
         );
-        this.connection = connection;
+        this.session = session;
         this.graphElementOperatorFactory = graphElementOperatorFactory;
         this.identificationFactory = identificationFactory;
     }
@@ -62,7 +61,7 @@ public class IdentificationNeo4j implements IdentificationOperator, OperatorNeo4
     @AssistedInject
     protected IdentificationNeo4j(
             FriendlyResourceFactoryNeo4j friendlyResourceFactory,
-            Connection connection,
+            Session session,
             GraphElementOperatorFactory graphElementOperatorFactory,
             IdentificationFactory identificationFactory,
             @Assisted URI uri
@@ -70,7 +69,7 @@ public class IdentificationNeo4j implements IdentificationOperator, OperatorNeo4
         this.friendlyResourceOperator = friendlyResourceFactory.withUri(
                 uri
         );
-        this.connection = connection;
+        this.session = session;
         this.graphElementOperatorFactory = graphElementOperatorFactory;
         this.identificationFactory = identificationFactory;
     }
@@ -78,147 +77,110 @@ public class IdentificationNeo4j implements IdentificationOperator, OperatorNeo4
     @Override
     public URI getRelationExternalResourceUri() {
         String query = String.format(
-                "%s RETURN n.%s as relationExternalUri",
+                "%sRETURN n.%s as relationExternalUri",
                 queryPrefix(),
                 props.relation_external_uri
         );
-        return NoEx.wrap(() -> {
-            ResultSet rs = connection.createStatement().executeQuery(query);
-            rs.next();
-            return URI.create(
-                    rs.getString("relationExternalUri")
-            );
-        }).get();
+        Record record = session.run(
+                query,
+                parameters(
+                        "uri",
+                        uri().toString()
+                )
+        ).single();
+        return URI.create(
+                record.get("relationExternalUri").asString()
+        );
     }
 
     @Override
     public URI getExternalResourceUri() {
-        String query = String.format(
-                "%s RETURN n.%s as externalUri",
-                queryPrefix(),
-                props.external_uri
+        Record record = session.run(
+                queryPrefix() + "RETURN n.external_uri as externalUri",
+                parameters(
+                        "uri",
+                        this.uri().toString()
+                )
+        ).single();
+        return URI.create(
+                record.get("externalUri").asString()
         );
-        return NoEx.wrap(() -> {
-            ResultSet rs = connection.createStatement().executeQuery(query);
-            rs.next();
-            return URI.create(
-                    rs.getString("externalUri")
-            );
-        }).get();
     }
 
     @Override
     public void setExternalResourceUri(URI uri) {
-        String query = String.format(
-                "%s SET n.%s=@external_uri",
-                queryPrefix(),
-                props.external_uri
+        session.run(
+                queryPrefix() + "SET n.external_uri=$external_uri",
+                parameters(
+                        "uri", this.uri().toString(),
+                        "external_uri", uri.toString()
+                )
         );
-        NoEx.wrap(() -> {
-            NamedParameterStatement statement = new NamedParameterStatement(
-                    connection,
-                    query
-            );
-            statement.setString(
-                    "external_uri",
-                    uri.toString()
-            );
-            return statement.executeQuery();
-        }).get();
     }
 
     @Override
     public Integer getNbReferences() {
-        String query = String.format(
-                "%s RETURN n.%s as nbReferences",
-                queryPrefix(),
-                IdentificationNeo4j.props.nb_references
-        );
-        return NoEx.wrap(() -> {
-            ResultSet rs = connection.createStatement().executeQuery(query);
-            rs.next();
-            return new Integer(
-                    rs.getString("nbReferences")
-            );
-        }).get();
+        Record record = session.run(
+                queryPrefix() + "RETURN n.nb_references as nbReferences",
+                parameters(
+                        "uri", this.uri().toString()
+                )
+        ).single();
+        return record.get("nbReferences").asInt();
     }
 
     @Override
     public void setNbReferences(Integer nb) {
-        String query = String.format(
-                "%s SET n.%s=@nbReferences",
-                queryPrefix(),
-                IdentificationNeo4j.props.nb_references
+        session.run(
+                queryPrefix() + "SET n.nb_references=$nbReferences",
+                parameters(
+                        "uri", uri().toString(),
+                        "nbReferences", nb
+                )
         );
-        NoEx.wrap(() -> {
-            NamedParameterStatement namedParameterStatement = new NamedParameterStatement(
-                    connection,
-                    query
-            );
-            namedParameterStatement.setInt(
-                    "nbReferences",
-                    nb
-            );
-            return namedParameterStatement.execute();
-        }).get();
     }
 
     @Override
     public IdentifierPojo buildPojo() {
-        String query = queryPrefix() +
-                String.format(
-                        "RETURN n.%s as uri," +
-                                "n.%s as label," +
-                                "n.%s as comment," +
-                                "n.%s as externalUri," +
-                                "n.%s as nbReferences",
-                        FriendlyResourceNeo4j.props.uri,
-                        FriendlyResourceNeo4j.props.label,
-                        FriendlyResourceNeo4j.props.comment,
-                        props.external_uri,
-                        IdentificationNeo4j.props.nb_references
-                );
-        return NoEx.wrap(() -> {
-            ResultSet rs = connection.createStatement().executeQuery(query);
-            rs.next();
-            FriendlyResourcePojo friendlyResourcePojo = new FriendlyResourcePojo(
-                    URI.create(rs.getString("uri")),
-                    rs.getString("label")
-            );
-            friendlyResourcePojo.setComment(
-                    rs.getString("comment")
-            );
-            return new IdentifierPojo(
-                    URI.create(rs.getString("externalUri")),
-                    new Integer(rs.getString("nbReferences")),
-                    friendlyResourcePojo
-            );
-        }).get();
+        Record record = session.run(
+                queryPrefix() + "RETURN n.uri as uri, n.label as label, n.comment as comment, n.external_uri as externalUri, n.nb_references as nbReferences",
+                parameters(
+                        "uri", this.uri().toString()
+                )
+        ).single();
+        FriendlyResourcePojo friendlyResourcePojo = new FriendlyResourcePojo(
+                URI.create(record.get("uri").asString()),
+                record.get("label").asString()
+        );
+        friendlyResourcePojo.setComment(
+                record.get("comment").asString()
+        );
+        return new IdentifierPojo(
+                URI.create(record.get("externalUri").asString()),
+                record.get("nbReferences").asInt(),
+                friendlyResourcePojo
+        );
     }
 
     @Override
     public void mergeTo(Identifier identifier) {
-        String query = queryPrefix() +
-                "MATCH n<-[:" +
-                Relationships.IDENTIFIED_TO +
-                "]-tagged " +
-                "RETURN tagged.uri";
-        NoEx.wrap(() -> {
-            ResultSet rs = connection.createStatement().executeQuery(query);
-            IdentifierPojo mergeWithPojo = identificationFactory.withUri(
-                    identifier.uri()
-            ).buildPojo();
-            while (rs.next()) {
-                graphElementOperatorFactory.withUri(
-                        URI.create(rs.getString("tagged.uri"))
-                ).addMeta(
-                        mergeWithPojo
-                );
-            }
-            this.remove();
-            return rs;
-        }).get();
-
+        StatementResult sr = session.run(
+                queryPrefix() + "MATCH (n)<-[:IDENTIFIED_TO]-(tagged) RETURN tagged.uri",
+                parameters(
+                        "uri", this.uri().toString()
+                )
+        );
+        IdentifierPojo mergeWithPojo = identificationFactory.withUri(
+                identifier.uri()
+        ).buildPojo();
+        while (sr.hasNext()) {
+            graphElementOperatorFactory.withUri(
+                    URI.create(sr.next().get("tagged.uri").asString())
+            ).addMeta(
+                    mergeWithPojo
+            );
+        }
+        this.remove();
     }
 
     @Override
@@ -310,18 +272,8 @@ public class IdentificationNeo4j implements IdentificationOperator, OperatorNeo4
     }
 
     @Override
-    public Node getNode() {
-        return friendlyResourceOperator.getNode();
-    }
-
-    @Override
     public Map<String, Object> addCreationProperties(Map<String, Object> map) {
         return friendlyResourceOperator.addCreationProperties(map);
-    }
-
-    @Override
-    public void setNamedCreationProperties(NamedParameterStatement statement) throws SQLException {
-        friendlyResourceOperator.setNamedCreationProperties(statement);
     }
 
     @Override

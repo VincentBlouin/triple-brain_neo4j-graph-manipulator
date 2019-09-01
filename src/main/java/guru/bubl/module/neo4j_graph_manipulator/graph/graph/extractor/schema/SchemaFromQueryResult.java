@@ -8,31 +8,37 @@ import guru.bubl.module.model.graph.GraphElementPojo;
 import guru.bubl.module.model.graph.schema.SchemaPojo;
 import guru.bubl.module.neo4j_graph_manipulator.graph.FriendlyResourceNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph.GraphElementFromExtractorQueryRow;
+import org.neo4j.driver.v1.Record;
+import org.neo4j.driver.v1.StatementResult;
 
 import java.net.URI;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
 public class SchemaFromQueryResult {
-    private ResultSet result;
+    private StatementResult rs;
     private Map<URI, GraphElementPojo> properties = new HashMap<>();
-    public SchemaFromQueryResult(ResultSet result) {
-        this.result = result;
+
+    public SchemaFromQueryResult(StatementResult rs) {
+        this.rs = rs;
     }
 
-    public SchemaPojo build() throws SQLException{
-        result.next();
-        GraphElementPojo schemaGraphElement = GraphElementFromExtractorQueryRow.usingRowKeyAndIdentificationKey(
-                result,
-                SchemaExtractorNeo4j.SCHEMA_QUERY_KEY,
-                SchemaExtractorNeo4j.SCHEMA_IDENTIFICATION_QUERY_KEY
-        ).build();
-        buildOrUpdatePropertyInRow(result);
-        while(result.next()){
+    public SchemaPojo build() {
+        Boolean firstRow = true;
+        GraphElementPojo schemaGraphElement = null;
+        while (rs.hasNext()) {
+            Record record = rs.next();
+            if (firstRow) {
+                schemaGraphElement = GraphElementFromExtractorQueryRow.usingRowKeyAndIdentificationKey(
+                        record,
+                        SchemaExtractorNeo4j.SCHEMA_QUERY_KEY,
+                        SchemaExtractorNeo4j.SCHEMA_IDENTIFICATION_QUERY_KEY
+                ).build();
+                firstRow = false;
+            }
+            buildOrUpdatePropertyInRow(record);
             buildOrUpdatePropertyInRow(
-                    result
+                    record
             );
         }
         return new SchemaPojo(
@@ -41,14 +47,14 @@ public class SchemaFromQueryResult {
         );
     }
 
-    private void buildOrUpdatePropertyInRow(ResultSet row) throws SQLException{
+    private void buildOrUpdatePropertyInRow(Record record) {
         GraphElementFromExtractorQueryRow extractor = GraphElementFromExtractorQueryRow.usingRowKeyAndIdentificationKey(
-                row,
+                record,
                 SchemaExtractorNeo4j.PROPERTY_QUERY_KEY,
                 SchemaExtractorNeo4j.PROPERTY_IDENTIFICATION_QUERY_KEY
         );
-        if(rowHasSchemaProperty(row)){
-            URI uri = getPropertyUri(row);
+        if (rowHasSchemaProperty(record)) {
+            URI uri = getPropertyUri(record);
             properties.put(
                     uri,
                     extractor.build()
@@ -56,17 +62,17 @@ public class SchemaFromQueryResult {
         }
     }
 
-    private Boolean rowHasSchemaProperty(ResultSet row) throws SQLException{
-        return row.getString(
+    private Boolean rowHasSchemaProperty(Record record) {
+        return record.get(
                 SchemaExtractorNeo4j.PROPERTY_QUERY_KEY + "." + FriendlyResourceNeo4j.props.uri
-        ) != null;
+        ).asObject() != null;
     }
 
-    private URI getPropertyUri(ResultSet row)throws SQLException{
+    private URI getPropertyUri(Record record) {
         return URI.create(
-                row.getString(
+                record.get(
                         SchemaExtractorNeo4j.PROPERTY_QUERY_KEY + "." + FriendlyResourceNeo4j.props.uri
-                )
+                ).asString()
         );
     }
 }

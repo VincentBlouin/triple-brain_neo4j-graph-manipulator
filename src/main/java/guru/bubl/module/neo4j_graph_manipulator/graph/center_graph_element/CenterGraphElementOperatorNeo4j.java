@@ -6,15 +6,16 @@ package guru.bubl.module.neo4j_graph_manipulator.graph.center_graph_element;
 
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
-import guru.bubl.module.common_utils.NoEx;
 import guru.bubl.module.model.FriendlyResource;
 import guru.bubl.module.model.center_graph_element.CenterGraphElementOperator;
-import guru.bubl.module.neo4j_graph_manipulator.graph.FriendlyResourceNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.FriendlyResourceFactoryNeo4j;
+import guru.bubl.module.neo4j_graph_manipulator.graph.FriendlyResourceNeo4j;
+import org.neo4j.driver.v1.Record;
+import org.neo4j.driver.v1.Session;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
 import java.util.Date;
+
+import static org.neo4j.driver.v1.Values.parameters;
 
 public class CenterGraphElementOperatorNeo4j implements CenterGraphElementOperator {
 
@@ -23,16 +24,16 @@ public class CenterGraphElementOperatorNeo4j implements CenterGraphElementOperat
         last_center_date
     }
 
-    private Connection connection;
+    private Session session;
     private FriendlyResourceNeo4j neo4jFriendlyResource;
 
     @AssistedInject
     protected CenterGraphElementOperatorNeo4j(
-            Connection connection,
+            Session session,
             FriendlyResourceFactoryNeo4j friendlyResourceFactory,
             @Assisted FriendlyResource friendlyResource
     ) {
-        this.connection = connection;
+        this.session = session;
         this.neo4jFriendlyResource = friendlyResourceFactory.withUri(
                 friendlyResource.uri()
         );
@@ -40,59 +41,58 @@ public class CenterGraphElementOperatorNeo4j implements CenterGraphElementOperat
 
     @Override
     public void incrementNumberOfVisits() {
-        String query = String.format(
-                "%s set n.%s= CASE WHEN n.%s is null THEN 1 ELSE n.%s + 1 END",
-                neo4jFriendlyResource.queryPrefix(),
-                props.number_of_visits,
-                props.number_of_visits,
-                props.number_of_visits
+        session.run(
+                neo4jFriendlyResource.queryPrefix() + "SET n.number_of_visits= CASE WHEN n.number_of_visits is null THEN 1 ELSE n.number_of_visits + 1 END",
+                parameters(
+                        "uri",
+                        neo4jFriendlyResource.uri().toString()
+                )
         );
-        NoEx.wrap(() -> connection.createStatement().execute(query)).get();
     }
 
     @Override
     public Integer getNumberOfVisits() {
-        String query = String.format(
-                "%s return n.%s as number;",
-                neo4jFriendlyResource.queryPrefix(),
-                props.number_of_visits
-        );
-        return NoEx.wrap(() -> {
-            ResultSet rs = connection.createStatement().executeQuery(query);
-            rs.next();
-            return new Integer(
-                    rs.getString("number")
-            );
-        }).get();
+        Record record = session.run(
+                neo4jFriendlyResource.queryPrefix() + "RETURN n.number_of_visits as number;",
+                parameters(
+                        "uri", neo4jFriendlyResource.uri().toString()
+                )
+        ).single();
+        return record.get("number").asInt();
     }
 
     @Override
     public void updateLastCenterDate() {
-        String query = String.format(
-                "%s set n.%s= %s",
-                neo4jFriendlyResource.queryPrefix(),
-                props.last_center_date,
-                new Date().getTime()
+        session.run(
+                neo4jFriendlyResource.queryPrefix() + "SET n.last_center_date=$lastCenterDate",
+                parameters(
+                        "uri",
+                        neo4jFriendlyResource.uri().toString(),
+                        "lastCenterDate", new Date().getTime()
+                )
         );
-        NoEx.wrap(() -> connection.createStatement().execute(query)).get();
     }
 
     @Override
     public Date getLastCenterDate() {
-        String query = String.format(
-                "%s return n.%s as date;",
-                neo4jFriendlyResource.queryPrefix(),
-                props.last_center_date
+        Record record = session.run(
+                neo4jFriendlyResource.queryPrefix() + "RETURN n.last_center_date as date;",
+                parameters(
+                        "uri", neo4jFriendlyResource.uri().toString()
+                )
+        ).single();
+        return record.get("date") == null ? null : new Date(
+                record.get("date").asLong()
         );
-        return NoEx.wrap(() -> {
-            ResultSet rs = connection.createStatement().executeQuery(query);
-            rs.next();
-            if(null == rs.getString("date")){
-                return null;
-            }
-            return new Date(
-                    rs.getLong("date")
-            );
-        }).get();
+    }
+
+    @Override
+    public void remove() {
+        session.run(
+                "MATCH(n:GraphElement{uri:$uri}) REMOVE n.last_center_date, n.number_of_visits",
+                parameters(
+                        "uri", neo4jFriendlyResource.uri().toString()
+                )
+        );
     }
 }

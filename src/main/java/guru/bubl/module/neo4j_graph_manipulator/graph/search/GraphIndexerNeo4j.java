@@ -5,8 +5,6 @@
 package guru.bubl.module.neo4j_graph_manipulator.graph.search;
 
 import com.google.inject.Inject;
-import guru.bubl.module.common_utils.NamedParameterStatement;
-import guru.bubl.module.common_utils.NoEx;
 import guru.bubl.module.model.FriendlyResource;
 import guru.bubl.module.model.graph.GraphElement;
 import guru.bubl.module.model.graph.GraphElementPojo;
@@ -20,13 +18,15 @@ import guru.bubl.module.model.graph.vertex.VertexInSubGraphPojo;
 import guru.bubl.module.model.graph.vertex.VertexOperator;
 import guru.bubl.module.model.json.JsonUtils;
 import guru.bubl.module.model.search.GraphIndexer;
-import guru.bubl.module.neo4j_graph_manipulator.graph.FriendlyResourceNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.FriendlyResourceFactoryNeo4j;
+import guru.bubl.module.neo4j_graph_manipulator.graph.FriendlyResourceNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph.SubGraphExtractorFactoryNeo4j;
+import org.neo4j.driver.v1.Session;
 
 import java.net.URI;
-import java.sql.Connection;
 import java.util.*;
+
+import static org.neo4j.driver.v1.Values.parameters;
 
 public class GraphIndexerNeo4j implements GraphIndexer {
 
@@ -37,7 +37,7 @@ public class GraphIndexerNeo4j implements GraphIndexer {
     FriendlyResourceFactoryNeo4j neo4jFriendlyResourceFactory;
 
     @Inject
-    Connection connection;
+    Session session;
 
     @Override
     public void indexVertex(VertexOperator vertex) {
@@ -168,23 +168,17 @@ public class GraphIndexerNeo4j implements GraphIndexer {
         FriendlyResourceNeo4j neo4jFriendlyResource = neo4jFriendlyResourceFactory.withUri(
                 friendlyResource.uri()
         );
-        NoEx.wrap(() -> {
-            String query = String.format(
-                    "%s SET n.private_context=@privateContext, " +
-                            "n.public_context=@publicContext",
-                    neo4jFriendlyResource.queryPrefix()
-            );
-            NamedParameterStatement statement = new NamedParameterStatement(connection, query);
-            statement.setString(
-                    "privateContext",
-                    privateContext
-            );
-            statement.setString(
-                    "publicContext",
-                    publicContext
-            );
-            return statement.execute();
-        }).get();
+        session.run(
+                neo4jFriendlyResource.queryPrefix() + "SET n.private_context=$privateContext, n.public_context=$publicContext",
+                parameters(
+                        "uri",
+                        neo4jFriendlyResource.uri().toString(),
+                        "privateContext",
+                        privateContext,
+                        "publicContext",
+                        publicContext
+                )
+        );
     }
 
     private Map<URI, String> mapOfGraphElementsToMapOfLabels(Map<URI, ? extends GraphElement> mapOfGraphElements) {

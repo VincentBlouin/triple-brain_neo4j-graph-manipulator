@@ -7,39 +7,37 @@ package guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph;
 import guru.bubl.module.model.graph.FriendlyResourcePojo;
 import guru.bubl.module.model.graph.identification.IdentifierPojo;
 import guru.bubl.module.model.json.ImageJson;
+import org.neo4j.driver.v1.Record;
 
 import java.net.URI;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class IdentifiersFromExtractorQueryRowAsArray {
 
-    private ResultSet row;
+    private Record record;
     private String key;
 
     public static IdentifiersFromExtractorQueryRowAsArray usingRowAndKey(
-            ResultSet row,
+            Record record,
             String key
     ) {
         return new IdentifiersFromExtractorQueryRowAsArray(
-                row,
+                record,
                 key
         );
     }
 
     protected IdentifiersFromExtractorQueryRowAsArray(
-            ResultSet row,
+            Record record,
             String key
     ) {
-        this.row = row;
+        this.record = record;
         this.key = key;
     }
 
-    public Map<URI, IdentifierPojo> build() throws SQLException {
+    public Map<URI, IdentifierPojo> build() {
         Map<URI, IdentifierPojo> identifications = new HashMap<>();
         if (!isInQuery()) {
             return identifications;
@@ -84,16 +82,11 @@ public class IdentifiersFromExtractorQueryRowAsArray {
         return identifications;
     }
 
-    private Boolean isInQuery() throws SQLException {
-        try {
-            row.getString(key);
-            return true;
-        } catch (SQLException e) {
-            return false;
-        }
+    private Boolean isInQuery() {
+        return record.get(key).asObject() != null;
     }
 
-    private List<List<Object>> getList() throws SQLException {
-        return (List) row.getObject(key);
+    private List<List<Object>> getList() {
+        return (List) record.get(key).asObject();
     }
 }

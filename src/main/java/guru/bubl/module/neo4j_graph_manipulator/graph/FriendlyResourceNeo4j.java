@@ -6,27 +6,27 @@ package guru.bubl.module.neo4j_graph_manipulator.graph;
 
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
-import guru.bubl.module.common_utils.NamedParameterStatement;
-import guru.bubl.module.common_utils.NoEx;
 import guru.bubl.module.common_utils.Uris;
 import guru.bubl.module.model.FriendlyResource;
 import guru.bubl.module.model.Image;
 import guru.bubl.module.model.UserUris;
 import guru.bubl.module.model.graph.FriendlyResourceOperator;
 import guru.bubl.module.model.graph.FriendlyResourcePojo;
-import guru.bubl.module.model.graph.GraphElementType;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.UserGraphNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.image.ImageFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.image.ImagesNeo4j;
 import org.apache.commons.lang.StringUtils;
+import org.neo4j.driver.v1.Record;
+import org.neo4j.driver.v1.Session;
+import org.neo4j.driver.v1.StatementResult;
 import org.neo4j.graphdb.Node;
-import org.neo4j.graphdb.Relationship;
 
 import java.net.URI;
-import java.sql.*;
 import java.util.Date;
 import java.util.Map;
 import java.util.Set;
+
+import static org.neo4j.driver.v1.Values.parameters;
 
 public class FriendlyResourceNeo4j implements FriendlyResourceOperator, OperatorNeo4j {
 
@@ -41,7 +41,7 @@ public class FriendlyResourceNeo4j implements FriendlyResourceOperator, Operator
     }
 
     public static final String LAST_MODIFICATION_QUERY_PART = String.format(
-            " n.%s=@%s ",
+            " n.%s=$%s ",
             props.last_modification_date,
             props.last_modification_date
     );
@@ -59,28 +59,27 @@ public class FriendlyResourceNeo4j implements FriendlyResourceOperator, Operator
 
     protected ImagesNeo4j images;
 
-    protected Connection connection;
+    protected Session session;
 
-    public static Boolean haveElementWithUri(URI uri, Connection connection) {
-        String query = String.format(
-                "START n=node:node_auto_index('uri:%s') return n.uri as uri",
-                uri
-        );
-        return NoEx.wrap(() ->
-                connection.createStatement().executeQuery(
-                        query
-                ).next()
-        ).get();
+    public static Boolean haveElementWithUri(URI uri, Session session) {
+        String query = "MATCH(n:Resource{uri:$uri}) RETURN n.uri as uri";
+        return session.run(
+                query,
+                parameters(
+                        "uri",
+                        uri.toString()
+                )
+        ).hasNext();
     }
 
     @AssistedInject
     protected FriendlyResourceNeo4j(
             ImageFactoryNeo4j imageFactory,
-            Connection connection,
+            Session session,
             @Assisted Node node
     ) {
         this.images = imageFactory.forResource(this);
-        this.connection = connection;
+        this.session = session;
         this.node = node;
         this.uri = Uris.get(node.getProperty(
                 UserGraphNeo4j.URI_PROPERTY_NAME
@@ -90,11 +89,11 @@ public class FriendlyResourceNeo4j implements FriendlyResourceOperator, Operator
     @AssistedInject
     protected FriendlyResourceNeo4j(
             ImageFactoryNeo4j imageFactory,
-            Connection connection,
+            Session session,
             @Assisted URI uri
     ) {
         this.images = imageFactory.forResource(this);
-        this.connection = connection;
+        this.session = session;
         if (StringUtils.isEmpty(uri.toString())) {
             throw new RuntimeException("uri for friendly resource is mandatory");
         }
@@ -104,12 +103,12 @@ public class FriendlyResourceNeo4j implements FriendlyResourceOperator, Operator
     @AssistedInject
     protected FriendlyResourceNeo4j(
             ImageFactoryNeo4j imageFactory,
-            Connection connection,
+            Session session,
             @Assisted FriendlyResourcePojo pojo
     ) {
 
         this.images = imageFactory.forResource(this);
-        this.connection = connection;
+        this.session = session;
         this.uri = pojo.uri();
         createUsingInitialValues(
                 RestApiUtilsNeo4j.map(
@@ -131,38 +130,43 @@ public class FriendlyResourceNeo4j implements FriendlyResourceOperator, Operator
 
     @Override
     public String label() {
-        return NoEx.wrap(() -> {
-            String query = String.format(
-                    "%s return n.%s as label",
-                    queryPrefix(),
-                    props.label.toString()
-            );
-            Statement statement = connection.createStatement();
-            ResultSet rs = statement.executeQuery(query);
-            return rs.next() && rs.getString("label") != null ?
-                    rs.getString("label") :
-                    "";
-        }).get();
+        String query = String.format(
+                "%sRETURN n.label as label",
+                queryPrefix()
+        );
+        StatementResult rs = session.run(
+                query,
+                parameters(
+                        "uri", uri.toString()
+                )
+        );
+        Record record = rs.single();
+        return record.get("label").asObject() == null ?
+                "" : record.get("label").asString();
     }
 
     @Override
     public void label(String label) {
         String query = String.format(
-                "%s SET n.%s=@label, %s",
+                "%s SET n.label=$label, %s",
                 queryPrefix(),
-                FriendlyResourceNeo4j.props.label,
                 LAST_MODIFICATION_QUERY_PART
         );
         Map<String, Object> props = RestApiUtilsNeo4j.map(
                 "label", label
         );
         addUpdatedLastModificationDate(props);
-        NoEx.wrap(() -> {
-            NamedParameterStatement statement = new NamedParameterStatement(connection, query);
-            statement.setString("label", label);
-            setLastUpdatedDateInStatement(statement);
-            return statement.execute();
-        }).get();
+        session.run(
+                query,
+                parameters(
+                        "uri",
+                        uri.toString(),
+                        "label",
+                        label,
+                        "last_modification_date",
+                        new Date().getTime()
+                )
+        );
     }
 
     @Override
@@ -178,37 +182,38 @@ public class FriendlyResourceNeo4j implements FriendlyResourceOperator, Operator
     @Override
     public String comment() {
         String query = String.format(
-                "%sreturn n.%s as comment",
-                queryPrefix(),
-                props.comment
+                "%sRETURN n.comment as comment",
+                queryPrefix()
         );
-        return NoEx.wrap(() -> {
-            Statement statement = connection.createStatement();
-            ResultSet rs = statement.executeQuery(query);
-            return rs.next() && rs.getString("comment") != null ?
-                    rs.getString("comment") :
-                    "";
-        }).get();
+        Record record = session.run(
+                query,
+                parameters(
+                        "uri", uri.toString()
+                )
+        ).single();
+        return record.get("comment").asObject() == null ?
+                "" : record.get("comment").asString();
     }
 
     @Override
     public void comment(String comment) {
         String query = String.format(
-                "%s SET n.%s=@comment, %s",
+                "%sSET n.comment=$comment, %s",
                 queryPrefix(),
-                props.comment,
                 LAST_MODIFICATION_QUERY_PART
         );
         Map<String, Object> props = RestApiUtilsNeo4j.map(
                 "comment", comment
         );
         addUpdatedLastModificationDate(props);
-        NoEx.wrap(() -> {
-            NamedParameterStatement statement = new NamedParameterStatement(connection, query);
-            statement.setString("comment", comment);
-            setLastUpdatedDateInStatement(statement);
-            return statement.execute();
-        }).get();
+        session.run(
+                query,
+                parameters(
+                        "uri", uri.toString(),
+                        "comment", comment,
+                        "last_modification_date", new Date().getTime()
+                )
+        );
     }
 
     @Override
@@ -235,18 +240,13 @@ public class FriendlyResourceNeo4j implements FriendlyResourceOperator, Operator
         Map<String, Object> creationProps = addCreationProperties(
                 values
         );
-        String query = String.format(
-                "create (n:%s {1})",
-                GraphElementType.resource
+        session.run(
+                "CREATE(n:Resource $creationProps)",
+                parameters(
+                        "creationProps",
+                        creationProps
+                )
         );
-        NoEx.wrap(() -> {
-            PreparedStatement statement = connection.prepareStatement(query);
-            statement.setObject(
-                    1,
-                    creationProps
-            );
-            return statement.execute();
-        }).get();
     }
 
     public FriendlyResourcePojo pojoFromCreationProperties(Map<String, Object> creationProperties) {
@@ -272,30 +272,48 @@ public class FriendlyResourceNeo4j implements FriendlyResourceOperator, Operator
 
     @Override
     public void remove() {
-        for (Relationship relationship : getNode().getRelationships()) {
-            //removing explicitly so node index gets reindexed
-            relationship.removeProperty(
-                    UserGraphNeo4j.URI_PROPERTY_NAME
-            );
-            relationship.delete();
-        }
-        //removing explicitly so node index gets reindexed
-        getNode().removeProperty(UserGraphNeo4j.URI_PROPERTY_NAME);
-        getNode().delete();
+        session.run(
+                String.format(
+                        "%s DETACH DELETE n",
+                        queryPrefix()
+                ),
+                parameters(
+                        "uri",
+                        uri.toString()
+                )
+        );
     }
 
     @Override
     public Date creationDate() {
-        return new Date((Long) getNode().getProperty(
-                props.creation_date.name()
-        ));
+        return new Date(
+                session.run(
+                        String.format(
+                                "%s RETURN n.creation_date as creationDate",
+                                queryPrefix()
+                        ),
+                        parameters(
+                                "uri",
+                                uri.toString()
+                        )
+                ).single().get("creationDate").asLong()
+        );
     }
 
     @Override
     public Date lastModificationDate() {
-        return new Date((Long) getNode().getProperty(
-                props.last_modification_date.name()
-        ));
+        return new Date(
+                session.run(
+                        String.format(
+                                "%s RETURN n.last_modification_date as lastModificationDate",
+                                queryPrefix()
+                        ),
+                        parameters(
+                                "uri",
+                                uri.toString()
+                        )
+                ).single().get("lastModificationDate").asLong()
+        );
     }
 
 
@@ -303,44 +321,15 @@ public class FriendlyResourceNeo4j implements FriendlyResourceOperator, Operator
         String query = queryPrefix() +
                 " SET " +
                 LAST_MODIFICATION_QUERY_PART;
-        NoEx.wrap(() -> {
-            NamedParameterStatement statement = new NamedParameterStatement(
-                    connection,
-                    query
-            );
-            setLastUpdatedDateInStatement(statement);
-            return statement.execute();
-        });
-    }
-
-    @Override
-    public Node getNode() {
-        if (null == node) {
-            node = NoEx.wrap(() -> {
-                ResultSet rs = connection.createStatement().executeQuery(
-                        queryPrefix() + "return n"
-                );
-                rs.next();
-                return (Node) rs.getObject("n");
-            }).get();
-        }
-        return node;
-    }
-
-    @Override
-    public void setNamedCreationProperties(NamedParameterStatement statement) throws SQLException {
-        statement.setString(
-                UserGraphNeo4j.URI_PROPERTY_NAME,
-                uri().toString()
+        session.run(
+                query,
+                parameters(
+                        "uri",
+                        uri.toString(),
+                        "last_modification_date",
+                        new Date().getTime()
+                )
         );
-        statement.setString(
-                props.owner.name(),
-                UserUris.ownerUserNameFromUri(uri())
-        );
-        /*
-         *  not setting creation date and last modification date because it
-         *  can be easily done in neo4j using timestamp()
-         */
     }
 
     @Override
@@ -372,25 +361,19 @@ public class FriendlyResourceNeo4j implements FriendlyResourceOperator, Operator
     @Override
     public String queryPrefix() {
         return String.format(
-                "START %s ",
+                "MATCH%s ",
                 addToSelectUsingVariableName(
-                        "n"
+                        "n",
+                        "uri"
                 )
         );
     }
 
-    public void setLastUpdatedDateInStatement(NamedParameterStatement statement) throws SQLException {
-        statement.setLong(
-                props.last_modification_date.name(),
-                new Date().getTime()
-        );
-    }
-
-    public String addToSelectUsingVariableName(String variableName) {
+    public String addToSelectUsingVariableName(String variableName, String uriName) {
         return String.format(
-                "%s=node:node_auto_index('uri:%s') ",
+                "(%s:Resource{uri:$%s}) ",
                 variableName,
-                uri
+                uriName
         );
     }
 }

@@ -6,18 +6,16 @@ package guru.bubl.module.neo4j_graph_manipulator.graph.graph;
 
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
-import guru.bubl.module.common_utils.NoEx;
 import guru.bubl.module.model.User;
 import guru.bubl.module.model.UserUris;
-import guru.bubl.module.model.graph.GraphElementType;
 import guru.bubl.module.model.graph.ShareLevel;
-import guru.bubl.module.model.graph.subgraph.SubGraphPojo;
-import guru.bubl.module.model.graph.subgraph.UserGraph;
 import guru.bubl.module.model.graph.edge.EdgeOperator;
 import guru.bubl.module.model.graph.exceptions.InvalidDepthOfSubVerticesException;
 import guru.bubl.module.model.graph.exceptions.NonExistingResourceException;
 import guru.bubl.module.model.graph.schema.SchemaOperator;
 import guru.bubl.module.model.graph.schema.SchemaPojo;
+import guru.bubl.module.model.graph.subgraph.SubGraphPojo;
+import guru.bubl.module.model.graph.subgraph.UserGraph;
 import guru.bubl.module.model.graph.vertex.VertexOperator;
 import guru.bubl.module.model.graph.vertex.VertexPojo;
 import guru.bubl.module.neo4j_graph_manipulator.graph.FriendlyResourceNeo4j;
@@ -26,13 +24,14 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.schema.Sch
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph.SubGraphExtractorFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.schema.SchemaFactory;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.VertexFactoryNeo4j;
+import org.neo4j.driver.v1.Record;
+import org.neo4j.driver.v1.Session;
 
 import javax.inject.Inject;
 import java.net.URI;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.Statement;
 import java.util.Set;
+
+import static org.neo4j.driver.v1.Values.parameters;
 
 public class UserGraphNeo4j implements UserGraph {
 
@@ -46,7 +45,7 @@ public class UserGraphNeo4j implements UserGraph {
     private SchemaExtractorFactoryNeo4j schemaExtractorFactory;
 
     @Inject
-    Connection connection;
+    Session session;
 
     @AssistedInject
     protected UserGraphNeo4j(
@@ -77,7 +76,7 @@ public class UserGraphNeo4j implements UserGraph {
 
     @Override
     public Boolean haveElementWithId(URI uri) {
-        return FriendlyResourceNeo4j.haveElementWithUri(uri, connection);
+        return FriendlyResourceNeo4j.haveElementWithUri(uri, session);
     }
 
     @Override
@@ -181,21 +180,16 @@ public class UserGraphNeo4j implements UserGraph {
     }
 
     private VertexOperator getAnyVertex() {
-        String query = String.format(
-                "START n=node:node_auto_index('type:%s AND owner:%s') return n.uri limit 1",
-                GraphElementType.vertex,
-                user.username()
+        Record record = session.run(
+                "MATCH(n:Vertex{owner:$owner}) RETURN n.uri limit 1",
+                parameters(
+                        "owner", user.username()
+                )
+        ).single();
+        return vertexFactory.withUri(
+                URI.create(
+                        record.get("n.uri").asString()
+                )
         );
-        URI uri = NoEx.wrap(() -> {
-            Statement statement = connection.createStatement();
-            ResultSet rs = statement.executeQuery(
-                    query
-            );
-            rs.next();
-            return URI.create(
-                    rs.getString("n.uri")
-            );
-        }).get();
-        return vertexFactory.withUri(uri);
     }
 }

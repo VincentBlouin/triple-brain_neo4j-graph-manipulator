@@ -11,41 +11,39 @@ import guru.bubl.module.model.json.ImageJson;
 import guru.bubl.module.neo4j_graph_manipulator.graph.FriendlyResourceNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.UserGraphNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.image.ImagesNeo4j;
+import org.neo4j.driver.v1.Record;
 
 import java.net.URI;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.Set;
 
 public class FriendlyResourceFromExtractorQueryRow {
 
-    private ResultSet row;
+    private Record record;
     private String nodeKey;
 
     public static FriendlyResourceFromExtractorQueryRow usingRowAndNodeKey(
-            ResultSet row,
+            Record record,
             String nodeKey
     ) {
         return new FriendlyResourceFromExtractorQueryRow(
-                row,
+                record,
                 nodeKey
         );
     }
 
     public static FriendlyResourceFromExtractorQueryRow usingRowAndPrefix(
-            ResultSet row,
+            Record record,
             String nodeKey
     ) {
         return new FriendlyResourceFromExtractorQueryRow(
-                row,
+                record,
                 nodeKey
         );
     }
 
-    protected FriendlyResourceFromExtractorQueryRow(ResultSet row, String nodeKey) {
-        this.row = row;
+    protected FriendlyResourceFromExtractorQueryRow(Record record, String nodeKey) {
+        this.record = record;
         this.nodeKey = nodeKey;
     }
 
@@ -61,62 +59,40 @@ public class FriendlyResourceFromExtractorQueryRow {
     }
 
     private Set<Image> getImages() {
-        try {
-            return ImageJson.fromJson(
-                    row.getString(
-                            nodeKey + "." + ImagesNeo4j.props.images
-                    )
-            );
-        } catch (SQLException e) {
-            return new HashSet<>();
-        }
-
-
+        return ImageJson.fromJson(
+                record.get(
+                        nodeKey + "." + ImagesNeo4j.props.images
+                ).asString()
+        );
     }
 
-    public String getLabel() throws SQLException {
+    public String getLabel() {
         String labelKey = nodeKey + "." + FriendlyResourceNeo4j.props.label + "";
-        return row.getString(
+        return record.get(
                 labelKey
-        ) != null ? row.getString(labelKey) : "";
+        ).asObject() == null ? "" : record.get(labelKey).asString();
     }
 
     private String getComment() {
-        try {
-            return row.getString(
-                    nodeKey + "." + FriendlyResourceNeo4j.props.comment
-            );
-        } catch (SQLException e) {
-            return "";
-        }
-
+        String key = nodeKey + "." + FriendlyResourceNeo4j.props.comment;
+        return record.get(key).asObject() == null ? "" : record.get(key).asString();
     }
 
-    private Long getLastModificationDate() throws SQLException {
+    private Long getLastModificationDate() {
         String key = nodeKey + "." + FriendlyResourceNeo4j.props.last_modification_date.name();
-        if (row.getString(key) == null) {
-            return new Date().getTime();
-        }
-        return row.getLong(
-                key
-        );
+        return record.get(key).asObject() == null ? new Date().getTime() : record.get(key).asLong();
     }
 
-    private Long getCreationDate() throws SQLException {
+    private Long getCreationDate() {
         String key = nodeKey + "." + FriendlyResourceNeo4j.props.creation_date.name();
-        if (row.getString(key) == null) {
-            return new Date().getTime();
-        }
-        return row.getLong(
-                key
-        );
+        return record.get(key).asObject() == null ? new Date().getTime() : record.get(key).asLong();
     }
 
-    public URI getUri() throws SQLException {
+    public URI getUri() {
         return URI.create(
-                row.getString(
+                record.get(
                         nodeKey + "." + UserGraphNeo4j.URI_PROPERTY_NAME
-                )
+                ).asString()
         );
     }
 

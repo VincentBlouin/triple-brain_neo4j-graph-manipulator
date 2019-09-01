@@ -5,36 +5,29 @@
 package guru.bubl.module.neo4j_graph_manipulator.graph.search.result_builder;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.gson.reflect.TypeToken;
-import guru.bubl.module.common_utils.NoEx;
 import guru.bubl.module.model.graph.FriendlyResourcePojo;
 import guru.bubl.module.model.graph.GraphElementPojo;
 import guru.bubl.module.model.graph.GraphElementType;
 import guru.bubl.module.model.graph.identification.IdentifierPojo;
-import guru.bubl.module.model.json.JsonUtils;
 import guru.bubl.module.model.search.GraphElementSearchResult;
 import guru.bubl.module.model.search.GraphElementSearchResultPojo;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.FriendlyResourceFromExtractorQueryRow;
+import org.neo4j.driver.v1.Record;
 
 import java.net.URI;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.Map;
 
 public class MetaSearchResultBuilder implements SearchResultBuilder {
 
-    private ResultSet row;
+    private Record row;
     private String prefix;
 
-    public MetaSearchResultBuilder(ResultSet row, String prefix) {
+    public MetaSearchResultBuilder(Record row, String prefix) {
         this.row = row;
         this.prefix = prefix;
     }
 
     @Override
     public GraphElementSearchResult build() {
-
         FriendlyResourcePojo friendlyResourcePojo = FriendlyResourceFromExtractorQueryRow.usingRowAndNodeKey(
                 row,
                 prefix
@@ -42,18 +35,16 @@ public class MetaSearchResultBuilder implements SearchResultBuilder {
         IdentifierPojo identifierPojo = new IdentifierPojo(
                 friendlyResourcePojo
         );
-        NoEx.wrap(() -> {
-            identifierPojo.setExternalResourceUri(
-                    URI.create(
-                            row.getString("n.external_uri")
-                    )
-            );
-            return identifierPojo.setNbRefences(
-                    new Integer(
-                            row.getString("n.nb_references")
-                    )
-            );
-        }).get();
+
+        identifierPojo.setExternalResourceUri(
+                URI.create(
+                        row.get("n.external_uri").asString()
+                )
+        );
+
+        identifierPojo.setNbRefences(
+                row.get("n.nb_references").asInt()
+        );
 
         GraphElementPojo identifierAsGraphElement = new GraphElementPojo(
                 identifierPojo.getFriendlyResource(),
@@ -62,15 +53,15 @@ public class MetaSearchResultBuilder implements SearchResultBuilder {
                         identifierPojo
                 )
         );
-        return NoEx.wrap(() -> new GraphElementSearchResultPojo(
-                GraphElementType.meta,
+        return new GraphElementSearchResultPojo(
+                GraphElementType.Meta,
                 identifierAsGraphElement,
                 getContext()
-        )).get();
+        );
     }
 
     @Override
-    public ResultSet getRow() {
+    public Record getRow() {
         return row;
     }
 }

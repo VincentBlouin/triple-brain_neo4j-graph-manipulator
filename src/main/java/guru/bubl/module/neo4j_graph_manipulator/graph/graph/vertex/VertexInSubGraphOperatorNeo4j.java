@@ -7,12 +7,9 @@ package guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
-import guru.bubl.module.common_utils.NamedParameterStatement;
-import guru.bubl.module.common_utils.NoEx;
 import guru.bubl.module.model.Image;
 import guru.bubl.module.model.User;
 import guru.bubl.module.model.UserUris;
-import guru.bubl.module.model.graph.GraphElementType;
 import guru.bubl.module.model.graph.ShareLevel;
 import guru.bubl.module.model.graph.edge.Edge;
 import guru.bubl.module.model.graph.edge.EdgeOperator;
@@ -25,22 +22,26 @@ import guru.bubl.module.model.suggestion.SuggestionPojo;
 import guru.bubl.module.neo4j_graph_manipulator.graph.FriendlyResourceFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.FriendlyResourceNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.OperatorNeo4j;
-import guru.bubl.module.neo4j_graph_manipulator.graph.Relationships;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.GraphElementFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.GraphElementOperatorNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.edge.EdgeFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.edge.EdgeOperatorNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph.SubGraphExtractorNeo4j;
+import org.neo4j.driver.v1.Record;
+import org.neo4j.driver.v1.Session;
+import org.neo4j.driver.v1.StatementResult;
 import org.neo4j.graphdb.Node;
 
 import java.net.URI;
-import java.sql.*;
 import java.util.Date;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 import static guru.bubl.module.neo4j_graph_manipulator.graph.RestApiUtilsNeo4j.map;
 import static guru.bubl.module.neo4j_graph_manipulator.graph.graph.GraphElementOperatorNeo4j.decrementNbFriendsOrPublicQueryPart;
 import static guru.bubl.module.neo4j_graph_manipulator.graph.graph.GraphElementOperatorNeo4j.incrementNbFriendsOrPublicQueryPart;
+import static org.neo4j.driver.v1.Values.parameters;
 
 public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, OperatorNeo4j {
 
@@ -60,7 +61,7 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
 
     protected GraphElementFactoryNeo4j neo4jGraphElementFactory;
     protected Node node;
-    protected Connection connection;
+    protected Session session;
 
 
     @Inject
@@ -71,33 +72,13 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
             VertexFactoryNeo4j vertexFactory,
             EdgeFactoryNeo4j edgeFactory,
             GraphElementFactoryNeo4j neo4jGraphElementFactory,
-            Connection connection,
-            @Assisted Node node
-    ) {
-        this(
-                vertexFactory,
-                edgeFactory,
-                neo4jGraphElementFactory,
-                connection,
-                neo4jGraphElementFactory.withNode(
-                        node
-                ).uri()
-        );
-        this.node = node;
-    }
-
-    @AssistedInject
-    protected VertexInSubGraphOperatorNeo4j(
-            VertexFactoryNeo4j vertexFactory,
-            EdgeFactoryNeo4j edgeFactory,
-            GraphElementFactoryNeo4j neo4jGraphElementFactory,
-            Connection connection,
+            Session session,
             @Assisted URI uri
     ) {
         this.vertexFactory = vertexFactory;
         this.edgeFactory = edgeFactory;
         this.neo4jGraphElementFactory = neo4jGraphElementFactory;
-        this.connection = connection;
+        this.session = session;
         this.graphElementOperator = neo4jGraphElementFactory.withUri(
                 uri
         );
@@ -108,14 +89,14 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
             VertexFactoryNeo4j vertexFactory,
             EdgeFactoryNeo4j edgeFactory,
             GraphElementFactoryNeo4j neo4jGraphElementFactory,
-            Connection connection,
+            Session session,
             @Assisted String ownerUserName
     ) {
         this(
                 vertexFactory,
                 edgeFactory,
                 neo4jGraphElementFactory,
-                connection,
+                session,
                 new UserUris(ownerUserName).generateVertexUri()
         );
         create();
@@ -126,7 +107,7 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
             final VertexFactoryNeo4j vertexFactory,
             EdgeFactoryNeo4j edgeFactory,
             GraphElementFactoryNeo4j neo4jGraphElementFactory,
-            Connection connection,
+            Session session,
             final @Assisted Set<Vertex> includedVertices,
             final @Assisted Set<Edge> includedEdges
     ) throws IllegalArgumentException {
@@ -134,7 +115,7 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
                 vertexFactory,
                 edgeFactory,
                 neo4jGraphElementFactory,
-                connection,
+                session,
                 new UserUris(
                         includedVertices.iterator().next().getOwnerUsername()
                 ).generateVertexUri()
@@ -145,12 +126,12 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
             );
         }
         create();
-        setIncludedVertices(
-                includedVertices
-        );
-        setIncludedEdges(
-                includedEdges
-        );
+//        setIncludedVertices(
+//                includedVertices
+//        );
+//        setIncludedEdges(
+//                includedEdges
+//        );
     }
 
     @Override
@@ -158,16 +139,18 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
         FriendlyResourceNeo4j edgeFriendlyResource = friendlyResourceFactory.withUri(
                 edge.uri()
         );
-        String query = String.format(
-                "%s, %sMATCH n<-[:SOURCE_VERTEX|DESTINATION_VERTEX]-edge RETURN edge",
-                queryPrefix(),
-                edgeFriendlyResource.addToSelectUsingVariableName("edge")
+        StatementResult rs = session.run(
+                String.format(
+                        "%s, %s, (n)<-[:SOURCE_VERTEX|DESTINATION_VERTEX]-(edge) RETURN edge",
+                        queryPrefix(),
+                        edgeFriendlyResource.addToSelectUsingVariableName("edge", "edgeUri")
+                ),
+                parameters(
+                        "uri", uri().toString(),
+                        "edgeUri", edgeFriendlyResource.uri().toString()
+                )
         );
-        return NoEx.wrap(() -> {
-            Statement statement = connection.createStatement();
-            ResultSet rs = statement.executeQuery(query);
-            return rs.next();
-        }).get();
+        return rs.hasNext();
     }
 
     @Override
@@ -175,31 +158,32 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
         FriendlyResourceNeo4j destinationVertexOperator = friendlyResourceFactory.withUri(
                 destinationVertex.uri()
         );
-        return NoEx.wrap(() -> {
-            String query = String.format(
-                    "%s, %s MATCH n<-[:SOURCE_VERTEX|DESTINATION_VERTEX]-r, " +
-                            "r-[:SOURCE_VERTEX|DESTINATION_VERTEX]->d " +
-                            "RETURN r.uri as uri",
-                    queryPrefix(),
-                    destinationVertexOperator.addToSelectUsingVariableName("d")
+        StatementResult rs = session.run(
+                String.format(
+                        "%s, %s, (n)<-[:SOURCE_VERTEX|DESTINATION_VERTEX]-(r), " +
+                                "(r)-[:SOURCE_VERTEX|DESTINATION_VERTEX]->(d) " +
+                                "RETURN r.uri as uri",
+                        queryPrefix(),
+                        destinationVertexOperator.addToSelectUsingVariableName("d", "destinationUri")
+                ),
+                parameters(
+                        "uri", uri().toString(),
+                        "destinationUri", destinationVertexOperator.uri().toString()
+                )
+        );
+        if (!rs.hasNext()) {
+            throw new RuntimeException(
+                    "Edge between vertex with " + uri() +
+                            " and vertex with uri " + destinationVertex.uri() +
+                            " was not found"
             );
-            Statement statement = connection.createStatement();
-            ResultSet rs = statement.executeQuery(
-                    query
-            );
-            if (!rs.next()) {
-                throw new RuntimeException(
-                        "Edge between vertex with " + uri() +
-                                " and vertex with uri " + destinationVertex.uri() +
-                                " was not found"
-                );
-            }
-            return edgeFactory.withUri(URI.create(
-                    rs.getString(
-                            "uri"
-                    )
-            ));
-        }).get();
+        }
+        Record record = rs.next();
+        return edgeFactory.withUri(URI.create(
+                record.get(
+                        "uri"
+                ).asString()
+        ));
     }
 
     @Override
@@ -207,20 +191,21 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
         FriendlyResourceNeo4j destinationVertexOperator = friendlyResourceFactory.withUri(
                 destinationVertex.uri()
         );
-        String query = String.format(
-                "%s, %s " +
-                        "MATCH n<-[:SOURCE_VERTEX]-r, " +
-                        "r-[:DESTINATION_VERTEX]->d " +
-                        "RETURN n.uri",
-                queryPrefix(),
-                destinationVertexOperator.addToSelectUsingVariableName("d")
+        StatementResult rs = session.run(
+                String.format(
+                        "%s, %s, " +
+                                "(n)<-[:SOURCE_VERTEX]-(r), " +
+                                "(r)-[:DESTINATION_VERTEX]->(d) " +
+                                "RETURN n.uri",
+                        queryPrefix(),
+                        destinationVertexOperator.addToSelectUsingVariableName("d", "destinationUri")
+                ),
+                parameters(
+                        "uri", uri().toString(),
+                        "destinationUri", destinationVertexOperator.uri().toString()
+                )
         );
-
-        return NoEx.wrap(() -> {
-            Statement statement = connection.createStatement();
-            ResultSet rs = statement.executeQuery(query);
-            return rs.next();
-        }).get();
+        return rs.hasNext();
     }
 
     @Override
@@ -240,11 +225,11 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
                 getOwnerUsername()
         );
         URI vertexUri = userUri.vertexUriFromShortId(vertexId);
-        if (FriendlyResourceNeo4j.haveElementWithUri(vertexUri, connection)) {
+        if (FriendlyResourceNeo4j.haveElementWithUri(vertexUri, session)) {
             vertexUri = userUri.generateVertexUri();
         }
         URI edgeUri = userUri.edgeUriFromShortId(edgeId);
-        if (FriendlyResourceNeo4j.haveElementWithUri(edgeUri, connection)) {
+        if (FriendlyResourceNeo4j.haveElementWithUri(edgeUri, session)) {
             edgeUri = userUri.generateEdgeUri();
         }
         return this.addVertexAndRelationToTheLeftOrNotAction(
@@ -284,7 +269,6 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
 
     @Override
     public EdgeOperator addRelationToVertex(final VertexOperator destinationVertex) {
-        //todo batch
         EdgeOperator edge = edgeFactory.withSourceAndDestinationVertex(
                 this,
                 destinationVertex
@@ -299,26 +283,27 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
             edge.createWithShareLevel(ShareLevel.PRIVATE);
         }
         String query = String.format(
-                "MATCH (s:%s {uri:'%s'}), (d:%s {uri:'%s'}) " +
+                "MATCH (s:Vertex {uri:$uri}), (d:Vertex {uri:$destinationUri}) " +
                         "SET " +
                         "s.%s=s.%s+1, " +
                         "d.%s=d.%s+1 " +
                         incrementNbFriendsOrPublicQueryPart(destinationShareLevel, "s", "WITH s,d SET ") +
                         incrementNbFriendsOrPublicQueryPart(sourceShareLevel, "d", "WITH s,d SET "),
-                GraphElementType.vertex,
-                this.uri(),
-                GraphElementType.vertex,
-                destinationVertex.uri(),
                 props.number_of_connected_edges_property_name,
                 props.number_of_connected_edges_property_name,
                 props.number_of_connected_edges_property_name,
                 props.number_of_connected_edges_property_name
         );
-        NoEx.wrap(() -> connection.createStatement().executeQuery(
-                query
-        )).get();
+        session.run(
+                query,
+                parameters(
+                        "uri",
+                        this.uri().toString(),
+                        "destinationUri",
+                        destinationVertex.uri().toString()
+                )
+        );
         return edge;
-        //todo endbatch
     }
 
     @Override
@@ -410,64 +395,70 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
     @Override
     public void remove() {
         //todo batch
-        NoEx.wrap(() -> {
-            graphElementOperator.removeAllIdentifications();
-            connection.createStatement().executeQuery(
-                    queryPrefix() +
-                            "MATCH " +
-                            "n<-[:SOURCE_VERTEX|DESTINATION_VERTEX]-(e),  " +
-                            "e-[:IDENTIFIED_TO]->(i) " +
-                            "SET " +
-                            "i.nb_references = i.nb_references - 1"
-            );
-            ShareLevel shareLevel = getShareLevel();
-            String decrementQueryPart = shareLevel == ShareLevel.PRIVATE ? "" :
-                    decrementNbFriendsOrPublicQueryPart(shareLevel, "v", ", ") + " ";
-            return connection.createStatement().executeQuery(
-                    queryPrefix() +
-                            "OPTIONAL MATCH " +
-                            "n<-[:SOURCE_VERTEX|DESTINATION_VERTEX]-(e), " +
-                            "e-[:SOURCE_VERTEX|DESTINATION_VERTEX]->(v) " +
-                            "SET " +
-                            "v.number_of_connected_edges_property_name = " +
-                            "v.number_of_connected_edges_property_name - 1 " +
-                            decrementQueryPart +
-                            "WITH e, n " +
-                            "OPTIONAL MATCH e-[e_r]-(), " +
-                            "n-[v_r]-() " +
-                            "DELETE " +
-                            "v_r, n, " +
-                            "e_r, e"
-            );
-        }).get();
-        //todo endbatch
+        graphElementOperator.removeAllIdentifications();
+        session.run(
+                queryPrefix() +
+                        "MATCH " +
+                        "(n)<-[:SOURCE_VERTEX|DESTINATION_VERTEX]-(e),  " +
+                        "(e)-[:IDENTIFIED_TO]->(i) " +
+                        "SET " +
+                        "i.nb_references = i.nb_references - 1",
+                parameters(
+                        "uri", this.uri().toString()
+                )
+        );
+        ShareLevel shareLevel = getShareLevel();
+        String decrementQueryPart = shareLevel == ShareLevel.PRIVATE ? "" :
+                decrementNbFriendsOrPublicQueryPart(shareLevel, "v", ", ") + " ";
+        session.run(
+                queryPrefix() +
+                        "OPTIONAL MATCH " +
+                        "(n)<-[:SOURCE_VERTEX|DESTINATION_VERTEX]-(e), " +
+                        "(e)-[:SOURCE_VERTEX|DESTINATION_VERTEX]->(v) " +
+                        "SET " +
+                        "v.number_of_connected_edges_property_name = " +
+                        "v.number_of_connected_edges_property_name - 1 " +
+                        decrementQueryPart +
+                        "WITH e, n " +
+                        "OPTIONAL MATCH (e)-[e_r]-(), " +
+                        "(n)-[v_r]-() " +
+                        "DELETE " +
+                        "v_r, n, " +
+                        "e_r, e",
+                parameters(
+                        "uri",
+                        this.uri().toString()
+                )
+        );
     }
 
     @Override
     public Map<URI, EdgeOperator> connectedEdges() {
         Map<URI, EdgeOperator> edges = new HashMap<>();
-        String query = queryPrefix() +
-                "MATCH n<-[:SOURCE_VERTEX|DESTINATION_VERTEX]-(edge) " +
-                "RETURN edge.uri as uri";
-        return NoEx.wrap(() -> {
-            ResultSet rs = connection.createStatement().executeQuery(
-                    query
+        StatementResult rs = session.run(
+                queryPrefix() +
+                        "MATCH (n)<-[:SOURCE_VERTEX|DESTINATION_VERTEX]-(edge) " +
+                        "RETURN edge.uri as uri",
+                parameters(
+                        "uri",
+                        this.uri().toString()
+                )
+        );
+        while (rs.hasNext()) {
+            Record record = rs.next();
+            URI edgeUri = URI.create(
+                    record.get(
+                            "uri"
+                    ).asString()
             );
-            while (rs.next()) {
-                URI edgeUri = URI.create(
-                        rs.getString(
-                                "uri"
-                        )
-                );
-                edges.put(
-                        edgeUri,
-                        edgeFactory.withUri(
-                                edgeUri
-                        )
-                );
-            }
-            return edges;
-        }).get();
+            edges.put(
+                    edgeUri,
+                    edgeFactory.withUri(
+                            edgeUri
+                    )
+            );
+        }
+        return edges;
     }
 
     @Override
@@ -490,144 +481,120 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
 
     @Override
     public Integer getNumberOfConnectedEdges() {
-        String query = String.format(
-                "%sreturn n.%s as result",
-                queryPrefix(),
-                props.number_of_connected_edges_property_name
+        StatementResult rs = session.run(
+                String.format(
+                        "%sRETURN n.%s as result",
+                        queryPrefix(),
+                        props.number_of_connected_edges_property_name
+                ),
+                parameters(
+                        "uri",
+                        uri().toString()
+                )
         );
-        return NoEx.wrap(() -> {
-            ResultSet rs = connection.createStatement().executeQuery(
-                    query
-            );
-            rs.next();
-            return Integer.valueOf(
-                    rs.getString("result")
-            );
-        }).get();
+        Record record = rs.next();
+        return Integer.valueOf(
+                record.get("result").asInt()
+        );
     }
 
     @Override
     public Integer getNbPublicNeighbors() {
-        String query = String.format(
-                "%sreturn n.%s as result",
-                queryPrefix(),
-                props.nb_public_neighbors
+        StatementResult rs = session.run(
+                String.format(
+                        "%sRETURN n.nb_public_neighbors as result",
+                        queryPrefix()
+                ),
+                parameters(
+                        "uri",
+                        this.uri().toString()
+                )
         );
-        return NoEx.wrap(() -> {
-            ResultSet rs = connection.createStatement().executeQuery(
-                    query
-            );
-            rs.next();
-            return Integer.valueOf(
-                    rs.getString("result")
-            );
-        }).get();
+        Record record = rs.next();
+        return record.get("result").asInt();
     }
 
     @Override
     public Integer getNbFriendNeighbors() {
-        String query = String.format(
-                "%sreturn n.%s as result",
-                queryPrefix(),
-                props.nb_friend_neighbors.name()
+        StatementResult rs = session.run(
+                queryPrefix() + "RETURN n.nb_friend_neighbors as result",
+                parameters(
+                        "uri",
+                        uri().toString()
+                )
         );
-        return NoEx.wrap(() -> {
-            ResultSet rs = connection.createStatement().executeQuery(
-                    query
-            );
-            rs.next();
-            return Integer.valueOf(
-                    rs.getString("result")
-            );
-        }).get();
+        Record record = rs.next();
+        return record.get("result").asInt();
     }
 
     @Override
     public void setNumberOfConnectedEdges(Integer numberOfConnectedEdges) {
-        NoEx.wrap(() -> {
-            String query = String.format(
-                    "%s SET n.%s={1}",
-                    queryPrefix(),
-                    props.number_of_connected_edges_property_name
-            );
-            PreparedStatement statement = connection.prepareStatement(
-                    query
-            );
-            statement.setInt(
-                    1, numberOfConnectedEdges
-            );
-            return statement.execute();
-        }).get();
+        session.run(
+                String.format(
+                        "%s SET n.%s=$nbConnectedEdges",
+                        queryPrefix(),
+                        props.number_of_connected_edges_property_name
+                ),
+                parameters(
+                        "uri",
+                        uri().toString(),
+                        "nbConnectedEdges",
+                        numberOfConnectedEdges
+                )
+        );
     }
 
     @Override
     public void setNumberOfPublicConnectedEdges(Integer nbPublicNeighbors) {
-        NoEx.wrap(() -> {
-            String query = String.format(
-                    "%s SET n.%s={1}",
-                    queryPrefix(),
-                    props.nb_public_neighbors
-            );
-            PreparedStatement statement = connection.prepareStatement(
-                    query
-            );
-            statement.setInt(
-                    1, nbPublicNeighbors
-            );
-            return statement.execute();
-        }).get();
+        session.run(
+                queryPrefix() + "SET n.nb_public_neighbors=$nbPublicNeighbors",
+                parameters(
+                        "uri",
+                        uri().toString(),
+                        "nbPublicNeighbors",
+                        nbPublicNeighbors
+                )
+        );
     }
 
     @Override
     public void setNbFriendNeighbors(Integer nbFriendNeighbors) {
-        NoEx.wrap(() -> {
-            String query = String.format(
-                    "%s SET n.%s={1}",
-                    queryPrefix(),
-                    props.nb_friend_neighbors
-            );
-            PreparedStatement statement = connection.prepareStatement(
-                    query
-            );
-            statement.setInt(
-                    1, nbFriendNeighbors
-            );
-            return statement.execute();
-        }).get();
+        session.run(
+                queryPrefix() + "SET n.nb_friend_neighbors=$nbFriendNeighbors",
+                parameters(
+                        "uri",
+                        uri().toString(),
+                        "nbFriendNeighbors",
+                        nbFriendNeighbors
+                )
+        );
     }
 
     protected void incrementNumberOfConnectedEdges() {
-        NoEx.wrap(() -> {
-            Statement statement = connection.createStatement();
-            String query = String.format(
-                    "%s SET n.%s= n.%s + 1",
-                    queryPrefix(),
-                    props.number_of_connected_edges_property_name,
-                    props.number_of_connected_edges_property_name
-            );
-            statement.executeUpdate(
-                    query
-            );
-            statement.close();
-            return null;
-        }).get();
+        session.run(
+                String.format(
+                        "%s SET n.%s= n.%s + 1",
+                        queryPrefix(),
+                        props.number_of_connected_edges_property_name,
+                        props.number_of_connected_edges_property_name
+                ),
+                parameters(
+                        "uri", uri().toString()
+                )
+        );
     }
 
     @Override
     public void setSuggestions(Map<URI, SuggestionPojo> suggestions) {
-        String query = String.format(
-                "%sSET n.%s= {1} ",
-                queryPrefix(),
-                props.suggestions
+        session.run(
+                queryPrefix() + "SET n.suggestions=$suggestions",
+                parameters(
+                        "uri",
+                        this.uri().toString(),
+                        "suggestions",
+                        SuggestionJson.multipleToJson(suggestions).toString()
+                )
         );
-        NoEx.wrap(() -> {
-            PreparedStatement statement = connection.prepareStatement(query);
-            statement.setString(
-                    1,
-                    SuggestionJson.multipleToJson(suggestions).toString()
-            );
-            return statement.execute();
-        }).get();
     }
 
     @Override
@@ -639,25 +606,22 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
 
     @Override
     public Map<URI, SuggestionPojo> getSuggestions() {
-        String query = String.format(
-                "%sreturn n.`%s` as suggestions",
-                queryPrefix(),
-                props.suggestions
-        );
-        return NoEx.wrap(() -> {
-            ResultSet rs = connection.createStatement().executeQuery(
-                    query
-            );
-            rs.next();
-            String suggestionsStr = rs.getString(
-                    "suggestions"
-            );
-            return suggestionsStr == null ?
-                    new HashMap<URI, SuggestionPojo>() :
-                    SuggestionJson.fromJsonArray(
-                            suggestionsStr
-                    );
-        }).get();
+        Record record = session.run(
+                queryPrefix() + "RETURN n.suggestions as suggestions",
+                parameters(
+                        "uri",
+                        this.uri().toString()
+                )
+        ).single();
+        return record.get(
+                "suggestions"
+        ).asObject() == null ?
+                new HashMap<URI, SuggestionPojo>() :
+                SuggestionJson.fromJsonArray(
+                        record.get(
+                                "suggestions"
+                        ).asString()
+                );
     }
 
     @Override
@@ -692,86 +656,85 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
 
     @Override
     public Map<URI, Vertex> getIncludedVertices() {
-        String query = String.format(
-                "%sMATCH n-[:%s]->included_vertex RETURN %s'dummy_return'",
-                queryPrefix(),
-                Relationships.HAS_INCLUDED_VERTEX,
-                SubGraphExtractorNeo4j.includedElementQueryPart("included_vertex")
+        StatementResult rs = session.run(
+                String.format(
+                        "%sMATCH (n)-[:HAS_INCLUDED_VERTEX]->(included_vertex) RETURN %s'dummy_return'",
+                        queryPrefix(),
+                        SubGraphExtractorNeo4j.includedElementQueryPart("included_vertex")
+                ),
+                parameters(
+                        "uri", this.uri().toString()
+                )
         );
-        return NoEx.wrap(() -> {
-            Statement statement = connection.createStatement();
-            ResultSet rs = statement.executeQuery(
-                    query
+        Map<URI, Vertex> includedVertices = new HashMap<>();
+        while (rs.hasNext()) {
+            Record record = rs.next();
+            URI uri = URI.create(
+                    record.get("included_vertex.uri").asString()
             );
-            Map<URI, Vertex> includedVertices = new HashMap<>();
-            while (rs.next()) {
-                URI uri = URI.create(
-                        rs.getString("included_vertex.uri")
-                );
-                includedVertices.put(
-                        uri,
-                        new VertexInSubGraphPojo(
-                                uri,
-                                rs.getString(
-                                        "included_vertex." + FriendlyResourceNeo4j.props.label.toString()
-                                )
-                        )
-                );
-            }
-            return includedVertices;
-        }).get();
+            includedVertices.put(
+                    uri,
+                    new VertexInSubGraphPojo(
+                            uri,
+                            record.get(
+                                    "included_vertex." + FriendlyResourceNeo4j.props.label.toString()
+                            ).asString()
+                    )
+            );
+        }
+        return includedVertices;
     }
 
     @Override
     public Map<URI, Edge> getIncludedEdges() {
-        String query = String.format(
-                "%sMATCH n-[:%s]->included_edge RETURN %s'dummy_return'",
-                queryPrefix(),
-                Relationships.HAS_INCLUDED_EDGE,
-                SubGraphExtractorNeo4j.includedElementQueryPart("included_edge")
+        StatementResult rs = session.run(
+                String.format(
+                        "%sMATCH n-[:HAS_INCLUDED_EDGE]->included_edge RETURN %s'dummy_return'",
+                        queryPrefix(),
+                        SubGraphExtractorNeo4j.includedElementQueryPart("included_edge")
+                ),
+                parameters(
+                        "uri",
+                        uri().toString()
+                )
         );
-        return NoEx.wrap(() -> {
-            Statement statement = connection.createStatement();
-            ResultSet rs = statement.executeQuery(
-                    query
+        Map<URI, Edge> includedEdge = new HashMap<>();
+        while (rs.hasNext()) {
+            Record record = rs.next();
+            URI uri = URI.create(
+                    record.get("included_edge.uri").asString()
             );
-            Map<URI, Edge> includedEdge = new HashMap<>();
-            while (rs.next()) {
-                URI uri = URI.create(
-                        rs.getString("included_edge.uri")
-                );
-                includedEdge.put(
-                        uri,
-                        new EdgePojo(
-                                uri,
-                                rs.getString(
-                                        "included_edge." + FriendlyResourceNeo4j.props.label.toString()
-                                )
-                        )
-                );
-            }
-            return includedEdge;
-        }).get();
-    }
-
-
-    public void setIncludedVertices(Set<Vertex> includedVertices) {
-        for (Vertex vertex : includedVertices) {
-            getNode().createRelationshipTo(
-                    vertexFactory.withUri(vertex.uri()).getNode(),
-                    Relationships.HAS_INCLUDED_VERTEX
+            includedEdge.put(
+                    uri,
+                    new EdgePojo(
+                            uri,
+                            record.get(
+                                    "included_edge." + FriendlyResourceNeo4j.props.label.toString()
+                            ).asString()
+                    )
             );
         }
+        return includedEdge;
     }
 
-    public void setIncludedEdges(Set<Edge> includedEdges) {
-        for (Edge edge : includedEdges) {
-            getNode().createRelationshipTo(
-                    edgeFactory.withUri(edge.uri()).getNode(),
-                    Relationships.HAS_INCLUDED_EDGE
-            );
-        }
-    }
+
+//    public void setIncludedVertices(Set<Vertex> includedVertices) {
+//        for (Vertex vertex : includedVertices) {
+//            getNode().createRelationshipTo(
+//                    vertexFactory.withUri(vertex.uri()).getNode(),
+//                    Relationships.HAS_INCLUDED_VERTEX
+//            );
+//        }
+//    }
+//
+//    public void setIncludedEdges(Set<Edge> includedEdges) {
+//        for (Edge edge : includedEdges) {
+//            getNode().createRelationshipTo(
+//                    edgeFactory.withUri(edge.uri()).getNode(),
+//                    Relationships.HAS_INCLUDED_EDGE
+//            );
+//        }
+//    }
 
     @Override
     public Date creationDate() {
@@ -840,14 +803,6 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
     @Override
     public boolean hasLabel() {
         return graphElementOperator.hasLabel();
-    }
-
-    @Override
-    public void setSortDate(Date sortDate, Date moveDate) {
-        graphElementOperator.setSortDate(
-                sortDate,
-                moveDate
-        );
     }
 
     @Override
@@ -923,22 +878,21 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
         ShareLevel previousShareLevel = this.getShareLevel();
         String decrementQueryPart = decrementNbFriendsOrPublicQueryPart(previousShareLevel, "d", "SET ");
         String incrementQueryPart = incrementNbFriendsOrPublicQueryPart(shareLevel, "d", "SET ");
-        String query = queryPrefix()
-                + "SET n.shareLevel=@shareLevel " +
-                "WITH n " +
-                "MATCH n<-[:SOURCE_VERTEX|DESTINATION_VERTEX]->e, " +
-                "e<-[:SOURCE_VERTEX|DESTINATION_VERTEX]->d " +
-                decrementQueryPart + " " +
-                incrementQueryPart + " " +
-                "WITH d,n,e " +
-                "SET e.shareLevel = CASE WHEN (n.shareLevel <= d.shareLevel) THEN n.shareLevel ELSE d.shareLevel END";
-        NoEx.wrap(() -> {
-            NamedParameterStatement statement = new NamedParameterStatement(
-                    connection, query
-            );
-            statement.setInt("shareLevel", shareLevel.getConfidentialityIndex());
-            return statement.execute();
-        }).get();
+        session.run(
+                queryPrefix()
+                        + "SET n.shareLevel=$shareLevel " +
+                        "WITH n " +
+                        "MATCH (n)<-[:SOURCE_VERTEX|DESTINATION_VERTEX]->(e), " +
+                        "(e)<-[:SOURCE_VERTEX|DESTINATION_VERTEX]->(d) " +
+                        decrementQueryPart + " " +
+                        incrementQueryPart + " " +
+                        "WITH d,n,e " +
+                        "SET e.shareLevel = CASE WHEN (n.shareLevel <= d.shareLevel) THEN n.shareLevel ELSE d.shareLevel END",
+                parameters(
+                        "uri",uri().toString(),
+                        "shareLevel", shareLevel.getConfidentialityIndex()
+                )
+        );
     }
 
     @Override
@@ -953,20 +907,14 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
         VertexPojo vertexPojo = pojoFromCreationProperties(
                 props
         );
-        return NoEx.wrap(() -> {
-            String query = String.format(
-                    "create (n:%s {1})",
-                    GraphElementType.vertex
-            );
-            PreparedStatement statement = connection.prepareStatement(query);
-            statement.setObject(
-                    1,
-                    props
-            );
-            statement.execute();
-            statement.close();
-            return vertexPojo;
-        }).get();
+        session.run(
+                "CREATE(n:Resource:GraphElement:Vertex $vertex)",
+                parameters(
+                        "vertex",
+                        props
+                )
+        );
+        return vertexPojo;
     }
 
     @Override
@@ -975,21 +923,12 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
     }
 
     @Override
-    public Node getNode() {
-        if (null == node) {
-            return graphElementOperator.getNode();
-        }
-        return node;
-    }
-
-    @Override
     public Map<String, Object> addCreationProperties(Map<String, Object> map) {
         Map<String, Object> newMap = map(
                 props.shareLevel.name(), ShareLevel.PRIVATE.getConfidentialityIndex(),
                 props.number_of_connected_edges_property_name.name(), 0,
                 props.nb_public_neighbors.name(), 0,
-                props.nb_friend_neighbors.name(), 0,
-                FriendlyResourceNeo4j.props.type.name(), GraphElementType.vertex.name()
+                props.nb_friend_neighbors.name(), 0
         );
         newMap.putAll(
                 map
@@ -1014,28 +953,5 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
             );
         }
         return vertex;
-    }
-
-    @Override
-    public void setNamedCreationProperties(NamedParameterStatement statement) throws SQLException {
-        statement.setObject(
-                props.is_public.name(),
-                false
-        );
-        statement.setObject(
-                props.number_of_connected_edges_property_name.name(),
-                0
-        );
-        statement.setObject(
-                props.number_of_connected_edges_property_name.name(),
-                0
-        );
-        statement.setObject(
-                FriendlyResourceNeo4j.props.type.name(),
-                GraphElementType.vertex.name()
-        );
-        graphElementOperator.setNamedCreationProperties(
-                statement
-        );
     }
 }

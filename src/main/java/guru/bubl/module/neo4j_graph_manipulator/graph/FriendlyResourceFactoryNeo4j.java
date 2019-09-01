@@ -4,8 +4,8 @@
 
 package guru.bubl.module.neo4j_graph_manipulator.graph;
 
-import org.neo4j.graphdb.Node;
 import guru.bubl.module.model.FriendlyResourceFactory;
+import org.neo4j.graphdb.Node;
 
 import java.net.URI;
 

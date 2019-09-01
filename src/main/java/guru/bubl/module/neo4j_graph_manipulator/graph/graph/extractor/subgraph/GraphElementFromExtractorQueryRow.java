@@ -7,57 +7,55 @@ package guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph;
 import guru.bubl.module.model.graph.GraphElementPojo;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.FriendlyResourceFromExtractorQueryRow;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.IdentificationQueryBuilder;
-
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import org.neo4j.driver.v1.Record;
 
 public class GraphElementFromExtractorQueryRow {
 
-    private ResultSet row;
+    private Record record;
     private String key;
     private String identificationKey = IdentificationQueryBuilder.IDENTIFIER_QUERY_KEY;
 
     public static GraphElementFromExtractorQueryRow usingRowAndKey(
-            ResultSet row,
+            Record record,
             String key
     ) {
         return new GraphElementFromExtractorQueryRow(
-                row,
+                record,
                 key
         );
     }
 
     public static GraphElementFromExtractorQueryRow usingRowKeyAndIdentificationKey(
-            ResultSet row,
+            Record record,
             String key,
             String identificationKey
     ) {
         return new GraphElementFromExtractorQueryRow(
-                row,
+                record,
                 key,
                 identificationKey
         );
     }
 
-    protected GraphElementFromExtractorQueryRow(ResultSet row, String key) {
-        this.row = row;
+    protected GraphElementFromExtractorQueryRow(Record record, String key) {
+        this.record = record;
         this.key = key;
     }
 
-    protected GraphElementFromExtractorQueryRow(ResultSet row, String key, String identificationKey) {
-        this.row = row;
+    protected GraphElementFromExtractorQueryRow(Record record, String key, String identificationKey) {
+        this.record = record;
         this.key = key;
         this.identificationKey = identificationKey;
     }
 
-    public GraphElementPojo build() throws SQLException{
+    public GraphElementPojo build() {
         return new GraphElementPojo(
                 FriendlyResourceFromExtractorQueryRow.usingRowAndNodeKey(
-                        row,
+                        record,
                         key
                 ).build(),
                 IdentifiersFromExtractorQueryRowAsArray.usingRowAndKey(
-                        row,
+                        record,
                         identificationKey
                 ).build()
         );

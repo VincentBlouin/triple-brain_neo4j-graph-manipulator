@@ -6,9 +6,7 @@ package guru.bubl.module.neo4j_graph_manipulator.graph;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
-import guru.bubl.module.model.EmptyGraphTransaction;
 import guru.bubl.module.model.FriendlyResourceFactory;
-import guru.bubl.module.model.GraphTransaction;
 import guru.bubl.module.model.WholeGraph;
 import guru.bubl.module.model.admin.WholeGraphAdmin;
 import guru.bubl.module.model.center_graph_element.CenterGraphElementOperator;
@@ -41,9 +39,9 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.graph.edge.EdgeOperatorNeo
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.schema.SchemaExtractorFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph.SubGraphExtractorFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.identification.IdentificationNeo4j;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.schema.SchemaFactory;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.schema.SchemaListNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.schema.SchemaOperatorNeo4j;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.schema.SchemaFactory;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.subgraph.SubGraphForkerNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.VertexFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.VertexInSubGraphOperatorNeo4j;
@@ -52,24 +50,17 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.meta.IdentificationFactory
 import guru.bubl.module.neo4j_graph_manipulator.graph.meta.UserMetasOperatorNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.search.GraphSearchModuleNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.test.GraphComponentTestNeo4j;
-import org.neo4j.graphdb.*;
-import org.neo4j.graphdb.event.KernelEventHandler;
-import org.neo4j.graphdb.event.TransactionEventHandler;
+import org.neo4j.driver.v1.AuthTokens;
+import org.neo4j.driver.v1.Driver;
+import org.neo4j.driver.v1.GraphDatabase;
+import org.neo4j.driver.v1.Session;
+import org.neo4j.graphdb.GraphDatabaseService;
+import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
-import org.neo4j.graphdb.factory.GraphDatabaseSettings;
-import org.neo4j.graphdb.index.IndexManager;
-import org.neo4j.graphdb.schema.Schema;
-import org.neo4j.graphdb.traversal.BidirectionalTraversalDescription;
-import org.neo4j.graphdb.traversal.TraversalDescription;
-import org.neo4j.helpers.collection.MapUtil;
+import org.neo4j.kernel.configuration.BoltConnector;
 
 import javax.inject.Singleton;
 import java.io.File;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.util.Map;
-import java.util.Properties;
 
 public class Neo4jModule extends AbstractModule {
 
@@ -102,11 +93,7 @@ public class Neo4jModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        if (useEmbedded) {
-            bindForEmbedded();
-        } else {
-            bindForRestApi();
-        }
+        bindForEmbedded();
         if (test) {
             bind(GraphComponentTest.class).to(GraphComponentTestNeo4j.class);
         }
@@ -198,38 +185,33 @@ public class Neo4jModule extends AbstractModule {
     }
 
     private void bindForEmbedded() {
-        bind(GraphTransaction.class).to(GraphTransactionNeo4j.class);
-        // Make sure Neo4j Driver is registered
+        BoltConnector boltConnector = new BoltConnector("bolt");
         GraphDatabaseService graphDb = new GraphDatabaseFactory().newEmbeddedDatabaseBuilder(
-                test ? DB_PATH_FOR_TESTS : DB_PATH
+                new File(test ? DB_PATH_FOR_TESTS : DB_PATH)
         )
-                .setConfig(
-                        GraphDatabaseSettings.node_keys_indexable,
-                        FriendlyResourceNeo4j.props.uri + "," +
-                                FriendlyResourceNeo4j.props.label + "," +
-                                IdentificationNeo4j.props.external_uri + "," +
-                                FriendlyResourceNeo4j.props.owner + "," +
-                                FriendlyResourceNeo4j.props.type + "," +
-                                VertexInSubGraphOperatorNeo4j.props.shareLevel + "," +
-                                CenterGraphElementOperatorNeo4j.props.last_center_date + "," +
-                                "email"
-                ).setConfig(
-                        GraphDatabaseSettings.node_auto_indexing,
-                        "true"
-                ).newGraphDatabase();
+                .setConfig(boltConnector.enabled, "true")
+                .setConfig(boltConnector.type, "BOLT")
+                .setConfig(boltConnector.listen_address, "localhost:7687")
+                .newGraphDatabase();
         Transaction tx = graphDb.beginTx();
-        graphDb.index().forNodes("node_auto_index",
-                MapUtil.stringMap(
-                        IndexManager.PROVIDER,
-                        "lucene",
-                        "type",
-                        "fulltext",
-                        "to_lower_case",
-                        "true"
-                )
+        if (test) {
+            graphDb.execute("CREATE CONSTRAINT ON (n:Resource) ASSERT n.uri IS UNIQUE");
+            graphDb.execute("CREATE CONSTRAINT ON (n:User) ASSERT n.email IS UNIQUE");
+            graphDb.execute("CREATE INDEX ON :GraphElement(owner)");
+            graphDb.execute("CALL db.index.fulltext.createNodeIndex('graphElementLabel',['GraphElement'],['label'])");
+            graphDb.execute("CALL db.index.fulltext.createNodeIndex('vertexLabel',['Vertex'],['label'])");
+            graphDb.execute("CALL db.index.fulltext.createNodeIndex('username',['User'],['username'])");
+            graphDb.execute("CREATE INDEX ON :GraphElement(shareLevel)");
+            graphDb.execute("CREATE INDEX ON :GraphElement(last_center_date)");
+            graphDb.execute("CREATE INDEX ON :Meta(external_uri)");
+        }
+
+        Driver driver = GraphDatabase.driver(
+                "bolt://localhost:7687",
+                AuthTokens.basic("user", "password")
         );
-        bind(Connection.class).toInstance(
-                getConnectionForEmbedded(graphDb)
+        bind(Session.class).toInstance(
+                driver.session()
         );
         bind(GraphDatabaseService.class).toInstance(graphDb);
         if (test) {
@@ -237,19 +219,6 @@ public class Neo4jModule extends AbstractModule {
         }
         tx.success();
         tx.close();
-    }
-
-    private void bindForRestApi() {
-        bind(GraphTransaction.class).to(
-                EmptyGraphTransaction.class
-        );
-        bind(Connection.class).toInstance(
-                getConnectionForRest()
-        );
-        bind(GraphDatabaseService.class).toInstance(
-                dummyGraphDatabaseService()
-        );
-
     }
 
     private void registerShutdownHook(final GraphDatabaseService graphDb) {
@@ -282,153 +251,5 @@ public class Neo4jModule extends AbstractModule {
             }
             file.delete();
         }
-    }
-
-    private Connection getConnectionForEmbedded(GraphDatabaseService graphDatabaseService) {
-        try {
-            Class.forName("org.neo4j.jdbc.Driver");
-            Properties props = new Properties();
-            props.put("bubl.guru_db", graphDatabaseService);
-            return DriverManager.getConnection(
-                    "jdbc:neo4j:instance:bubl.guru_db",
-                    props
-            );
-        } catch (ClassNotFoundException | SQLException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private Connection getConnectionForRest() {
-        try {
-            Class.forName("org.neo4j.jdbc.Driver");
-            return DriverManager.getConnection(
-                    "jdbc:neo4j:" +
-                            (test ?
-                                    "//localhost:9594/db/data?debug=true" :
-                                    "//localhost:8484/db/data"
-                            )
-            );
-        } catch (ClassNotFoundException | SQLException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private GraphDatabaseService dummyGraphDatabaseService() {
-        return new GraphDatabaseService() {
-            @Override
-            public Node createNode() {
-                return null;
-            }
-
-            @Override
-            public Node createNode(Label... labels) {
-                return null;
-            }
-
-            @Override
-            public Node getNodeById(long id) {
-                return null;
-            }
-
-            @Override
-            public Relationship getRelationshipById(long id) {
-                return null;
-            }
-
-            @Override
-            public Iterable<Node> getAllNodes() {
-                return null;
-            }
-
-            @Override
-            public ResourceIterator<Node> findNodes(Label label, String key, Object value) {
-                return null;
-            }
-
-            @Override
-            public Node findNode(Label label, String key, Object value) {
-                return null;
-            }
-
-            @Override
-            public ResourceIterator<Node> findNodes(Label label) {
-                return null;
-            }
-
-            @Override
-            public ResourceIterable<Node> findNodesByLabelAndProperty(Label label, String key, Object value) {
-                return null;
-            }
-
-            @Override
-            public Iterable<RelationshipType> getRelationshipTypes() {
-                return null;
-            }
-
-            @Override
-            public boolean isAvailable(long timeout) {
-                return false;
-            }
-
-            @Override
-            public void shutdown() {
-
-            }
-
-            @Override
-            public Transaction beginTx() {
-                return null;
-            }
-
-            @Override
-            public Result execute(String query) throws QueryExecutionException {
-                return null;
-            }
-
-            @Override
-            public Result execute(String query, Map<String, Object> parameters) throws QueryExecutionException {
-                return null;
-            }
-
-            @Override
-            public <T> TransactionEventHandler<T> registerTransactionEventHandler(TransactionEventHandler<T> handler) {
-                return null;
-            }
-
-            @Override
-            public <T> TransactionEventHandler<T> unregisterTransactionEventHandler(TransactionEventHandler<T> handler) {
-                return null;
-            }
-
-            @Override
-            public KernelEventHandler registerKernelEventHandler(KernelEventHandler handler) {
-                return null;
-            }
-
-            @Override
-            public KernelEventHandler unregisterKernelEventHandler(KernelEventHandler handler) {
-                return null;
-            }
-
-            @Override
-            public Schema schema() {
-                return null;
-            }
-
-            @Override
-            public IndexManager index() {
-                return null;
-            }
-
-            @Override
-            public TraversalDescription traversalDescription() {
-                return null;
-            }
-
-            @Override
-            public BidirectionalTraversalDescription bidirectionalTraversalDescription() {
-                return null;
-            }
-        };
     }
 }

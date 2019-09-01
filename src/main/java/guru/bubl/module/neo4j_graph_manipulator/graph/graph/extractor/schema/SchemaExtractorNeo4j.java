@@ -6,20 +6,21 @@ package guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.schema;
 
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
-import guru.bubl.module.common_utils.NoEx;
 import guru.bubl.module.model.graph.schema.SchemaPojo;
 import guru.bubl.module.neo4j_graph_manipulator.graph.Relationships;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.FriendlyResourceQueryBuilder;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.IdentificationQueryBuilder;
+import org.neo4j.driver.v1.Session;
+import org.neo4j.driver.v1.StatementResult;
 
 import java.net.URI;
-import java.sql.Connection;
-import java.sql.ResultSet;
+
+import static org.neo4j.driver.v1.Values.parameters;
 
 public class SchemaExtractorNeo4j {
     protected URI schemaUri;
 
-    protected Connection connection;
+    protected Session session;
 
     public static final String
             SCHEMA_QUERY_KEY = "s",
@@ -32,30 +33,32 @@ public class SchemaExtractorNeo4j {
 
     @AssistedInject
     protected SchemaExtractorNeo4j(
-            Connection connection,
+            Session session,
             @Assisted URI schemaUri
     ) {
-        this.connection = connection;
+        this.session = session;
         this.schemaUri = schemaUri;
     }
 
     public SchemaPojo load() {
-        return NoEx.wrap(() -> {
-            ResultSet rs = connection.createStatement().executeQuery(
-                    buildQuery()
-            );
-            return new SchemaFromQueryResult(
-                    rs
-            ).build();
-        }).get();
+        StatementResult rs = session.run(
+                buildQuery(),
+                parameters(
+                        "uri",
+                        schemaUri.toString()
+                )
+        );
+        return new SchemaFromQueryResult(
+                rs
+        ).build();
     }
 
     private String buildQuery() {
         String dummyReturnValueToAvoidFinishWithComma = "1";
-        return "START " + SCHEMA_QUERY_KEY + "=node:node_auto_index('uri:" + schemaUri + "') " +
-                "OPTIONAL MATCH ("+ SCHEMA_QUERY_KEY +")-[:" + Relationships.HAS_PROPERTY + "]->("+PROPERTY_QUERY_KEY+") " +
-                "OPTIONAL MATCH ("+SCHEMA_QUERY_KEY+")-[" + SCHEMA_IDENTIFICATION_RELATION_QUERY_KEY + ":" + Relationships.IDENTIFIED_TO + "]->(" + SCHEMA_IDENTIFICATION_QUERY_KEY + ") " +
-                "OPTIONAL MATCH ("+PROPERTY_QUERY_KEY+")-[" + PROPERTY_IDENTIFICATION_RELATION_QUERY_KEY + ":" + Relationships.IDENTIFIED_TO + "]->(" + PROPERTY_IDENTIFICATION_QUERY_KEY + ") " +
+        return "MATCH (s{uri:$uri}) " +
+                "OPTIONAL MATCH (s)-[:" + Relationships.HAS_PROPERTY + "]->(p) " +
+                "OPTIONAL MATCH (s)-[" + SCHEMA_IDENTIFICATION_RELATION_QUERY_KEY + ":" + Relationships.IDENTIFIED_TO + "]->(" + SCHEMA_IDENTIFICATION_QUERY_KEY + ") " +
+                "OPTIONAL MATCH (p)-[" + PROPERTY_IDENTIFICATION_RELATION_QUERY_KEY + ":" + Relationships.IDENTIFIED_TO + "]->(" + PROPERTY_IDENTIFICATION_QUERY_KEY + ") " +
                 "RETURN " +
                 FriendlyResourceQueryBuilder.returnQueryPartUsingPrefix(SCHEMA_QUERY_KEY) +
                 FriendlyResourceQueryBuilder.returnQueryPartUsingPrefix(PROPERTY_QUERY_KEY) +
