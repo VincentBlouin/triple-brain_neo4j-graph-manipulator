@@ -41,15 +41,17 @@ public class CenterGraphElementsOperatorNeo4j implements CenteredGraphElementsOp
     public Set<CenterGraphElementPojo> getPublicAndPrivate() {
         return getPublicOnlyOrNot(
                 false,
+                null,
                 null
         );
     }
 
     @Override
-    public Set<CenterGraphElementPojo> getPublicAndPrivateWithLimit(Integer limit) {
+    public Set<CenterGraphElementPojo> getPublicAndPrivateWithLimitAndSkip(Integer limit, Integer skip) {
         return getPublicOnlyOrNot(
                 false,
-                limit
+                limit,
+                skip
         );
     }
 
@@ -57,19 +59,21 @@ public class CenterGraphElementsOperatorNeo4j implements CenteredGraphElementsOp
     public Set<CenterGraphElementPojo> getPublicOnlyOfType() {
         return getPublicOnlyOrNot(
                 true,
+                null,
                 null
         );
     }
 
     @Override
-    public Set<CenterGraphElementPojo> getPublicOnlyOfTypeWithLimit(Integer limit) {
+    public Set<CenterGraphElementPojo> getPublicOnlyOfTypeWithLimitAndSkip(Integer limit, Integer skip) {
         return getPublicOnlyOrNot(
                 true,
-                limit
+                limit,
+                skip
         );
     }
 
-    private Set<CenterGraphElementPojo> getPublicOnlyOrNot(Boolean publicOnly, Integer limit) {
+    private Set<CenterGraphElementPojo> getPublicOnlyOrNot(Boolean publicOnly, Integer limit, Integer skip) {
         Set<CenterGraphElementPojo> centerGraphElements = new HashSet<>();
         StatementResult rs = session.run(
                 String.format(
@@ -78,10 +82,12 @@ public class CenterGraphElementsOperatorNeo4j implements CenteredGraphElementsOp
                                 (publicOnly ? "AND n.shareLevel=40 " : "") +
                                 "RETURN n.%s as context, n.number_of_visits as numberOfVisits, n.last_center_date as lastCenterDate, n.label as label, n.uri as uri, n.nb_references as nbReferences, n.colors as colors, n.shareLevel " +
                                 "%s " +
+                                "%s " +
                                 "%s",
                         publicOnly ? "public_context" : "private_context",
                         limit == null ? "" : "ORDER BY n.last_center_date DESC",
-                        limit == null ? "" : "LIMIT " + limit
+                        skip == null ? "" : " SKIP " + skip,
+                        limit == null ? "" : " LIMIT " + limit
                 ),
                 parameters(
                         "owner", user.username()
