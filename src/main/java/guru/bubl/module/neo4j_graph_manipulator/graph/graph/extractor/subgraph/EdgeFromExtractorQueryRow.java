@@ -48,9 +48,7 @@ public class EdgeFromExtractorQueryRow {
         EdgePojo edge = new EdgePojo(
                 GraphElementFromExtractorQueryRow.usingRowAndKey(
                         row, key
-                ).build(),
-                new VertexInSubGraphPojo(getSourceVertexUri()),
-                new VertexInSubGraphPojo(getDestinationVertexUri())
+                ).build()
         );
         return edge;
     }

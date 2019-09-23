@@ -4,6 +4,13 @@
 
 package guru.bubl.module.neo4j_graph_manipulator.graph;
 
+import apoc.convert.Json;
+import apoc.help.Help;
+import apoc.load.LoadJson;
+import apoc.load.Xml;
+import apoc.meta.Meta;
+import apoc.path.PathExplorer;
+import apoc.refactor.GraphRefactoring;
 import com.google.inject.AbstractModule;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
 import guru.bubl.module.model.FriendlyResourceFactory;
@@ -21,6 +28,9 @@ import guru.bubl.module.model.graph.edge.EdgeFactory;
 import guru.bubl.module.model.graph.edge.EdgeOperator;
 import guru.bubl.module.model.graph.identification.IdentificationFactory;
 import guru.bubl.module.model.graph.identification.IdentificationOperator;
+import guru.bubl.module.model.graph.pattern.PatternList;
+import guru.bubl.module.model.graph.pattern.PatternUser;
+import guru.bubl.module.model.graph.pattern.PatternUserFactory;
 import guru.bubl.module.model.graph.schema.SchemaList;
 import guru.bubl.module.model.graph.schema.SchemaOperator;
 import guru.bubl.module.model.graph.subgraph.SubGraphForker;
@@ -39,6 +49,8 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.graph.edge.EdgeOperatorNeo
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.schema.SchemaExtractorFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph.SubGraphExtractorFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.identification.IdentificationNeo4j;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.pattern.PatternListNeo4J;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.pattern.PatternUserNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.schema.SchemaFactory;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.schema.SchemaListNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.schema.SchemaOperatorNeo4j;
@@ -57,10 +69,16 @@ import org.neo4j.driver.v1.Session;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
+import org.neo4j.internal.kernel.api.exceptions.KernelException;
 import org.neo4j.kernel.configuration.BoltConnector;
+import org.neo4j.kernel.impl.proc.Procedures;
+import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
 import javax.inject.Singleton;
 import java.io.File;
+import java.util.List;
+
+import static java.util.Arrays.asList;
 
 public class Neo4jModule extends AbstractModule {
 
@@ -119,6 +137,12 @@ public class Neo4jModule extends AbstractModule {
         install(factoryModuleBuilder
                 .implement(CenterGraphElementOperator.class, CenterGraphElementOperatorNeo4j.class)
                 .build(CenterGraphElementOperatorFactory.class));
+
+        bind(PatternList.class).to(PatternListNeo4J.class).in(Singleton.class);
+
+        install(factoryModuleBuilder
+                .implement(PatternUser.class, PatternUserNeo4j.class)
+                .build(PatternUserFactory.class));
 
         install(factoryModuleBuilder
                 .implement(UserMetasOperator.class, UserMetasOperatorNeo4j.class)
@@ -205,8 +229,21 @@ public class Neo4jModule extends AbstractModule {
                     .setConfig(boltConnector.listen_address, "localhost:7687")
                     .newGraphDatabase();
             bind(GraphDatabaseService.class).toInstance(graphDb);
+            registerProcedures(
+                    graphDb,
+                    asList(
+                            Help.class,
+                            Json.class,
+                            LoadJson.class,
+                            Xml.class,
+                            PathExplorer.class,
+                            Meta.class,
+                            GraphRefactoring.class
+                    )
+
+            );
             Transaction tx = graphDb.beginTx();
-            graphDb.execute("CREATE CONSTRAINT ON (n:Resource) ASSERT n.uri IS UNIQUE");
+            graphDb.execute("CREATE INDEX ON :Resource(uri)");
             graphDb.execute("CREATE CONSTRAINT ON (n:User) ASSERT n.email IS UNIQUE");
             graphDb.execute("CREATE INDEX ON :GraphElement(owner)");
             graphDb.execute("CALL db.index.fulltext.createNodeIndex('graphElementLabel',['GraphElement'],['label'])");
@@ -232,6 +269,17 @@ public class Neo4jModule extends AbstractModule {
         bind(Session.class).toInstance(
                 driver.session()
         );
+    }
+
+    private void registerProcedures(GraphDatabaseService graphDb, List<Class<?>> toRegister) {
+        Procedures procedures = ((GraphDatabaseAPI) graphDb).getDependencyResolver().resolveDependency(Procedures.class);
+        toRegister.forEach((proc) -> {
+            try {
+                procedures.registerProcedure(proc);
+            } catch (KernelException e) {
+                throw new RuntimeException("Error registering " + proc, e);
+            }
+        });
     }
 
     private void registerShutdownHook(final GraphDatabaseService graphDb) {

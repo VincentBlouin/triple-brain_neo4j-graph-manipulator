@@ -127,7 +127,7 @@ public class CenterGraphElementsOperatorNeo4j implements CenteredGraphElementsOp
         return centerGraphElements;
     }
 
-    private Map<URI, String> getContextFromRow(Record record) {
+    public static Map<URI, String> getContextFromRow(Record record) {
         String contextStr = record.get("context").asString();
         if (null == contextStr) {
             return new HashMap<>();

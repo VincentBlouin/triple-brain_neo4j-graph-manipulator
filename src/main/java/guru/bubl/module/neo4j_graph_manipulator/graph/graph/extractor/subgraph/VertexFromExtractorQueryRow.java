@@ -14,6 +14,7 @@ import org.neo4j.driver.v1.Record;
 
 import java.net.URI;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class VertexFromExtractorQueryRow {
@@ -53,6 +54,9 @@ public class VertexFromExtractorQueryRow {
         vertexInSubGraphPojo.getGraphElement().setFont(
                 getFont()
         );
+        if (this.isPattern()) {
+            vertexInSubGraphPojo.getVertex().setAsPattern();
+        }
         return vertexInSubGraphPojo;
     }
 
@@ -182,5 +186,16 @@ public class VertexFromExtractorQueryRow {
         return row.get(
                 key
         ).asString();
+    }
+
+    private Boolean isPattern() {
+        List<String> types = (List) row.get("type").asList();
+        Boolean isPattern = false;
+        for (String typeStr : types) {
+            if (typeStr.equals("Pattern")) {
+                isPattern = true;
+            }
+        }
+        return isPattern;
     }
 }

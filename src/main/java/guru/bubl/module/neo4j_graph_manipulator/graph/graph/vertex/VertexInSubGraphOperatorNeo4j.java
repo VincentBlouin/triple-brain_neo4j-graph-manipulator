@@ -889,10 +889,40 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
                         "WITH d,n,e " +
                         "SET e.shareLevel = CASE WHEN (n.shareLevel <= d.shareLevel) THEN n.shareLevel ELSE d.shareLevel END",
                 parameters(
-                        "uri",uri().toString(),
+                        "uri", uri().toString(),
                         "shareLevel", shareLevel.getConfidentialityIndex()
                 )
         );
+    }
+
+    @Override
+    public void makePattern() {
+        session.run(
+                queryPrefix() + "SET n:Pattern",
+                parameters(
+                        "uri", uri().toString()
+                )
+        );
+    }
+
+    @Override
+    public void undoPattern() {
+        session.run(
+                queryPrefix() + "remove n:Pattern",
+                parameters(
+                        "uri", uri().toString()
+                )
+        );
+    }
+
+    @Override
+    public Boolean isPattern() {
+        return session.run(
+                queryPrefix() + "RETURN 'Pattern' IN LABELS(n) as isPattern",
+                parameters(
+                        "uri", uri().toString()
+                )
+        ).single().get("isPattern").asBoolean();
     }
 
     @Override
