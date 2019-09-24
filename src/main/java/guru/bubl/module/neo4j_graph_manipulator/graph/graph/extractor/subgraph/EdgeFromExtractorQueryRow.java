@@ -17,12 +17,6 @@ public class EdgeFromExtractorQueryRow {
     private Record row;
     private String key;
 
-    public static EdgeFromExtractorQueryRow usingRowAndKey(Record row, String key) {
-        return new EdgeFromExtractorQueryRow(
-                row,
-                key
-        );
-    }
 
     public static EdgeFromExtractorQueryRow usingRow(Record row) {
         return new EdgeFromExtractorQueryRow(row);
@@ -51,26 +45,5 @@ public class EdgeFromExtractorQueryRow {
                 ).build()
         );
         return edge;
-    }
-
-    public URI getSourceVertexUri() {
-        return vertexUriFromProp(
-                EdgeOperatorNeo4j.props.source_vertex_uri
-        );
-    }
-
-    public URI getDestinationVertexUri() {
-        return vertexUriFromProp(
-                EdgeOperatorNeo4j.props.destination_vertex_uri
-        );
-    }
-
-    private URI vertexUriFromProp(Enum prop) {
-        return URI.create(
-                row.get(
-                        key + "." + prop
-
-                ).asString()
-        );
     }
 }

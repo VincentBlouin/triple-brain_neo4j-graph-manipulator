@@ -115,15 +115,33 @@ public class EdgeOperatorNeo4j implements EdgeOperator, OperatorNeo4j {
 
     @Override
     public VertexOperator sourceVertex() {
-        return vertexUsingProperty(
-                props.source_vertex_uri
+        Record record = session.run(
+                queryPrefix() +
+                        "MATCH (n)-[:SOURCE_VERTEX]->(v) " +
+                        "RETURN v.uri as uri",
+                parameters(
+                        "uri",
+                        uri().toString()
+                )
+        ).single();
+        return vertexFactory.withUri(
+                URI.create(record.get("uri").asString())
         );
     }
 
     @Override
     public VertexOperator destinationVertex() {
-        return vertexUsingProperty(
-                props.destination_vertex_uri
+        Record record = session.run(
+                queryPrefix() +
+                        "MATCH (n)-[:DESTINATION_VERTEX]->(v) " +
+                        "RETURN v.uri as uri",
+                parameters(
+                        "uri",
+                        uri().toString()
+                )
+        ).single();
+        return vertexFactory.withUri(
+                URI.create(record.get("uri").asString())
         );
     }
 
@@ -229,8 +247,7 @@ public class EdgeOperatorNeo4j implements EdgeOperator, OperatorNeo4j {
                         "(n)-[:%s]->(kept_v) " +
                         "CREATE (n)-[:%s]->(new_v) " +
                         "DELETE prev_rel " +
-                        "SET n.%s=new_v.uri, " +
-                        "prev_v.%s = prev_v.%s - 1, " +
+                        "SET prev_v.%s = prev_v.%s - 1, " +
                         "new_v.%s = new_v.%s + 1, %s" +
                         decrementPreviousVertexQueryPart +
                         decrementKeptVertexQueryPart +
@@ -240,7 +257,6 @@ public class EdgeOperatorNeo4j implements EdgeOperator, OperatorNeo4j {
                 relationshipToChange,
                 relationshipToKeep,
                 relationshipToChange,
-                Relationships.SOURCE_VERTEX == relationshipToChange ? props.source_vertex_uri : props.destination_vertex_uri,
                 VertexInSubGraphOperatorNeo4j.props.number_of_connected_edges_property_name,
                 VertexInSubGraphOperatorNeo4j.props.number_of_connected_edges_property_name,
                 VertexInSubGraphOperatorNeo4j.props.number_of_connected_edges_property_name,
@@ -288,14 +304,12 @@ public class EdgeOperatorNeo4j implements EdgeOperator, OperatorNeo4j {
                                 "CREATE (n)-[:%s]->(source_vertex) " +
                                 "CREATE (n)-[:%s]->(destination_vertex) " +
                                 "DELETE source_rel, destination_rel " +
-                                "SET n.%s=destination_vertex.uri, n.%s=source_vertex.uri, %s",
+                                "SET %s",
                         queryPrefix(),
                         Relationships.SOURCE_VERTEX,
                         Relationships.DESTINATION_VERTEX,
                         Relationships.DESTINATION_VERTEX,
                         Relationships.SOURCE_VERTEX,
-                        props.source_vertex_uri,
-                        props.destination_vertex_uri,
                         FriendlyResourceNeo4j.LAST_MODIFICATION_QUERY_PART
                 ),
                 parameters(
@@ -528,8 +542,6 @@ public class EdgeOperatorNeo4j implements EdgeOperator, OperatorNeo4j {
     @Override
     public Map<String, Object> addCreationProperties(Map<String, Object> map) {
         Map<String, Object> newMap = map(
-                props.source_vertex_uri.name(), sourceVertex.uri().toString(),
-                props.destination_vertex_uri.name(), destinationVertex.uri().toString(),
                 FriendlyResourceNeo4j.props.type.name(), GraphElementType.Edge.name(),
                 VertexInSubGraphOperatorNeo4j.props.shareLevel.name(), ShareLevel.PRIVATE.getConfidentialityIndex()
         );
