@@ -250,6 +250,20 @@ public class GraphElementOperatorNeo4j implements GraphElementOperator, Operator
     }
 
     @Override
+    public URI getPatternUri() {
+        Record record = session.run(
+                queryPrefix() + "RETURN n.pattern_uri as patternUri",
+                parameters(
+                        "uri",
+                        this.uri().toString()
+                )
+        ).single();
+        return record.get(
+                "patternUri"
+        ).asObject() == null ? null : URI.create(record.get("patternUri").asString());
+    }
+
+    @Override
     public void create() {
         createUsingInitialValues(
                 map()

@@ -432,6 +432,11 @@ public class EdgeOperatorNeo4j implements EdgeOperator, OperatorNeo4j {
     }
 
     @Override
+    public URI getPatternUri() {
+        return graphElementOperator.getPatternUri();
+    }
+
+    @Override
     public void create() {
         createEdge();
     }

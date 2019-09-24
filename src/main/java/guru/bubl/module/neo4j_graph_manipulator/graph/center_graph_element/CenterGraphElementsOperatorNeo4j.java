@@ -80,7 +80,7 @@ public class CenterGraphElementsOperatorNeo4j implements CenteredGraphElementsOp
                         "MATCH(n:GraphElement) " +
                                 "WHERE n.owner=$owner AND EXISTS(n.last_center_date) " +
                                 (publicOnly ? "AND n.shareLevel=40 " : "") +
-                                "RETURN n.%s as context, n.number_of_visits as numberOfVisits, n.last_center_date as lastCenterDate, n.label as label, n.uri as uri, n.nb_references as nbReferences, n.colors as colors, n.shareLevel " +
+                                "RETURN n.%s as context, n.number_of_visits as numberOfVisits, n.last_center_date as lastCenterDate, n.label as label, n.uri as uri, n.nb_references as nbReferences, n.colors as colors, n.shareLevel, 'Pattern' IN LABELS(n) as isPattern " +
                                 "%s " +
                                 "%s " +
                                 "%s",
@@ -120,7 +120,8 @@ public class CenterGraphElementsOperatorNeo4j implements CenteredGraphElementsOp
                             graphElement,
                             getContextFromRow(record),
                             nbReferences,
-                            shareLevel
+                            shareLevel,
+                            record.get("isPattern").asBoolean()
                     )
             );
         }

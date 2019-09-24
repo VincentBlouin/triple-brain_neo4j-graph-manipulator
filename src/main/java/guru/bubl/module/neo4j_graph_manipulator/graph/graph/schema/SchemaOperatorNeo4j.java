@@ -215,6 +215,11 @@ public class SchemaOperatorNeo4j implements SchemaOperator, OperatorNeo4j {
     }
 
     @Override
+    public URI getPatternUri() {
+        return graphElementOperator.getPatternUri();
+    }
+
+    @Override
     public GraphElementOperator addProperty() {
         URI createdUri = UserUris.generateSchemaPropertyUri(uri());
         GraphElementOperatorNeo4j property = graphElementFactory.withUri(createdUri);

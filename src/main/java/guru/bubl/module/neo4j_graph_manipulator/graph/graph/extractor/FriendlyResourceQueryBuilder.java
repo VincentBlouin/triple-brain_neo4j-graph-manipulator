@@ -30,6 +30,10 @@ public class FriendlyResourceQueryBuilder {
                         ) +
                         QueryUtils.getPropertyUsingContainerNameQueryPart(
                                 prefix,
+                                "pattern_uri"
+                        ) +
+                        QueryUtils.getPropertyUsingContainerNameQueryPart(
+                                prefix,
                                 FriendlyResourceNeo4j.props.last_modification_date.name()
                         );
     }

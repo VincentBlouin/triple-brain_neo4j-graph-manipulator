@@ -838,6 +838,11 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
     }
 
     @Override
+    public URI getPatternUri() {
+        return graphElementOperator.getPatternUri();
+    }
+
+    @Override
     public boolean equals(Object vertexToCompareAsObject) {
         return graphElementOperator.equals(vertexToCompareAsObject);
     }
@@ -898,7 +903,12 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
     @Override
     public void makePattern() {
         session.run(
-                queryPrefix() + "SET n:Pattern",
+                queryPrefix() + "SET n:Pattern " +
+                        "WITH n " +
+                        "CALL apoc.path.subgraphAll(n, {relationshipFilter:'SOURCE_VERTEX, DESTINATION_VERTEX'}) YIELD nodes " +
+                        "UNWIND nodes as s " +
+                        "SET s.shareLevel=40"
+                ,
                 parameters(
                         "uri", uri().toString()
                 )

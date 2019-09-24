@@ -5,9 +5,12 @@
 package guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph;
 
 import guru.bubl.module.model.graph.GraphElementPojo;
+import guru.bubl.module.neo4j_graph_manipulator.graph.FriendlyResourceNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.FriendlyResourceFromExtractorQueryRow;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.IdentificationQueryBuilder;
 import org.neo4j.driver.v1.Record;
+
+import java.net.URI;
 
 public class GraphElementFromExtractorQueryRow {
 
@@ -57,7 +60,13 @@ public class GraphElementFromExtractorQueryRow {
                 IdentifiersFromExtractorQueryRowAsArray.usingRowAndKey(
                         record,
                         identificationKey
-                ).build()
+                ).build(),
+                getPatternUri()
         );
+    }
+
+    private URI getPatternUri() {
+        String patternKey = key + "." + "pattern_uri";
+        return record.get(patternKey).asObject() == null ? null : URI.create(record.get(patternKey).asString());
     }
 }
