@@ -51,7 +51,7 @@ public class PatternUserNeo4j implements PatternUser {
                 "c.creation_date=timestamp(), " +
                 "c.last_modification_date=timestamp(), " +
                 "c.pattern_uri = c.uri, " +
-                "c.uri=(CASE WHEN 'Edge' IN LABELS(c) THEN '" + userUris.baseEdgeUri() + "/' ELSE '" + userUris.baseVertexUri() + "/' END)+randomUUID() " +
+                "c.uri=(CASE WHEN 'Edge' IN LABELS(c) THEN '" + userUris.baseEdgeUri() + "/' ELSE '" + userUris.baseVertexUri() + "/' END)+apoc.create.uuid() " +
                 "WITH c " +
                 "OPTIONAL MATCH (c)-[:IDENTIFIED_TO]->(tag) " +
                 "WITH c.uri as uri, c.pattern_uri as patternUri, tag, tag.external_uri as externalUri, tag.label as label, tag.comment as comment, tag.images as images " +

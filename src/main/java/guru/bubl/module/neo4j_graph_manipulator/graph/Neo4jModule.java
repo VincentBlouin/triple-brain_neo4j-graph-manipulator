@@ -11,6 +11,7 @@ import apoc.load.Xml;
 import apoc.meta.Meta;
 import apoc.path.PathExplorer;
 import apoc.refactor.GraphRefactoring;
+import apoc.create.*;
 import com.google.inject.AbstractModule;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
 import guru.bubl.module.model.FriendlyResourceFactory;
@@ -73,6 +74,7 @@ import org.neo4j.internal.kernel.api.exceptions.KernelException;
 import org.neo4j.kernel.configuration.BoltConnector;
 import org.neo4j.kernel.impl.proc.Procedures;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
+import org.neo4j.procedure.UserFunction;
 
 import javax.inject.Singleton;
 import java.io.File;
@@ -229,7 +231,7 @@ public class Neo4jModule extends AbstractModule {
                     .setConfig(boltConnector.listen_address, "localhost:7687")
                     .newGraphDatabase();
             bind(GraphDatabaseService.class).toInstance(graphDb);
-            registerProcedures(
+            registerProceduresAndFunctions(
                     graphDb,
                     asList(
                             Help.class,
@@ -239,6 +241,9 @@ public class Neo4jModule extends AbstractModule {
                             PathExplorer.class,
                             Meta.class,
                             GraphRefactoring.class
+                    ),
+                    asList(
+                            Create.class
                     )
 
             );
@@ -271,13 +276,20 @@ public class Neo4jModule extends AbstractModule {
         );
     }
 
-    private void registerProcedures(GraphDatabaseService graphDb, List<Class<?>> toRegister) {
+    private void registerProceduresAndFunctions(GraphDatabaseService graphDb, List<Class<?>> toRegister, List<Class<?>> functionsToRegister) {
         Procedures procedures = ((GraphDatabaseAPI) graphDb).getDependencyResolver().resolveDependency(Procedures.class);
         toRegister.forEach((proc) -> {
             try {
                 procedures.registerProcedure(proc);
             } catch (KernelException e) {
                 throw new RuntimeException("Error registering " + proc, e);
+            }
+        });
+        functionsToRegister.forEach((functionToRegister) -> {
+            try {
+                procedures.registerFunction(functionToRegister);
+            } catch (KernelException e) {
+                throw new RuntimeException("Error registering " + functionToRegister, e);
             }
         });
     }
