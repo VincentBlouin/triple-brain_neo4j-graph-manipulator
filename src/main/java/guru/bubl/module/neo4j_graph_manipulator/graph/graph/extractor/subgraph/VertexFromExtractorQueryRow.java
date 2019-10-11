@@ -46,13 +46,13 @@ public class VertexFromExtractorQueryRow {
                 shareLevel
         );
         vertexInSubGraphPojo.getGraphElement().setChildrenIndex(
-                getChildrenIndexes()
+                getChildrenIndexes(keyPrefix, row)
         );
         vertexInSubGraphPojo.getGraphElement().setColors(
-                getColors()
+                getColors(keyPrefix, row)
         );
         vertexInSubGraphPojo.getGraphElement().setFont(
-                getFont()
+                getFont(keyPrefix, row)
         );
         if (this.isPattern()) {
             vertexInSubGraphPojo.getVertex().setAsPattern();
@@ -158,7 +158,7 @@ public class VertexFromExtractorQueryRow {
         );
     }
 
-    private String getChildrenIndexes() {
+    public static String getChildrenIndexes(String keyPrefix, Record row) {
         String key = keyPrefix + "." + "childrenIndexes";
         if (row.get(key) == null) {
             return null;
@@ -168,7 +168,7 @@ public class VertexFromExtractorQueryRow {
         ).asString();
     }
 
-    private String getColors() {
+    public static String getColors(String keyPrefix, Record row) {
         String key = keyPrefix + "." + "colors";
         if (row.get(key) == null) {
             return null;
@@ -178,7 +178,7 @@ public class VertexFromExtractorQueryRow {
         ).asString();
     }
 
-    private String getFont() {
+    public static String getFont(String keyPrefix, Record row) {
         String key = keyPrefix + "." + "font";
         if (row.get(key) == null) {
             return null;

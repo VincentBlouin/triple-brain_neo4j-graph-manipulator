@@ -13,5 +13,4 @@ import java.net.URI;
 public interface IdentificationFactoryNeo4j extends IdentificationFactory {
     @Override
     IdentificationNeo4j withUri(URI uri);
-    IdentificationNeo4j withNode(Node node);
 }

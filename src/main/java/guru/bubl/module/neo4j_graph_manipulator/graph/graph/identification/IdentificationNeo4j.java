@@ -8,18 +8,19 @@ import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 import guru.bubl.module.model.Image;
 import guru.bubl.module.model.graph.FriendlyResourcePojo;
+import guru.bubl.module.model.graph.GraphElementOperator;
 import guru.bubl.module.model.graph.GraphElementOperatorFactory;
 import guru.bubl.module.model.graph.identification.IdentificationFactory;
 import guru.bubl.module.model.graph.identification.IdentificationOperator;
 import guru.bubl.module.model.graph.identification.Identifier;
 import guru.bubl.module.model.graph.identification.IdentifierPojo;
 import guru.bubl.module.neo4j_graph_manipulator.graph.FriendlyResourceFactoryNeo4j;
-import guru.bubl.module.neo4j_graph_manipulator.graph.FriendlyResourceNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.OperatorNeo4j;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.GraphElementFactoryNeo4j;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.GraphElementOperatorNeo4j;
 import org.neo4j.driver.v1.Record;
 import org.neo4j.driver.v1.Session;
 import org.neo4j.driver.v1.StatementResult;
-import org.neo4j.graphdb.Node;
 
 import java.net.URI;
 import java.util.Date;
@@ -30,6 +31,31 @@ import static org.neo4j.driver.v1.Values.parameters;
 
 public class IdentificationNeo4j implements IdentificationOperator, OperatorNeo4j {
 
+    @Override
+    public Map<URI, IdentifierPojo> getIdentifications() {
+        return null;
+    }
+
+    @Override
+    public String getColors() {
+        return null;
+    }
+
+    @Override
+    public String getFont() {
+        return null;
+    }
+
+    @Override
+    public String getChildrenIndex() {
+        return null;
+    }
+
+    @Override
+    public URI getPatternUri() {
+        return null;
+    }
+
     public enum props {
         external_uri,
         identification_type,
@@ -37,36 +63,20 @@ public class IdentificationNeo4j implements IdentificationOperator, OperatorNeo4
         relation_external_uri
     }
 
-    private FriendlyResourceNeo4j friendlyResourceOperator;
+    private GraphElementOperatorNeo4j graphElementOperator;
     private Session session;
-    private GraphElementOperatorFactory graphElementOperatorFactory;
+    private GraphElementFactoryNeo4j graphElementOperatorFactory;
     private IdentificationFactory identificationFactory;
 
     @AssistedInject
     protected IdentificationNeo4j(
             FriendlyResourceFactoryNeo4j friendlyResourceFactory,
             Session session,
-            GraphElementOperatorFactory graphElementOperatorFactory,
-            IdentificationFactory identificationFactory,
-            @Assisted Node node
-    ) {
-        this.friendlyResourceOperator = friendlyResourceFactory.withNode(
-                node
-        );
-        this.session = session;
-        this.graphElementOperatorFactory = graphElementOperatorFactory;
-        this.identificationFactory = identificationFactory;
-    }
-
-    @AssistedInject
-    protected IdentificationNeo4j(
-            FriendlyResourceFactoryNeo4j friendlyResourceFactory,
-            Session session,
-            GraphElementOperatorFactory graphElementOperatorFactory,
+            GraphElementFactoryNeo4j graphElementOperatorFactory,
             IdentificationFactory identificationFactory,
             @Assisted URI uri
     ) {
-        this.friendlyResourceOperator = friendlyResourceFactory.withUri(
+        this.graphElementOperator = graphElementOperatorFactory.withUri(
                 uri
         );
         this.session = session;
@@ -185,104 +195,129 @@ public class IdentificationNeo4j implements IdentificationOperator, OperatorNeo4
 
     @Override
     public URI uri() {
-        return friendlyResourceOperator.uri();
+        return graphElementOperator.uri();
     }
 
     @Override
     public boolean hasLabel() {
-        return friendlyResourceOperator.hasLabel();
+        return graphElementOperator.hasLabel();
     }
 
     @Override
     public String label() {
-        return friendlyResourceOperator.label();
+        return graphElementOperator.label();
     }
 
     @Override
     public Set<Image> images() {
-        return friendlyResourceOperator.images();
+        return graphElementOperator.images();
     }
 
     @Override
     public Boolean gotImages() {
-        return friendlyResourceOperator.gotImages();
+        return graphElementOperator.gotImages();
     }
 
     @Override
     public String comment() {
-        return friendlyResourceOperator.comment();
+        return graphElementOperator.comment();
     }
 
     @Override
     public Boolean gotComments() {
-        return friendlyResourceOperator.gotComments();
+        return graphElementOperator.gotComments();
     }
 
     @Override
     public Date creationDate() {
-        return friendlyResourceOperator.creationDate();
+        return graphElementOperator.creationDate();
     }
 
     @Override
     public Date lastModificationDate() {
-        return friendlyResourceOperator.lastModificationDate();
+        return graphElementOperator.lastModificationDate();
     }
 
     @Override
     public void comment(String comment) {
-        friendlyResourceOperator.comment(
+        graphElementOperator.comment(
                 comment
         );
     }
 
     @Override
     public void label(String label) {
-        friendlyResourceOperator.label(
+        graphElementOperator.label(
                 label
         );
     }
 
     @Override
     public void addImages(Set<Image> images) {
-        friendlyResourceOperator.addImages(
+        graphElementOperator.addImages(
                 images
         );
     }
 
     @Override
     public void create() {
-        friendlyResourceOperator.create();
+        graphElementOperator.create();
     }
 
     @Override
     public void createUsingInitialValues(Map<String, Object> values) {
-        friendlyResourceOperator.createUsingInitialValues(
+        graphElementOperator.createUsingInitialValues(
                 values
         );
     }
 
     @Override
     public void remove() {
-        friendlyResourceOperator.remove();
+        graphElementOperator.remove();
+    }
+
+    @Override
+    public void removeIdentification(Identifier type) {
+
+    }
+
+    @Override
+    public Map<URI, IdentifierPojo> addMeta(Identifier friendlyResource) {
+        return null;
+    }
+
+    @Override
+    public void setColors(String colors) {
+        graphElementOperator.setColors(colors);
+    }
+
+    @Override
+    public void setFont(String font) {
+        graphElementOperator.setFont(font);
+    }
+
+    @Override
+    public void setChildrenIndex(String childrenIndex) {
+        graphElementOperator.setChildrenIndex(childrenIndex);
     }
 
     @Override
     public String queryPrefix() {
-        return friendlyResourceOperator.queryPrefix();
+        return graphElementOperator.queryPrefix();
     }
 
     @Override
     public Map<String, Object> addCreationProperties(Map<String, Object> map) {
-        return friendlyResourceOperator.addCreationProperties(map);
+        return graphElementOperator.addCreationProperties(map);
     }
 
     @Override
     public boolean equals(Object toCompare) {
-        return friendlyResourceOperator.equals(toCompare);
+        return graphElementOperator.equals(toCompare);
     }
 
     @Override
     public int hashCode() {
-        return friendlyResourceOperator.hashCode();
+        return graphElementOperator.hashCode();
     }
 }

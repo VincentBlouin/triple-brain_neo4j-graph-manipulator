@@ -150,16 +150,26 @@ public class SubGraphExtractorNeo4j {
                             record.get("nId").asLong(),
                             edge.uri()
                     );
-//                    List<Integer> verticesIds = new ArrayList<>();
-//                    verticesIds.add(
-//                            relationship
-//                    );
-//                    edgesSourceAndDestination.put(
-//                            edge.uri(),
-//                            asList(
-//                                    1,0
-//                            )
-//                    )
+                    break;
+                case Meta:
+                    subGraph.setChildrenIndexesCenterTag(
+                            VertexFromExtractorQueryRow.getChildrenIndexes(
+                                    "ge",
+                                    record
+                            )
+                    );
+                    subGraph.setColorsCenterTag(
+                            VertexFromExtractorQueryRow.getColors(
+                                    "ge",
+                                    record
+                            )
+                    );
+                    subGraph.setFontCenterTag(
+                            VertexFromExtractorQueryRow.getFont(
+                                    "ge",
+                                    record
+                            )
+                    );
                     break;
             }
         }
@@ -238,21 +248,11 @@ public class SubGraphExtractorNeo4j {
     }
 
     private String getMatchQueryPart() {
-        if (UserUris.isUriOfAnIdentifier(centerBubbleUri)) {
-            return "MATCH (start_node)<-[:" +
-                    Relationships.IDENTIFIED_TO +
-                    "]-(it) " +
-                    "MATCH (it)<-[rel:" +
-                    Relationships.SOURCE_VERTEX + "|" +
-                    Relationships.DESTINATION_VERTEX + "*0.." + depth +
-                    "]->(" + SubGraphExtractorNeo4j.GRAPH_ELEMENT_QUERY_KEY + ") ";
-
-        } else {
-            return "MATCH (start_node)<-[rel:" +
-                    Relationships.SOURCE_VERTEX +
-                    "|" + Relationships.DESTINATION_VERTEX + "*0.." + depth * 2 +
-                    "]->(" + SubGraphExtractorNeo4j.GRAPH_ELEMENT_QUERY_KEY + ") ";
-        }
+        return "MATCH (start_node)<-[rel:" +
+                (UserUris.isUriOfAnIdentifier(centerBubbleUri) ? (Relationships.IDENTIFIED_TO + "|") : "") +
+                Relationships.SOURCE_VERTEX + "|" +
+                Relationships.DESTINATION_VERTEX + "*0.." + depth * 2 +
+                "]->(" + SubGraphExtractorNeo4j.GRAPH_ELEMENT_QUERY_KEY + ") ";
     }
 
     private String vertexAndEdgeCommonQueryPart(String prefix) {
