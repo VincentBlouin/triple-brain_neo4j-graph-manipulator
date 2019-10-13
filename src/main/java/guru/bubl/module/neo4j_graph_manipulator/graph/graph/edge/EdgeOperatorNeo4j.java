@@ -25,6 +25,7 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.graph.GraphElementFactoryN
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.GraphElementOperatorNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.VertexFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.VertexInSubGraphOperatorNeo4j;
+import org.neo4j.driver.v1.Driver;
 import org.neo4j.driver.v1.Record;
 import org.neo4j.driver.v1.Session;
 import org.neo4j.driver.v1.StatementResult;
@@ -58,7 +59,7 @@ public class EdgeOperatorNeo4j implements EdgeOperator, OperatorNeo4j {
 
     @Inject
     protected
-    Session session;
+    Driver driver;
 
     @AssistedInject
     protected EdgeOperatorNeo4j(
@@ -115,54 +116,60 @@ public class EdgeOperatorNeo4j implements EdgeOperator, OperatorNeo4j {
 
     @Override
     public VertexOperator sourceVertex() {
-        Record record = session.run(
-                queryPrefix() +
-                        "MATCH (n)-[:SOURCE_VERTEX]->(v) " +
-                        "RETURN v.uri as uri",
-                parameters(
-                        "uri",
-                        uri().toString()
-                )
-        ).single();
-        return vertexFactory.withUri(
-                URI.create(record.get("uri").asString())
-        );
+        try (Session session = driver.session()) {
+            Record record = session.run(
+                    queryPrefix() +
+                            "MATCH (n)-[:SOURCE_VERTEX]->(v) " +
+                            "RETURN v.uri as uri",
+                    parameters(
+                            "uri",
+                            uri().toString()
+                    )
+            ).single();
+            return vertexFactory.withUri(
+                    URI.create(record.get("uri").asString())
+            );
+        }
     }
 
     @Override
     public VertexOperator destinationVertex() {
-        Record record = session.run(
-                queryPrefix() +
-                        "MATCH (n)-[:DESTINATION_VERTEX]->(v) " +
-                        "RETURN v.uri as uri",
-                parameters(
-                        "uri",
-                        uri().toString()
-                )
-        ).single();
-        return vertexFactory.withUri(
-                URI.create(record.get("uri").asString())
-        );
+        try (Session session = driver.session()) {
+            Record record = session.run(
+                    queryPrefix() +
+                            "MATCH (n)-[:DESTINATION_VERTEX]->(v) " +
+                            "RETURN v.uri as uri",
+                    parameters(
+                            "uri",
+                            uri().toString()
+                    )
+            ).single();
+            return vertexFactory.withUri(
+                    URI.create(record.get("uri").asString())
+            );
+        }
     }
 
     private VertexOperator vertexUsingProperty(Enum prop) {
-        StatementResult rs = session.run(
-                String.format(
-                        "%sRETURN n.%s",
-                        queryPrefix(),
-                        prop.name()
-                ),
-                parameters(
-                        "uri",
-                        uri().toString()
-                )
-        );
-        Record record = rs.next();
-        return vertexFactory.withUri(URI.create(
-                record.get(
-                        "n." + prop.name()
-                ).asString()
-        ));
+        try (Session session = driver.session()) {
+            StatementResult rs = session.run(
+                    String.format(
+                            "%sRETURN n.%s",
+                            queryPrefix(),
+                            prop.name()
+                    ),
+                    parameters(
+                            "uri",
+                            uri().toString()
+                    )
+            );
+            Record record = rs.next();
+            return vertexFactory.withUri(URI.create(
+                    record.get(
+                            "n." + prop.name()
+                    ).asString()
+            ));
+        }
     }
 
     @Override
@@ -263,17 +270,19 @@ public class EdgeOperatorNeo4j implements EdgeOperator, OperatorNeo4j {
                 VertexInSubGraphOperatorNeo4j.props.number_of_connected_edges_property_name,
                 FriendlyResourceNeo4j.LAST_MODIFICATION_QUERY_PART
         );
-        session.run(
-                query,
-                parameters(
-                        "uri",
-                        this.uri().toString(),
-                        "endVertexUri",
-                        newEndVertex.uri().toString(),
-                        "last_modification_date",
-                        new Date().getTime()
-                )
-        );
+        try (Session session = driver.session()) {
+            session.run(
+                    query,
+                    parameters(
+                            "uri",
+                            this.uri().toString(),
+                            "endVertexUri",
+                            newEndVertex.uri().toString(),
+                            "last_modification_date",
+                            new Date().getTime()
+                    )
+            );
+        }
     }
 
     @Override
@@ -297,58 +306,62 @@ public class EdgeOperatorNeo4j implements EdgeOperator, OperatorNeo4j {
 
     @Override
     public void inverse() {
-        session.run(
-                String.format(
-                        "%sMATCH (n)-[source_rel:%s]->(source_vertex), " +
-                                "(n)-[destination_rel:%s]->(destination_vertex) " +
-                                "CREATE (n)-[:%s]->(source_vertex) " +
-                                "CREATE (n)-[:%s]->(destination_vertex) " +
-                                "DELETE source_rel, destination_rel " +
-                                "SET %s",
-                        queryPrefix(),
-                        Relationships.SOURCE_VERTEX,
-                        Relationships.DESTINATION_VERTEX,
-                        Relationships.DESTINATION_VERTEX,
-                        Relationships.SOURCE_VERTEX,
-                        FriendlyResourceNeo4j.LAST_MODIFICATION_QUERY_PART
-                ),
-                parameters(
-                        "uri",
-                        this.uri().toString(),
-                        "last_modification_date",
-                        new Date().getTime()
-                )
-        );
+        try (Session session = driver.session()) {
+            session.run(
+                    String.format(
+                            "%sMATCH (n)-[source_rel:%s]->(source_vertex), " +
+                                    "(n)-[destination_rel:%s]->(destination_vertex) " +
+                                    "CREATE (n)-[:%s]->(source_vertex) " +
+                                    "CREATE (n)-[:%s]->(destination_vertex) " +
+                                    "DELETE source_rel, destination_rel " +
+                                    "SET %s",
+                            queryPrefix(),
+                            Relationships.SOURCE_VERTEX,
+                            Relationships.DESTINATION_VERTEX,
+                            Relationships.DESTINATION_VERTEX,
+                            Relationships.SOURCE_VERTEX,
+                            FriendlyResourceNeo4j.LAST_MODIFICATION_QUERY_PART
+                    ),
+                    parameters(
+                            "uri",
+                            this.uri().toString(),
+                            "last_modification_date",
+                            new Date().getTime()
+                    )
+            );
+        }
     }
 
     @Override
     public void remove() {
         ShareLevel sourceVertexShareLevel = sourceVertex().getShareLevel();
         ShareLevel destinationVertexShareLevel = destinationVertex().getShareLevel();
-        session.run(
-                String.format(
-                        "%sMATCH (n)-[:SOURCE_VERTEX]->(s_v), (n)-[:DESTINATION_VERTEX]->(d_v) " +
-                                "SET s_v.number_of_connected_edges_property_name = s_v.number_of_connected_edges_property_name - 1, " +
-                                "d_v.number_of_connected_edges_property_name = d_v.number_of_connected_edges_property_name - 1" +
-                                (sourceVertexShareLevel == ShareLevel.PRIVATE ? "" : decrementNbFriendsOrPublicQueryPart(sourceVertexShareLevel, "d_v", ", ")) +
-                                (destinationVertexShareLevel == ShareLevel.PRIVATE ? "" : decrementNbFriendsOrPublicQueryPart(destinationVertexShareLevel, "s_v", ", ")),
-                        queryPrefix()
-                ),
-                parameters(
-                        "uri",
-                        uri().toString()
-                )
-        );
-        graphElementOperator.removeAllIdentifications();
-        session.run(
-                String.format(
-                        "%sDETACH DELETE n",
-                        queryPrefix()
-                ),
-                parameters(
-                        "uri", uri().toString()
-                )
-        );
+        try (Session session = driver.session()) {
+            session.run(
+                    String.format(
+                            "%sMATCH (n)-[:SOURCE_VERTEX]->(s_v), (n)-[:DESTINATION_VERTEX]->(d_v) " +
+                                    "SET s_v.number_of_connected_edges_property_name = s_v.number_of_connected_edges_property_name - 1, " +
+                                    "d_v.number_of_connected_edges_property_name = d_v.number_of_connected_edges_property_name - 1" +
+                                    (sourceVertexShareLevel == ShareLevel.PRIVATE ? "" : decrementNbFriendsOrPublicQueryPart(sourceVertexShareLevel, "d_v", ", ")) +
+                                    (destinationVertexShareLevel == ShareLevel.PRIVATE ? "" : decrementNbFriendsOrPublicQueryPart(destinationVertexShareLevel, "s_v", ", ")),
+                            queryPrefix()
+                    ),
+                    parameters(
+                            "uri",
+                            uri().toString()
+                    )
+            );
+            graphElementOperator.removeAllIdentifications();
+            session.run(
+                    String.format(
+                            "%sDETACH DELETE n",
+                            queryPrefix()
+                    ),
+                    parameters(
+                            "uri", uri().toString()
+                    )
+            );
+        }
     }
 
     @Override
@@ -477,31 +490,33 @@ public class EdgeOperatorNeo4j implements EdgeOperator, OperatorNeo4j {
     @Override
     public EdgePojo createEdgeUsingInitialValues(Map<String, Object> values) {
         Map<String, Object> creationProperties = addCreationProperties(values);
-        session.run(
-                "MATCH (source_node:Resource{uri:$sourceUri}), " +
-                        "(destination_node:Resource{uri:$destinationUri}) " +
-                        "CREATE (n:Resource:GraphElement:Edge $edge), (n)-[:SOURCE_VERTEX]->(source_node), (n)-[:DESTINATION_VERTEX]->(destination_node)",
-                parameters(
-                        "sourceUri",
-                        sourceVertex.uri().toString(),
-                        "destinationUri",
-                        destinationVertex.uri().toString(),
-                        "edge",
-                        creationProperties
-                )
-        );
-        EdgePojo edge = new EdgePojo(
-                graphElementOperator.pojoFromCreationProperties(
-                        creationProperties
-                )
-        );
-        edge.setSourceVertex(new VertexInSubGraphPojo(
-                sourceVertex.uri()
-        ));
-        edge.setDestinationVertex(new VertexInSubGraphPojo(
-                destinationVertex.uri()
-        ));
-        return edge;
+        try (Session session = driver.session()) {
+            session.run(
+                    "MATCH (source_node:Resource{uri:$sourceUri}), " +
+                            "(destination_node:Resource{uri:$destinationUri}) " +
+                            "CREATE (n:Resource:GraphElement:Edge $edge), (n)-[:SOURCE_VERTEX]->(source_node), (n)-[:DESTINATION_VERTEX]->(destination_node)",
+                    parameters(
+                            "sourceUri",
+                            sourceVertex.uri().toString(),
+                            "destinationUri",
+                            destinationVertex.uri().toString(),
+                            "edge",
+                            creationProperties
+                    )
+            );
+            EdgePojo edge = new EdgePojo(
+                    graphElementOperator.pojoFromCreationProperties(
+                            creationProperties
+                    )
+            );
+            edge.setSourceVertex(new VertexInSubGraphPojo(
+                    sourceVertex.uri()
+            ));
+            edge.setDestinationVertex(new VertexInSubGraphPojo(
+                    destinationVertex.uri()
+            ));
+            return edge;
+        }
     }
 
     @Override

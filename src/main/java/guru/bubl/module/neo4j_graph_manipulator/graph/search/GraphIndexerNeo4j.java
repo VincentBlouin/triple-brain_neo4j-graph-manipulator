@@ -21,6 +21,7 @@ import guru.bubl.module.model.search.GraphIndexer;
 import guru.bubl.module.neo4j_graph_manipulator.graph.FriendlyResourceFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.FriendlyResourceNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph.SubGraphExtractorFactoryNeo4j;
+import org.neo4j.driver.v1.Driver;
 import org.neo4j.driver.v1.Session;
 
 import java.net.URI;
@@ -37,7 +38,7 @@ public class GraphIndexerNeo4j implements GraphIndexer {
     FriendlyResourceFactoryNeo4j neo4jFriendlyResourceFactory;
 
     @Inject
-    Session session;
+    Driver driver;
 
     @Override
     public void indexVertex(VertexOperator vertex) {
@@ -168,17 +169,19 @@ public class GraphIndexerNeo4j implements GraphIndexer {
         FriendlyResourceNeo4j neo4jFriendlyResource = neo4jFriendlyResourceFactory.withUri(
                 friendlyResource.uri()
         );
-        session.run(
-                neo4jFriendlyResource.queryPrefix() + "SET n.private_context=$privateContext, n.public_context=$publicContext",
-                parameters(
-                        "uri",
-                        neo4jFriendlyResource.uri().toString(),
-                        "privateContext",
-                        privateContext,
-                        "publicContext",
-                        publicContext
-                )
-        );
+        try (Session session = driver.session()) {
+            session.run(
+                    neo4jFriendlyResource.queryPrefix() + "SET n.private_context=$privateContext, n.public_context=$publicContext",
+                    parameters(
+                            "uri",
+                            neo4jFriendlyResource.uri().toString(),
+                            "privateContext",
+                            privateContext,
+                            "publicContext",
+                            publicContext
+                    )
+            );
+        }
     }
 
     private Map<URI, String> mapOfGraphElementsToMapOfLabels(Map<URI, ? extends GraphElement> mapOfGraphElements) {

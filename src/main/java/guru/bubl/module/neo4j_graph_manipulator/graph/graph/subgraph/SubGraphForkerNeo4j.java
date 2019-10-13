@@ -17,7 +17,7 @@ import guru.bubl.module.model.graph.vertex.VertexInSubGraph;
 import guru.bubl.module.model.graph.vertex.VertexOperator;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.edge.EdgeFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.VertexFactoryNeo4j;
-import org.neo4j.driver.v1.Session;
+import org.neo4j.driver.v1.Driver;
 
 import java.net.URI;
 import java.util.Collection;
@@ -28,7 +28,7 @@ public class SubGraphForkerNeo4j implements SubGraphForker {
 
     EdgeFactoryNeo4j edgeFactory;
     VertexFactory vertexFactory;
-    Session session;
+    Driver driver;
     User user;
 
     private HashMap<URI, VertexOperator> forkedVertices;
@@ -37,13 +37,13 @@ public class SubGraphForkerNeo4j implements SubGraphForker {
     protected SubGraphForkerNeo4j(
             EdgeFactoryNeo4j edgeFactory,
             VertexFactoryNeo4j vertexFactory,
-            Session session,
+            Driver driver,
             @Assisted User user
     ) {
         this.user = user;
         this.edgeFactory = edgeFactory;
         this.vertexFactory = vertexFactory;
-        this.session = session;
+        this.driver = driver;
     }
 
     @Override

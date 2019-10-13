@@ -19,6 +19,7 @@ import guru.bubl.module.model.graph.schema.SchemaPojo;
 import guru.bubl.module.model.graph.vertex.VertexOperator;
 import guru.bubl.module.model.search.GraphIndexer;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.identification.IdentificationNeo4j;
+import org.neo4j.driver.v1.Driver;
 import org.neo4j.driver.v1.Session;
 
 import static org.neo4j.driver.v1.Values.parameters;
@@ -26,7 +27,7 @@ import static org.neo4j.driver.v1.Values.parameters;
 public class WholeGraphAdminNeo4j implements WholeGraphAdmin {
 
     @Inject
-    protected Session session;
+    protected Driver driver;
 
     @Inject
     protected WholeGraph wholeGraph;
@@ -100,14 +101,16 @@ public class WholeGraphAdminNeo4j implements WholeGraphAdmin {
 
     private void refreshNumberOfReferencesToIdentification(IdentificationOperator identification) {
         IdentificationNeo4j neo4jIdentification = (IdentificationNeo4j) identification;
-        session.run(
-                neo4jIdentification.queryPrefix() + "OPTIONAL MATCH (n)<-[r]-() " +
-                        "WITH n, count(r) as nbReferences " +
-                        "SET n.nb_references=nbReferences",
-                parameters(
-                        "uri", identification.uri().toString()
-                )
-        );
+        try (Session session = driver.session()) {
+            session.run(
+                    neo4jIdentification.queryPrefix() + "OPTIONAL MATCH (n)<-[r]-() " +
+                            "WITH n, count(r) as nbReferences " +
+                            "SET n.nb_references=nbReferences",
+                    parameters(
+                            "uri", identification.uri().toString()
+                    )
+            );
+        }
     }
 
     private void removeMetaIfNoReference(IdentificationOperator identification) {

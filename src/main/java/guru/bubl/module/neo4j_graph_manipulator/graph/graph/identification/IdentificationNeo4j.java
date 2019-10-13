@@ -18,6 +18,7 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.FriendlyResourceFactoryNeo
 import guru.bubl.module.neo4j_graph_manipulator.graph.OperatorNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.GraphElementFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.GraphElementOperatorNeo4j;
+import org.neo4j.driver.v1.Driver;
 import org.neo4j.driver.v1.Record;
 import org.neo4j.driver.v1.Session;
 import org.neo4j.driver.v1.StatementResult;
@@ -64,14 +65,14 @@ public class IdentificationNeo4j implements IdentificationOperator, OperatorNeo4
     }
 
     private GraphElementOperatorNeo4j graphElementOperator;
-    private Session session;
+    private Driver driver;
     private GraphElementFactoryNeo4j graphElementOperatorFactory;
     private IdentificationFactory identificationFactory;
 
     @AssistedInject
     protected IdentificationNeo4j(
             FriendlyResourceFactoryNeo4j friendlyResourceFactory,
-            Session session,
+            Driver driver,
             GraphElementFactoryNeo4j graphElementOperatorFactory,
             IdentificationFactory identificationFactory,
             @Assisted URI uri
@@ -79,7 +80,7 @@ public class IdentificationNeo4j implements IdentificationOperator, OperatorNeo4
         this.graphElementOperator = graphElementOperatorFactory.withUri(
                 uri
         );
-        this.session = session;
+        this.driver = driver;
         this.graphElementOperatorFactory = graphElementOperatorFactory;
         this.identificationFactory = identificationFactory;
     }
@@ -91,106 +92,120 @@ public class IdentificationNeo4j implements IdentificationOperator, OperatorNeo4
                 queryPrefix(),
                 props.relation_external_uri
         );
-        Record record = session.run(
-                query,
-                parameters(
-                        "uri",
-                        uri().toString()
-                )
-        ).single();
-        return URI.create(
-                record.get("relationExternalUri").asString()
-        );
+        try (Session session = driver.session()) {
+            Record record = session.run(
+                    query,
+                    parameters(
+                            "uri",
+                            uri().toString()
+                    )
+            ).single();
+            return URI.create(
+                    record.get("relationExternalUri").asString()
+            );
+        }
     }
 
     @Override
     public URI getExternalResourceUri() {
-        Record record = session.run(
-                queryPrefix() + "RETURN n.external_uri as externalUri",
-                parameters(
-                        "uri",
-                        this.uri().toString()
-                )
-        ).single();
-        return URI.create(
-                record.get("externalUri").asString()
-        );
+        try (Session session = driver.session()) {
+            Record record = session.run(
+                    queryPrefix() + "RETURN n.external_uri as externalUri",
+                    parameters(
+                            "uri",
+                            this.uri().toString()
+                    )
+            ).single();
+            return URI.create(
+                    record.get("externalUri").asString()
+            );
+        }
     }
 
     @Override
     public void setExternalResourceUri(URI uri) {
-        session.run(
-                queryPrefix() + "SET n.external_uri=$external_uri",
-                parameters(
-                        "uri", this.uri().toString(),
-                        "external_uri", uri.toString()
-                )
-        );
+        try (Session session = driver.session()) {
+            session.run(
+                    queryPrefix() + "SET n.external_uri=$external_uri",
+                    parameters(
+                            "uri", this.uri().toString(),
+                            "external_uri", uri.toString()
+                    )
+            );
+        }
     }
 
     @Override
     public Integer getNbReferences() {
-        Record record = session.run(
-                queryPrefix() + "RETURN n.nb_references as nbReferences",
-                parameters(
-                        "uri", this.uri().toString()
-                )
-        ).single();
-        return record.get("nbReferences").asInt();
+        try (Session session = driver.session()) {
+            Record record = session.run(
+                    queryPrefix() + "RETURN n.nb_references as nbReferences",
+                    parameters(
+                            "uri", this.uri().toString()
+                    )
+            ).single();
+            return record.get("nbReferences").asInt();
+        }
     }
 
     @Override
     public void setNbReferences(Integer nb) {
-        session.run(
-                queryPrefix() + "SET n.nb_references=$nbReferences",
-                parameters(
-                        "uri", uri().toString(),
-                        "nbReferences", nb
-                )
-        );
+        try (Session session = driver.session()) {
+            session.run(
+                    queryPrefix() + "SET n.nb_references=$nbReferences",
+                    parameters(
+                            "uri", uri().toString(),
+                            "nbReferences", nb
+                    )
+            );
+        }
     }
 
     @Override
     public IdentifierPojo buildPojo() {
-        Record record = session.run(
-                queryPrefix() + "RETURN n.uri as uri, n.label as label, n.comment as comment, n.external_uri as externalUri, n.nb_references as nbReferences",
-                parameters(
-                        "uri", this.uri().toString()
-                )
-        ).single();
-        FriendlyResourcePojo friendlyResourcePojo = new FriendlyResourcePojo(
-                URI.create(record.get("uri").asString()),
-                record.get("label").asString()
-        );
-        friendlyResourcePojo.setComment(
-                record.get("comment").asString()
-        );
-        return new IdentifierPojo(
-                URI.create(record.get("externalUri").asString()),
-                record.get("nbReferences").asInt(),
-                friendlyResourcePojo
-        );
+        try (Session session = driver.session()) {
+            Record record = session.run(
+                    queryPrefix() + "RETURN n.uri as uri, n.label as label, n.comment as comment, n.external_uri as externalUri, n.nb_references as nbReferences",
+                    parameters(
+                            "uri", this.uri().toString()
+                    )
+            ).single();
+            FriendlyResourcePojo friendlyResourcePojo = new FriendlyResourcePojo(
+                    URI.create(record.get("uri").asString()),
+                    record.get("label").asString()
+            );
+            friendlyResourcePojo.setComment(
+                    record.get("comment").asString()
+            );
+            return new IdentifierPojo(
+                    URI.create(record.get("externalUri").asString()),
+                    record.get("nbReferences").asInt(),
+                    friendlyResourcePojo
+            );
+        }
     }
 
     @Override
     public void mergeTo(Identifier identifier) {
-        StatementResult sr = session.run(
-                queryPrefix() + "MATCH (n)<-[:IDENTIFIED_TO]-(tagged) RETURN tagged.uri",
-                parameters(
-                        "uri", this.uri().toString()
-                )
-        );
-        IdentifierPojo mergeWithPojo = identificationFactory.withUri(
-                identifier.uri()
-        ).buildPojo();
-        while (sr.hasNext()) {
-            graphElementOperatorFactory.withUri(
-                    URI.create(sr.next().get("tagged.uri").asString())
-            ).addMeta(
-                    mergeWithPojo
+        try (Session session = driver.session()) {
+            StatementResult sr = session.run(
+                    queryPrefix() + "MATCH (n)<-[:IDENTIFIED_TO]-(tagged) RETURN tagged.uri",
+                    parameters(
+                            "uri", this.uri().toString()
+                    )
             );
+            IdentifierPojo mergeWithPojo = identificationFactory.withUri(
+                    identifier.uri()
+            ).buildPojo();
+            while (sr.hasNext()) {
+                graphElementOperatorFactory.withUri(
+                        URI.create(sr.next().get("tagged.uri").asString())
+                ).addMeta(
+                        mergeWithPojo
+                );
+            }
+            this.remove();
         }
-        this.remove();
     }
 
     @Override

@@ -271,8 +271,8 @@ public class Neo4jModule extends AbstractModule {
             );
         }
 
-        bind(Session.class).toInstance(
-                driver.session()
+        bind(Driver.class).toInstance(
+                driver
         );
     }
 

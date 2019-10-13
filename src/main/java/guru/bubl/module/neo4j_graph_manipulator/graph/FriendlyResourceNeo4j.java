@@ -16,6 +16,7 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.graph.UserGraphNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.image.ImageFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.image.ImagesNeo4j;
 import org.apache.commons.lang.StringUtils;
+import org.neo4j.driver.v1.Driver;
 import org.neo4j.driver.v1.Record;
 import org.neo4j.driver.v1.Session;
 import org.neo4j.driver.v1.StatementResult;
@@ -59,27 +60,29 @@ public class FriendlyResourceNeo4j implements FriendlyResourceOperator, Operator
 
     protected ImagesNeo4j images;
 
-    protected Session session;
+    protected Driver driver;
 
-    public static Boolean haveElementWithUri(URI uri, Session session) {
+    public static Boolean haveElementWithUri(URI uri, Driver driver) {
         String query = "MATCH(n:Resource{uri:$uri}) RETURN n.uri as uri";
-        return session.run(
-                query,
-                parameters(
-                        "uri",
-                        uri.toString()
-                )
-        ).hasNext();
+        try (Session session = driver.session()) {
+            return session.run(
+                    query,
+                    parameters(
+                            "uri",
+                            uri.toString()
+                    )
+            ).hasNext();
+        }
     }
 
     @AssistedInject
     protected FriendlyResourceNeo4j(
             ImageFactoryNeo4j imageFactory,
-            Session session,
+            Driver driver,
             @Assisted Node node
     ) {
         this.images = imageFactory.forResource(this);
-        this.session = session;
+        this.driver = driver;
         this.node = node;
         this.uri = Uris.get(node.getProperty(
                 UserGraphNeo4j.URI_PROPERTY_NAME
@@ -89,11 +92,11 @@ public class FriendlyResourceNeo4j implements FriendlyResourceOperator, Operator
     @AssistedInject
     protected FriendlyResourceNeo4j(
             ImageFactoryNeo4j imageFactory,
-            Session session,
+            Driver driver,
             @Assisted URI uri
     ) {
         this.images = imageFactory.forResource(this);
-        this.session = session;
+        this.driver = driver;
         if (StringUtils.isEmpty(uri.toString())) {
             throw new RuntimeException("uri for friendly resource is mandatory");
         }
@@ -103,12 +106,12 @@ public class FriendlyResourceNeo4j implements FriendlyResourceOperator, Operator
     @AssistedInject
     protected FriendlyResourceNeo4j(
             ImageFactoryNeo4j imageFactory,
-            Session session,
+            Driver driver,
             @Assisted FriendlyResourcePojo pojo
     ) {
 
         this.images = imageFactory.forResource(this);
-        this.session = session;
+        this.driver = driver;
         this.uri = pojo.uri();
         createUsingInitialValues(
                 RestApiUtilsNeo4j.map(
@@ -134,15 +137,17 @@ public class FriendlyResourceNeo4j implements FriendlyResourceOperator, Operator
                 "%sRETURN n.label as label",
                 queryPrefix()
         );
-        StatementResult rs = session.run(
-                query,
-                parameters(
-                        "uri", uri.toString()
-                )
-        );
-        Record record = rs.single();
-        return record.get("label").asObject() == null ?
-                "" : record.get("label").asString();
+        try (Session session = driver.session()) {
+            StatementResult rs = session.run(
+                    query,
+                    parameters(
+                            "uri", uri.toString()
+                    )
+            );
+            Record record = rs.single();
+            return record.get("label").asObject() == null ?
+                    "" : record.get("label").asString();
+        }
     }
 
     @Override
@@ -156,17 +161,19 @@ public class FriendlyResourceNeo4j implements FriendlyResourceOperator, Operator
                 "label", label
         );
         addUpdatedLastModificationDate(props);
-        session.run(
-                query,
-                parameters(
-                        "uri",
-                        uri.toString(),
-                        "label",
-                        label,
-                        "last_modification_date",
-                        new Date().getTime()
-                )
-        );
+        try (Session session = driver.session()) {
+            session.run(
+                    query,
+                    parameters(
+                            "uri",
+                            uri.toString(),
+                            "label",
+                            label,
+                            "last_modification_date",
+                            new Date().getTime()
+                    )
+            );
+        }
     }
 
     @Override
@@ -185,14 +192,16 @@ public class FriendlyResourceNeo4j implements FriendlyResourceOperator, Operator
                 "%sRETURN n.comment as comment",
                 queryPrefix()
         );
-        Record record = session.run(
-                query,
-                parameters(
-                        "uri", uri.toString()
-                )
-        ).single();
-        return record.get("comment").asObject() == null ?
-                "" : record.get("comment").asString();
+        try (Session session = driver.session()) {
+            Record record = session.run(
+                    query,
+                    parameters(
+                            "uri", uri.toString()
+                    )
+            ).single();
+            return record.get("comment").asObject() == null ?
+                    "" : record.get("comment").asString();
+        }
     }
 
     @Override
@@ -206,14 +215,16 @@ public class FriendlyResourceNeo4j implements FriendlyResourceOperator, Operator
                 "comment", comment
         );
         addUpdatedLastModificationDate(props);
-        session.run(
-                query,
-                parameters(
-                        "uri", uri.toString(),
-                        "comment", comment,
-                        "last_modification_date", new Date().getTime()
-                )
-        );
+        try (Session session = driver.session()) {
+            session.run(
+                    query,
+                    parameters(
+                            "uri", uri.toString(),
+                            "comment", comment,
+                            "last_modification_date", new Date().getTime()
+                    )
+            );
+        }
     }
 
     @Override
@@ -240,13 +251,15 @@ public class FriendlyResourceNeo4j implements FriendlyResourceOperator, Operator
         Map<String, Object> creationProps = addCreationProperties(
                 values
         );
-        session.run(
-                "CREATE(n:Resource $creationProps)",
-                parameters(
-                        "creationProps",
-                        creationProps
-                )
-        );
+        try (Session session = driver.session()) {
+            session.run(
+                    "CREATE(n:Resource $creationProps)",
+                    parameters(
+                            "creationProps",
+                            creationProps
+                    )
+            );
+        }
     }
 
     public FriendlyResourcePojo pojoFromCreationProperties(Map<String, Object> creationProperties) {
@@ -272,48 +285,55 @@ public class FriendlyResourceNeo4j implements FriendlyResourceOperator, Operator
 
     @Override
     public void remove() {
-        session.run(
-                String.format(
-                        "%s DETACH DELETE n",
-                        queryPrefix()
-                ),
-                parameters(
-                        "uri",
-                        uri.toString()
-                )
-        );
+        try (Session session = driver.session()) {
+            session.run(
+                    String.format(
+                            "%s DETACH DELETE n",
+                            queryPrefix()
+                    ),
+                    parameters(
+                            "uri",
+                            uri.toString()
+                    )
+            );
+        }
     }
 
     @Override
     public Date creationDate() {
-        return new Date(
-                session.run(
-                        String.format(
-                                "%s RETURN n.creation_date as creationDate",
-                                queryPrefix()
-                        ),
-                        parameters(
-                                "uri",
-                                uri.toString()
-                        )
-                ).single().get("creationDate").asLong()
-        );
+        try (Session session = driver.session()) {
+            return new Date(
+                    session.run(
+                            String.format(
+                                    "%s RETURN n.creation_date as creationDate",
+                                    queryPrefix()
+                            ),
+                            parameters(
+                                    "uri",
+                                    uri.toString()
+                            )
+                    ).single().get("creationDate").asLong()
+            );
+        }
+
     }
 
     @Override
     public Date lastModificationDate() {
-        return new Date(
-                session.run(
-                        String.format(
-                                "%s RETURN n.last_modification_date as lastModificationDate",
-                                queryPrefix()
-                        ),
-                        parameters(
-                                "uri",
-                                uri.toString()
-                        )
-                ).single().get("lastModificationDate").asLong()
-        );
+        try (Session session = driver.session()) {
+            return new Date(
+                    session.run(
+                            String.format(
+                                    "%s RETURN n.last_modification_date as lastModificationDate",
+                                    queryPrefix()
+                            ),
+                            parameters(
+                                    "uri",
+                                    uri.toString()
+                            )
+                    ).single().get("lastModificationDate").asLong()
+            );
+        }
     }
 
 
@@ -321,15 +341,17 @@ public class FriendlyResourceNeo4j implements FriendlyResourceOperator, Operator
         String query = queryPrefix() +
                 " SET " +
                 LAST_MODIFICATION_QUERY_PART;
-        session.run(
-                query,
-                parameters(
-                        "uri",
-                        uri.toString(),
-                        "last_modification_date",
-                        new Date().getTime()
-                )
-        );
+        try (Session session = driver.session()) {
+            session.run(
+                    query,
+                    parameters(
+                            "uri",
+                            uri.toString(),
+                            "last_modification_date",
+                            new Date().getTime()
+                    )
+            );
+        }
     }
 
     @Override

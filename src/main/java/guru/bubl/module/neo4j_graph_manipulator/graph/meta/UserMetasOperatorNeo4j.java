@@ -10,6 +10,7 @@ import guru.bubl.module.model.User;
 import guru.bubl.module.model.graph.FriendlyResourcePojo;
 import guru.bubl.module.model.graph.identification.IdentifierPojo;
 import guru.bubl.module.model.meta.UserMetasOperator;
+import org.neo4j.driver.v1.Driver;
 import org.neo4j.driver.v1.Record;
 import org.neo4j.driver.v1.Session;
 import org.neo4j.driver.v1.StatementResult;
@@ -22,39 +23,41 @@ import static org.neo4j.driver.v1.Values.parameters;
 
 public class UserMetasOperatorNeo4j implements UserMetasOperator {
 
-    private Session session;
+    private Driver driver;
     private User user;
 
     @AssistedInject
     protected UserMetasOperatorNeo4j(
-            Session session,
+            Driver driver,
             @Assisted User user
     ) {
-        this.session = session;
+        this.driver = driver;
         this.user = user;
     }
 
     @Override
     public Set<IdentifierPojo> get() {
         Set<IdentifierPojo> userMetas = new HashSet<>();
-        StatementResult rs = session.run(
-                "MATCH (n:Meta{owner:$owner}) RETURN n.label as label, n.nb_references as nbReferences, n.uri as uri;",
-                parameters(
-                        "owner", user.username()
-                )
-        );
-        while (rs.hasNext()) {
-            Record record = rs.next();
-            userMetas.add(
-                    new IdentifierPojo(
-                            record.get("nbReferences").asInt(),
-                            new FriendlyResourcePojo(
-                                    URI.create(record.get("uri").asString()),
-                                    record.get("label").asString()
-                            )
+        try (Session session = driver.session()) {
+            StatementResult rs = session.run(
+                    "MATCH (n:Meta{owner:$owner}) RETURN n.label as label, n.nb_references as nbReferences, n.uri as uri;",
+                    parameters(
+                            "owner", user.username()
                     )
             );
+            while (rs.hasNext()) {
+                Record record = rs.next();
+                userMetas.add(
+                        new IdentifierPojo(
+                                record.get("nbReferences").asInt(),
+                                new FriendlyResourcePojo(
+                                        URI.create(record.get("uri").asString()),
+                                        record.get("label").asString()
+                                )
+                        )
+                );
+            }
+            return userMetas;
         }
-        return userMetas;
     }
 }

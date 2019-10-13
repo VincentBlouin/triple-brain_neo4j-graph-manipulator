@@ -21,6 +21,7 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.Relationships;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.GraphElementFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.GraphElementOperatorNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.VertexInSubGraphOperatorNeo4j;
+import org.neo4j.driver.v1.Driver;
 import org.neo4j.driver.v1.Record;
 import org.neo4j.driver.v1.Session;
 import org.neo4j.driver.v1.StatementResult;
@@ -38,15 +39,15 @@ public class SchemaOperatorNeo4j implements SchemaOperator, OperatorNeo4j {
 
     protected GraphElementOperatorNeo4j graphElementOperator;
     protected GraphElementFactoryNeo4j graphElementFactory;
-    protected Session session;
+    protected Driver driver;
 
     @AssistedInject
     protected SchemaOperatorNeo4j(
             GraphElementFactoryNeo4j graphElementFactory,
-            Session session,
+            Driver driver,
             @Assisted URI uri
     ) {
-        this.session = session;
+        this.driver = driver;
         this.graphElementFactory = graphElementFactory;
         graphElementOperator = graphElementFactory.withUri(uri);
     }
@@ -54,12 +55,12 @@ public class SchemaOperatorNeo4j implements SchemaOperator, OperatorNeo4j {
     @AssistedInject
     protected SchemaOperatorNeo4j(
             GraphElementFactoryNeo4j graphElementFactory,
-            Session session,
+            Driver driver,
             @Assisted String ownerUserName
     ) {
         this(
                 graphElementFactory,
-                session,
+                driver,
                 new UserUris(ownerUserName).generateSchemaUri()
         );
         create();
@@ -157,14 +158,15 @@ public class SchemaOperatorNeo4j implements SchemaOperator, OperatorNeo4j {
         Map<String, Object> props = addCreationProperties(
                 values
         );
-
-        session.run(
-                "CREATE (n:Resource $props)",
-                parameters(
-                        "props",
-                        props
-                )
-        );
+        try (Session session = driver.session()) {
+            session.run(
+                    "CREATE (n:Resource $props)",
+                    parameters(
+                            "props",
+                            props
+                    )
+            );
+        }
     }
 
     @Override
@@ -227,18 +229,19 @@ public class SchemaOperatorNeo4j implements SchemaOperator, OperatorNeo4j {
                 "CREATE (p:Resource $values) " +
                 "CREATE UNIQUE " +
                 "(n)-[:" + Relationships.HAS_PROPERTY + "]->(p) ";
-
-        session.run(
-                query,
-                parameters(
-                        "uri", this.uri().toString(),
-                        "values", property.addCreationProperties(map(
-                                FriendlyResourceNeo4j.props.type.name(), GraphElementType.Property.name(),
-                                VertexInSubGraphOperatorNeo4j.props.shareLevel.name(), ShareLevel.PUBLIC.getConfidentialityIndex()
-                        ))
-                )
-        );
-        return property;
+        try (Session session = driver.session()) {
+            session.run(
+                    query,
+                    parameters(
+                            "uri", this.uri().toString(),
+                            "values", property.addCreationProperties(map(
+                                    FriendlyResourceNeo4j.props.type.name(), GraphElementType.Property.name(),
+                                    VertexInSubGraphOperatorNeo4j.props.shareLevel.name(), ShareLevel.PUBLIC.getConfidentialityIndex()
+                            ))
+                    )
+            );
+            return property;
+        }
     }
 
     @Override
@@ -255,27 +258,29 @@ public class SchemaOperatorNeo4j implements SchemaOperator, OperatorNeo4j {
     public Map<URI, ? extends GraphElement> getProperties() {
         Map<URI, GraphElementOperator> properties = new HashMap<>();
         String query = queryPrefix() + "MATCH (n)-[:HAS_PROPERTY]->(property) RETURN property.uri as uri";
-        StatementResult sr = session.run(
-                query,
-                parameters(
-                        "uri", this.uri().toString()
-                )
-        );
-        while (sr.hasNext()) {
-            Record record = sr.next();
-            URI uri = URI.create(
-                    record.get(
-                            "uri"
-                    ).asString()
-            );
-            properties.put(
-                    uri,
-                    graphElementFactory.withUri(
-                            uri
+        try (Session session = driver.session()) {
+            StatementResult sr = session.run(
+                    query,
+                    parameters(
+                            "uri", this.uri().toString()
                     )
             );
+            while (sr.hasNext()) {
+                Record record = sr.next();
+                URI uri = URI.create(
+                        record.get(
+                                "uri"
+                        ).asString()
+                );
+                properties.put(
+                        uri,
+                        graphElementFactory.withUri(
+                                uri
+                        )
+                );
+            }
+            return properties;
         }
-        return properties;
     }
 
     @Override

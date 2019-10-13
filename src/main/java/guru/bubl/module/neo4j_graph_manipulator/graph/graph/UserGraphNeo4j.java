@@ -24,6 +24,7 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.schema.Sch
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph.SubGraphExtractorFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.schema.SchemaFactory;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.VertexFactoryNeo4j;
+import org.neo4j.driver.v1.Driver;
 import org.neo4j.driver.v1.Record;
 import org.neo4j.driver.v1.Session;
 
@@ -45,7 +46,7 @@ public class UserGraphNeo4j implements UserGraph {
     private SchemaExtractorFactoryNeo4j schemaExtractorFactory;
 
     @Inject
-    Session session;
+    Driver driver;
 
     @AssistedInject
     protected UserGraphNeo4j(
@@ -76,7 +77,7 @@ public class UserGraphNeo4j implements UserGraph {
 
     @Override
     public Boolean haveElementWithId(URI uri) {
-        return FriendlyResourceNeo4j.haveElementWithUri(uri, session);
+        return FriendlyResourceNeo4j.haveElementWithUri(uri, driver);
     }
 
     @Override
@@ -180,16 +181,18 @@ public class UserGraphNeo4j implements UserGraph {
     }
 
     private VertexOperator getAnyVertex() {
-        Record record = session.run(
-                "MATCH(n:Vertex{owner:$owner}) RETURN n.uri limit 1",
-                parameters(
-                        "owner", user.username()
-                )
-        ).single();
-        return vertexFactory.withUri(
-                URI.create(
-                        record.get("n.uri").asString()
-                )
-        );
+        try (Session session = driver.session()) {
+            Record record = session.run(
+                    "MATCH(n:Vertex{owner:$owner}) RETURN n.uri limit 1",
+                    parameters(
+                            "owner", user.username()
+                    )
+            ).single();
+            return vertexFactory.withUri(
+                    URI.create(
+                            record.get("n.uri").asString()
+                    )
+            );
+        }
     }
 }

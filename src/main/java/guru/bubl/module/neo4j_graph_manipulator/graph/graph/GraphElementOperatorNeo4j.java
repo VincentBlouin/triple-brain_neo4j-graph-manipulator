@@ -18,6 +18,7 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.OperatorNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.image.ImagesNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.meta.IdentificationFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.search.GraphIndexerNeo4j;
+import org.neo4j.driver.v1.Driver;
 import org.neo4j.driver.v1.Record;
 import org.neo4j.driver.v1.Session;
 import org.neo4j.driver.v1.StatementResult;
@@ -40,7 +41,7 @@ public class GraphElementOperatorNeo4j implements GraphElementOperator, Operator
     protected Node node;
     protected FriendlyResourceNeo4j friendlyResource;
     protected FriendlyResourceFactoryNeo4j friendlyResourceFactory;
-    protected Session session;
+    protected Driver driver;
 
     protected IdentificationFactoryNeo4j identificationFactory;
 
@@ -84,7 +85,7 @@ public class GraphElementOperatorNeo4j implements GraphElementOperator, Operator
     @AssistedInject
     protected GraphElementOperatorNeo4j(
             FriendlyResourceFactoryNeo4j friendlyResourceFactory,
-            Session session,
+            Driver driver,
             IdentificationFactoryNeo4j identificationFactory,
             GraphElementOperatorFactory graphElementOperatorFactory,
             @Assisted URI uri
@@ -93,7 +94,7 @@ public class GraphElementOperatorNeo4j implements GraphElementOperator, Operator
                 uri
         );
         this.identificationFactory = identificationFactory;
-        this.session = session;
+        this.driver = driver;
         this.friendlyResourceFactory = friendlyResourceFactory;
         this.graphElementOperatorFactory = graphElementOperatorFactory;
     }
@@ -170,97 +171,111 @@ public class GraphElementOperatorNeo4j implements GraphElementOperator, Operator
 
     @Override
     public String getColors() {
-        Record record = session.run(
-                queryPrefix() + "RETURN n.colors as colors",
-                parameters(
-                        "uri",
-                        this.uri().toString()
-                )
-        ).single();
-        return record.get(
-                "colors"
-        ).asObject() == null ? "" : record.get("colors").asString();
+        try (Session session = driver.session()) {
+            Record record = session.run(
+                    queryPrefix() + "RETURN n.colors as colors",
+                    parameters(
+                            "uri",
+                            this.uri().toString()
+                    )
+            ).single();
+            return record.get(
+                    "colors"
+            ).asObject() == null ? "" : record.get("colors").asString();
+        }
     }
 
     @Override
     public String getFont() {
-        Record record = session.run(
-                queryPrefix() + "RETURN n.font as font",
-                parameters(
-                        "uri",
-                        this.uri().toString()
-                )
-        ).single();
-        return record.get(
-                "font"
-        ).asObject() == null ? "" : record.get("font").asString();
+        try (Session session = driver.session()) {
+            Record record = session.run(
+                    queryPrefix() + "RETURN n.font as font",
+                    parameters(
+                            "uri",
+                            this.uri().toString()
+                    )
+            ).single();
+            return record.get(
+                    "font"
+            ).asObject() == null ? "" : record.get("font").asString();
+        }
     }
 
     @Override
     public void setColors(String colors) {
-        session.run(
-                queryPrefix() + "SET n.colors=$colors",
-                parameters(
-                        "uri",
-                        uri().toString(),
-                        "colors",
-                        colors
-                )
-        );
+        try (Session session = driver.session()) {
+            session.run(
+                    queryPrefix() + "SET n.colors=$colors",
+                    parameters(
+                            "uri",
+                            uri().toString(),
+                            "colors",
+                            colors
+                    )
+            );
+        }
     }
 
     @Override
     public void setFont(String font) {
-        session.run(
-                queryPrefix() + "SET n.font=$font",
-                parameters(
-                        "uri",
-                        uri().toString(),
-                        "font",
-                        font
-                )
-        );
+        try (Session session = driver.session()) {
+            session.run(
+                    queryPrefix() + "SET n.font=$font",
+                    parameters(
+                            "uri",
+                            uri().toString(),
+                            "font",
+                            font
+                    )
+            );
+        }
     }
 
     @Override
     public void setChildrenIndex(String childrenIndex) {
-        session.run(
-                queryPrefix() + "SET n.childrenIndexes=$childrenIndexes",
-                parameters(
-                        "uri",
-                        uri().toString(),
-                        "childrenIndexes",
-                        childrenIndex
-                )
-        );
+        try (Session session = driver.session()) {
+            session.run(
+                    queryPrefix() + "SET n.childrenIndexes=$childrenIndexes",
+                    parameters(
+                            "uri",
+                            uri().toString(),
+                            "childrenIndexes",
+                            childrenIndex
+                    )
+            );
+        }
     }
 
     @Override
     public String getChildrenIndex() {
-        Record record = session.run(
-                queryPrefix() + "RETURN n.childrenIndexes as childrenIndexes",
-                parameters(
-                        "uri",
-                        this.uri().toString()
-                )
-        ).single();
-        return record.get(
-                "childrenIndexes"
-        ).asObject() == null ? "" : record.get("childrenIndexes").asString();
+        try (Session session = driver.session()) {
+            Record record = session.run(
+                    queryPrefix() + "RETURN n.childrenIndexes as childrenIndexes",
+                    parameters(
+                            "uri",
+                            this.uri().toString()
+                    )
+            ).single();
+            return record.get(
+                    "childrenIndexes"
+            ).asObject() == null ? "" : record.get("childrenIndexes").asString();
+        }
     }
 
     @Override
     public URI getPatternUri() {
-        Record record = session.run(
-                queryPrefix() + "RETURN n.pattern_uri as patternUri",
-                parameters(
-                        "uri",
-                        this.uri().toString()
-                )
-        ).single();
-        return record.get(
-                "patternUri"
-        ).asObject() == null ? null : URI.create(record.get("patternUri").asString());
+        try (Session session = driver.session()) {
+            Record record = session.run(
+                    queryPrefix() + "RETURN n.pattern_uri as patternUri",
+                    parameters(
+                            "uri",
+                            this.uri().toString()
+                    )
+            ).single();
+            return record.get(
+                    "patternUri"
+            ).asObject() == null ? null : URI.create(record.get("patternUri").asString());
+        }
     }
 
     @Override
@@ -286,16 +301,17 @@ public class GraphElementOperatorNeo4j implements GraphElementOperator, Operator
     }
 
     public ShareLevel getShareLevel() {
-        Record record = session.run(
-                queryPrefix() + "RETURN n.shareLevel as shareLevel",
-                parameters(
-                        "uri",
-                        this.uri().toString()
-                )
-        ).single();
-        Integer shareLevel = record.get("shareLevel").asInt();
-        return ShareLevel.get(shareLevel);
-
+        try (Session session = driver.session()) {
+            Record record = session.run(
+                    queryPrefix() + "RETURN n.shareLevel as shareLevel",
+                    parameters(
+                            "uri",
+                            this.uri().toString()
+                    )
+            ).single();
+            Integer shareLevel = record.get("shareLevel").asInt();
+            return ShareLevel.get(shareLevel);
+        }
     }
 
     public Boolean isPublic() {
@@ -332,124 +348,128 @@ public class GraphElementOperatorNeo4j implements GraphElementOperator, Operator
         String searchContext = GraphIndexerNeo4j.descriptionToContext(
                 tag.comment()
         );
-        StatementResult result = session.run(
-                AddIdentificationQueryBuilder.usingIdentificationForGraphElement(
-                        identificationPojo, this
-                ).build(),
-                parameters(
-                        "uri",
-                        uri().toString(),
-                        "metaUri",
-                        neo4jFriendlyResource.uri().toString(),
-                        "label",
-                        tag.label(),
-                        "comment",
-                        tag.comment(),
-                        "privateContext",
-                        searchContext,
-                        "publicContext",
-                        searchContext,
-                        ImagesNeo4j.props.images.name(),
-                        ImageJson.toJsonArray(tag.images()),
-                        "creationDate",
-                        tagCreationDate.getTime(),
-                        "external_uri",
-                        identificationPojo.getExternalResourceUri().toString(),
-                        "relationExternalUri",
-                        identificationPojo.getRelationExternalResourceUri().toString(),
-                        FriendlyResourceNeo4j.props.last_modification_date.name(),
-                        new Date().getTime(),
-                        FriendlyResourceNeo4j.props.owner.name(),
-                        UserUris.ownerUserNameFromUri(uri())
-                )
-        );
-        while (result.hasNext()) {
-            Record record = result.next();
-            URI externalUri = URI.create(
-                    record.get("external_uri").asString()
-            );
-            IdentifierPojo tagPojo = new IdentifierPojo(
-                    externalUri,
-                    record.get("nbReferences").asInt(),
-                    new FriendlyResourcePojo(
-                            URI.create(
-                                    record.get("uri").asString()
-                            ),
-                            record.get("label").asObject() == null ?
-                                    "" : record.get("label").asString(),
-                            record.get("images").asObject() == null ?
-                                    new HashSet<>() : ImageJson.fromJson(record.get("images").asString()),
-                            record.get("comment").asObject() == null ?
-                                    "" : record.get("comment").asString(),
-                            record.get("creation_date").asLong(),
-                            record.get("last_modification_date").asLong()
+        try (Session session = driver.session()) {
+            StatementResult result = session.run(
+                    AddIdentificationQueryBuilder.usingIdentificationForGraphElement(
+                            identificationPojo, this
+                    ).build(),
+                    parameters(
+                            "uri",
+                            uri().toString(),
+                            "metaUri",
+                            neo4jFriendlyResource.uri().toString(),
+                            "label",
+                            tag.label(),
+                            "comment",
+                            tag.comment(),
+                            "privateContext",
+                            searchContext,
+                            "publicContext",
+                            searchContext,
+                            ImagesNeo4j.props.images.name(),
+                            ImageJson.toJsonArray(tag.images()),
+                            "creationDate",
+                            tagCreationDate.getTime(),
+                            "external_uri",
+                            identificationPojo.getExternalResourceUri().toString(),
+                            "relationExternalUri",
+                            identificationPojo.getRelationExternalResourceUri().toString(),
+                            FriendlyResourceNeo4j.props.last_modification_date.name(),
+                            new Date().getTime(),
+                            FriendlyResourceNeo4j.props.owner.name(),
+                            UserUris.ownerUserNameFromUri(uri())
                     )
             );
-            Boolean isReference = tag.getExternalResourceUri().equals(
-                    this.uri()
-            );
+            while (result.hasNext()) {
+                Record record = result.next();
+                URI externalUri = URI.create(
+                        record.get("external_uri").asString()
+                );
+                IdentifierPojo tagPojo = new IdentifierPojo(
+                        externalUri,
+                        record.get("nbReferences").asInt(),
+                        new FriendlyResourcePojo(
+                                URI.create(
+                                        record.get("uri").asString()
+                                ),
+                                record.get("label").asObject() == null ?
+                                        "" : record.get("label").asString(),
+                                record.get("images").asObject() == null ?
+                                        new HashSet<>() : ImageJson.fromJson(record.get("images").asString()),
+                                record.get("comment").asObject() == null ?
+                                        "" : record.get("comment").asString(),
+                                record.get("creation_date").asLong(),
+                                record.get("last_modification_date").asLong()
+                        )
+                );
+                Boolean isReference = tag.getExternalResourceUri().equals(
+                        this.uri()
+                );
 
-            Boolean isOwnerOfExternalUri = UserUris.ownerUserNameFromUri(
-                    tag.getExternalResourceUri()
-            ).equals(getOwnerUsername());
-
-            if (isOwnerOfExternalUri && !isReference && addOriginalReferenceTags) {
-                Map<URI, IdentifierPojo> existingTags = getIdentifications();
-                Map<URI, IdentifierPojo> referenceTags = graphElementOperatorFactory.withUri(
+                Boolean isOwnerOfExternalUri = UserUris.ownerUserNameFromUri(
                         tag.getExternalResourceUri()
-                ).getIdentifications();
-                for (IdentifierPojo otherIdentifier : referenceTags.values()) {
-                    if (!existingTags.containsKey(otherIdentifier.getExternalResourceUri())) {
-                        otherIdentifier = addTagAndOriginalReferenceOnesOrNot(
-                                otherIdentifier,
-                                false
-                        ).get(otherIdentifier.getExternalResourceUri());
+                ).equals(getOwnerUsername());
+
+                if (isOwnerOfExternalUri && !isReference && addOriginalReferenceTags) {
+                    Map<URI, IdentifierPojo> existingTags = getIdentifications();
+                    Map<URI, IdentifierPojo> referenceTags = graphElementOperatorFactory.withUri(
+                            tag.getExternalResourceUri()
+                    ).getIdentifications();
+                    for (IdentifierPojo otherIdentifier : referenceTags.values()) {
+                        if (!existingTags.containsKey(otherIdentifier.getExternalResourceUri())) {
+                            otherIdentifier = addTagAndOriginalReferenceOnesOrNot(
+                                    otherIdentifier,
+                                    false
+                            ).get(otherIdentifier.getExternalResourceUri());
+                        }
+                        identifications.put(otherIdentifier.getExternalResourceUri(), otherIdentifier);
                     }
-                    identifications.put(otherIdentifier.getExternalResourceUri(), otherIdentifier);
                 }
-            }
-            Boolean justCreatedTag = tagCreationDate.equals(tagPojo.creationDate());
-            Boolean isVoidReference = tag.getExternalResourceUri().toString().contains("/void/ref/");
-            if (!isReference && isOwnerOfExternalUri && justCreatedTag && !isVoidReference) {
-                Map<URI, IdentifierPojo> tags = graphElementOperatorFactory.withUri(
-                        tag.getExternalResourceUri()
-                ).addMeta(
+                Boolean justCreatedTag = tagCreationDate.equals(tagPojo.creationDate());
+                Boolean isVoidReference = tag.getExternalResourceUri().toString().contains("/void/ref/");
+                if (!isReference && isOwnerOfExternalUri && justCreatedTag && !isVoidReference) {
+                    Map<URI, IdentifierPojo> tags = graphElementOperatorFactory.withUri(
+                            tag.getExternalResourceUri()
+                    ).addMeta(
+                            tagPojo
+                    );
+                    tagPojo = tags.get(tag.getExternalResourceUri());
+                }
+                identifications.put(
+                        tag.getExternalResourceUri(),
                         tagPojo
                 );
-                tagPojo = tags.get(tag.getExternalResourceUri());
             }
-            identifications.put(
-                    tag.getExternalResourceUri(),
-                    tagPojo
-            );
+            return identifications;
         }
-        return identifications;
     }
 
     @Override
     public void removeIdentification(Identifier identification) {
-        session.run(
-                String.format(
-                        "%s MATCH (n)-[r:IDENTIFIED_TO]->(i{uri:$metaUri}) " +
-                                "DELETE r " +
-                                "SET i.nb_references=i.nb_references -1, " +
-                                FriendlyResourceNeo4j.LAST_MODIFICATION_QUERY_PART +
-                                "RETURN i.uri as uri",
-                        queryPrefix()
-                ),
-                parameters(
-                        "uri",
-                        uri().toString(),
-                        "metaUri",
-                        identification.uri().toString(),
-                        "last_modification_date",
-                        new Date().getTime()
-                )
-        );
-        if (identification.getExternalResourceUri() != null && identification.getExternalResourceUri().equals(this.uri())) {
-            identificationFactory.withUri(identification.uri()).setExternalResourceUri(
-                    identification.uri()
+        try (Session session = driver.session()) {
+            session.run(
+                    String.format(
+                            "%s MATCH (n)-[r:IDENTIFIED_TO]->(i{uri:$metaUri}) " +
+                                    "DELETE r " +
+                                    "SET i.nb_references=i.nb_references -1, " +
+                                    FriendlyResourceNeo4j.LAST_MODIFICATION_QUERY_PART +
+                                    "RETURN i.uri as uri",
+                            queryPrefix()
+                    ),
+                    parameters(
+                            "uri",
+                            uri().toString(),
+                            "metaUri",
+                            identification.uri().toString(),
+                            "last_modification_date",
+                            new Date().getTime()
+                    )
             );
+            if (identification.getExternalResourceUri() != null && identification.getExternalResourceUri().equals(this.uri())) {
+                identificationFactory.withUri(identification.uri()).setExternalResourceUri(
+                        identification.uri()
+                );
+            }
         }
     }
 
@@ -492,61 +512,65 @@ public class GraphElementOperatorNeo4j implements GraphElementOperator, Operator
     @Override
     public Map<URI, IdentifierPojo> getIdentifications() {
         Map<URI, IdentifierPojo> identifications = new HashMap<>();
-        StatementResult rs = session.run(
-                String.format(
-                        "%sMATCH (n)-[r:IDENTIFIED_TO]->(identification) " +
-                                "RETURN identification.uri as uri, " +
-                                "identification.external_uri as external_uri, " +
-                                "identification.nb_references as nbReferences, " +
-                                "r.relation_external_uri as r_x_u",
-                        queryPrefix()
-                ),
-                parameters(
-                        "uri", uri().toString()
-                )
-        );
-        while (rs.hasNext()) {
-            Record record = rs.next();
-            URI uri = URI.create(
-                    record.get("uri").asString()
-            );
-            URI externalUri = URI.create(
-                    record.get("external_uri").asString()
-            );
-            IdentifierPojo identification = new IdentifierPojo(
-                    externalUri,
-                    new Integer(record.get("nbReferences").asInt()),
-                    new FriendlyResourcePojo(
-                            uri
+        try (Session session = driver.session()) {
+            StatementResult rs = session.run(
+                    String.format(
+                            "%sMATCH (n)-[r:IDENTIFIED_TO]->(identification) " +
+                                    "RETURN identification.uri as uri, " +
+                                    "identification.external_uri as external_uri, " +
+                                    "identification.nb_references as nbReferences, " +
+                                    "r.relation_external_uri as r_x_u",
+                            queryPrefix()
+                    ),
+                    parameters(
+                            "uri", uri().toString()
                     )
             );
-            String relationExternalUriString = record.get("r_x_u").asString();
-            identification.setRelationExternalResourceUri(
-                    relationExternalUriString == null ? Identifier.DEFAULT_IDENTIFIER_RELATION_EXTERNAL_URI :
-                            URI.create(
-                                    relationExternalUriString
-                            )
-            );
-            identifications.put(
-                    externalUri,
-                    identification
-            );
+            while (rs.hasNext()) {
+                Record record = rs.next();
+                URI uri = URI.create(
+                        record.get("uri").asString()
+                );
+                URI externalUri = URI.create(
+                        record.get("external_uri").asString()
+                );
+                IdentifierPojo identification = new IdentifierPojo(
+                        externalUri,
+                        new Integer(record.get("nbReferences").asInt()),
+                        new FriendlyResourcePojo(
+                                uri
+                        )
+                );
+                String relationExternalUriString = record.get("r_x_u").asString();
+                identification.setRelationExternalResourceUri(
+                        relationExternalUriString == null ? Identifier.DEFAULT_IDENTIFIER_RELATION_EXTERNAL_URI :
+                                URI.create(
+                                        relationExternalUriString
+                                )
+                );
+                identifications.put(
+                        externalUri,
+                        identification
+                );
+            }
+            return identifications;
         }
-        return identifications;
     }
 
     public void removeAllIdentifications() {
-        session.run(
-                String.format(
-                        "%s MATCH (n)-[r:IDENTIFIED_TO]->(i) " +
-                                "DELETE r " +
-                                "SET i.nb_references=i.nb_references -1 ",
-                        queryPrefix()
-                ),
-                parameters(
-                        "uri", this.uri().toString()
-                )
-        );
+        try (Session session = driver.session()) {
+            session.run(
+                    String.format(
+                            "%s MATCH (n)-[r:IDENTIFIED_TO]->(i) " +
+                                    "DELETE r " +
+                                    "SET i.nb_references=i.nb_references -1 ",
+                            queryPrefix()
+                    ),
+                    parameters(
+                            "uri", this.uri().toString()
+                    )
+            );
+        }
     }
 
     public GraphElementOperator forkUsingCreationPropertiesAndCache(GraphElementOperator clone, Map<String, Object> additionalCreateValues, GraphElement cache) {

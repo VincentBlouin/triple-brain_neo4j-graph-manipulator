@@ -24,6 +24,7 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.Identifica
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.QueryUtils;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.VertexInSubGraphOperatorNeo4j;
 import org.neo4j.driver.internal.InternalRelationship;
+import org.neo4j.driver.v1.Driver;
 import org.neo4j.driver.v1.Record;
 import org.neo4j.driver.v1.Session;
 import org.neo4j.driver.v1.StatementResult;
@@ -51,16 +52,16 @@ public class SubGraphExtractorNeo4j {
 
     private Set<ShareLevel> inShareLevels = new HashSet<>();
 
-    protected Session session;
+    protected Driver driver;
 
     @AssistedInject
     protected SubGraphExtractorNeo4j(
-            Session session,
+            Driver driver,
             @Assisted URI centerBubbleUri,
             @Assisted("depth") Integer depth
     ) {
         this(
-                session,
+                driver,
                 centerBubbleUri,
                 depth,
                 null
@@ -69,12 +70,12 @@ public class SubGraphExtractorNeo4j {
 
     @AssistedInject
     protected SubGraphExtractorNeo4j(
-            Session session,
+            Driver driver,
             @Assisted URI centerBubbleUri,
             @Assisted("depth") Integer depth,
             @Assisted("resultsLimit") Integer resultsLimit
     ) {
-        this.session = session;
+        this.driver = driver;
         this.centerBubbleUri = centerBubbleUri;
         this.depth = depth;
         this.resultsLimit = resultsLimit;
@@ -84,11 +85,11 @@ public class SubGraphExtractorNeo4j {
 
     @AssistedInject
     protected SubGraphExtractorNeo4j(
-            Session session,
+            Driver driver,
             @Assisted URI centerBubbleUri,
             @Assisted Set<ShareLevel> inShareLevels
     ) {
-        this.session = session;
+        this.driver = driver;
         this.centerBubbleUri = centerBubbleUri;
         this.depth = 1;
         this.inShareLevels = inShareLevels;
@@ -96,28 +97,29 @@ public class SubGraphExtractorNeo4j {
 
     @AssistedInject
     protected SubGraphExtractorNeo4j(
-            Session session,
+            Driver driver,
             @Assisted URI centerBubbleUri,
             @Assisted Set<ShareLevel> inShareLevels,
             @Assisted Integer depth
     ) {
-        this.session = session;
+        this.driver = driver;
         this.centerBubbleUri = centerBubbleUri;
         this.depth = depth;
         this.inShareLevels = inShareLevels;
     }
 
     public SubGraphPojo load() {
-        StatementResult rs = session.run(
-                queryToGetGraph(),
-                parameters(
-                        "centerUri", centerBubbleUri.toString()
-                )
-        );
-        Set<InternalRelationship> relationships = new HashSet<>();
-        Map<Long, URI> idsUri = new HashMap<>();
-        while (rs.hasNext()) {
-            Record record = rs.next();
+        try (Session session = driver.session()) {
+            StatementResult rs = session.run(
+                    queryToGetGraph(),
+                    parameters(
+                            "centerUri", centerBubbleUri.toString()
+                    )
+            );
+            Set<InternalRelationship> relationships = new HashSet<>();
+            Map<Long, URI> idsUri = new HashMap<>();
+            while (rs.hasNext()) {
+                Record record = rs.next();
 //            for (InternalRelationship type : types) {
 //                System.out.println(type.endNodeId());
 //                System.out.println(type.type());
@@ -125,88 +127,89 @@ public class SubGraphExtractorNeo4j {
 //            if(record.get("endId").asObject() != null){
 //                System.out.println(record.get("endId").asString());
 //            }
-            List<InternalRelationship> relations = (List) record.get("rel").asList();
-            relationships.addAll(relations);
-            switch (getGraphElementTypeFromRow(record)) {
-                case Vertex:
-                    ShareLevel shareLevel = ShareLevel.get(record.get("ge.shareLevel").asInt());
-                    if (!inShareLevels.contains(shareLevel)) {
+                List<InternalRelationship> relations = (List) record.get("rel").asList();
+                relationships.addAll(relations);
+                switch (getGraphElementTypeFromRow(record)) {
+                    case Vertex:
+                        ShareLevel shareLevel = ShareLevel.get(record.get("ge.shareLevel").asInt());
+                        if (!inShareLevels.contains(shareLevel)) {
+                            break;
+                        }
+                        Vertex vertex = addVertexUsingRow(
+                                record,
+                                shareLevel
+                        );
+                        idsUri.put(
+                                record.get("nId").asLong(),
+                                vertex.uri()
+                        );
                         break;
-                    }
-                    Vertex vertex = addVertexUsingRow(
-                            record,
-                            shareLevel
-                    );
-                    idsUri.put(
-                            record.get("nId").asLong(),
-                            vertex.uri()
-                    );
-                    break;
-                case Edge:
-                    Edge edge = addEdgeUsingRow(
-                            record
-                    );
-                    idsUri.put(
-                            record.get("nId").asLong(),
-                            edge.uri()
-                    );
-                    break;
-                case Meta:
-                    subGraph.setChildrenIndexesCenterTag(
-                            VertexFromExtractorQueryRow.getChildrenIndexes(
-                                    "ge",
-                                    record
-                            )
-                    );
-                    subGraph.setColorsCenterTag(
-                            VertexFromExtractorQueryRow.getColors(
-                                    "ge",
-                                    record
-                            )
-                    );
-                    subGraph.setFontCenterTag(
-                            VertexFromExtractorQueryRow.getFont(
-                                    "ge",
-                                    record
-                            )
-                    );
-                    break;
+                    case Edge:
+                        Edge edge = addEdgeUsingRow(
+                                record
+                        );
+                        idsUri.put(
+                                record.get("nId").asLong(),
+                                edge.uri()
+                        );
+                        break;
+                    case Meta:
+                        subGraph.setChildrenIndexesCenterTag(
+                                VertexFromExtractorQueryRow.getChildrenIndexes(
+                                        "ge",
+                                        record
+                                )
+                        );
+                        subGraph.setColorsCenterTag(
+                                VertexFromExtractorQueryRow.getColors(
+                                        "ge",
+                                        record
+                                )
+                        );
+                        subGraph.setFontCenterTag(
+                                VertexFromExtractorQueryRow.getFont(
+                                        "ge",
+                                        record
+                                )
+                        );
+                        break;
+                }
             }
-        }
-        for (InternalRelationship relation : relationships) {
-            EdgePojo edge = subGraph.edgeWithIdentifier(
-                    idsUri.get(relation.startNodeId())
-            );
-            URI uri = idsUri.get(relation.endNodeId());
-            if (uri == null) {
-            } else if (relation.type().equals("SOURCE_VERTEX")) {
-                edge.setSourceVertex(
-                        new VertexInSubGraphPojo(
-                                uri
-                        )
+            for (InternalRelationship relation : relationships) {
+                EdgePojo edge = subGraph.edgeWithIdentifier(
+                        idsUri.get(relation.startNodeId())
                 );
-            } else {
-                edge.setDestinationVertex(
-                        new VertexInSubGraphPojo(
-                                uri
-                        )
+                URI uri = idsUri.get(relation.endNodeId());
+                if (uri == null) {
+                } else if (relation.type().equals("SOURCE_VERTEX")) {
+                    edge.setSourceVertex(
+                            new VertexInSubGraphPojo(
+                                    uri
+                            )
+                    );
+                } else {
+                    edge.setDestinationVertex(
+                            new VertexInSubGraphPojo(
+                                    uri
+                            )
+                    );
+                }
+            }
+            Iterator<EdgePojo> it = subGraph.edges().values().iterator();
+            while (it.hasNext()) {
+                EdgePojo edge = it.next();
+                Boolean hasSourceVertex = edge.sourceVertex() != null && subGraph.vertices().containsKey(
+                        edge.sourceVertex().uri()
                 );
+                Boolean hasDestinationVertex = edge.destinationVertex() != null && subGraph.vertices().containsKey(
+                        edge.destinationVertex().uri()
+                );
+                if (!hasSourceVertex || !hasDestinationVertex) {
+                    it.remove();
+                }
             }
+            return subGraph;
         }
-        Iterator<EdgePojo> it = subGraph.edges().values().iterator();
-        while (it.hasNext()) {
-            EdgePojo edge = it.next();
-            Boolean hasSourceVertex = edge.sourceVertex() != null && subGraph.vertices().containsKey(
-                    edge.sourceVertex().uri()
-            );
-            Boolean hasDestinationVertex = edge.destinationVertex() != null && subGraph.vertices().containsKey(
-                    edge.destinationVertex().uri()
-            );
-            if (!hasSourceVertex || !hasDestinationVertex) {
-                it.remove();
-            }
-        }
-        return subGraph;
     }
 
     private GraphElementType getGraphElementTypeFromRow(Record record) {

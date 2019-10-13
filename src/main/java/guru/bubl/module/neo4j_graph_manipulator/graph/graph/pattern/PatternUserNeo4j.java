@@ -8,6 +8,7 @@ import guru.bubl.module.model.graph.FriendlyResourcePojo;
 import guru.bubl.module.model.graph.GraphElementOperatorFactory;
 import guru.bubl.module.model.graph.identification.IdentifierPojo;
 import guru.bubl.module.model.graph.pattern.PatternUser;
+import org.neo4j.driver.v1.Driver;
 import org.neo4j.driver.v1.Record;
 import org.neo4j.driver.v1.Session;
 import org.neo4j.driver.v1.StatementResult;
@@ -18,19 +19,19 @@ import static org.neo4j.driver.v1.Values.parameters;
 
 public class PatternUserNeo4j implements PatternUser {
 
-    private Session session;
+    private Driver driver;
     private GraphElementOperatorFactory graphElementFactory;
     private User user;
     private URI patternUri;
 
     @AssistedInject
     protected PatternUserNeo4j(
-            Session session,
+            Driver driver,
             GraphElementOperatorFactory graphElementFactory,
             @Assisted User user,
             @Assisted URI patternUri
     ) {
-        this.session = session;
+        this.driver = driver;
         this.graphElementFactory = graphElementFactory;
         this.user = user;
         this.patternUri = patternUri;
@@ -57,36 +58,38 @@ public class PatternUserNeo4j implements PatternUser {
                 "WITH c.uri as uri, c.pattern_uri as patternUri, tag, tag.external_uri as externalUri, tag.label as label, tag.comment as comment, tag.images as images " +
                 "DETACH DELETE tag " +
                 "RETURN uri, patternUri, externalUri, label, comment, images";
-        StatementResult rs = session.run(
-                query,
-                parameters(
-                        "uri",
-                        patternUri.toString(),
-                        "owner",
-                        user.username()
-                )
-        );
-        URI centerUri = null;
-        while (rs.hasNext()) {
-            Record record = rs.next();
-            String patternUri = record.get("patternUri").asString();
-            URI uri = URI.create(record.get("uri").asString());
-            if (patternUri.equals(this.patternUri.toString())) {
-                centerUri = uri;
+        try (Session session = driver.session()) {
+            StatementResult rs = session.run(
+                    query,
+                    parameters(
+                            "uri",
+                            patternUri.toString(),
+                            "owner",
+                            user.username()
+                    )
+            );
+            URI centerUri = null;
+            while (rs.hasNext()) {
+                Record record = rs.next();
+                String patternUri = record.get("patternUri").asString();
+                URI uri = URI.create(record.get("uri").asString());
+                if (patternUri.equals(this.patternUri.toString())) {
+                    centerUri = uri;
+                }
+                if (record.get("externalUri").asObject() != null)
+                    graphElementFactory.withUri(
+                            uri
+                    ).addMeta(
+                            new IdentifierPojo(
+                                    URI.create(record.get("externalUri").asString()),
+                                    new FriendlyResourcePojo(
+                                            record.get("label").asString(),
+                                            record.get("comment").asString()
+                                    )
+                            )
+                    );
             }
-            if (record.get("externalUri").asObject() != null)
-                graphElementFactory.withUri(
-                        uri
-                ).addMeta(
-                        new IdentifierPojo(
-                                URI.create(record.get("externalUri").asString()),
-                                new FriendlyResourcePojo(
-                                        record.get("label").asString(),
-                                        record.get("comment").asString()
-                                )
-                        )
-                );
+            return centerUri;
         }
-        return centerUri;
     }
 }

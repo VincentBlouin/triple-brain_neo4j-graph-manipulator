@@ -16,6 +16,7 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.FriendlyRe
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.IdentificationQueryBuilder;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph.GraphElementFromExtractorQueryRow;
 import org.apache.commons.lang.StringUtils;
+import org.neo4j.driver.v1.Driver;
 import org.neo4j.driver.v1.Record;
 import org.neo4j.driver.v1.Session;
 import org.neo4j.driver.v1.StatementResult;
@@ -34,7 +35,7 @@ public class GraphSearchNeo4j implements GraphSearch {
 
 
     @Inject
-    Session session;
+    Driver driver;
 
 
     @Override
@@ -136,46 +137,48 @@ public class GraphSearchNeo4j implements GraphSearch {
 
     private class Getter<ResultType extends GraphElementSearchResult> {
         public GraphElementSearchResult getForUri(URI uri, String username) {
-            StatementResult rs = session.run(
-                    String.format(
-                            "MATCH (n:GraphElement{uri:$uri}) " +
-                                    "WHERE %s " +
-                                    "OPTIONAL MATCH (n)-[%s:IDENTIFIED_TO]->(%s) " +
-                                    "RETURN %s%s%s labels(n) as type",
-                            StringUtils.isEmpty(username) ? "n.shareLevel=40" : "n.owner=$owner",
-                            IdentificationQueryBuilder.IDENTIFICATION_RELATION_QUERY_KEY,
-                            IdentificationQueryBuilder.IDENTIFIER_QUERY_KEY,
-                            FriendlyResourceQueryBuilder.returnQueryPartUsingPrefix("n"),
-                            FriendlyResourceQueryBuilder.imageReturnQueryPart("n"),
-                            IdentificationQueryBuilder.identificationReturnQueryPart()
-                    ),
-                    parameters(
-                            "uri",
-                            uri.toString(),
-                            "owner",
-                            username
-                    )
-            );
+            try (Session session = driver.session()) {
+                StatementResult rs = session.run(
+                        String.format(
+                                "MATCH (n:GraphElement{uri:$uri}) " +
+                                        "WHERE %s " +
+                                        "OPTIONAL MATCH (n)-[%s:IDENTIFIED_TO]->(%s) " +
+                                        "RETURN %s%s%s labels(n) as type",
+                                StringUtils.isEmpty(username) ? "n.shareLevel=40" : "n.owner=$owner",
+                                IdentificationQueryBuilder.IDENTIFICATION_RELATION_QUERY_KEY,
+                                IdentificationQueryBuilder.IDENTIFIER_QUERY_KEY,
+                                FriendlyResourceQueryBuilder.returnQueryPartUsingPrefix("n"),
+                                FriendlyResourceQueryBuilder.imageReturnQueryPart("n"),
+                                IdentificationQueryBuilder.identificationReturnQueryPart()
+                        ),
+                        parameters(
+                                "uri",
+                                uri.toString(),
+                                "owner",
+                                username
+                        )
+                );
 //            if (!StringUtils.isEmpty(username)) {
 //                statement.setString(
 //                        "owner",
 //                        username
 //                );
 //            }
-            if (!rs.hasNext()) {
-                return null;
+                if (!rs.hasNext()) {
+                    return null;
+                }
+                Record record = rs.next();
+                return new GraphElementSearchResultPojo(
+                        SearchResultGetter.nodeTypeInRow(record),
+                        setupGraphElementForDetailedResult(
+                                GraphElementFromExtractorQueryRow.usingRowAndKey(
+                                        record,
+                                        "n"
+                                ).build()
+                        ),
+                        new HashMap<>()
+                );
             }
-            Record record = rs.next();
-            return new GraphElementSearchResultPojo(
-                    SearchResultGetter.nodeTypeInRow(record),
-                    setupGraphElementForDetailedResult(
-                            GraphElementFromExtractorQueryRow.usingRowAndKey(
-                                    record,
-                                    "n"
-                            ).build()
-                    ),
-                    new HashMap<>()
-            );
         }
 
 
@@ -203,14 +206,16 @@ public class GraphSearchNeo4j implements GraphSearch {
                 String username,
                 GraphElementType... graphElementTypes
         ) {
-            StatementResult rs = session.run(
-                    buildQuery(forPersonal, username, graphElementTypes),
-                    parameters(
-                            "label", formatSearchTerm(searchTerm) + "*",
-                            "owner", username
-                    )
-            );
-            return new SearchResultGetter<ResultType>(rs).get();
+            try (Session session = driver.session()) {
+                StatementResult rs = session.run(
+                        buildQuery(forPersonal, username, graphElementTypes),
+                        parameters(
+                                "label", formatSearchTerm(searchTerm) + "*",
+                                "owner", username
+                        )
+                );
+                return new SearchResultGetter<ResultType>(rs).get();
+            }
         }
 
         private String buildQuery(

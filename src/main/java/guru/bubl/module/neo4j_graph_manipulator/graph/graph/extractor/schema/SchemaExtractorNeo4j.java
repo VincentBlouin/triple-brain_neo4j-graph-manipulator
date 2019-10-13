@@ -10,6 +10,7 @@ import guru.bubl.module.model.graph.schema.SchemaPojo;
 import guru.bubl.module.neo4j_graph_manipulator.graph.Relationships;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.FriendlyResourceQueryBuilder;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.IdentificationQueryBuilder;
+import org.neo4j.driver.v1.Driver;
 import org.neo4j.driver.v1.Session;
 import org.neo4j.driver.v1.StatementResult;
 
@@ -20,7 +21,7 @@ import static org.neo4j.driver.v1.Values.parameters;
 public class SchemaExtractorNeo4j {
     protected URI schemaUri;
 
-    protected Session session;
+    protected Driver driver;
 
     public static final String
             SCHEMA_QUERY_KEY = "s",
@@ -33,24 +34,26 @@ public class SchemaExtractorNeo4j {
 
     @AssistedInject
     protected SchemaExtractorNeo4j(
-            Session session,
+            Driver driver,
             @Assisted URI schemaUri
     ) {
-        this.session = session;
+        this.driver = driver;
         this.schemaUri = schemaUri;
     }
 
     public SchemaPojo load() {
-        StatementResult rs = session.run(
-                buildQuery(),
-                parameters(
-                        "uri",
-                        schemaUri.toString()
-                )
-        );
-        return new SchemaFromQueryResult(
-                rs
-        ).build();
+        try (Session session = driver.session()) {
+            StatementResult rs = session.run(
+                    buildQuery(),
+                    parameters(
+                            "uri",
+                            schemaUri.toString()
+                    )
+            );
+            return new SchemaFromQueryResult(
+                    rs
+            ).build();
+        }
     }
 
     private String buildQuery() {

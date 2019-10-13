@@ -23,6 +23,7 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.graph.UserGraphFactoryNeo4
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.WholeGraphNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph.SubGraphExtractorFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.VertexFactoryNeo4j;
+import org.neo4j.driver.v1.Driver;
 import org.neo4j.driver.v1.Session;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Transaction;
@@ -56,7 +57,7 @@ public class GraphComponentTestNeo4j implements GraphComponentTest {
     protected GraphFactory graphFactory;
 
     @Inject
-    Session session;
+    Driver driver;
 
     protected VertexOperator vertexA;
     protected VertexOperator vertexB;
@@ -137,9 +138,11 @@ public class GraphComponentTestNeo4j implements GraphComponentTest {
 
     @Override
     public void removeWholeGraph() {
-        session.run(
-                "MATCH (n:GraphElement) DETACH DELETE n"
-        );
+        try (Session session = driver.session()) {
+            session.run(
+                    "MATCH (n:GraphElement) DETACH DELETE n"
+            );
+        }
     }
 
     @Override
