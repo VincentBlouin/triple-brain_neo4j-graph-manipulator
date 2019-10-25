@@ -50,7 +50,6 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.graph.edge.EdgeOperatorNeo
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.schema.SchemaExtractorFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph.SubGraphExtractorFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.identification.IdentificationNeo4j;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.pattern.PatternListNeo4J;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.pattern.PatternUserNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.schema.SchemaFactory;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.schema.SchemaListNeo4j;
@@ -139,8 +138,6 @@ public class Neo4jModule extends AbstractModule {
         install(factoryModuleBuilder
                 .implement(CenterGraphElementOperator.class, CenterGraphElementOperatorNeo4j.class)
                 .build(CenterGraphElementOperatorFactory.class));
-
-        bind(PatternList.class).to(PatternListNeo4J.class).in(Singleton.class);
 
         install(factoryModuleBuilder
                 .implement(PatternUser.class, PatternUserNeo4j.class)
