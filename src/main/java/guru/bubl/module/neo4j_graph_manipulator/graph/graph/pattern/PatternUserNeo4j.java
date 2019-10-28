@@ -42,7 +42,7 @@ public class PatternUserNeo4j implements PatternUser {
     public URI use() {
         UserUris userUris = new UserUris(user);
         String query = "MATCH (n:Pattern{uri:$uri}) " +
-                "CALL apoc.path.subgraphAll(n, {}) YIELD nodes, relationships " +
+                "CALL apoc.path.subgraphAll(n, {relationshipFilter:'SOURCE_VERTEX|DESTINATION_VERTEX|IDENTIFIED_TO>'}) YIELD nodes, relationships " +
                 "CALL apoc.refactor.cloneSubgraph(nodes, relationships, {}) YIELD input, output, error " +
                 "WITH collect(output) as createdNodes " +
                 "UNWIND createdNodes as c " +
