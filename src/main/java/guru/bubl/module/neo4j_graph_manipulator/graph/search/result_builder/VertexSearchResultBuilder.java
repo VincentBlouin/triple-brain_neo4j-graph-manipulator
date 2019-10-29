@@ -43,9 +43,8 @@ public class VertexSearchResultBuilder implements SearchResultBuilder {
     }
 
     private Integer getNbVisits() {
-        String key = prefix + "." + CenterGraphElementOperatorNeo4j.props.number_of_visits.name();
-        return row.get(key).asObject() == null ?
-                0 : row.get(key).asInt();
+        return row.get("nbVisits").asObject() == null ?
+                0 : row.get("nbVisits").asInt();
     }
 
 }

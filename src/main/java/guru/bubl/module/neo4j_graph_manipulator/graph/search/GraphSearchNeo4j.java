@@ -226,15 +226,19 @@ public class GraphSearchNeo4j implements GraphSearch {
             String indexDomain = graphElementTypes.length == 4 ? "graphElementLabel" : "vertexLabel";
             return
                     String.format(
-                            "CALL db.index.fulltext.queryNodes('%s', $label) YIELD node as n " +
+                            "CALL db.index.fulltext.queryNodes('%s', $label) YIELD node as n, score " +
                                     "WHERE n." + (forPersonal ? "owner=$owner" : "shareLevel=40 ") +
                                     (!forPersonal && !StringUtils.isEmpty(username) ? "OR n.owner=$owner " : " ") +
                                     "OPTIONAL MATCH (n)-[idr:IDENTIFIED_TO]->(id) " +
                                     "RETURN " +
-                                    "n.uri, n.label, n.external_uri, n.nb_references, n.number_of_visits, n.creation_date, n.last_modification_date, " +
+                                    "score, n.uri, n.label, n.external_uri, COALESCE(n.n.nb_references, 0) as nbReferences, COALESCE(n.number_of_visits, 0) as nbVisits, n.creation_date, n.last_modification_date, " +
                                     "(CASE WHEN n.owner=$owner THEN n.private_context ELSE n.public_context END) as context, " +
                                     IdentificationQueryBuilder.identificationReturnQueryPart() +
-                                    "labels(n) as type ",
+                                    "labels(n) as type " +
+                                    "ORDER BY nbVisits DESC," +
+                                    "score DESC," +
+                                    "nbReferences DESC " +
+                                    "LIMIT 10",
                             indexDomain
                     );
 

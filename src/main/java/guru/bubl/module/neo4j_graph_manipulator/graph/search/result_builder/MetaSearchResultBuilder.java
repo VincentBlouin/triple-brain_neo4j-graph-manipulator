@@ -43,7 +43,7 @@ public class MetaSearchResultBuilder implements SearchResultBuilder {
         );
 
         identifierPojo.setNbRefences(
-                row.get("n.nb_references").asInt()
+                row.get("nbReferences").asInt()
         );
 
         GraphElementPojo identifierAsGraphElement = new GraphElementPojo(
