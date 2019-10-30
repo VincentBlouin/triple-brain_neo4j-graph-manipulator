@@ -4,44 +4,57 @@
 
 package guru.bubl.module.neo4j_graph_manipulator.graph.search;
 
+import com.google.inject.assistedinject.Assisted;
+import com.google.inject.assistedinject.AssistedInject;
 import guru.bubl.module.model.User;
 import guru.bubl.module.model.graph.GraphElementPojo;
 import guru.bubl.module.model.graph.GraphElementType;
 import guru.bubl.module.model.graph.identification.IdentifierPojo;
 import guru.bubl.module.model.search.GraphElementSearchResult;
-import guru.bubl.module.model.search.GraphElementSearchResultPojo;
 import guru.bubl.module.model.search.GraphSearch;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.GraphElementFactoryNeo4j;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.FriendlyResourceQueryBuilder;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.IdentificationQueryBuilder;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph.GraphElementFromExtractorQueryRow;
 import org.apache.commons.lang.StringUtils;
 import org.neo4j.driver.v1.Driver;
-import org.neo4j.driver.v1.Record;
 import org.neo4j.driver.v1.Session;
 import org.neo4j.driver.v1.StatementResult;
 
-import javax.inject.Inject;
-import java.net.URI;
-import java.util.HashMap;
 import java.util.List;
 
 import static org.neo4j.driver.v1.Values.parameters;
 
 public class GraphSearchNeo4j implements GraphSearch {
 
-    @Inject
-    GraphElementFactoryNeo4j graphElementFactory;
 
+    private Driver driver;
+    private Integer limit;
+    private Integer skip;
+    private String searchTerm;
 
-    @Inject
-    Driver driver;
+    @AssistedInject
+    protected GraphSearchNeo4j(
+            Driver driver,
+            @Assisted String searchTerm
+    ) {
+        this(driver, searchTerm, 0, GraphSearch.LIMIT);
+    }
+
+    @AssistedInject
+    protected GraphSearchNeo4j(
+            Driver driver,
+            @Assisted String searchTerm,
+            @Assisted("skip") Integer skip,
+            @Assisted("limit") Integer limit
+    ) {
+        this.driver = driver;
+        this.searchTerm = searchTerm;
+        this.skip = skip;
+        this.limit = limit;
+    }
 
 
     @Override
-    public List<GraphElementSearchResult> searchForAllOwnResources(String searchTerm, User user) {
+    public List<GraphElementSearchResult> searchForAllOwnResources(User user) {
         return new Getter<>().get(
-                searchTerm,
                 true,
                 user.username(),
                 GraphElementType.Vertex,
@@ -52,9 +65,8 @@ public class GraphSearchNeo4j implements GraphSearch {
     }
 
     @Override
-    public List<GraphElementSearchResult> searchForAnyResourceThatCanBeUsedAsAnIdentifier(String searchTerm, User user) {
+    public List<GraphElementSearchResult> searchForAnyResourceThatCanBeUsedAsAnIdentifier(User user) {
         return new Getter<>().get(
-                searchTerm,
                 false,
                 user.username(),
                 GraphElementType.Vertex,
@@ -65,21 +77,8 @@ public class GraphSearchNeo4j implements GraphSearch {
     }
 
     @Override
-    public List<GraphElementSearchResult> searchOnlyForOwnVerticesOrSchemasForAutoCompletionByLabel(String searchTerm, User user) {
+    public List<GraphElementSearchResult> searchOnlyForOwnVerticesForAutoCompletionByLabel(User user) {
         return new Getter<>().get(
-                searchTerm,
-                true,
-                user.username(),
-                GraphElementType.Vertex,
-                GraphElementType.Schema,
-                GraphElementType.Meta
-        );
-    }
-
-    @Override
-    public List<GraphElementSearchResult> searchOnlyForOwnVerticesForAutoCompletionByLabel(String searchTerm, User user) {
-        return new Getter<>().get(
-                searchTerm,
                 true,
                 user.username(),
                 GraphElementType.Vertex
@@ -87,9 +86,8 @@ public class GraphSearchNeo4j implements GraphSearch {
     }
 
     @Override
-    public List<GraphElementSearchResult> searchOwnTagsForAutoCompletionByLabel(String searchTerm, User user) {
+    public List<GraphElementSearchResult> searchOwnTagsForAutoCompletionByLabel(User user) {
         return new Getter<>().get(
-                searchTerm,
                 true,
                 user.username(),
                 GraphElementType.Meta
@@ -97,9 +95,8 @@ public class GraphSearchNeo4j implements GraphSearch {
     }
 
     @Override
-    public List<GraphElementSearchResult> searchRelationsPropertiesSchemasForAutoCompletionByLabel(String searchTerm, User user) {
+    public List<GraphElementSearchResult> searchRelationsForAutoCompletionByLabel(User user) {
         return new Getter<GraphElementSearchResult>().get(
-                searchTerm,
                 false,
                 user.username(),
                 GraphElementType.Schema,
@@ -109,77 +106,70 @@ public class GraphSearchNeo4j implements GraphSearch {
         );
     }
 
-    @Override
-    public GraphElementSearchResult getDetails(URI uri, User user) {
-        return new Getter().getForUri(
-                uri,
-                user.username()
-        );
-    }
+//    @Override
+//    public GraphElementSearchResult getDetails(URI uri, User user) {
+//        return new Getter().getForUri(
+//                uri,
+//                user.username()
+//        );
+//    }
 
     @Override
-    public List<GraphElementSearchResult> searchPublicVerticesOnly(String searchTerm) {
+    public List<GraphElementSearchResult> searchPublicVerticesOnly() {
         return new Getter<GraphElementSearchResult>().get(
-                searchTerm,
                 false,
                 "",
                 GraphElementType.Vertex
         );
     }
 
-    @Override
-    public GraphElementSearchResult getDetailsAnonymously(URI uri) {
-        return new Getter().getForUri(
-                uri,
-                ""
-        );
-    }
+//    @Override
+//    public GraphElementSearchResult getDetailsAnonymously(URI uri) {
+//        return new Getter().getForUri(
+//                uri,
+//                ""
+//        );
+//    }
 
     private class Getter<ResultType extends GraphElementSearchResult> {
-        public GraphElementSearchResult getForUri(URI uri, String username) {
-            try (Session session = driver.session()) {
-                StatementResult rs = session.run(
-                        String.format(
-                                "MATCH (n:GraphElement{uri:$uri}) " +
-                                        "WHERE %s " +
-                                        "OPTIONAL MATCH (n)-[%s:IDENTIFIED_TO]->(%s) " +
-                                        "RETURN %s%s%s labels(n) as type",
-                                StringUtils.isEmpty(username) ? "n.shareLevel=40" : "n.owner=$owner",
-                                IdentificationQueryBuilder.IDENTIFICATION_RELATION_QUERY_KEY,
-                                IdentificationQueryBuilder.IDENTIFIER_QUERY_KEY,
-                                FriendlyResourceQueryBuilder.returnQueryPartUsingPrefix("n"),
-                                FriendlyResourceQueryBuilder.imageReturnQueryPart("n"),
-                                IdentificationQueryBuilder.identificationReturnQueryPart()
-                        ),
-                        parameters(
-                                "uri",
-                                uri.toString(),
-                                "owner",
-                                username
-                        )
-                );
-//            if (!StringUtils.isEmpty(username)) {
-//                statement.setString(
-//                        "owner",
-//                        username
+//        public GraphElementSearchResult getForUri(URI uri, String username) {
+//            try (Session session = driver.session()) {
+//                StatementResult rs = session.run(
+//                        String.format(
+//                                "MATCH (n:GraphElement{uri:$uri}) " +
+//                                        "WHERE %s " +
+//                                        "OPTIONAL MATCH (n)-[%s:IDENTIFIED_TO]->(%s) " +
+//                                        "RETURN %s%s%s labels(n) as type",
+//                                StringUtils.isEmpty(username) ? "n.shareLevel=40" : "n.owner=$owner",
+//                                IdentificationQueryBuilder.IDENTIFICATION_RELATION_QUERY_KEY,
+//                                IdentificationQueryBuilder.IDENTIFIER_QUERY_KEY,
+//                                FriendlyResourceQueryBuilder.returnQueryPartUsingPrefix("n"),
+//                                FriendlyResourceQueryBuilder.imageReturnQueryPart("n"),
+//                                IdentificationQueryBuilder.identificationReturnQueryPart()
+//                        ),
+//                        parameters(
+//                                "uri",
+//                                uri.toString(),
+//                                "owner",
+//                                username
+//                        )
+//                );
+//                if (!rs.hasNext()) {
+//                    return null;
+//                }
+//                Record record = rs.next();
+//                return new GraphElementSearchResultPojo(
+//                        SearchResultGetter.nodeTypeInRow(record),
+//                        setupGraphElementForDetailedResult(
+//                                GraphElementFromExtractorQueryRow.usingRowAndKey(
+//                                        record,
+//                                        "n"
+//                                ).build()
+//                        ),
+//                        new HashMap<>()
 //                );
 //            }
-                if (!rs.hasNext()) {
-                    return null;
-                }
-                Record record = rs.next();
-                return new GraphElementSearchResultPojo(
-                        SearchResultGetter.nodeTypeInRow(record),
-                        setupGraphElementForDetailedResult(
-                                GraphElementFromExtractorQueryRow.usingRowAndKey(
-                                        record,
-                                        "n"
-                                ).build()
-                        ),
-                        new HashMap<>()
-                );
-            }
-        }
+//        }
 
 
         private GraphElementPojo setupGraphElementForDetailedResult(GraphElementPojo graphElement) {
@@ -201,7 +191,6 @@ public class GraphSearchNeo4j implements GraphSearch {
         }
 
         public List<ResultType> get(
-                String searchTerm,
                 Boolean forPersonal,
                 String username,
                 GraphElementType... graphElementTypes
@@ -238,7 +227,8 @@ public class GraphSearchNeo4j implements GraphSearch {
                                     "ORDER BY nbVisits DESC," +
                                     "score DESC," +
                                     "nbReferences DESC " +
-                                    "LIMIT 10",
+                                    "SKIP " + skip +
+                                    " LIMIT " + limit,
                             indexDomain
                     );
 
