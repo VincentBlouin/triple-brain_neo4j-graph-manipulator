@@ -943,7 +943,9 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
                             "WITH n " +
                             "CALL apoc.path.subgraphAll(n, {relationshipFilter:'SOURCE_VERTEX, DESTINATION_VERTEX'}) YIELD nodes " +
                             "UNWIND nodes as s " +
-                            "SET s.shareLevel=40"
+                            "SET s.shareLevel=40," +
+                            "s.nb_public_neighbors = s.number_of_connected_edges_property_name," +
+                            "s.nb_friend_neighbors = 0"
                     ,
                     parameters(
                             "uri", uri().toString()
