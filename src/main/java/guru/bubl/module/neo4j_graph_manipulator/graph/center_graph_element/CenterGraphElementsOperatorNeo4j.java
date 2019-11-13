@@ -61,7 +61,10 @@ public class CenterGraphElementsOperatorNeo4j implements CenteredGraphElementsOp
                 GRAPH_ELEMENT_MATCH,
                 owner,
                 true,
-                true
+                true,
+                true,
+                false,
+                false
         );
     }
 
@@ -72,6 +75,9 @@ public class CenterGraphElementsOperatorNeo4j implements CenteredGraphElementsOp
                 null,
                 false,
                 false,
+                false,
+                true,
+                false,
                 ShareLevel.PUBLIC.getConfidentialityIndex()
         );
     }
@@ -81,6 +87,9 @@ public class CenterGraphElementsOperatorNeo4j implements CenteredGraphElementsOp
         return get(
                 GRAPH_ELEMENT_MATCH,
                 owner,
+                true,
+                false,
+                false,
                 true,
                 false,
                 ShareLevel.PUBLIC.getConfidentialityIndex()
@@ -94,6 +103,9 @@ public class CenterGraphElementsOperatorNeo4j implements CenteredGraphElementsOp
                 null,
                 false,
                 false,
+                false,
+                true,
+                false,
                 ShareLevel.PUBLIC.getConfidentialityIndex()
         );
     }
@@ -105,6 +117,9 @@ public class CenterGraphElementsOperatorNeo4j implements CenteredGraphElementsOp
                 user,
                 false,
                 false,
+                false,
+                true,
+                true,
                 ShareLevel.FRIENDS.getConfidentialityIndex(),
                 ShareLevel.PUBLIC.getConfidentialityIndex()
         );
@@ -117,13 +132,16 @@ public class CenterGraphElementsOperatorNeo4j implements CenteredGraphElementsOp
                 friend,
                 true,
                 false,
+                false,
+                true,
+                true,
                 ShareLevel.FRIENDS.getConfidentialityIndex(),
                 ShareLevel.PUBLIC.getConfidentialityIndex()
         );
     }
 
 
-    private List<CenterGraphElementPojo> get(String match, User user, Boolean filterOnUser, Boolean isPrivateContext, Integer... shareLevels) {
+    private List<CenterGraphElementPojo> get(String match, User user, Boolean filterOnUser, Boolean isPrivateContext, Boolean nbAll, Boolean nbPublic, Boolean nbFriends, Integer... shareLevels) {
         List<CenterGraphElementPojo> centerGraphElements = new ArrayList<>();
         try (Session session = driver.session()) {
             StatementResult rs = session.run(
@@ -131,10 +149,14 @@ public class CenterGraphElementsOperatorNeo4j implements CenteredGraphElementsOp
                             match + " " +
                                     (filterOnUser ? "n.owner=$owner AND " : "") + "EXISTS(n.last_center_date)" +
                                     (shareLevels.length == 0 ? " " : "AND n.shareLevel IN {shareLevels} ") +
-                                    "RETURN n.%s as context, n.number_of_visits as numberOfVisits, n.last_center_date as lastCenterDate, n.label as label, n.uri as uri, n.nb_references as nbReferences, n.colors as colors, n.shareLevel, 'Pattern' IN LABELS(n) as isPattern " +
+                                    "RETURN " +
+                                    "%s %s %s n.%s as context, n.number_of_visits as numberOfVisits, n.last_center_date as lastCenterDate, n.label as label, n.uri as uri, n.nb_references as nbReferences, n.colors as colors, n.shareLevel, 'Pattern' IN LABELS(n) as isPattern " +
                                     "ORDER BY n.last_center_date DESC " +
                                     "SKIP " + skip +
                                     " LIMIT " + limit,
+                            (nbAll ? "n.number_of_connected_edges_property_name as nbConnected," : ""),
+                            (nbPublic ? "n.nb_public_neighbors as nbPublic," : ""),
+                            (nbFriends ? "n.nb_friend_neighbors as nbFriendNeighbors," : ""),
                             (isPrivateContext ? "private_context" : "public_context")
                     ),
                     parameters(
@@ -153,6 +175,15 @@ public class CenterGraphElementsOperatorNeo4j implements CenteredGraphElementsOp
                 Integer nbReferences = null == record.get("nbReferences").asObject() ?
                         null :
                         record.get("nbReferences").asInt();
+                Integer nbConnected = null == record.get("nbConnected").asObject() ?
+                        null :
+                        record.get("nbConnected").asInt();
+                Integer nbPublicNeighbors = null == record.get("nbPublic").asObject() ?
+                        null :
+                        record.get("nbPublic").asInt();
+                Integer nbFriendNeighbors = null == record.get("nbFriendNeighbors").asObject() ?
+                        null :
+                        record.get("nbFriendNeighbors").asInt();
                 String colors = record.get("colors").asString();
                 ShareLevel shareLevel = record.get("n.shareLevel").asObject() == null ? ShareLevel.PRIVATE : ShareLevel.get(
                         record.get("n.shareLevel").asInt()
@@ -170,7 +201,10 @@ public class CenterGraphElementsOperatorNeo4j implements CenteredGraphElementsOp
                                 getContextFromRow(record),
                                 nbReferences,
                                 shareLevel,
-                                record.get("isPattern").asBoolean()
+                                record.get("isPattern").asBoolean(),
+                                nbConnected,
+                                nbPublicNeighbors,
+                                nbFriendNeighbors
                         )
                 );
             }
