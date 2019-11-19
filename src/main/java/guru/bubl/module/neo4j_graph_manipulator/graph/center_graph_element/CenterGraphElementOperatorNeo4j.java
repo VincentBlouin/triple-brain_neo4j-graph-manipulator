@@ -68,13 +68,18 @@ public class CenterGraphElementOperatorNeo4j implements CenterGraphElementOperat
 
     @Override
     public void updateLastCenterDate() {
+        this.setLastCenterDate(new Date());
+    }
+
+    @Override
+    public void setLastCenterDate(Date lastCenterDate) {
         try (Session session = driver.session()) {
             session.run(
                     neo4jFriendlyResource.queryPrefix() + "SET n.last_center_date=$lastCenterDate",
                     parameters(
                             "uri",
                             neo4jFriendlyResource.uri().toString(),
-                            "lastCenterDate", new Date().getTime()
+                            "lastCenterDate", lastCenterDate.getTime()
                     )
             );
         }
