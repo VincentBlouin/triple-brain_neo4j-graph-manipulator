@@ -64,7 +64,8 @@ public class CenterGraphElementsOperatorNeo4j implements CenteredGraphElementsOp
                 true,
                 true,
                 false,
-                false
+                false,
+                "last_center_date"
         );
     }
 
@@ -78,6 +79,7 @@ public class CenterGraphElementsOperatorNeo4j implements CenteredGraphElementsOp
                 false,
                 true,
                 false,
+                "creation_date",
                 ShareLevel.PUBLIC.getConfidentialityIndex()
         );
     }
@@ -92,6 +94,7 @@ public class CenterGraphElementsOperatorNeo4j implements CenteredGraphElementsOp
                 false,
                 true,
                 false,
+                "creation_date",
                 ShareLevel.PUBLIC.getConfidentialityIndex()
         );
     }
@@ -106,6 +109,7 @@ public class CenterGraphElementsOperatorNeo4j implements CenteredGraphElementsOp
                 false,
                 true,
                 false,
+                "creation_date",
                 ShareLevel.PUBLIC.getConfidentialityIndex()
         );
     }
@@ -120,6 +124,7 @@ public class CenterGraphElementsOperatorNeo4j implements CenteredGraphElementsOp
                 false,
                 true,
                 true,
+                "creation_date",
                 ShareLevel.FRIENDS.getConfidentialityIndex(),
                 ShareLevel.PUBLIC.getConfidentialityIndex()
         );
@@ -135,13 +140,14 @@ public class CenterGraphElementsOperatorNeo4j implements CenteredGraphElementsOp
                 false,
                 true,
                 true,
+                "creation_date",
                 ShareLevel.FRIENDS.getConfidentialityIndex(),
                 ShareLevel.PUBLIC.getConfidentialityIndex()
         );
     }
 
 
-    private List<CenterGraphElementPojo> get(String match, User user, Boolean filterOnUser, Boolean isPrivateContext, Boolean nbAll, Boolean nbPublic, Boolean nbFriends, Integer... shareLevels) {
+    private List<CenterGraphElementPojo> get(String match, User user, Boolean filterOnUser, Boolean isPrivateContext, Boolean nbAll, Boolean nbPublic, Boolean nbFriends, String sortBy, Integer... shareLevels) {
         List<CenterGraphElementPojo> centerGraphElements = new ArrayList<>();
         try (Session session = driver.session()) {
             StatementResult rs = session.run(
@@ -151,7 +157,7 @@ public class CenterGraphElementsOperatorNeo4j implements CenteredGraphElementsOp
                                     (shareLevels.length == 0 ? " " : "AND n.shareLevel IN {shareLevels} ") +
                                     "RETURN " +
                                     "%s %s %s n.%s as context, n.number_of_visits as numberOfVisits, n.last_center_date as lastCenterDate, n.label as label, n.uri as uri, n.nb_references as nbReferences, n.colors as colors, n.shareLevel, 'Pattern' IN LABELS(n) as isPattern " +
-                                    "ORDER BY n.last_center_date DESC " +
+                                    "ORDER BY n." + sortBy + " DESC " +
                                     "SKIP " + skip +
                                     " LIMIT " + limit,
                             (nbAll ? "n.number_of_connected_edges_property_name as nbConnected," : ""),
