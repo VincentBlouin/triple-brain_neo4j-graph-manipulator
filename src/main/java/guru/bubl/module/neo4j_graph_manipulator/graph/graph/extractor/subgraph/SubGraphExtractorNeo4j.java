@@ -173,6 +173,8 @@ public class SubGraphExtractorNeo4j {
                                 )
                         );
                         break;
+                    case Unknown:
+                        break;
                 }
             }
             for (InternalRelationship relation : relationships) {
@@ -220,6 +222,9 @@ public class SubGraphExtractorNeo4j {
             if (!GraphElementType.commonTypes.contains(graphElementType)) {
                 type = graphElementType;
             }
+        }
+        if (type == null) {
+            return GraphElementType.Unknown;
         }
         return type;
     }
