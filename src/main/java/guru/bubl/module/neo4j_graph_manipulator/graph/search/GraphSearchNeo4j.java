@@ -236,6 +236,6 @@ public class GraphSearchNeo4j implements GraphSearch {
     }
 
     public static String formatSearchTerm(String searchTerm) {
-        return searchTerm.replaceAll("[^a-zA-Z0-9\\s]", " ");
+                return searchTerm.replaceAll("[?!*|~|(|)\\s]", " ");
     }
 }
