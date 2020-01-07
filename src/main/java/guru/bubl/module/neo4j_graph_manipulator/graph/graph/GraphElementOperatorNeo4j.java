@@ -171,18 +171,7 @@ public class GraphElementOperatorNeo4j implements GraphElementOperator, Operator
 
     @Override
     public String getColors() {
-        try (Session session = driver.session()) {
-            Record record = session.run(
-                    queryPrefix() + "RETURN n.colors as colors",
-                    parameters(
-                            "uri",
-                            this.uri().toString()
-                    )
-            ).single();
-            return record.get(
-                    "colors"
-            ).asObject() == null ? "" : record.get("colors").asString();
-        }
+        return friendlyResource.getColors();
     }
 
     @Override
@@ -203,17 +192,7 @@ public class GraphElementOperatorNeo4j implements GraphElementOperator, Operator
 
     @Override
     public void setColors(String colors) {
-        try (Session session = driver.session()) {
-            session.run(
-                    queryPrefix() + "SET n.colors=$colors",
-                    parameters(
-                            "uri",
-                            uri().toString(),
-                            "colors",
-                            colors
-                    )
-            );
-        }
+        friendlyResource.setColors(colors);
     }
 
     @Override

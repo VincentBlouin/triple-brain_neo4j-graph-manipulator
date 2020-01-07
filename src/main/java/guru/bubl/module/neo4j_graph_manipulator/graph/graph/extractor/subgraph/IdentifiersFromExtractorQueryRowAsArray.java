@@ -66,6 +66,11 @@ public class IdentifiersFromExtractorQueryRowAsArray {
             friendlyResource.setCreationDate(
                     new Long(properties.get(7).toString())
             );
+            if (properties.get(8) != null) {
+                friendlyResource.setColors(
+                        properties.get(8).toString()
+                );
+            }
             IdentifierPojo identification = new IdentifierPojo(
                     externalUri,
                     new Integer(properties.get(5).toString()),

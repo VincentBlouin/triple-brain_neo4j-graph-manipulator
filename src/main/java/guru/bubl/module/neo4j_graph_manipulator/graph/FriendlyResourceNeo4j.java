@@ -300,6 +300,21 @@ public class FriendlyResourceNeo4j implements FriendlyResourceOperator, Operator
     }
 
     @Override
+    public void setColors(String colors) {
+        try (Session session = driver.session()) {
+            session.run(
+                    queryPrefix() + "SET n.colors=$colors",
+                    parameters(
+                            "uri",
+                            uri().toString(),
+                            "colors",
+                            colors
+                    )
+            );
+        }
+    }
+
+    @Override
     public Date creationDate() {
         try (Session session = driver.session()) {
             return new Date(
@@ -333,6 +348,22 @@ public class FriendlyResourceNeo4j implements FriendlyResourceOperator, Operator
                             )
                     ).single().get("lastModificationDate").asLong()
             );
+        }
+    }
+
+    @Override
+    public String getColors() {
+        try (Session session = driver.session()) {
+            Record record = session.run(
+                    queryPrefix() + "RETURN n.colors as colors",
+                    parameters(
+                            "uri",
+                            this.uri().toString()
+                    )
+            ).single();
+            return record.get(
+                    "colors"
+            ).asObject() == null ? "" : record.get("colors").asString();
         }
     }
 

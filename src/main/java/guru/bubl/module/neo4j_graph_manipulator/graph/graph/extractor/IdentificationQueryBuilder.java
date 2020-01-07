@@ -5,6 +5,7 @@
 package guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor;
 
 import guru.bubl.module.neo4j_graph_manipulator.graph.FriendlyResourceNeo4j;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.GraphElementOperatorNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.UserGraphNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.identification.IdentificationNeo4j;
 
@@ -20,6 +21,7 @@ public class IdentificationQueryBuilder {
                 IDENTIFICATION_RELATION_QUERY_KEY
         );
     }
+
     public static String identificationReturnQueryPartUsingKeysForIdentificationRelationAndAlias(
             String identificationKey,
             String relationKey
@@ -52,9 +54,13 @@ public class IdentificationQueryBuilder {
                         relationKey,
                         IdentificationNeo4j.props.relation_external_uri.name()
                 ) +
-                QueryUtils.getLastPropertyUsingContainerNameQueryPart(
+                QueryUtils.getPropertyUsingContainerNameQueryPart(
                         identificationKey,
                         FriendlyResourceNeo4j.props.creation_date.name()
+                ) +
+                QueryUtils.getLastPropertyUsingContainerNameQueryPart(
+                        identificationKey,
+                        "colors"
                 ) +
                 "]) as " + identificationKey + ", ";
     }
