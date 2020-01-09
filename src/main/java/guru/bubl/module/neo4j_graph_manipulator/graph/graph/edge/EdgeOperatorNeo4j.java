@@ -13,8 +13,8 @@ import guru.bubl.module.model.graph.ShareLevel;
 import guru.bubl.module.model.graph.edge.Edge;
 import guru.bubl.module.model.graph.edge.EdgeOperator;
 import guru.bubl.module.model.graph.edge.EdgePojo;
-import guru.bubl.module.model.graph.identification.Identifier;
-import guru.bubl.module.model.graph.identification.IdentifierPojo;
+import guru.bubl.module.model.graph.tag.Tag;
+import guru.bubl.module.model.graph.tag.TagPojo;
 import guru.bubl.module.model.graph.vertex.Vertex;
 import guru.bubl.module.model.graph.vertex.VertexInSubGraphPojo;
 import guru.bubl.module.model.graph.vertex.VertexOperator;
@@ -525,17 +525,17 @@ public class EdgeOperatorNeo4j implements EdgeOperator, OperatorNeo4j {
     }
 
     @Override
-    public void removeIdentification(Identifier type) {
+    public void removeIdentification(Tag type) {
         graphElementOperator.removeIdentification(type);
     }
 
     @Override
-    public Map<URI, IdentifierPojo> addMeta(Identifier friendlyResource) {
+    public Map<URI, TagPojo> addMeta(Tag friendlyResource) {
         return graphElementOperator.addMeta(friendlyResource);
     }
 
     @Override
-    public Map<URI, IdentifierPojo> getIdentifications() {
+    public Map<URI, TagPojo> getIdentifications() {
         return graphElementOperator.getIdentifications();
     }
 

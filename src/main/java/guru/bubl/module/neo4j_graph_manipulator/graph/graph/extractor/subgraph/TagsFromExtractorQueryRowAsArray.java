@@ -5,7 +5,8 @@
 package guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph;
 
 import guru.bubl.module.model.graph.FriendlyResourcePojo;
-import guru.bubl.module.model.graph.identification.IdentifierPojo;
+import guru.bubl.module.model.graph.GraphElementPojo;
+import guru.bubl.module.model.graph.tag.TagPojo;
 import guru.bubl.module.model.json.ImageJson;
 import org.neo4j.driver.v1.Record;
 
@@ -14,22 +15,22 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class IdentifiersFromExtractorQueryRowAsArray {
+public class TagsFromExtractorQueryRowAsArray {
 
     private Record record;
     private String key;
 
-    public static IdentifiersFromExtractorQueryRowAsArray usingRowAndKey(
+    public static TagsFromExtractorQueryRowAsArray usingRowAndKey(
             Record record,
             String key
     ) {
-        return new IdentifiersFromExtractorQueryRowAsArray(
+        return new TagsFromExtractorQueryRowAsArray(
                 record,
                 key
         );
     }
 
-    protected IdentifiersFromExtractorQueryRowAsArray(
+    protected TagsFromExtractorQueryRowAsArray(
             Record record,
             String key
     ) {
@@ -37,8 +38,8 @@ public class IdentifiersFromExtractorQueryRowAsArray {
         this.key = key;
     }
 
-    public Map<URI, IdentifierPojo> build() {
-        Map<URI, IdentifierPojo> identifications = new HashMap<>();
+    public Map<URI, TagPojo> build() {
+        Map<URI, TagPojo> identifications = new HashMap<>();
         if (!isInQuery()) {
             return identifications;
         }
@@ -71,10 +72,12 @@ public class IdentifiersFromExtractorQueryRowAsArray {
                         properties.get(8).toString()
                 );
             }
-            IdentifierPojo identification = new IdentifierPojo(
+            TagPojo identification = new TagPojo(
                     externalUri,
                     new Integer(properties.get(5).toString()),
-                    friendlyResource
+                    new GraphElementPojo(
+                            friendlyResource
+                    )
             );
             identification.setRelationExternalResourceUri(URI.create(
                     properties.get(6).toString()

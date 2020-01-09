@@ -6,7 +6,8 @@ import guru.bubl.module.model.User;
 import guru.bubl.module.model.UserUris;
 import guru.bubl.module.model.graph.FriendlyResourcePojo;
 import guru.bubl.module.model.graph.GraphElementOperatorFactory;
-import guru.bubl.module.model.graph.identification.IdentifierPojo;
+import guru.bubl.module.model.graph.GraphElementPojo;
+import guru.bubl.module.model.graph.tag.TagPojo;
 import guru.bubl.module.model.graph.pattern.PatternUser;
 import org.neo4j.driver.v1.Driver;
 import org.neo4j.driver.v1.Record;
@@ -80,11 +81,13 @@ public class PatternUserNeo4j implements PatternUser {
                     graphElementFactory.withUri(
                             uri
                     ).addMeta(
-                            new IdentifierPojo(
+                            new TagPojo(
                                     URI.create(record.get("externalUri").asString()),
-                                    new FriendlyResourcePojo(
-                                            record.get("label").asString(),
-                                            record.get("comment").asString()
+                                    new GraphElementPojo(
+                                            new FriendlyResourcePojo(
+                                                    record.get("label").asString(),
+                                                    record.get("comment").asString()
+                                            )
                                     )
                             )
                     );

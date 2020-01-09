@@ -8,8 +8,9 @@ import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 import guru.bubl.module.model.User;
 import guru.bubl.module.model.graph.FriendlyResourcePojo;
-import guru.bubl.module.model.graph.identification.IdentifierPojo;
-import guru.bubl.module.model.meta.UserMetasOperator;
+import guru.bubl.module.model.graph.GraphElementPojo;
+import guru.bubl.module.model.graph.tag.TagPojo;
+import guru.bubl.module.model.tag.UserTagsOperator;
 import org.neo4j.driver.v1.Driver;
 import org.neo4j.driver.v1.Record;
 import org.neo4j.driver.v1.Session;
@@ -21,13 +22,13 @@ import java.util.Set;
 
 import static org.neo4j.driver.v1.Values.parameters;
 
-public class UserMetasOperatorNeo4j implements UserMetasOperator {
+public class UserTagsOperatorNeo4J implements UserTagsOperator {
 
     private Driver driver;
     private User user;
 
     @AssistedInject
-    protected UserMetasOperatorNeo4j(
+    protected UserTagsOperatorNeo4J(
             Driver driver,
             @Assisted User user
     ) {
@@ -36,8 +37,8 @@ public class UserMetasOperatorNeo4j implements UserMetasOperator {
     }
 
     @Override
-    public Set<IdentifierPojo> get() {
-        Set<IdentifierPojo> userMetas = new HashSet<>();
+    public Set<TagPojo> get() {
+        Set<TagPojo> userMetas = new HashSet<>();
         try (Session session = driver.session()) {
             StatementResult rs = session.run(
                     "MATCH (n:Meta{owner:$owner}) RETURN n.label as label, n.nb_references as nbReferences, n.uri as uri;",
@@ -48,11 +49,13 @@ public class UserMetasOperatorNeo4j implements UserMetasOperator {
             while (rs.hasNext()) {
                 Record record = rs.next();
                 userMetas.add(
-                        new IdentifierPojo(
+                        new TagPojo(
                                 record.get("nbReferences").asInt(),
-                                new FriendlyResourcePojo(
-                                        URI.create(record.get("uri").asString()),
-                                        record.get("label").asString()
+                                new GraphElementPojo(
+                                        new FriendlyResourcePojo(
+                                                URI.create(record.get("uri").asString()),
+                                                record.get("label").asString()
+                                        )
                                 )
                         )
                 );

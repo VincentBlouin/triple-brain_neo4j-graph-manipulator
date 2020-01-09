@@ -11,14 +11,14 @@ import guru.bubl.module.model.admin.WholeGraphAdmin;
 import guru.bubl.module.model.graph.FriendlyResourcePojo;
 import guru.bubl.module.model.graph.GraphElementPojo;
 import guru.bubl.module.model.graph.edge.EdgeOperator;
-import guru.bubl.module.model.graph.identification.IdentificationOperator;
-import guru.bubl.module.model.graph.identification.Identifier;
-import guru.bubl.module.model.graph.identification.IdentifierPojo;
+import guru.bubl.module.model.graph.tag.TagOperator;
+import guru.bubl.module.model.graph.tag.Tag;
+import guru.bubl.module.model.graph.tag.TagPojo;
 import guru.bubl.module.model.graph.schema.SchemaOperator;
 import guru.bubl.module.model.graph.schema.SchemaPojo;
 import guru.bubl.module.model.graph.vertex.VertexOperator;
 import guru.bubl.module.model.search.GraphIndexer;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.identification.IdentificationNeo4j;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.tag.TagNeo4J;
 import org.neo4j.driver.v1.Driver;
 import org.neo4j.driver.v1.Session;
 
@@ -64,11 +64,13 @@ public class WholeGraphAdminNeo4j implements WholeGraphAdmin {
                 graphIndexer.indexProperty(property, schemaPojo);
             }
         }
-        for (Identifier identifier : wholeGraph.getAllTags()) {
+        for (Tag tag : wholeGraph.getAllTags()) {
             graphIndexer.indexMeta(
-                    new IdentifierPojo(
-                            new FriendlyResourcePojo(
-                                    identifier.uri()
+                    new TagPojo(
+                            new GraphElementPojo(
+                                    new FriendlyResourcePojo(
+                                            tag.uri()
+                                    )
                             )
                     )
             );
@@ -83,11 +85,13 @@ public class WholeGraphAdminNeo4j implements WholeGraphAdmin {
         for (EdgeOperator edge : wholeGraph.getAllEdgesOfUser(user)) {
             graphIndexer.indexRelation(edge);
         }
-        for (Identifier identifier : wholeGraph.getAllTagsOfUser(user)) {
+        for (Tag tag : wholeGraph.getAllTagsOfUser(user)) {
             graphIndexer.indexMeta(
-                    new IdentifierPojo(
-                            new FriendlyResourcePojo(
-                                    identifier.uri()
+                    new TagPojo(
+                            new GraphElementPojo(
+                                    new FriendlyResourcePojo(
+                                            tag.uri()
+                                    )
                             )
                     )
             );
@@ -99,8 +103,8 @@ public class WholeGraphAdminNeo4j implements WholeGraphAdmin {
         return wholeGraph;
     }
 
-    private void refreshNumberOfReferencesToIdentification(IdentificationOperator identification) {
-        IdentificationNeo4j neo4jIdentification = (IdentificationNeo4j) identification;
+    private void refreshNumberOfReferencesToIdentification(TagOperator identification) {
+        TagNeo4J neo4jIdentification = (TagNeo4J) identification;
         try (Session session = driver.session()) {
             session.run(
                     neo4jIdentification.queryPrefix() + "OPTIONAL MATCH (n)<-[r]-() " +
@@ -113,7 +117,7 @@ public class WholeGraphAdminNeo4j implements WholeGraphAdmin {
         }
     }
 
-    private void removeMetaIfNoReference(IdentificationOperator identification) {
+    private void removeMetaIfNoReference(TagOperator identification) {
         if (0 == identification.getNbReferences()) {
             identification.remove();
         }

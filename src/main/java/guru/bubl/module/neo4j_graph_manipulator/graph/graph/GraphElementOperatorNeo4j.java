@@ -9,14 +9,14 @@ import com.google.inject.assistedinject.AssistedInject;
 import guru.bubl.module.model.Image;
 import guru.bubl.module.model.UserUris;
 import guru.bubl.module.model.graph.*;
-import guru.bubl.module.model.graph.identification.Identifier;
-import guru.bubl.module.model.graph.identification.IdentifierPojo;
+import guru.bubl.module.model.graph.tag.Tag;
+import guru.bubl.module.model.graph.tag.TagPojo;
 import guru.bubl.module.model.json.ImageJson;
 import guru.bubl.module.neo4j_graph_manipulator.graph.FriendlyResourceFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.FriendlyResourceNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.OperatorNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.image.ImagesNeo4j;
-import guru.bubl.module.neo4j_graph_manipulator.graph.meta.IdentificationFactoryNeo4j;
+import guru.bubl.module.neo4j_graph_manipulator.graph.meta.TagFactoryNeo4J;
 import guru.bubl.module.neo4j_graph_manipulator.graph.search.GraphIndexerNeo4j;
 import org.neo4j.driver.v1.Driver;
 import org.neo4j.driver.v1.Record;
@@ -43,7 +43,7 @@ public class GraphElementOperatorNeo4j implements GraphElementOperator, Operator
     protected FriendlyResourceFactoryNeo4j friendlyResourceFactory;
     protected Driver driver;
 
-    protected IdentificationFactoryNeo4j identificationFactory;
+    protected TagFactoryNeo4J identificationFactory;
 
     protected GraphElementOperatorFactory graphElementOperatorFactory;
 
@@ -86,7 +86,7 @@ public class GraphElementOperatorNeo4j implements GraphElementOperator, Operator
     protected GraphElementOperatorNeo4j(
             FriendlyResourceFactoryNeo4j friendlyResourceFactory,
             Driver driver,
-            IdentificationFactoryNeo4j identificationFactory,
+            TagFactoryNeo4J identificationFactory,
             GraphElementOperatorFactory graphElementOperatorFactory,
             @Assisted URI uri
     ) {
@@ -270,8 +270,8 @@ public class GraphElementOperatorNeo4j implements GraphElementOperator, Operator
     }
 
     @Override
-    public Map<URI, IdentifierPojo> addMeta(
-            Identifier identification
+    public Map<URI, TagPojo> addMeta(
+            Tag identification
     ) {
         return addTagAndOriginalReferenceOnesOrNot(
                 identification,
@@ -297,22 +297,24 @@ public class GraphElementOperatorNeo4j implements GraphElementOperator, Operator
         return this.getShareLevel().isPublic();
     }
 
-    private Map<URI, IdentifierPojo> addTagAndOriginalReferenceOnesOrNot(Identifier tag, Boolean addOriginalReferenceTags) {
-        IdentifierPojo identificationPojo;
+    private Map<URI, TagPojo> addTagAndOriginalReferenceOnesOrNot(Tag tag, Boolean addOriginalReferenceTags) {
+        TagPojo identificationPojo;
         Boolean isIdentifyingToAnIdentification = UserUris.isUriOfAnIdentifier(
                 tag.getExternalResourceUri()
         );
         if (isIdentifyingToAnIdentification) {
-            identificationPojo = new IdentifierPojo(
+            identificationPojo = new TagPojo(
                     identificationFactory.withUri(
                             tag.getExternalResourceUri()
                     ).getExternalResourceUri(),
-                    new FriendlyResourcePojo(
-                            tag.getExternalResourceUri()
+                    new GraphElementPojo(
+                            new FriendlyResourcePojo(
+                                    tag.getExternalResourceUri()
+                            )
                     )
             );
         } else {
-            identificationPojo = new IdentifierPojo(
+            identificationPojo = new TagPojo(
                     new UserUris(getOwnerUsername()).generateIdentificationUri(),
                     tag
             );
@@ -322,14 +324,14 @@ public class GraphElementOperatorNeo4j implements GraphElementOperator, Operator
         final FriendlyResourceNeo4j neo4jFriendlyResource = friendlyResourceFactory.withUri(
                 new UserUris(getOwnerUsername()).generateIdentificationUri()
         );
-        Map<URI, IdentifierPojo> identifications = new HashMap<>();
+        Map<URI, TagPojo> identifications = new HashMap<>();
         Date tagCreationDate = new Date();
         String searchContext = GraphIndexerNeo4j.descriptionToContext(
                 tag.comment()
         );
         try (Session session = driver.session()) {
             StatementResult result = session.run(
-                    AddIdentificationQueryBuilder.usingIdentificationForGraphElement(
+                    AddTagQueryBuilder.usingIdentificationForGraphElement(
                             identificationPojo, this
                     ).build(),
                     parameters(
@@ -364,21 +366,23 @@ public class GraphElementOperatorNeo4j implements GraphElementOperator, Operator
                 URI externalUri = URI.create(
                         record.get("external_uri").asString()
                 );
-                IdentifierPojo tagPojo = new IdentifierPojo(
+                TagPojo tagPojo = new TagPojo(
                         externalUri,
                         record.get("nbReferences").asInt(),
-                        new FriendlyResourcePojo(
-                                URI.create(
-                                        record.get("uri").asString()
-                                ),
-                                record.get("label").asObject() == null ?
-                                        "" : record.get("label").asString(),
-                                record.get("images").asObject() == null ?
-                                        new HashSet<>() : ImageJson.fromJson(record.get("images").asString()),
-                                record.get("comment").asObject() == null ?
-                                        "" : record.get("comment").asString(),
-                                record.get("creation_date").asLong(),
-                                record.get("last_modification_date").asLong()
+                        new GraphElementPojo(
+                                new FriendlyResourcePojo(
+                                        URI.create(
+                                                record.get("uri").asString()
+                                        ),
+                                        record.get("label").asObject() == null ?
+                                                "" : record.get("label").asString(),
+                                        record.get("images").asObject() == null ?
+                                                new HashSet<>() : ImageJson.fromJson(record.get("images").asString()),
+                                        record.get("comment").asObject() == null ?
+                                                "" : record.get("comment").asString(),
+                                        record.get("creation_date").asLong(),
+                                        record.get("last_modification_date").asLong()
+                                )
                         )
                 );
                 Boolean isReference = tag.getExternalResourceUri().equals(
@@ -390,11 +394,11 @@ public class GraphElementOperatorNeo4j implements GraphElementOperator, Operator
                 ).equals(getOwnerUsername());
 
                 if (isOwnerOfExternalUri && !isReference && addOriginalReferenceTags) {
-                    Map<URI, IdentifierPojo> existingTags = getIdentifications();
-                    Map<URI, IdentifierPojo> referenceTags = graphElementOperatorFactory.withUri(
+                    Map<URI, TagPojo> existingTags = getIdentifications();
+                    Map<URI, TagPojo> referenceTags = graphElementOperatorFactory.withUri(
                             tag.getExternalResourceUri()
                     ).getIdentifications();
-                    for (IdentifierPojo otherIdentifier : referenceTags.values()) {
+                    for (TagPojo otherIdentifier : referenceTags.values()) {
                         if (!existingTags.containsKey(otherIdentifier.getExternalResourceUri())) {
                             otherIdentifier = addTagAndOriginalReferenceOnesOrNot(
                                     otherIdentifier,
@@ -407,7 +411,7 @@ public class GraphElementOperatorNeo4j implements GraphElementOperator, Operator
                 Boolean justCreatedTag = tagCreationDate.equals(tagPojo.creationDate());
                 Boolean isVoidReference = tag.getExternalResourceUri().toString().contains("/void/ref/");
                 if (!isReference && isOwnerOfExternalUri && justCreatedTag && !isVoidReference) {
-                    Map<URI, IdentifierPojo> tags = graphElementOperatorFactory.withUri(
+                    Map<URI, TagPojo> tags = graphElementOperatorFactory.withUri(
                             tag.getExternalResourceUri()
                     ).addMeta(
                             tagPojo
@@ -424,7 +428,7 @@ public class GraphElementOperatorNeo4j implements GraphElementOperator, Operator
     }
 
     @Override
-    public void removeIdentification(Identifier identification) {
+    public void removeIdentification(Tag identification) {
         try (Session session = driver.session()) {
             session.run(
                     String.format(
@@ -489,8 +493,8 @@ public class GraphElementOperatorNeo4j implements GraphElementOperator, Operator
     }
 
     @Override
-    public Map<URI, IdentifierPojo> getIdentifications() {
-        Map<URI, IdentifierPojo> identifications = new HashMap<>();
+    public Map<URI, TagPojo> getIdentifications() {
+        Map<URI, TagPojo> identifications = new HashMap<>();
         try (Session session = driver.session()) {
             StatementResult rs = session.run(
                     String.format(
@@ -513,16 +517,18 @@ public class GraphElementOperatorNeo4j implements GraphElementOperator, Operator
                 URI externalUri = URI.create(
                         record.get("external_uri").asString()
                 );
-                IdentifierPojo identification = new IdentifierPojo(
+                TagPojo identification = new TagPojo(
                         externalUri,
                         new Integer(record.get("nbReferences").asInt()),
-                        new FriendlyResourcePojo(
-                                uri
+                        new GraphElementPojo(
+                                new FriendlyResourcePojo(
+                                        uri
+                                )
                         )
                 );
                 String relationExternalUriString = record.get("r_x_u").asString();
                 identification.setRelationExternalResourceUri(
-                        relationExternalUriString == null ? Identifier.DEFAULT_IDENTIFIER_RELATION_EXTERNAL_URI :
+                        relationExternalUriString == null ? Tag.DEFAULT_IDENTIFIER_RELATION_EXTERNAL_URI :
                                 URI.create(
                                         relationExternalUriString
                                 )
@@ -571,9 +577,11 @@ public class GraphElementOperatorNeo4j implements GraphElementOperator, Operator
                 createValues
         );
         clone.addMeta(
-                new IdentifierPojo(
+                new TagPojo(
                         this.uri(),
-                        original
+                        new GraphElementPojo(
+                                original
+                        )
                 )
         );
         cache.getIdentifications().values().forEach(

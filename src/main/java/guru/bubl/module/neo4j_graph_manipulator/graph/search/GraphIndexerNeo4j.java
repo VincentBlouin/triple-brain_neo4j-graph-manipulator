@@ -10,7 +10,7 @@ import guru.bubl.module.model.graph.GraphElement;
 import guru.bubl.module.model.graph.GraphElementPojo;
 import guru.bubl.module.model.graph.ShareLevel;
 import guru.bubl.module.model.graph.edge.Edge;
-import guru.bubl.module.model.graph.identification.IdentifierPojo;
+import guru.bubl.module.model.graph.tag.TagPojo;
 import guru.bubl.module.model.graph.schema.SchemaPojo;
 import guru.bubl.module.model.graph.subgraph.SubGraphPojo;
 import guru.bubl.module.model.graph.vertex.Vertex;
@@ -94,7 +94,7 @@ public class GraphIndexerNeo4j implements GraphIndexer {
     }
 
     @Override
-    public void indexMeta(IdentifierPojo identifier) {
+    public void indexMeta(TagPojo identifier) {
         if (identifier.gotComments()) {
             String descriptionAsContext = descriptionToContext(
                     identifier.comment()

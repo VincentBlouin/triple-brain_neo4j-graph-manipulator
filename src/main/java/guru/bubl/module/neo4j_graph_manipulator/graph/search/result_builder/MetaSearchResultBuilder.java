@@ -8,7 +8,7 @@ import com.google.common.collect.ImmutableMap;
 import guru.bubl.module.model.graph.FriendlyResourcePojo;
 import guru.bubl.module.model.graph.GraphElementPojo;
 import guru.bubl.module.model.graph.GraphElementType;
-import guru.bubl.module.model.graph.identification.IdentifierPojo;
+import guru.bubl.module.model.graph.tag.TagPojo;
 import guru.bubl.module.model.search.GraphElementSearchResult;
 import guru.bubl.module.model.search.GraphElementSearchResultPojo;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.FriendlyResourceFromExtractorQueryRow;
@@ -32,25 +32,27 @@ public class MetaSearchResultBuilder implements SearchResultBuilder {
                 row,
                 prefix
         ).build();
-        IdentifierPojo identifierPojo = new IdentifierPojo(
-                friendlyResourcePojo
+        TagPojo tagPojo = new TagPojo(
+                new GraphElementPojo(
+                        friendlyResourcePojo
+                )
         );
 
-        identifierPojo.setExternalResourceUri(
+        tagPojo.setExternalResourceUri(
                 URI.create(
                         row.get("n.external_uri").asString()
                 )
         );
 
-        identifierPojo.setNbRefences(
+        tagPojo.setNbRefences(
                 row.get("nbReferences").asInt()
         );
 
         GraphElementPojo identifierAsGraphElement = new GraphElementPojo(
-                identifierPojo.getFriendlyResource(),
+                tagPojo.getGraphElement().getFriendlyResource(),
                 ImmutableMap.of(
-                        identifierPojo.getExternalResourceUri(),
-                        identifierPojo
+                        tagPojo.getExternalResourceUri(),
+                        tagPojo
                 )
         );
         return new GraphElementSearchResultPojo(

@@ -20,7 +20,7 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.Relationships;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.UserGraphNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.edge.EdgeOperatorNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.FriendlyResourceQueryBuilder;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.IdentificationQueryBuilder;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.TagQueryBuilder;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.QueryUtils;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.VertexInSubGraphOperatorNeo4j;
 import org.neo4j.driver.internal.InternalRelationship;
@@ -29,11 +29,9 @@ import org.neo4j.driver.v1.Record;
 import org.neo4j.driver.v1.Session;
 import org.neo4j.driver.v1.StatementResult;
 
-import java.lang.reflect.Array;
 import java.net.URI;
 import java.util.*;
 
-import static java.util.Arrays.asList;
 import static org.neo4j.driver.v1.Values.parameters;
 
 public class SubGraphExtractorNeo4j {
@@ -155,24 +153,6 @@ public class SubGraphExtractorNeo4j {
                         );
                         break;
                     case Meta:
-                        subGraph.setChildrenIndexesCenterTag(
-                                VertexFromExtractorQueryRow.getChildrenIndexes(
-                                        "ge",
-                                        record
-                                )
-                        );
-                        subGraph.setColorsCenterTag(
-                                VertexFromExtractorQueryRow.getColors(
-                                        "ge",
-                                        record
-                                )
-                        );
-                        subGraph.setFontCenterTag(
-                                VertexFromExtractorQueryRow.getFont(
-                                        "ge",
-                                        record
-                                )
-                        );
                         subGraph.setCenterMeta(
                                 TagFromExtractorQueryRow.usingRowAndKey(
                                         record,
@@ -256,8 +236,8 @@ public class SubGraphExtractorNeo4j {
                         vertexAndEdgeCommonQueryPart(GRAPH_ELEMENT_QUERY_KEY) +
                         vertexReturnQueryPart(GRAPH_ELEMENT_QUERY_KEY) +
                         edgeReturnQueryPart(GRAPH_ELEMENT_QUERY_KEY) +
-                        (isCenterTagFlow ? IdentificationQueryBuilder.centerTagQueryPart(GRAPH_ELEMENT_QUERY_KEY) : "") +
-                        IdentificationQueryBuilder.identificationReturnQueryPart() +
+                        (isCenterTagFlow ? TagQueryBuilder.centerTagQueryPart(GRAPH_ELEMENT_QUERY_KEY) : "") +
+                        TagQueryBuilder.identificationReturnQueryPart() +
                         "labels(ge) as type, ID(ge) as nId, rel";
     }
 

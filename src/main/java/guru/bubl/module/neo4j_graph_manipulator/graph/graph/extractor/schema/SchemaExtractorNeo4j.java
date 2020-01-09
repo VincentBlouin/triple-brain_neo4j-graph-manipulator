@@ -9,7 +9,7 @@ import com.google.inject.assistedinject.AssistedInject;
 import guru.bubl.module.model.graph.schema.SchemaPojo;
 import guru.bubl.module.neo4j_graph_manipulator.graph.Relationships;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.FriendlyResourceQueryBuilder;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.IdentificationQueryBuilder;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.TagQueryBuilder;
 import org.neo4j.driver.v1.Driver;
 import org.neo4j.driver.v1.Session;
 import org.neo4j.driver.v1.StatementResult;
@@ -67,11 +67,11 @@ public class SchemaExtractorNeo4j {
                 FriendlyResourceQueryBuilder.returnQueryPartUsingPrefix(PROPERTY_QUERY_KEY) +
                 FriendlyResourceQueryBuilder.imageReturnQueryPart(SCHEMA_QUERY_KEY) +
                 FriendlyResourceQueryBuilder.imageReturnQueryPart(PROPERTY_QUERY_KEY) +
-                IdentificationQueryBuilder.identificationReturnQueryPartUsingKeysForIdentificationRelationAndAlias(
+                TagQueryBuilder.identificationReturnQueryPartUsingKeysForIdentificationRelationAndAlias(
                         SCHEMA_IDENTIFICATION_QUERY_KEY,
                         SCHEMA_IDENTIFICATION_RELATION_QUERY_KEY
                 ) +
-                IdentificationQueryBuilder.identificationReturnQueryPartUsingKeysForIdentificationRelationAndAlias(
+                TagQueryBuilder.identificationReturnQueryPartUsingKeysForIdentificationRelationAndAlias(
                         PROPERTY_IDENTIFICATION_QUERY_KEY,
                         PROPERTY_IDENTIFICATION_RELATION_QUERY_KEY
                 ) +

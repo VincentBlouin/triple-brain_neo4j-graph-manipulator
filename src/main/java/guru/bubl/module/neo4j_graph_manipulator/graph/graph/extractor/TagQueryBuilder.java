@@ -4,14 +4,11 @@
 
 package guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor;
 
-import guru.bubl.module.model.UserUris;
 import guru.bubl.module.neo4j_graph_manipulator.graph.FriendlyResourceNeo4j;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.GraphElementOperatorNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.UserGraphNeo4j;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.edge.EdgeOperatorNeo4j;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.identification.IdentificationNeo4j;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.tag.TagNeo4J;
 
-public class IdentificationQueryBuilder {
+public class TagQueryBuilder {
 
     public static final String
             IDENTIFIER_QUERY_KEY = "id",
@@ -31,7 +28,7 @@ public class IdentificationQueryBuilder {
         return "COLLECT([" +
                 QueryUtils.getPropertyUsingContainerNameQueryPart(
                         identificationKey,
-                        IdentificationNeo4j.props.external_uri.name()
+                        TagNeo4J.props.external_uri.name()
                 ) +
                 QueryUtils.getPropertyUsingContainerNameQueryPart(
                         identificationKey,
@@ -50,11 +47,11 @@ public class IdentificationQueryBuilder {
                 ) +
                 QueryUtils.getPropertyUsingContainerNameQueryPart(
                         identificationKey,
-                        IdentificationNeo4j.props.nb_references.name()
+                        TagNeo4J.props.nb_references.name()
                 ) +
                 QueryUtils.getPropertyUsingContainerNameQueryPart(
                         relationKey,
-                        IdentificationNeo4j.props.relation_external_uri.name()
+                        TagNeo4J.props.relation_external_uri.name()
                 ) +
                 QueryUtils.getPropertyUsingContainerNameQueryPart(
                         identificationKey,

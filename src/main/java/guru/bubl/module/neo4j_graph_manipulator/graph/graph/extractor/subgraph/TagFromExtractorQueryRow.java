@@ -1,8 +1,7 @@
 package guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph;
 
-import guru.bubl.module.model.graph.identification.IdentifierPojo;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.FriendlyResourceFromExtractorQueryRow;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.identification.IdentificationNeo4j;
+import guru.bubl.module.model.graph.tag.TagPojo;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.tag.TagNeo4J;
 import org.neo4j.driver.v1.Record;
 
 import java.net.URI;
@@ -27,15 +26,33 @@ public class TagFromExtractorQueryRow {
         this.key = key;
     }
 
-    public IdentifierPojo build() {
-        IdentifierPojo tag = new IdentifierPojo(
+    public TagPojo build() {
+        TagPojo tag = new TagPojo(
                 getExternalUri(),
-                FriendlyResourceFromExtractorQueryRow.usingRowAndNodeKey(
+                GraphElementFromExtractorQueryRow.usingRowAndKey(
                         record,
                         key
                 ).build()
         );
         tag.setNbRefences(getNbReferences());
+        tag.getGraphElement().setChildrenIndex(
+                VertexFromExtractorQueryRow.getChildrenIndexes(
+                        key,
+                        record
+                )
+        );
+        tag.getGraphElement().setColors(
+                VertexFromExtractorQueryRow.getColors(
+                        key,
+                        record
+                )
+        );
+        tag.getGraphElement().setFont(
+                VertexFromExtractorQueryRow.getFont(
+                        key,
+                        record
+                )
+        );
         return tag;
     }
 
@@ -46,7 +63,7 @@ public class TagFromExtractorQueryRow {
 
     private Integer getNbReferences() {
         return record.get(
-                key + "." + IdentificationNeo4j.props.nb_references.name()
+                key + "." + TagNeo4J.props.nb_references.name()
         ).asInt();
     }
 

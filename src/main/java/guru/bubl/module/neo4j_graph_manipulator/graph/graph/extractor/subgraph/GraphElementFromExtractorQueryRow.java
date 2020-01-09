@@ -5,9 +5,8 @@
 package guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph;
 
 import guru.bubl.module.model.graph.GraphElementPojo;
-import guru.bubl.module.neo4j_graph_manipulator.graph.FriendlyResourceNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.FriendlyResourceFromExtractorQueryRow;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.IdentificationQueryBuilder;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.TagQueryBuilder;
 import org.neo4j.driver.v1.Record;
 
 import java.net.URI;
@@ -16,7 +15,7 @@ public class GraphElementFromExtractorQueryRow {
 
     private Record record;
     private String key;
-    private String identificationKey = IdentificationQueryBuilder.IDENTIFIER_QUERY_KEY;
+    private String identificationKey = TagQueryBuilder.IDENTIFIER_QUERY_KEY;
 
     public static GraphElementFromExtractorQueryRow usingRowAndKey(
             Record record,
@@ -57,7 +56,7 @@ public class GraphElementFromExtractorQueryRow {
                         record,
                         key
                 ).build(),
-                IdentifiersFromExtractorQueryRowAsArray.usingRowAndKey(
+                TagsFromExtractorQueryRowAsArray.usingRowAndKey(
                         record,
                         identificationKey
                 ).build(),

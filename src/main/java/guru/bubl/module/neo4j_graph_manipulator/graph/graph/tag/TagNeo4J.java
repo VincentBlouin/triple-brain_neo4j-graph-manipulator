@@ -2,18 +2,17 @@
  * Copyright Vincent Blouin under the GPL License version 3
  */
 
-package guru.bubl.module.neo4j_graph_manipulator.graph.graph.identification;
+package guru.bubl.module.neo4j_graph_manipulator.graph.graph.tag;
 
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 import guru.bubl.module.model.Image;
 import guru.bubl.module.model.graph.FriendlyResourcePojo;
-import guru.bubl.module.model.graph.GraphElementOperator;
-import guru.bubl.module.model.graph.GraphElementOperatorFactory;
-import guru.bubl.module.model.graph.identification.IdentificationFactory;
-import guru.bubl.module.model.graph.identification.IdentificationOperator;
-import guru.bubl.module.model.graph.identification.Identifier;
-import guru.bubl.module.model.graph.identification.IdentifierPojo;
+import guru.bubl.module.model.graph.GraphElementPojo;
+import guru.bubl.module.model.graph.tag.TagFactory;
+import guru.bubl.module.model.graph.tag.TagOperator;
+import guru.bubl.module.model.graph.tag.Tag;
+import guru.bubl.module.model.graph.tag.TagPojo;
 import guru.bubl.module.neo4j_graph_manipulator.graph.FriendlyResourceFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.OperatorNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.GraphElementFactoryNeo4j;
@@ -30,10 +29,10 @@ import java.util.Set;
 
 import static org.neo4j.driver.v1.Values.parameters;
 
-public class IdentificationNeo4j implements IdentificationOperator, OperatorNeo4j {
+public class TagNeo4J implements TagOperator, OperatorNeo4j {
 
     @Override
-    public Map<URI, IdentifierPojo> getIdentifications() {
+    public Map<URI, TagPojo> getIdentifications() {
         return null;
     }
 
@@ -67,14 +66,14 @@ public class IdentificationNeo4j implements IdentificationOperator, OperatorNeo4
     private GraphElementOperatorNeo4j graphElementOperator;
     private Driver driver;
     private GraphElementFactoryNeo4j graphElementOperatorFactory;
-    private IdentificationFactory identificationFactory;
+    private TagFactory tagFactory;
 
     @AssistedInject
-    protected IdentificationNeo4j(
+    protected TagNeo4J(
             FriendlyResourceFactoryNeo4j friendlyResourceFactory,
             Driver driver,
             GraphElementFactoryNeo4j graphElementOperatorFactory,
-            IdentificationFactory identificationFactory,
+            TagFactory tagFactory,
             @Assisted URI uri
     ) {
         this.graphElementOperator = graphElementOperatorFactory.withUri(
@@ -82,7 +81,7 @@ public class IdentificationNeo4j implements IdentificationOperator, OperatorNeo4
         );
         this.driver = driver;
         this.graphElementOperatorFactory = graphElementOperatorFactory;
-        this.identificationFactory = identificationFactory;
+        this.tagFactory = tagFactory;
     }
 
     @Override
@@ -162,7 +161,7 @@ public class IdentificationNeo4j implements IdentificationOperator, OperatorNeo4
     }
 
     @Override
-    public IdentifierPojo buildPojo() {
+    public TagPojo buildPojo() {
         try (Session session = driver.session()) {
             Record record = session.run(
                     queryPrefix() + "RETURN n.uri as uri, n.label as label, n.comment as comment, n.external_uri as externalUri, n.nb_references as nbReferences",
@@ -177,16 +176,18 @@ public class IdentificationNeo4j implements IdentificationOperator, OperatorNeo4
             friendlyResourcePojo.setComment(
                     record.get("comment").asString()
             );
-            return new IdentifierPojo(
+            return new TagPojo(
                     URI.create(record.get("externalUri").asString()),
                     record.get("nbReferences").asInt(),
-                    friendlyResourcePojo
+                    new GraphElementPojo(
+                            friendlyResourcePojo
+                    )
             );
         }
     }
 
     @Override
-    public void mergeTo(Identifier identifier) {
+    public void mergeTo(Tag tag) {
         try (Session session = driver.session()) {
             StatementResult sr = session.run(
                     queryPrefix() + "MATCH (n)<-[:IDENTIFIED_TO]-(tagged) RETURN tagged.uri",
@@ -194,8 +195,8 @@ public class IdentificationNeo4j implements IdentificationOperator, OperatorNeo4
                             "uri", this.uri().toString()
                     )
             );
-            IdentifierPojo mergeWithPojo = identificationFactory.withUri(
-                    identifier.uri()
+            TagPojo mergeWithPojo = tagFactory.withUri(
+                    tag.uri()
             ).buildPojo();
             while (sr.hasNext()) {
                 graphElementOperatorFactory.withUri(
@@ -292,12 +293,12 @@ public class IdentificationNeo4j implements IdentificationOperator, OperatorNeo4
     }
 
     @Override
-    public void removeIdentification(Identifier type) {
+    public void removeIdentification(Tag type) {
 
     }
 
     @Override
-    public Map<URI, IdentifierPojo> addMeta(Identifier friendlyResource) {
+    public Map<URI, TagPojo> addMeta(Tag friendlyResource) {
         return null;
     }
 

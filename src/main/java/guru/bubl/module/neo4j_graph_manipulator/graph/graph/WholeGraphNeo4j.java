@@ -9,8 +9,8 @@ import guru.bubl.module.model.WholeGraph;
 import guru.bubl.module.model.graph.GraphElementOperator;
 import guru.bubl.module.model.graph.GraphElementOperatorFactory;
 import guru.bubl.module.model.graph.edge.EdgeOperator;
-import guru.bubl.module.model.graph.identification.IdentificationFactory;
-import guru.bubl.module.model.graph.identification.IdentificationOperator;
+import guru.bubl.module.model.graph.tag.TagFactory;
+import guru.bubl.module.model.graph.tag.TagOperator;
 import guru.bubl.module.model.graph.schema.SchemaOperator;
 import guru.bubl.module.model.graph.vertex.VertexInSubGraphOperator;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.edge.EdgeFactoryNeo4j;
@@ -46,7 +46,7 @@ public class WholeGraphNeo4j implements WholeGraph {
     protected GraphElementOperatorFactory graphElementFactory;
 
     @Inject
-    protected IdentificationFactory identificationFactory;
+    protected TagFactory tagFactory;
 
     @Override
     public Set<VertexInSubGraphOperator> getAllVertices() {
@@ -179,21 +179,21 @@ public class WholeGraphNeo4j implements WholeGraph {
     }
 
     @Override
-    public Set<IdentificationOperator> getAllTags() {
+    public Set<TagOperator> getAllTags() {
         return getAllTagsOfUserOrNot(null);
     }
 
     @Override
-    public Set<IdentificationOperator> getAllTagsOfUser(User user) {
+    public Set<TagOperator> getAllTagsOfUser(User user) {
         return getAllTagsOfUserOrNot(user);
     }
 
-    private Set<IdentificationOperator> getAllTagsOfUserOrNot(User user) {
+    private Set<TagOperator> getAllTagsOfUserOrNot(User user) {
         String query = String.format(
                 "MATCH(n:Meta%s) RETURN n.uri as uri",
                 user == null ? "" : "{owner:$username}"
         );
-        Set<IdentificationOperator> identifications = new HashSet<>();
+        Set<TagOperator> identifications = new HashSet<>();
         try (Session session = driver.session()) {
             StatementResult rs = session.run(
                     query,
@@ -205,7 +205,7 @@ public class WholeGraphNeo4j implements WholeGraph {
             while (rs.hasNext()) {
                 Record record = rs.next();
                 identifications.add(
-                        identificationFactory.withUri(
+                        tagFactory.withUri(
                                 URI.create(
                                         record.get("uri").asString()
                                 )

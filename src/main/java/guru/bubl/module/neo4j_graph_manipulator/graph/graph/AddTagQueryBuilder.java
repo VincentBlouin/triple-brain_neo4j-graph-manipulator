@@ -4,26 +4,26 @@
 
 package guru.bubl.module.neo4j_graph_manipulator.graph.graph;
 
-import guru.bubl.module.model.graph.identification.IdentifierPojo;
+import guru.bubl.module.model.graph.tag.TagPojo;
 import guru.bubl.module.neo4j_graph_manipulator.graph.FriendlyResourceNeo4j;
 
-public class AddIdentificationQueryBuilder {
+public class AddTagQueryBuilder {
 
-    private IdentifierPojo identification;
+    private TagPojo identification;
     private GraphElementOperatorNeo4j graphElement;
     private Boolean isOriginalReference;
 
-    public static AddIdentificationQueryBuilder usingIdentificationForGraphElement(
-            IdentifierPojo identification, GraphElementOperatorNeo4j graphElement
+    public static AddTagQueryBuilder usingIdentificationForGraphElement(
+            TagPojo identification, GraphElementOperatorNeo4j graphElement
     ) {
-        return new AddIdentificationQueryBuilder(
+        return new AddTagQueryBuilder(
                 identification,
                 graphElement
         );
     }
 
-    protected AddIdentificationQueryBuilder(
-            IdentifierPojo identification,
+    protected AddTagQueryBuilder(
+            TagPojo identification,
             GraphElementOperatorNeo4j graphElement
     ) {
         this.identification = identification;

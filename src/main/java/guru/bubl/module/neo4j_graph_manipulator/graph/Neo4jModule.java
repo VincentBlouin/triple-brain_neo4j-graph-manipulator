@@ -27,8 +27,8 @@ import guru.bubl.module.model.graph.GraphElementOperatorFactory;
 import guru.bubl.module.model.graph.GraphFactory;
 import guru.bubl.module.model.graph.edge.EdgeFactory;
 import guru.bubl.module.model.graph.edge.EdgeOperator;
-import guru.bubl.module.model.graph.identification.IdentificationFactory;
-import guru.bubl.module.model.graph.identification.IdentificationOperator;
+import guru.bubl.module.model.graph.tag.TagFactory;
+import guru.bubl.module.model.graph.tag.TagOperator;
 import guru.bubl.module.model.graph.pattern.PatternUser;
 import guru.bubl.module.model.graph.pattern.PatternUserFactory;
 import guru.bubl.module.model.graph.schema.SchemaList;
@@ -37,10 +37,8 @@ import guru.bubl.module.model.graph.subgraph.SubGraphForker;
 import guru.bubl.module.model.graph.subgraph.SubGraphForkerFactory;
 import guru.bubl.module.model.graph.vertex.VertexFactory;
 import guru.bubl.module.model.graph.vertex.VertexInSubGraphOperator;
-import guru.bubl.module.model.meta.UserMetasOperator;
-import guru.bubl.module.model.meta.UserMetasOperatorFactory;
-import guru.bubl.module.model.search.GraphSearch;
-import guru.bubl.module.model.search.GraphSearchFactory;
+import guru.bubl.module.model.tag.UserTagsOperator;
+import guru.bubl.module.model.tag.UserTagsOperatorFactory;
 import guru.bubl.module.model.test.GraphComponentTest;
 import guru.bubl.module.neo4j_graph_manipulator.graph.admin.WholeGraphAdminNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.center_graph_element.CenterGraphElementOperatorNeo4j;
@@ -50,7 +48,7 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.graph.edge.EdgeFactoryNeo4
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.edge.EdgeOperatorNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.schema.SchemaExtractorFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph.SubGraphExtractorFactoryNeo4j;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.identification.IdentificationNeo4j;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.tag.TagNeo4J;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.pattern.PatternUserNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.schema.SchemaFactory;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.schema.SchemaListNeo4j;
@@ -59,10 +57,9 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.graph.subgraph.SubGraphFor
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.VertexFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.VertexInSubGraphOperatorNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.image.ImageFactoryNeo4j;
-import guru.bubl.module.neo4j_graph_manipulator.graph.meta.IdentificationFactoryNeo4j;
-import guru.bubl.module.neo4j_graph_manipulator.graph.meta.UserMetasOperatorNeo4j;
+import guru.bubl.module.neo4j_graph_manipulator.graph.meta.TagFactoryNeo4J;
+import guru.bubl.module.neo4j_graph_manipulator.graph.meta.UserTagsOperatorNeo4J;
 import guru.bubl.module.neo4j_graph_manipulator.graph.search.GraphSearchModuleNeo4j;
-import guru.bubl.module.neo4j_graph_manipulator.graph.search.GraphSearchNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.test.GraphComponentTestNeo4j;
 import org.neo4j.driver.v1.AuthTokens;
 import org.neo4j.driver.v1.Driver;
@@ -144,8 +141,8 @@ public class Neo4jModule extends AbstractModule {
                 .build(PatternUserFactory.class));
 
         install(factoryModuleBuilder
-                .implement(UserMetasOperator.class, UserMetasOperatorNeo4j.class)
-                .build(UserMetasOperatorFactory.class));
+                .implement(UserTagsOperator.class, UserTagsOperatorNeo4J.class)
+                .build(UserTagsOperatorFactory.class));
 
         install(factoryModuleBuilder
                 .build(EdgeFactoryNeo4j.class));
@@ -206,11 +203,11 @@ public class Neo4jModule extends AbstractModule {
         );
 
         install(factoryModuleBuilder
-                .implement(IdentificationOperator.class, IdentificationNeo4j.class)
-                .build(IdentificationFactory.class)
+                .implement(TagOperator.class, TagNeo4J.class)
+                .build(TagFactory.class)
         );
         install(factoryModuleBuilder
-                .build(IdentificationFactoryNeo4j.class)
+                .build(TagFactoryNeo4J.class)
         );
         bind(GraphFactory.class).to(GraphFactoryNeo4j.class).in(Singleton.class);
     }

@@ -10,12 +10,13 @@ import com.google.inject.assistedinject.AssistedInject;
 import guru.bubl.module.model.Image;
 import guru.bubl.module.model.User;
 import guru.bubl.module.model.UserUris;
+import guru.bubl.module.model.graph.GraphElementPojo;
 import guru.bubl.module.model.graph.ShareLevel;
 import guru.bubl.module.model.graph.edge.Edge;
 import guru.bubl.module.model.graph.edge.EdgeOperator;
 import guru.bubl.module.model.graph.edge.EdgePojo;
-import guru.bubl.module.model.graph.identification.Identifier;
-import guru.bubl.module.model.graph.identification.IdentifierPojo;
+import guru.bubl.module.model.graph.tag.Tag;
+import guru.bubl.module.model.graph.tag.TagPojo;
 import guru.bubl.module.model.graph.vertex.*;
 import guru.bubl.module.model.json.SuggestionJson;
 import guru.bubl.module.model.suggestion.SuggestionPojo;
@@ -342,23 +343,30 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
 
         if (suggestion.getSameAs() != null) {
             newEdgeOperator.addMeta(
-                    new IdentifierPojo(
+                    new TagPojo(
                             suggestion.getSameAs().uri(),
-                            suggestion.getSameAs()
+                            new GraphElementPojo(
+                                    suggestion.getSameAs()
+                            )
                     )
             );
             newVertex.addMeta(
-                    new IdentifierPojo(
+                    new TagPojo(
                             suggestion.getSameAs().uri(),
-                            suggestion.getSameAs()
+                            new GraphElementPojo(
+                                    suggestion.getSameAs()
+                            )
                     )
             );
         }
         if (suggestion.getType() != null) {
             newVertex.addMeta(
-                    new IdentifierPojo(
+                    new TagPojo(
                             suggestion.getType().uri(),
-                            suggestion.getType()
+                            new GraphElementPojo(
+                                    suggestion.getType()
+                            )
+
                     )
             );
         }
@@ -383,15 +391,19 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
                 suggestion.label()
         );
         newEdgeOperator.addMeta(
-                new IdentifierPojo(
+                new TagPojo(
                         suggestion.getSameAs().uri(),
-                        suggestion.getSameAs()
+                        new GraphElementPojo(
+                                suggestion.getSameAs()
+                        )
                 )
         );
         newVertex.addMeta(
-                new IdentifierPojo(
+                new TagPojo(
                         suggestion.getType().uri(),
-                        suggestion.getType()
+                        new GraphElementPojo(
+                                suggestion.getType()
+                        )
                 )
         );
         newVertex.label(
@@ -654,17 +666,17 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
     }
 
     @Override
-    public void removeIdentification(Identifier identification) {
+    public void removeIdentification(Tag identification) {
         graphElementOperator.removeIdentification(identification);
     }
 
     @Override
-    public Map<URI, IdentifierPojo> addMeta(Identifier friendlyResource) {
+    public Map<URI, TagPojo> addMeta(Tag friendlyResource) {
         return graphElementOperator.addMeta(friendlyResource);
     }
 
     @Override
-    public Map<URI, IdentifierPojo> getIdentifications() {
+    public Map<URI, TagPojo> getIdentifications() {
         return graphElementOperator.getIdentifications();
     }
 

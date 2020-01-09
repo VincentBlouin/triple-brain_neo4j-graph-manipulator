@@ -9,10 +9,10 @@ import com.google.inject.assistedinject.AssistedInject;
 import guru.bubl.module.model.User;
 import guru.bubl.module.model.graph.GraphElementPojo;
 import guru.bubl.module.model.graph.GraphElementType;
-import guru.bubl.module.model.graph.identification.IdentifierPojo;
+import guru.bubl.module.model.graph.tag.TagPojo;
 import guru.bubl.module.model.search.GraphElementSearchResult;
 import guru.bubl.module.model.search.GraphSearch;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.IdentificationQueryBuilder;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.TagQueryBuilder;
 import org.apache.commons.lang.StringUtils;
 import org.neo4j.driver.v1.Driver;
 import org.neo4j.driver.v1.Session;
@@ -177,7 +177,7 @@ public class GraphSearchNeo4j implements GraphSearch {
                 graphElement.removeAllIdentifications();
                 return graphElement;
             }
-            for (IdentifierPojo identification : graphElement.getIdentifications().values()) {
+            for (TagPojo identification : graphElement.getIdentifications().values()) {
                 if (identification.gotImages()) {
                     graphElement.addImage(
                             identification.images().iterator().next()
@@ -222,7 +222,7 @@ public class GraphSearchNeo4j implements GraphSearch {
                                     "RETURN " +
                                     "score, n.uri, n.label, n.external_uri, COALESCE(n.n.nb_references, 0) as nbReferences, COALESCE(n.number_of_visits, 0) as nbVisits, n.creation_date, n.last_modification_date, " +
                                     "(CASE WHEN n.owner=$owner THEN n.private_context ELSE n.public_context END) as context, " +
-                                    IdentificationQueryBuilder.identificationReturnQueryPart() +
+                                    TagQueryBuilder.identificationReturnQueryPart() +
                                     "labels(n) as type " +
                                     "ORDER BY nbVisits DESC," +
                                     "score DESC," +
