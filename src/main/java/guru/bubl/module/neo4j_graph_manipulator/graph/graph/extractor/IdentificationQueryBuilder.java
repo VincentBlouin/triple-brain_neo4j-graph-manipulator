@@ -4,9 +4,11 @@
 
 package guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor;
 
+import guru.bubl.module.model.UserUris;
 import guru.bubl.module.neo4j_graph_manipulator.graph.FriendlyResourceNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.GraphElementOperatorNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.UserGraphNeo4j;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.edge.EdgeOperatorNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.identification.IdentificationNeo4j;
 
 public class IdentificationQueryBuilder {
@@ -63,5 +65,16 @@ public class IdentificationQueryBuilder {
                         "colors"
                 ) +
                 "]) as " + identificationKey + ", ";
+    }
+
+    public static String centerTagQueryPart(String prefix) {
+        return QueryUtils.getPropertyUsingContainerNameQueryPart(
+                prefix,
+                "external_uri"
+        ) +
+                QueryUtils.getPropertyUsingContainerNameQueryPart(
+                        prefix,
+                        "nb_references"
+                );
     }
 }

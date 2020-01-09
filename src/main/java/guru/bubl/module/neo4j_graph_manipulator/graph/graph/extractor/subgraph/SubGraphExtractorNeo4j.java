@@ -38,11 +38,9 @@ import static org.neo4j.driver.v1.Values.parameters;
 
 public class SubGraphExtractorNeo4j {
 
-    public final static String
-            INCLUDED_VERTEX_QUERY_KEY = "iv",
-            INCLUDED_EDGE_QUERY_KEY = "ie",
-            GRAPH_ELEMENT_QUERY_KEY = "ge";
+    public final static String GRAPH_ELEMENT_QUERY_KEY = "ge";
     private URI centerBubbleUri;
+    private Boolean isCenterTagFlow;
     private Integer depth;
     private Integer resultsLimit;
     private SubGraphPojo subGraph = SubGraphPojo.withVerticesAndEdges(
@@ -81,6 +79,7 @@ public class SubGraphExtractorNeo4j {
         this.resultsLimit = resultsLimit;
         inShareLevels.clear();
         inShareLevels.add(ShareLevel.PRIVATE);
+        this.isCenterTagFlow = UserUris.isUriOfAnIdentifier(centerBubbleUri);
     }
 
     @AssistedInject
@@ -93,6 +92,7 @@ public class SubGraphExtractorNeo4j {
         this.centerBubbleUri = centerBubbleUri;
         this.depth = 1;
         this.inShareLevels = inShareLevels;
+        this.isCenterTagFlow = UserUris.isUriOfAnIdentifier(centerBubbleUri);
     }
 
     @AssistedInject
@@ -106,6 +106,7 @@ public class SubGraphExtractorNeo4j {
         this.centerBubbleUri = centerBubbleUri;
         this.depth = depth;
         this.inShareLevels = inShareLevels;
+        this.isCenterTagFlow = UserUris.isUriOfAnIdentifier(centerBubbleUri);
     }
 
     public SubGraphPojo load() {
@@ -171,6 +172,12 @@ public class SubGraphExtractorNeo4j {
                                         "ge",
                                         record
                                 )
+                        );
+                        subGraph.setCenterMeta(
+                                TagFromExtractorQueryRow.usingRowAndKey(
+                                        record,
+                                        "ge"
+                                ).build()
                         );
                         break;
                     case Unknown:
@@ -244,20 +251,19 @@ public class SubGraphExtractorNeo4j {
         return
                 "MATCH(start_node:Resource{uri:$centerUri}) " +
                         getMatchQueryPart() +
-//                        "OPTIONAL MATCH (" + GRAPH_ELEMENT_QUERY_KEY + ")-[:HAS_INCLUDED_VERTEX]->(" + INCLUDED_VERTEX_QUERY_KEY + ") " +
-//                        "OPTIONAL MATCH(" + GRAPH_ELEMENT_QUERY_KEY + ")-[:HAS_INCLUDED_EDGE]->(" + INCLUDED_EDGE_QUERY_KEY + ") " +
                         "OPTIONAL MATCH (ge)-[idr:IDENTIFIED_TO]->(id) " +
                         "RETURN " +
                         vertexAndEdgeCommonQueryPart(GRAPH_ELEMENT_QUERY_KEY) +
                         vertexReturnQueryPart(GRAPH_ELEMENT_QUERY_KEY) +
                         edgeReturnQueryPart(GRAPH_ELEMENT_QUERY_KEY) +
+                        (isCenterTagFlow ? IdentificationQueryBuilder.centerTagQueryPart(GRAPH_ELEMENT_QUERY_KEY) : "") +
                         IdentificationQueryBuilder.identificationReturnQueryPart() +
                         "labels(ge) as type, ID(ge) as nId, rel";
     }
 
     private String getMatchQueryPart() {
         return "MATCH (start_node)<-[rel:" +
-                (UserUris.isUriOfAnIdentifier(centerBubbleUri) ? (Relationships.IDENTIFIED_TO + "|") : "") +
+                (isCenterTagFlow ? (Relationships.IDENTIFIED_TO + "|") : "") +
                 Relationships.SOURCE_VERTEX + "|" +
                 Relationships.DESTINATION_VERTEX + "*0.." + depth * 2 +
                 "]->(" + SubGraphExtractorNeo4j.GRAPH_ELEMENT_QUERY_KEY + ") ";
