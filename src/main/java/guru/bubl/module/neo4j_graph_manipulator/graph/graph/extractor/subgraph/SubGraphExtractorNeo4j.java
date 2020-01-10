@@ -153,12 +153,17 @@ public class SubGraphExtractorNeo4j {
                         );
                         break;
                     case Meta:
-                        subGraph.setCenterMeta(
-                                TagFromExtractorQueryRow.usingRowAndKey(
-                                        record,
-                                        "ge"
-                                ).build()
-                        );
+                        URI uri = URI.create(record.get(
+                                "ge.uri"
+                        ).asString());
+                        if (uri.equals(centerBubbleUri)) {
+                            subGraph.setCenterMeta(
+                                    TagFromExtractorQueryRow.usingRowAndKey(
+                                            record,
+                                            "ge"
+                                    ).build()
+                            );
+                        }
                         break;
                     case Unknown:
                         break;

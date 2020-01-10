@@ -55,7 +55,6 @@ public class TagsFromExtractorQueryRowAsArray {
             friendlyResource.setLabel(
                     properties.get(2).toString()
             );
-
             friendlyResource.setComment(
                     (String) properties.get(3)
             );
