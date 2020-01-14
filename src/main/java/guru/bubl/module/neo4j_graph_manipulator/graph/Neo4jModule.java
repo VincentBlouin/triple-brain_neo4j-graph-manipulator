@@ -57,8 +57,8 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.graph.subgraph.SubGraphFor
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.VertexFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.VertexInSubGraphOperatorNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.image.ImageFactoryNeo4j;
-import guru.bubl.module.neo4j_graph_manipulator.graph.meta.TagFactoryNeo4J;
-import guru.bubl.module.neo4j_graph_manipulator.graph.meta.UserTagsOperatorNeo4J;
+import guru.bubl.module.neo4j_graph_manipulator.graph.tag.TagFactoryNeo4J;
+import guru.bubl.module.neo4j_graph_manipulator.graph.tag.UserTagsOperatorNeo4J;
 import guru.bubl.module.neo4j_graph_manipulator.graph.search.GraphSearchModuleNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.test.GraphComponentTestNeo4j;
 import org.neo4j.driver.v1.AuthTokens;

@@ -16,7 +16,7 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.FriendlyResourceFactoryNeo
 import guru.bubl.module.neo4j_graph_manipulator.graph.FriendlyResourceNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.OperatorNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.image.ImagesNeo4j;
-import guru.bubl.module.neo4j_graph_manipulator.graph.meta.TagFactoryNeo4J;
+import guru.bubl.module.neo4j_graph_manipulator.graph.tag.TagFactoryNeo4J;
 import guru.bubl.module.neo4j_graph_manipulator.graph.search.GraphIndexerNeo4j;
 import org.neo4j.driver.v1.Driver;
 import org.neo4j.driver.v1.Record;

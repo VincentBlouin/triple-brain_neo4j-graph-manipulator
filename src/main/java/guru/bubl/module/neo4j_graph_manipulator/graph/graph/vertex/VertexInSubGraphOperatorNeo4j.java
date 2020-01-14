@@ -920,6 +920,9 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
                     }
                 }
         );
+        this.getIdentifications().values().forEach((tag) -> {
+            vertexOperator.addMeta(tag);
+        });
         this.remove();
     }
 

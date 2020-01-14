@@ -2,7 +2,7 @@
  * Copyright Vincent Blouin under the GPL License version 3
  */
 
-package guru.bubl.module.neo4j_graph_manipulator.graph.meta;
+package guru.bubl.module.neo4j_graph_manipulator.graph.tag;
 
 import guru.bubl.module.model.graph.tag.TagFactory;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.tag.TagNeo4J;
