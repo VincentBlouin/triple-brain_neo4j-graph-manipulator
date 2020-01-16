@@ -7,9 +7,6 @@ package guru.bubl.module.neo4j_graph_manipulator.graph.search;
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 import guru.bubl.module.model.User;
-import guru.bubl.module.model.graph.GraphElementPojo;
-import guru.bubl.module.model.graph.GraphElementType;
-import guru.bubl.module.model.graph.tag.TagPojo;
 import guru.bubl.module.model.search.GraphElementSearchResult;
 import guru.bubl.module.model.search.GraphSearch;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.TagQueryBuilder;
@@ -57,10 +54,7 @@ public class GraphSearchNeo4j implements GraphSearch {
         return new Getter<>().get(
                 true,
                 user.username(),
-                GraphElementType.Vertex,
-                GraphElementType.Schema,
-                GraphElementType.Edge,
-                GraphElementType.Meta
+                "graphElementLabel"
         );
     }
 
@@ -69,10 +63,7 @@ public class GraphSearchNeo4j implements GraphSearch {
         return new Getter<>().get(
                 false,
                 user.username(),
-                GraphElementType.Vertex,
-                GraphElementType.Schema,
-                GraphElementType.Meta,
-                GraphElementType.Edge
+                "graphElementLabel"
         );
     }
 
@@ -81,7 +72,7 @@ public class GraphSearchNeo4j implements GraphSearch {
         return new Getter<>().get(
                 true,
                 user.username(),
-                GraphElementType.Vertex
+                "vertexLabel"
         );
     }
 
@@ -90,7 +81,7 @@ public class GraphSearchNeo4j implements GraphSearch {
         return new Getter<>().get(
                 true,
                 user.username(),
-                GraphElementType.Meta
+                "tagLabel"
         );
     }
 
@@ -99,105 +90,29 @@ public class GraphSearchNeo4j implements GraphSearch {
         return new Getter<GraphElementSearchResult>().get(
                 false,
                 user.username(),
-                GraphElementType.Schema,
-                GraphElementType.Property,
-                GraphElementType.Edge,
-                GraphElementType.Meta
+                "graphElementLabel"
         );
     }
-
-//    @Override
-//    public GraphElementSearchResult getDetails(URI uri, User user) {
-//        return new Getter().getForUri(
-//                uri,
-//                user.username()
-//        );
-//    }
 
     @Override
     public List<GraphElementSearchResult> searchPublicVerticesOnly() {
         return new Getter<GraphElementSearchResult>().get(
                 false,
                 "",
-                GraphElementType.Vertex
+                "vertexLabel"
         );
     }
 
-//    @Override
-//    public GraphElementSearchResult getDetailsAnonymously(URI uri) {
-//        return new Getter().getForUri(
-//                uri,
-//                ""
-//        );
-//    }
-
     private class Getter<ResultType extends GraphElementSearchResult> {
-//        public GraphElementSearchResult getForUri(URI uri, String username) {
-//            try (Session session = driver.session()) {
-//                StatementResult rs = session.run(
-//                        String.format(
-//                                "MATCH (n:GraphElement{uri:$uri}) " +
-//                                        "WHERE %s " +
-//                                        "OPTIONAL MATCH (n)-[%s:IDENTIFIED_TO]->(%s) " +
-//                                        "RETURN %s%s%s labels(n) as type",
-//                                StringUtils.isEmpty(username) ? "n.shareLevel=40" : "n.owner=$owner",
-//                                IdentificationQueryBuilder.IDENTIFICATION_RELATION_QUERY_KEY,
-//                                IdentificationQueryBuilder.IDENTIFIER_QUERY_KEY,
-//                                FriendlyResourceQueryBuilder.returnQueryPartUsingPrefix("n"),
-//                                FriendlyResourceQueryBuilder.imageReturnQueryPart("n"),
-//                                IdentificationQueryBuilder.identificationReturnQueryPart()
-//                        ),
-//                        parameters(
-//                                "uri",
-//                                uri.toString(),
-//                                "owner",
-//                                username
-//                        )
-//                );
-//                if (!rs.hasNext()) {
-//                    return null;
-//                }
-//                Record record = rs.next();
-//                return new GraphElementSearchResultPojo(
-//                        SearchResultGetter.nodeTypeInRow(record),
-//                        setupGraphElementForDetailedResult(
-//                                GraphElementFromExtractorQueryRow.usingRowAndKey(
-//                                        record,
-//                                        "n"
-//                                ).build()
-//                        ),
-//                        new HashMap<>()
-//                );
-//            }
-//        }
-
-
-        private GraphElementPojo setupGraphElementForDetailedResult(GraphElementPojo graphElement) {
-            if (graphElement.gotImages()) {
-                graphElement.removeAllIdentifications();
-                return graphElement;
-            }
-            for (TagPojo identification : graphElement.getIdentifications().values()) {
-                if (identification.gotImages()) {
-                    graphElement.addImage(
-                            identification.images().iterator().next()
-                    );
-                    graphElement.removeAllIdentifications();
-                    return graphElement;
-                }
-            }
-            graphElement.removeAllIdentifications();
-            return graphElement;
-        }
 
         public List<ResultType> get(
                 Boolean forPersonal,
                 String username,
-                GraphElementType... graphElementTypes
+                String indexDomain
         ) {
             try (Session session = driver.session()) {
                 StatementResult rs = session.run(
-                        buildQuery(forPersonal, username, graphElementTypes),
+                        buildQuery(forPersonal, username, indexDomain),
                         parameters(
                                 "label", formatSearchTerm(searchTerm) + "*",
                                 "owner", username
@@ -210,9 +125,8 @@ public class GraphSearchNeo4j implements GraphSearch {
         private String buildQuery(
                 Boolean forPersonal,
                 String username,
-                GraphElementType... graphElementTypes
+                String indexDomain
         ) {
-            String indexDomain = graphElementTypes.length == 4 ? "graphElementLabel" : "vertexLabel";
             return
                     String.format(
                             "CALL db.index.fulltext.queryNodes('%s', $label) YIELD node as n, score " +
@@ -236,6 +150,6 @@ public class GraphSearchNeo4j implements GraphSearch {
     }
 
     public static String formatSearchTerm(String searchTerm) {
-                return searchTerm.replaceAll("[?!*|~|(|)\\s]", " ");
+        return searchTerm.replaceAll("[?!*|~|(|)\\s]", " ");
     }
 }

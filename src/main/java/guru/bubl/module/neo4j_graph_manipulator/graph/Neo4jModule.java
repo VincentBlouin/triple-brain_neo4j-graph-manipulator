@@ -247,6 +247,7 @@ public class Neo4jModule extends AbstractModule {
             graphDb.execute("CREATE INDEX ON :GraphElement(owner)");
             graphDb.execute("CALL db.index.fulltext.createNodeIndex('graphElementLabel',['GraphElement'],['label'])");
             graphDb.execute("CALL db.index.fulltext.createNodeIndex('vertexLabel',['Vertex'],['label'])");
+            graphDb.execute("CALL db.index.fulltext.createNodeIndex('tagLabel',['Meta'],['label'])");
             graphDb.execute("CALL db.index.fulltext.createNodeIndex('username',['User'],['username'])");
             graphDb.execute("CREATE INDEX ON :GraphElement(shareLevel)");
             graphDb.execute("CREATE INDEX ON :GraphElement(last_center_date)");
