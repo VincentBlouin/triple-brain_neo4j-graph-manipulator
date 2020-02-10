@@ -5,10 +5,13 @@
 package guru.bubl.module.neo4j_graph_manipulator.graph.search.result_builder;
 
 import guru.bubl.module.model.graph.GraphElementType;
+import guru.bubl.module.model.graph.ShareLevel;
 import guru.bubl.module.model.search.GraphElementSearchResult;
 import guru.bubl.module.model.search.GraphElementSearchResultPojo;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph.GraphElementFromExtractorQueryRow;
 import org.neo4j.driver.v1.Record;
+
+import java.util.Set;
 
 public class SchemaSearchResultBuilder implements SearchResultBuilder {
 
@@ -24,7 +27,10 @@ public class SchemaSearchResultBuilder implements SearchResultBuilder {
     public GraphElementSearchResult build() {
         return new GraphElementSearchResultPojo(
                 GraphElementType.Schema,
-                GraphElementFromExtractorQueryRow.usingRowAndKey(row, prefix).build(),
+                GraphElementFromExtractorQueryRow.usingRowAndKey(
+                        row,
+                        prefix
+                ).build(),
                 getContext()
         );
     }

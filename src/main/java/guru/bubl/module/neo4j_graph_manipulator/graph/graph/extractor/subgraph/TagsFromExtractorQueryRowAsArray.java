@@ -6,6 +6,7 @@ package guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph;
 
 import guru.bubl.module.model.graph.FriendlyResourcePojo;
 import guru.bubl.module.model.graph.GraphElementPojo;
+import guru.bubl.module.model.graph.ShareLevel;
 import guru.bubl.module.model.graph.tag.TagPojo;
 import guru.bubl.module.model.json.ImageJson;
 import org.neo4j.driver.v1.Record;
@@ -39,13 +40,13 @@ public class TagsFromExtractorQueryRowAsArray {
     }
 
     public Map<URI, TagPojo> build() {
-        Map<URI, TagPojo> identifications = new HashMap<>();
+        Map<URI, TagPojo> tags = new HashMap<>();
         if (!isInQuery()) {
-            return identifications;
+            return tags;
         }
         for (List<Object> properties : getList()) {
             if (properties.get(0) == null) {
-                return identifications;
+                return tags;
             }
             URI externalUri = URI.create(properties.get(0).toString());
             URI uri = URI.create(properties.get(1).toString());
@@ -71,22 +72,32 @@ public class TagsFromExtractorQueryRowAsArray {
                         properties.get(8).toString()
                 );
             }
-            TagPojo identification = new TagPojo(
+            TagPojo tag = new TagPojo(
                     externalUri,
                     new Integer(properties.get(5).toString()),
                     new GraphElementPojo(
                             friendlyResource
                     )
             );
-            identification.setRelationExternalResourceUri(URI.create(
+            ShareLevel shareLevel = ShareLevel.PRIVATE;
+            if (properties.get(9) != null) {
+                Long shareLevelLong = (Long) properties.get(9);
+                shareLevel = ShareLevel.get(
+                        shareLevelLong.intValue()
+                );
+            }
+            tag.setShareLevel(
+                    shareLevel
+            );
+            tag.setRelationExternalResourceUri(URI.create(
                     properties.get(6).toString()
             ));
-            identifications.put(
+            tags.put(
                     externalUri,
-                    identification
+                    tag
             );
         }
-        return identifications;
+        return tags;
     }
 
     private Boolean isInQuery() {

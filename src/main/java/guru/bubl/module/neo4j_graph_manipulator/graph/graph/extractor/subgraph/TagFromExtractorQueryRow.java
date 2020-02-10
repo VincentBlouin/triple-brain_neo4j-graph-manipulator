@@ -35,6 +35,12 @@ public class TagFromExtractorQueryRow {
                 ).build()
         );
         tag.setNbRefences(getNbReferences());
+        tag.setShareLevel(
+                VertexFromExtractorQueryRow.getShareLevel(
+                        key,
+                        record
+                )
+        );
         tag.getGraphElement().setChildrenIndex(
                 VertexFromExtractorQueryRow.getChildrenIndexes(
                         key,

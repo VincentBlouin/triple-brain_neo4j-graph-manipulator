@@ -15,6 +15,7 @@ import org.neo4j.driver.v1.Session;
 import org.neo4j.driver.v1.StatementResult;
 
 import java.net.URI;
+import java.util.HashSet;
 
 import static org.neo4j.driver.v1.Values.parameters;
 

@@ -944,7 +944,7 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
                             "SET e.shareLevel = CASE WHEN (n.shareLevel <= d.shareLevel) THEN n.shareLevel ELSE d.shareLevel END",
                     parameters(
                             "uri", uri().toString(),
-                            "shareLevel", shareLevel.getConfidentialityIndex()
+                            "shareLevel", shareLevel.getIndex()
                     )
             );
         }
@@ -1025,7 +1025,7 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
     @Override
     public Map<String, Object> addCreationProperties(Map<String, Object> map) {
         Map<String, Object> newMap = map(
-                props.shareLevel.name(), ShareLevel.PRIVATE.getConfidentialityIndex(),
+                props.shareLevel.name(), ShareLevel.PRIVATE.getIndex(),
                 props.number_of_connected_edges_property_name.name(), 0,
                 props.nb_public_neighbors.name(), 0,
                 props.nb_friend_neighbors.name(), 0

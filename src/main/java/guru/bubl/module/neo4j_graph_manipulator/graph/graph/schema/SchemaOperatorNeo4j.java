@@ -122,7 +122,7 @@ public class SchemaOperatorNeo4j implements SchemaOperator, OperatorNeo4j {
                 FriendlyResourceNeo4j.props.type.name(),
                 GraphElementType.Schema.name(),
                 VertexInSubGraphOperatorNeo4j.props.shareLevel.name(),
-                ShareLevel.PUBLIC.getConfidentialityIndex()
+                ShareLevel.PUBLIC.getIndex()
         );
         newMap.putAll(
                 map
@@ -236,7 +236,7 @@ public class SchemaOperatorNeo4j implements SchemaOperator, OperatorNeo4j {
                             "uri", this.uri().toString(),
                             "values", property.addCreationProperties(map(
                                     FriendlyResourceNeo4j.props.type.name(), GraphElementType.Property.name(),
-                                    VertexInSubGraphOperatorNeo4j.props.shareLevel.name(), ShareLevel.PUBLIC.getConfidentialityIndex()
+                                    VertexInSubGraphOperatorNeo4j.props.shareLevel.name(), ShareLevel.PUBLIC.getIndex()
                             ))
                     )
             );

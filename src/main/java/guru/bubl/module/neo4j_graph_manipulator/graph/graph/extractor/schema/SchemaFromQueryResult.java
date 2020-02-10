@@ -5,6 +5,7 @@
 package guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.schema;
 
 import guru.bubl.module.model.graph.GraphElementPojo;
+import guru.bubl.module.model.graph.ShareLevel;
 import guru.bubl.module.model.graph.schema.SchemaPojo;
 import guru.bubl.module.neo4j_graph_manipulator.graph.FriendlyResourceNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph.GraphElementFromExtractorQueryRow;
@@ -14,11 +15,11 @@ import org.neo4j.driver.v1.StatementResult;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 public class SchemaFromQueryResult {
     private StatementResult rs;
     private Map<URI, GraphElementPojo> properties = new HashMap<>();
-
     public SchemaFromQueryResult(StatementResult rs) {
         this.rs = rs;
     }

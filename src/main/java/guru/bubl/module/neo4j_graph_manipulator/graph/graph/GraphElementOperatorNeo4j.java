@@ -288,6 +288,9 @@ public class GraphElementOperatorNeo4j implements GraphElementOperator, Operator
                             this.uri().toString()
                     )
             ).single();
+            if (record.get("shareLevel").asObject() == null) {
+                return ShareLevel.PRIVATE;
+            }
             Integer shareLevel = record.get("shareLevel").asInt();
             return ShareLevel.get(shareLevel);
         }

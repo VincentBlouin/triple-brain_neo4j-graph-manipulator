@@ -8,6 +8,7 @@ import com.google.common.collect.ImmutableMap;
 import guru.bubl.module.model.graph.FriendlyResourcePojo;
 import guru.bubl.module.model.graph.GraphElementPojo;
 import guru.bubl.module.model.graph.GraphElementType;
+import guru.bubl.module.model.graph.ShareLevel;
 import guru.bubl.module.model.graph.tag.TagPojo;
 import guru.bubl.module.model.search.GraphElementSearchResult;
 import guru.bubl.module.model.search.GraphElementSearchResultPojo;
@@ -15,6 +16,7 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.FriendlyRe
 import org.neo4j.driver.v1.Record;
 
 import java.net.URI;
+import java.util.Set;
 
 public class MetaSearchResultBuilder implements SearchResultBuilder {
 

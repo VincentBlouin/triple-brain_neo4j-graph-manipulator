@@ -86,7 +86,7 @@ public class UserGraphNeo4j implements UserGraph {
     }
 
     @Override
-    public SubGraphPojo aroundVertexUriInShareLevels(URI centerVertexUri, Set<ShareLevel> shareLevels) throws NonExistingResourceException {
+    public SubGraphPojo aroundVertexUriInShareLevels(URI centerVertexUri, Integer ... shareLevels) throws NonExistingResourceException {
         return subGraphExtractorFactory.withCenterVertexInShareLevels(
                 centerVertexUri,
                 shareLevels
@@ -94,11 +94,11 @@ public class UserGraphNeo4j implements UserGraph {
     }
 
     @Override
-    public SubGraphPojo aroundVertexUriInShareLevelsWithDepth(URI centerVertexUri, Set<ShareLevel> shareLevels, Integer depth) throws NonExistingResourceException {
+    public SubGraphPojo aroundVertexUriWithDepthInShareLevels(URI centerVertexUri, Integer depth, Integer ... shareLevels) throws NonExistingResourceException {
         return subGraphExtractorFactory.withCenterVertexInShareLevelsAndDepth(
                 centerVertexUri,
-                shareLevels,
-                depth
+                depth,
+                shareLevels
         ).load();
     }
 

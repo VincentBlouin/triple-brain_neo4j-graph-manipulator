@@ -472,7 +472,7 @@ public class EdgeOperatorNeo4j implements EdgeOperator, OperatorNeo4j {
     public EdgePojo createEdge() {
         return createEdgeUsingInitialValues(
                 map(
-                        VertexInSubGraphOperatorNeo4j.props.shareLevel.name(), ShareLevel.PRIVATE.getConfidentialityIndex()
+                        VertexInSubGraphOperatorNeo4j.props.shareLevel.name(), ShareLevel.PRIVATE.getIndex()
                 )
         );
     }
@@ -482,7 +482,7 @@ public class EdgeOperatorNeo4j implements EdgeOperator, OperatorNeo4j {
         return createEdgeUsingInitialValues(
                 map(
                         VertexInSubGraphOperatorNeo4j.props.shareLevel.name(),
-                        shareLevel.getConfidentialityIndex()
+                        shareLevel.getIndex()
                 )
         );
     }
@@ -558,7 +558,7 @@ public class EdgeOperatorNeo4j implements EdgeOperator, OperatorNeo4j {
     public Map<String, Object> addCreationProperties(Map<String, Object> map) {
         Map<String, Object> newMap = map(
                 FriendlyResourceNeo4j.props.type.name(), GraphElementType.Edge.name(),
-                VertexInSubGraphOperatorNeo4j.props.shareLevel.name(), ShareLevel.PRIVATE.getConfidentialityIndex()
+                VertexInSubGraphOperatorNeo4j.props.shareLevel.name(), ShareLevel.PRIVATE.getIndex()
         );
         newMap.putAll(
                 map

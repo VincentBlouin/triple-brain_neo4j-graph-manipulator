@@ -18,13 +18,13 @@ public interface SubGraphExtractorFactoryNeo4j {
 
     SubGraphExtractorNeo4j withCenterVertexInShareLevels(
             URI centerVertexUri,
-            Set<ShareLevel> shareLevels
+            Integer... shareLevels
     );
 
     SubGraphExtractorNeo4j withCenterVertexInShareLevelsAndDepth(
             URI centerVertexUri,
-            Set<ShareLevel> shareLevels,
-            Integer depth
+            Integer depth,
+            Integer... shareLevels
     );
 
     SubGraphExtractorNeo4j withCenterVertexDepthAndResultsLimit(

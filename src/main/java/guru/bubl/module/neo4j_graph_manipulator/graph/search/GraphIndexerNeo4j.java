@@ -123,7 +123,7 @@ public class GraphIndexerNeo4j implements GraphIndexer {
     private void indexWhereContextIsSurroundVertices(FriendlyResource friendlyResource) {
         SubGraphPojo subGraph = subGraphExtractorFactory.withCenterVertexInShareLevels(
                 friendlyResource.uri(),
-                ShareLevel.allShareLevels
+                ShareLevel.allShareLevelsInt
         ).load();
         subGraph.vertices().remove(friendlyResource.uri());
         setPrivateFriendsAndPublicSearchContextToFriendlyResource(

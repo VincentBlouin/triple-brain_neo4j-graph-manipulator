@@ -34,6 +34,7 @@ public class AddTagQueryBuilder {
         return String.format(
                 "%sMERGE (f:Resource:GraphElement:Meta{external_uri:$external_uri, owner:$owner}) " +
                         "ON CREATE SET f.uri=$metaUri, " +
+                        "f.shareLevel=10, " +
                         "f.label=$label, " +
                         "f.comment=$comment, " +
                         "f.private_context=$privateContext, " +

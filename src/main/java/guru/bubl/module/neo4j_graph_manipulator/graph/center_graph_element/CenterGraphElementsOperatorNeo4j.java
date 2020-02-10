@@ -82,7 +82,7 @@ public class CenterGraphElementsOperatorNeo4j implements CenteredGraphElementsOp
                 true,
                 false,
                 "creationDate",
-                ShareLevel.PUBLIC.getConfidentialityIndex()
+                ShareLevel.PUBLIC.getIndex()
         );
     }
 
@@ -97,7 +97,7 @@ public class CenterGraphElementsOperatorNeo4j implements CenteredGraphElementsOp
                 true,
                 false,
                 "creationDate",
-                ShareLevel.PUBLIC.getConfidentialityIndex()
+                ShareLevel.PUBLIC.getIndex()
         );
     }
 
@@ -112,7 +112,7 @@ public class CenterGraphElementsOperatorNeo4j implements CenteredGraphElementsOp
                 true,
                 false,
                 "creationDate",
-                ShareLevel.PUBLIC.getConfidentialityIndex()
+                ShareLevel.PUBLIC.getIndex()
         );
     }
 
@@ -127,8 +127,8 @@ public class CenterGraphElementsOperatorNeo4j implements CenteredGraphElementsOp
                 true,
                 true,
                 "creationDate",
-                ShareLevel.FRIENDS.getConfidentialityIndex(),
-                ShareLevel.PUBLIC.getConfidentialityIndex()
+                ShareLevel.FRIENDS.getIndex(),
+                ShareLevel.PUBLIC.getIndex()
         );
     }
 
@@ -143,8 +143,8 @@ public class CenterGraphElementsOperatorNeo4j implements CenteredGraphElementsOp
                 true,
                 true,
                 "creationDate",
-                ShareLevel.FRIENDS.getConfidentialityIndex(),
-                ShareLevel.PUBLIC.getConfidentialityIndex()
+                ShareLevel.FRIENDS.getIndex(),
+                ShareLevel.PUBLIC.getIndex()
         );
     }
 
@@ -158,6 +158,7 @@ public class CenterGraphElementsOperatorNeo4j implements CenteredGraphElementsOp
                                     (filterOnUser ? "n.owner=$owner AND " : "") + "EXISTS(n.last_center_date)" +
                                     (shareLevels.length == 0 ? " " : "AND n.shareLevel IN {shareLevels} ") +
                                     "OPTIONAL MATCH (n)-[idr:IDENTIFIED_TO]->(id) " +
+                                    (shareLevels.length == 0 ? " " : "WHERE id.shareLevel IN {shareLevels} ") +
                                     "RETURN " +
                                     TagQueryBuilder.identificationReturnQueryPart() +
                                     "%s %s %s n.%s as context, n.number_of_visits as numberOfVisits, n.creation_date as creationDate, n.last_center_date as lastCenterDate, n.label as label, n.uri as uri, n.nb_references as nbReferences, n.colors as colors, n.shareLevel, 'Pattern' IN LABELS(n) as isPattern " +

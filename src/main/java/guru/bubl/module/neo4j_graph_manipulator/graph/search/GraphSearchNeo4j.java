@@ -133,6 +133,8 @@ public class GraphSearchNeo4j implements GraphSearch {
                                     "WHERE n." + (forPersonal ? "owner=$owner" : "shareLevel=40 ") +
                                     (!forPersonal && !StringUtils.isEmpty(username) ? "OR n.owner=$owner " : " ") +
                                     "OPTIONAL MATCH (n)-[idr:IDENTIFIED_TO]->(id) " +
+                                    "WHERE id." + (forPersonal ? "owner=$owner" : " shareLevel=40 ") +
+                                    (!forPersonal && !StringUtils.isEmpty(username) ? "OR id.owner=$owner " : " ") +
                                     "RETURN " +
                                     "score, n.uri, n.label, n.external_uri, COALESCE(n.n.nb_references, 0) as nbReferences, COALESCE(n.number_of_visits, 0) as nbVisits, n.creation_date, n.last_modification_date, " +
                                     "(CASE WHEN n.owner=$owner THEN n.private_context ELSE n.public_context END) as context, " +

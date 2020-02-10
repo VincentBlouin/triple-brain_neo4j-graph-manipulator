@@ -9,6 +9,7 @@ import com.google.inject.assistedinject.AssistedInject;
 import guru.bubl.module.model.Image;
 import guru.bubl.module.model.graph.FriendlyResourcePojo;
 import guru.bubl.module.model.graph.GraphElementPojo;
+import guru.bubl.module.model.graph.ShareLevel;
 import guru.bubl.module.model.graph.tag.TagFactory;
 import guru.bubl.module.model.graph.tag.TagOperator;
 import guru.bubl.module.model.graph.tag.Tag;
@@ -54,6 +55,16 @@ public class TagNeo4J implements TagOperator, OperatorNeo4j {
     @Override
     public URI getPatternUri() {
         return null;
+    }
+
+    @Override
+    public Boolean isPublic() {
+        return this.getShareLevel().isPublic();
+    }
+
+    @Override
+    public ShareLevel getShareLevel() {
+        return graphElementOperator.getShareLevel();
     }
 
     public enum props {
@@ -206,6 +217,19 @@ public class TagNeo4J implements TagOperator, OperatorNeo4j {
                 );
             }
             this.remove();
+        }
+    }
+
+    @Override
+    public void setShareLevel(ShareLevel shareLevel) {
+        try (Session session = driver.session()) {
+            session.run(
+                    queryPrefix() + "SET n.shareLevel=$shareLevel ",
+                            parameters(
+                                    "uri", uri().toString(),
+                                    "shareLevel", shareLevel.getIndex()
+                            )
+            );
         }
     }
 

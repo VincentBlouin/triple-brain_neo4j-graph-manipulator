@@ -16,6 +16,7 @@ import java.net.URI;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class VertexFromExtractorQueryRow {
 
@@ -31,7 +32,7 @@ public class VertexFromExtractorQueryRow {
         this.keyPrefix = keyPrefix;
     }
 
-    public VertexInSubGraph build(ShareLevel shareLevel) {
+    public VertexInSubGraph build() {
         VertexInSubGraphPojo vertexInSubGraphPojo = new VertexInSubGraphPojo(
                 GraphElementFromExtractorQueryRow.usingRowAndKey(
                         row,
@@ -43,7 +44,7 @@ public class VertexFromExtractorQueryRow {
                 null,
                 null,
                 getSuggestions(),
-                shareLevel
+                getShareLevel(keyPrefix, row)
         );
         vertexInSubGraphPojo.getGraphElement().setChildrenIndex(
                 getChildrenIndexes(keyPrefix, row)
@@ -119,6 +120,10 @@ public class VertexFromExtractorQueryRow {
         return row.get(
                 key
         ).asString();
+    }
+
+    public static ShareLevel getShareLevel(String keyPrefix, Record row) {
+        return ShareLevel.get(row.get(keyPrefix + ".shareLevel").asInt());
     }
 
     private Boolean isPattern() {

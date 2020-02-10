@@ -57,9 +57,13 @@ public class TagQueryBuilder {
                         identificationKey,
                         FriendlyResourceNeo4j.props.creation_date.name()
                 ) +
-                QueryUtils.getLastPropertyUsingContainerNameQueryPart(
+                QueryUtils.getPropertyUsingContainerNameQueryPart(
                         identificationKey,
                         "colors"
+                ) +
+                QueryUtils.getLastPropertyUsingContainerNameQueryPart(
+                        identificationKey,
+                        "shareLevel"
                 ) +
                 "]) as " + identificationKey + ", ";
     }

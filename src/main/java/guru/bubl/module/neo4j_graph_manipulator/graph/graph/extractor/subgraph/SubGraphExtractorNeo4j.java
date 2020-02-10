@@ -46,7 +46,7 @@ public class SubGraphExtractorNeo4j {
             new HashMap<>()
     );
 
-    private Set<ShareLevel> inShareLevels = new HashSet<>();
+    private Integer[] inShareLevels;
 
     protected Driver driver;
 
@@ -60,7 +60,7 @@ public class SubGraphExtractorNeo4j {
                 driver,
                 centerBubbleUri,
                 depth,
-                null
+                ShareLevel.PRIVATE.getIndex()
         );
     }
 
@@ -75,8 +75,9 @@ public class SubGraphExtractorNeo4j {
         this.centerBubbleUri = centerBubbleUri;
         this.depth = depth;
         this.resultsLimit = resultsLimit;
-        inShareLevels.clear();
-        inShareLevels.add(ShareLevel.PRIVATE);
+        this.inShareLevels = new Integer[]{
+                ShareLevel.PRIVATE.getIndex()
+        };
         this.isCenterTagFlow = UserUris.isUriOfAnIdentifier(centerBubbleUri);
     }
 
@@ -84,7 +85,7 @@ public class SubGraphExtractorNeo4j {
     protected SubGraphExtractorNeo4j(
             Driver driver,
             @Assisted URI centerBubbleUri,
-            @Assisted Set<ShareLevel> inShareLevels
+            @Assisted Integer... inShareLevels
     ) {
         this.driver = driver;
         this.centerBubbleUri = centerBubbleUri;
@@ -97,8 +98,8 @@ public class SubGraphExtractorNeo4j {
     protected SubGraphExtractorNeo4j(
             Driver driver,
             @Assisted URI centerBubbleUri,
-            @Assisted Set<ShareLevel> inShareLevels,
-            @Assisted Integer depth
+            @Assisted Integer depth,
+            @Assisted Integer... inShareLevels
     ) {
         this.driver = driver;
         this.centerBubbleUri = centerBubbleUri;
@@ -112,7 +113,8 @@ public class SubGraphExtractorNeo4j {
             StatementResult rs = session.run(
                     queryToGetGraph(),
                     parameters(
-                            "centerUri", centerBubbleUri.toString()
+                            "centerUri", centerBubbleUri.toString(),
+                            "shareLevels", inShareLevels
                     )
             );
             Set<InternalRelationship> relationships = new HashSet<>();
@@ -130,13 +132,8 @@ public class SubGraphExtractorNeo4j {
                 relationships.addAll(relations);
                 switch (getGraphElementTypeFromRow(record)) {
                     case Vertex:
-                        ShareLevel shareLevel = ShareLevel.get(record.get("ge.shareLevel").asInt());
-                        if (!inShareLevels.contains(shareLevel)) {
-                            break;
-                        }
                         Vertex vertex = addVertexUsingRow(
-                                record,
-                                shareLevel
+                                record
                         );
                         idsUri.put(
                                 record.get("nId").asLong(),
@@ -221,11 +218,11 @@ public class SubGraphExtractorNeo4j {
         return type;
     }
 
-    private VertexInSubGraph addVertexUsingRow(Record row, ShareLevel shareLevel) {
+    private VertexInSubGraph addVertexUsingRow(Record row) {
         VertexInSubGraph vertex = new VertexFromExtractorQueryRow(
                 row,
                 SubGraphExtractorNeo4j.GRAPH_ELEMENT_QUERY_KEY
-        ).build(shareLevel);
+        ).build();
         subGraph.addVertex(
                 (VertexInSubGraphPojo) vertex
         );
@@ -236,7 +233,9 @@ public class SubGraphExtractorNeo4j {
         return
                 "MATCH(start_node:Resource{uri:$centerUri}) " +
                         getMatchQueryPart() +
+                        "WHERE ge.shareLevel IN {shareLevels} WITH ge,rel " +
                         "OPTIONAL MATCH (ge)-[idr:IDENTIFIED_TO]->(id) " +
+                        "WHERE id.shareLevel IN {shareLevels} " +
                         "RETURN " +
                         vertexAndEdgeCommonQueryPart(GRAPH_ELEMENT_QUERY_KEY) +
                         vertexReturnQueryPart(GRAPH_ELEMENT_QUERY_KEY) +
