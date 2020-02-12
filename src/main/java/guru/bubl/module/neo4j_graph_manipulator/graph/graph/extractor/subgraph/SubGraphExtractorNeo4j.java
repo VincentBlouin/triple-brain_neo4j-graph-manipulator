@@ -171,9 +171,7 @@ public class SubGraphExtractorNeo4j {
                         idsUri.get(relation.startNodeId())
                 );
                 URI uri = idsUri.get(relation.endNodeId());
-                if (uri == null) {
-                } else if (edge == null) {
-                    subGraph.vertices().remove(uri);
+                if (uri == null || edge == null) {
                 } else if (relation.type().equals("SOURCE_VERTEX")) {
                     edge.setSourceVertex(
                             new VertexInSubGraphPojo(
