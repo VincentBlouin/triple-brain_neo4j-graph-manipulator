@@ -11,6 +11,8 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph.G
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph.VertexFromExtractorQueryRow;
 import org.neo4j.driver.v1.Record;
 
+import java.util.List;
+
 public class VertexSearchResultBuilder implements SearchResultBuilder {
 
     private Record row;
@@ -41,6 +43,9 @@ public class VertexSearchResultBuilder implements SearchResultBuilder {
                 getNbVisits()
         );
         searchResult.setShareLevel(this.extractShareLevel());
+        searchResult.setIsPattern(
+                isPattern()
+        );
         return searchResult;
     }
 
@@ -52,6 +57,18 @@ public class VertexSearchResultBuilder implements SearchResultBuilder {
     private Integer getNbVisits() {
         return row.get("nbVisits").asObject() == null ?
                 0 : row.get("nbVisits").asInt();
+    }
+
+    private Boolean isPattern() {
+        List<String> types = (List) row.get("type").asList();
+        Boolean isPattern = false;
+        for (String typeStr : types) {
+            GraphElementType graphElementType = GraphElementType.valueOf(typeStr);
+            if (graphElementType == GraphElementType.Pattern) {
+                isPattern = true;
+            }
+        }
+        return isPattern;
     }
 
 }
