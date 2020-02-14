@@ -62,6 +62,7 @@ public class MetaSearchResultBuilder implements SearchResultBuilder {
                 identifierAsGraphElement,
                 getContext()
         );
+        searchResult.setShareLevel(this.extractShareLevel());
         searchResult.setNbReferences(
                 tagPojo.getNbReferences()
         );

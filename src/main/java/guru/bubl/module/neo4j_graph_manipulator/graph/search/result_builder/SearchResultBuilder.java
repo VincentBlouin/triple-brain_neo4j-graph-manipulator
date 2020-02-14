@@ -30,5 +30,13 @@ public interface SearchResultBuilder {
         );
     }
 
+    default ShareLevel extractShareLevel() {
+        if (getRow().get("shareLevel").asObject() == null) {
+            return ShareLevel.PRIVATE;
+        }
+        Integer shareLevel = getRow().get("shareLevel").asInt();
+        return ShareLevel.get(shareLevel);
+    }
+
     Record getRow();
 }

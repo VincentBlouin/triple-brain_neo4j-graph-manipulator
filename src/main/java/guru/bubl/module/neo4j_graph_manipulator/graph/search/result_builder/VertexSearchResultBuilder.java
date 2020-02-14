@@ -33,6 +33,7 @@ public class VertexSearchResultBuilder implements SearchResultBuilder {
         searchResult.setNbVisits(
                 getNbVisits()
         );
+        searchResult.setShareLevel(this.extractShareLevel());
         return searchResult;
     }
 
