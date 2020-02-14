@@ -57,11 +57,15 @@ public class MetaSearchResultBuilder implements SearchResultBuilder {
                         tagPojo
                 )
         );
-        return new GraphElementSearchResultPojo(
+        GraphElementSearchResultPojo searchResult = new GraphElementSearchResultPojo(
                 GraphElementType.Meta,
                 identifierAsGraphElement,
                 getContext()
         );
+        searchResult.setNbReferences(
+                tagPojo.getNbReferences()
+        );
+        return searchResult;
     }
 
     @Override
