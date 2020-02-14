@@ -8,6 +8,7 @@ import guru.bubl.module.model.graph.GraphElementType;
 import guru.bubl.module.model.search.GraphElementSearchResult;
 import guru.bubl.module.model.search.GraphElementSearchResultPojo;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph.GraphElementFromExtractorQueryRow;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph.VertexFromExtractorQueryRow;
 import org.neo4j.driver.v1.Record;
 
 public class VertexSearchResultBuilder implements SearchResultBuilder {
@@ -29,6 +30,12 @@ public class VertexSearchResultBuilder implements SearchResultBuilder {
                         prefix
                 ).build(),
                 getContext()
+        );
+        searchResult.getGraphElement().setColors(
+                VertexFromExtractorQueryRow.getColors(
+                        prefix,
+                        row
+                )
         );
         searchResult.setNbVisits(
                 getNbVisits()
