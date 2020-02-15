@@ -73,6 +73,9 @@ public class MetaSearchResultBuilder implements SearchResultBuilder {
         searchResult.setNbReferences(
                 tagPojo.getNbReferences()
         );
+        searchResult.setNbVisits(
+                getNbVisits()
+        );
         return searchResult;
     }
 

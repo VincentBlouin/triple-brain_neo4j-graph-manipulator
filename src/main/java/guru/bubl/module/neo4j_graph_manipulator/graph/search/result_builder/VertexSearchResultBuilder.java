@@ -54,11 +54,6 @@ public class VertexSearchResultBuilder implements SearchResultBuilder {
         return row;
     }
 
-    private Integer getNbVisits() {
-        return row.get("nbVisits").asObject() == null ?
-                0 : row.get("nbVisits").asInt();
-    }
-
     private Boolean isPattern() {
         List<String> types = (List) row.get("type").asList();
         Boolean isPattern = false;

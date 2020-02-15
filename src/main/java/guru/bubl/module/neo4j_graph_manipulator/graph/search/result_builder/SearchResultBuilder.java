@@ -38,5 +38,10 @@ public interface SearchResultBuilder {
         return ShareLevel.get(shareLevel);
     }
 
+    default Integer getNbVisits() {
+        return getRow().get("nbVisits").asObject() == null ?
+                0 : getRow().get("nbVisits").asInt();
+    }
+
     Record getRow();
 }
