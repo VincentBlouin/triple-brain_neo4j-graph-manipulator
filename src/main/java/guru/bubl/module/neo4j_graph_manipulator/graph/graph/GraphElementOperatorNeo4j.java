@@ -15,6 +15,7 @@ import guru.bubl.module.model.json.ImageJson;
 import guru.bubl.module.neo4j_graph_manipulator.graph.FriendlyResourceFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.FriendlyResourceNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.OperatorNeo4j;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph.VertexFromExtractorQueryRow;
 import guru.bubl.module.neo4j_graph_manipulator.graph.image.ImagesNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.tag.TagFactoryNeo4J;
 import guru.bubl.module.neo4j_graph_manipulator.graph.search.GraphIndexerNeo4j;
@@ -386,6 +387,12 @@ public class GraphElementOperatorNeo4j implements GraphElementOperator, Operator
                                         record.get("creation_date").asLong(),
                                         record.get("last_modification_date").asLong()
                                 )
+                        )
+                );
+                tagPojo.setShareLevel(
+                        VertexFromExtractorQueryRow.getShareLevel(
+                                "f",
+                                record
                         )
                 );
                 Boolean isReference = tag.getExternalResourceUri().equals(

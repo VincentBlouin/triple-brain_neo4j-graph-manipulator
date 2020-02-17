@@ -11,7 +11,6 @@ public class AddTagQueryBuilder {
 
     private TagPojo identification;
     private GraphElementOperatorNeo4j graphElement;
-    private Boolean isOriginalReference;
 
     public static AddTagQueryBuilder usingIdentificationForGraphElement(
             TagPojo identification, GraphElementOperatorNeo4j graphElement
@@ -54,7 +53,8 @@ public class AddTagQueryBuilder {
                         "f.images as images, " +
                         "f.creation_date as creation_date, " +
                         "f.last_modification_date as last_modification_date, " +
-                        "f.nb_references as nbReferences",
+                        "f.nb_references as nbReferences, " +
+                        "f.shareLevel ",
                 this.graphElement.queryPrefix()
         );
     }
