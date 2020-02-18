@@ -960,7 +960,10 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
                             "UNWIND nodes as s " +
                             "SET s.shareLevel=40," +
                             "s.nb_public_neighbors = s.number_of_connected_edges_property_name," +
-                            "s.nb_friend_neighbors = 0"
+                            "s.nb_friend_neighbors = 0 " +
+                            "WITH s "+
+                            "MATCH (s)-[:IDENTIFIED_TO]->(tag) "+
+                            "SET tag.shareLevel=40"
                     ,
                     parameters(
                             "uri", uri().toString()
