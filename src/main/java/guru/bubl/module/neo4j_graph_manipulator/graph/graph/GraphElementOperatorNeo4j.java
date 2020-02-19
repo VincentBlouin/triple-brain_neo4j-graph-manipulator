@@ -362,7 +362,9 @@ public class GraphElementOperatorNeo4j implements GraphElementOperator, Operator
                             FriendlyResourceNeo4j.props.last_modification_date.name(),
                             new Date().getTime(),
                             FriendlyResourceNeo4j.props.owner.name(),
-                            UserUris.ownerUserNameFromUri(uri())
+                            UserUris.ownerUserNameFromUri(uri()),
+                            "shareLevel",
+                            tag.getShareLevel().getIndex()
                     )
             );
             while (result.hasNext()) {
