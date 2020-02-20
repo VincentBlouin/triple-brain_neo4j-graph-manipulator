@@ -405,21 +405,21 @@ public class GraphElementOperatorNeo4j implements GraphElementOperator, Operator
                         tag.getExternalResourceUri()
                 ).equals(getOwnerUsername());
 
-                if (isOwnerOfExternalUri && !isReference && addOriginalReferenceTags) {
-                    Map<URI, TagPojo> existingTags = getIdentifications();
-                    Map<URI, TagPojo> referenceTags = graphElementOperatorFactory.withUri(
-                            tag.getExternalResourceUri()
-                    ).getIdentifications();
-                    for (TagPojo otherIdentifier : referenceTags.values()) {
-                        if (!existingTags.containsKey(otherIdentifier.getExternalResourceUri())) {
-                            otherIdentifier = addTagAndOriginalReferenceOnesOrNot(
-                                    otherIdentifier,
-                                    false
-                            ).get(otherIdentifier.getExternalResourceUri());
-                        }
-                        identifications.put(otherIdentifier.getExternalResourceUri(), otherIdentifier);
-                    }
-                }
+//                if (isOwnerOfExternalUri && !isReference && addOriginalReferenceTags) {
+//                    Map<URI, TagPojo> existingTags = getIdentifications();
+//                    Map<URI, TagPojo> referenceTags = graphElementOperatorFactory.withUri(
+//                            tag.getExternalResourceUri()
+//                    ).getIdentifications();
+//                    for (TagPojo otherIdentifier : referenceTags.values()) {
+//                        if (!existingTags.containsKey(otherIdentifier.getExternalResourceUri())) {
+//                            otherIdentifier = addTagAndOriginalReferenceOnesOrNot(
+//                                    otherIdentifier,
+//                                    false
+//                            ).get(otherIdentifier.getExternalResourceUri());
+//                        }
+//                        identifications.put(otherIdentifier.getExternalResourceUri(), otherIdentifier);
+//                    }
+//                }
                 Boolean justCreatedTag = tagCreationDate.equals(tagPojo.creationDate());
                 Boolean isVoidReference = tag.getExternalResourceUri().toString().contains("/void/ref/");
                 if (!isReference && isOwnerOfExternalUri && justCreatedTag && !isVoidReference) {
@@ -428,7 +428,9 @@ public class GraphElementOperatorNeo4j implements GraphElementOperator, Operator
                     ).addMeta(
                             tagPojo
                     );
-                    tagPojo = tags.get(tag.getExternalResourceUri());
+                    if(tags.get(tag.getExternalResourceUri()) != null){
+                        tagPojo = tags.get(tag.getExternalResourceUri());
+                    }
                 }
                 identifications.put(
                         tag.getExternalResourceUri(),
