@@ -67,7 +67,8 @@ public class CenterGraphElementsOperatorNeo4j implements CenteredGraphElementsOp
                 true,
                 false,
                 false,
-                "lastCenterDate"
+                "lastCenterDate",
+                false
         );
     }
 
@@ -82,6 +83,7 @@ public class CenterGraphElementsOperatorNeo4j implements CenteredGraphElementsOp
                 true,
                 false,
                 "creationDate",
+                false,
                 ShareLevel.PUBLIC.getIndex()
         );
     }
@@ -97,6 +99,7 @@ public class CenterGraphElementsOperatorNeo4j implements CenteredGraphElementsOp
                 true,
                 false,
                 "creationDate",
+                false,
                 ShareLevel.PUBLIC.getIndex()
         );
     }
@@ -112,6 +115,7 @@ public class CenterGraphElementsOperatorNeo4j implements CenteredGraphElementsOp
                 true,
                 false,
                 "creationDate",
+                true,
                 ShareLevel.PUBLIC.getIndex()
         );
     }
@@ -127,6 +131,7 @@ public class CenterGraphElementsOperatorNeo4j implements CenteredGraphElementsOp
                 true,
                 true,
                 "creationDate",
+                false,
                 ShareLevel.FRIENDS.getIndex(),
                 ShareLevel.PUBLIC.getIndex()
         );
@@ -143,19 +148,20 @@ public class CenterGraphElementsOperatorNeo4j implements CenteredGraphElementsOp
                 true,
                 true,
                 "creationDate",
+                false,
                 ShareLevel.FRIENDS.getIndex(),
                 ShareLevel.PUBLIC.getIndex()
         );
     }
 
 
-    private List<CenterGraphElementPojo> get(String match, User user, Boolean filterOnUser, Boolean isPrivateContext, Boolean nbAll, Boolean nbPublic, Boolean nbFriends, String sortBy, Integer... shareLevels) {
+    private List<CenterGraphElementPojo> get(String match, User user, Boolean filterOnUser, Boolean isPrivateContext, Boolean nbAll, Boolean nbPublic, Boolean nbFriends, String sortBy, Boolean includeNonCenters, Integer... shareLevels) {
         List<CenterGraphElementPojo> centerGraphElements = new ArrayList<>();
         try (Session session = driver.session()) {
             StatementResult rs = session.run(
                     String.format(
-                            match + " " +
-                                    (filterOnUser ? "n.owner=$owner AND " : "") + "EXISTS(n.last_center_date)" +
+                            match + " 1=1 " +
+                                    (filterOnUser ? "AND n.owner=$owner" : "") + (includeNonCenters ? " " : " AND EXISTS(n.last_center_date) ") +
                                     (shareLevels.length == 0 ? " " : "AND n.shareLevel IN {shareLevels} ") +
                                     "OPTIONAL MATCH (n)-[idr:IDENTIFIED_TO]->(id) " +
                                     (shareLevels.length == 0 ? " " : "WHERE id.shareLevel IN {shareLevels} ") +
