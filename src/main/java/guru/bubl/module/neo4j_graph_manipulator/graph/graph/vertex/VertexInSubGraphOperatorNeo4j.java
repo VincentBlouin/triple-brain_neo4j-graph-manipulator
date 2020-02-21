@@ -994,12 +994,12 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
 
     @Override
     public Boolean makePattern() {
-        if (isUnderPattern()) {
+        if (isPatternOrUnderPattern()) {
             return false;
         }
         try (Session session = driver.session()) {
             session.run(
-                    queryPrefix() + "SET n:Pattern " +
+                    queryPrefix() + "SET n:Pattern,n.nbPatternUsage=0 " +
                             "WITH n " +
                             "CALL apoc.path.subgraphAll(n, {relationshipFilter:'SOURCE_VERTEX, DESTINATION_VERTEX'}) YIELD nodes " +
                             "UNWIND nodes as s " +
@@ -1007,6 +1007,7 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
                             "s.isUnderPattern=true," +
                             "s.nb_public_neighbors = s.number_of_connected_edges_property_name," +
                             "s.nb_friend_neighbors = 0 " +
+                            "WITH s,n " +
                             "REMOVE n.isUnderPattern " +
                             "WITH s " +
                             "MATCH (s)-[:IDENTIFIED_TO]->(tag) " +
@@ -1033,6 +1034,18 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
                             "uri", uri().toString()
                     )
             );
+        }
+    }
+
+    @Override
+    public Integer getNbPatternUsage() {
+        try (Session session = driver.session()) {
+            return session.run(
+                    queryPrefix() + "RETURN n.nbPatternUsage",
+                    parameters(
+                            "uri", uri().toString()
+                    )
+            ).single().get("n.nbPatternUsage").asInt();
         }
     }
 
