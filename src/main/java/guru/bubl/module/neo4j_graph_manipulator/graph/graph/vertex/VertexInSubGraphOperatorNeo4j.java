@@ -218,17 +218,25 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
 
     @Override
     public EdgePojo addVertexAndRelation() {
-        return addVertexAndRelationToTheLeftOrNotAction(
-                this,
+        return addVertexAndRelationIsUnderPatternOrNot(
                 new UserUris(
                         getOwnerUsername()
                 ).generateVertexUri(),
-                null
+                null,
+                this.isPatternOrUnderPattern()
         );
     }
 
     @Override
     public EdgePojo addVertexAndRelationWithIds(String vertexId, String edgeId) {
+        return addVertexAndRelationWithIdsUnderPatternOrNot(
+                vertexId,
+                edgeId,
+                this.isPatternOrUnderPattern()
+        );
+    }
+
+    private EdgePojo addVertexAndRelationWithIdsUnderPatternOrNot(String vertexId, String edgeId, Boolean isUnderPattern) {
         UserUris userUri = new UserUris(
                 getOwnerUsername()
         );
@@ -240,33 +248,50 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
         if (FriendlyResourceNeo4j.haveElementWithUri(edgeUri, driver)) {
             edgeUri = userUri.generateEdgeUri();
         }
-        return this.addVertexAndRelationToTheLeftOrNotAction(
-                this,
+        return this.addVertexAndRelationIsUnderPatternOrNot(
                 vertexUri,
-                edgeUri
+                edgeUri,
+                isUnderPattern
         );
     }
 
-    private EdgePojo addVertexAndRelationToTheLeftOrNotAction(VertexInSubGraphOperatorNeo4j self, URI newVertexUri, URI newEdgeUri) {
+    private EdgePojo addVertexAndRelationIsUnderPatternOrNot(URI newVertexUri, URI newEdgeUri, Boolean isUnderPattern) {
         VertexInSubGraphOperatorNeo4j newVertexOperator = vertexFactory.withUri(
                 newVertexUri
         );
-        self.incrementNumberOfConnectedEdges();
+        this.incrementNumberOfConnectedEdges();
+        Boolean isPublic = isUnderPattern || this.isPublic();
+        Map<String, Object> properties = map(
+                props.number_of_connected_edges_property_name.name(), 1,
+                props.nb_public_neighbors.name(), isPublic ? 1 : 0
+        );
+        if (isUnderPattern) {
+            properties.put(
+                    "isUnderPattern",
+                    true
+            );
+            properties.put(
+                    "shareLevel",
+                    ShareLevel.PUBLIC.getIndex()
+            );
+        }
         VertexPojo newVertex = newVertexOperator.createVertexUsingInitialValues(
-                map(
-                        props.number_of_connected_edges_property_name.name(), 1,
-                        props.nb_public_neighbors.name(), self.isPublic() ? 1 : 0
-                )
+                properties
         );
         EdgeOperatorNeo4j edgeOperator = newEdgeUri == null ? edgeFactory.withSourceAndDestinationVertex(
-                self,
+                this,
                 newVertexOperator
         ) : edgeFactory.withUriAndSourceAndDestinationVertex(
                 newEdgeUri,
-                self,
+                this,
                 newVertexOperator
         );
-        EdgePojo newEdge = edgeOperator.createEdge();
+        EdgePojo newEdge = isUnderPattern ?
+                edgeOperator.createEdgeWithAdditionalProperties(
+                        map("isUnderPattern", true)
+                ) :
+                edgeOperator.createEdge();
+
         newEdge.setDestinationVertex(
                 new VertexInSubGraphPojo(
                         newVertex
@@ -277,6 +302,9 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
 
     @Override
     public EdgeOperator addRelationToVertex(final VertexOperator destinationVertex) {
+        if (this.isPatternOrUnderPattern() || destinationVertex.isPatternOrUnderPattern()) {
+            return null;
+        }
         EdgeOperator edge = edgeFactory.withSourceAndDestinationVertex(
                 this,
                 destinationVertex
@@ -329,10 +357,10 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
                         getOwnerUsername()
                 ).generateVertexUri()
         );
-        Edge newEdge = addVertexAndRelationToTheLeftOrNotAction(
-                this,
+        Edge newEdge = addVertexAndRelationIsUnderPatternOrNot(
                 newVertex.uri(),
-                null
+                null,
+                false
         );
         EdgeOperator newEdgeOperator = edgeFactory.withUri(
                 newEdge.uri()
@@ -379,10 +407,10 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
                         getOwnerUsername()
                 ).generateVertexUri()
         );
-        EdgePojo newEdge = addVertexAndRelationToTheLeftOrNotAction(
-                this,
+        EdgePojo newEdge = addVertexAndRelationIsUnderPatternOrNot(
                 newVertex.uri(),
-                null
+                null,
+                false
         );
         EdgeOperator newEdgeOperator = edgeFactory.withUri(
                 newEdge.uri()
@@ -878,6 +906,16 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
     }
 
     @Override
+    public Boolean isUnderPattern() {
+        return graphElementOperator.isUnderPattern();
+    }
+
+    @Override
+    public Boolean isPatternOrUnderPattern() {
+        return graphElementOperator.isPatternOrUnderPattern();
+    }
+
+    @Override
     public String getChildrenIndex() {
         return graphElementOperator.getChildrenIndex();
     }
@@ -910,7 +948,10 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
     }
 
     @Override
-    public void mergeTo(VertexOperator vertexOperator) {
+    public Boolean mergeTo(VertexOperator vertexOperator) {
+        if (this.isPatternOrUnderPattern() || vertexOperator.isPatternOrUnderPattern()) {
+            return false;
+        }
         this.connectedEdges().values().forEach(
                 (edge) -> {
                     if (edge.destinationVertex().equals(this)) {
@@ -924,6 +965,7 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
             vertexOperator.addMeta(tag);
         });
         this.remove();
+        return true;
     }
 
     @Override
@@ -951,7 +993,10 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
     }
 
     @Override
-    public void makePattern() {
+    public Boolean makePattern() {
+        if (isUnderPattern()) {
+            return false;
+        }
         try (Session session = driver.session()) {
             session.run(
                     queryPrefix() + "SET n:Pattern " +
@@ -959,10 +1004,12 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
                             "CALL apoc.path.subgraphAll(n, {relationshipFilter:'SOURCE_VERTEX, DESTINATION_VERTEX'}) YIELD nodes " +
                             "UNWIND nodes as s " +
                             "SET s.shareLevel=40," +
+                            "s.isUnderPattern=true," +
                             "s.nb_public_neighbors = s.number_of_connected_edges_property_name," +
                             "s.nb_friend_neighbors = 0 " +
-                            "WITH s "+
-                            "MATCH (s)-[:IDENTIFIED_TO]->(tag) "+
+                            "REMOVE n.isUnderPattern " +
+                            "WITH s " +
+                            "MATCH (s)-[:IDENTIFIED_TO]->(tag) " +
                             "SET tag.shareLevel=40"
                     ,
                     parameters(
@@ -970,13 +1017,18 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
                     )
             );
         }
+        return true;
     }
 
     @Override
     public void undoPattern() {
         try (Session session = driver.session()) {
             session.run(
-                    queryPrefix() + "remove n:Pattern",
+                    queryPrefix() + "remove n:Pattern " +
+                            "WITH n " +
+                            "CALL apoc.path.subgraphAll(n, {relationshipFilter:'SOURCE_VERTEX, DESTINATION_VERTEX'}) YIELD nodes " +
+                            "UNWIND nodes as s " +
+                            "REMOVE s.isUnderPattern",
                     parameters(
                             "uri", uri().toString()
                     )

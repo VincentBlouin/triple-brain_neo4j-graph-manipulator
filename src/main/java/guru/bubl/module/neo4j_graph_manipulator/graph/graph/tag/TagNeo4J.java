@@ -225,10 +225,10 @@ public class TagNeo4J implements TagOperator, OperatorNeo4j {
         try (Session session = driver.session()) {
             session.run(
                     queryPrefix() + "SET n.shareLevel=$shareLevel ",
-                            parameters(
-                                    "uri", uri().toString(),
-                                    "shareLevel", shareLevel.getIndex()
-                            )
+                    parameters(
+                            "uri", uri().toString(),
+                            "shareLevel", shareLevel.getIndex()
+                    )
             );
         }
     }
@@ -339,6 +339,16 @@ public class TagNeo4J implements TagOperator, OperatorNeo4j {
     @Override
     public void setChildrenIndex(String childrenIndex) {
         graphElementOperator.setChildrenIndex(childrenIndex);
+    }
+
+    @Override
+    public Boolean isUnderPattern() {
+        return graphElementOperator.isUnderPattern();
+    }
+
+    @Override
+    public Boolean isPatternOrUnderPattern() {
+        return this.isUnderPattern();
     }
 
     @Override

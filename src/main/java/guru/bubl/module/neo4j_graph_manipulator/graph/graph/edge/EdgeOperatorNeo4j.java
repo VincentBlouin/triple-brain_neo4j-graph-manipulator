@@ -57,6 +57,10 @@ public class EdgeOperatorNeo4j implements EdgeOperator, OperatorNeo4j {
     protected Vertex sourceVertex;
     protected Vertex destinationVertex;
 
+    private static final Map<String, Object> edgeCreateProperties = map(
+            VertexInSubGraphOperatorNeo4j.props.shareLevel.name(), ShareLevel.PRIVATE.getIndex()
+    );
+
     @Inject
     protected
     Driver driver;
@@ -454,6 +458,16 @@ public class EdgeOperatorNeo4j implements EdgeOperator, OperatorNeo4j {
     }
 
     @Override
+    public Boolean isUnderPattern() {
+        return graphElementOperator.isUnderPattern();
+    }
+
+    @Override
+    public Boolean isPatternOrUnderPattern() {
+        return graphElementOperator.isUnderPattern();
+    }
+
+    @Override
     public String getChildrenIndex() {
         return graphElementOperator.getChildrenIndex();
     }
@@ -471,9 +485,17 @@ public class EdgeOperatorNeo4j implements EdgeOperator, OperatorNeo4j {
     @Override
     public EdgePojo createEdge() {
         return createEdgeUsingInitialValues(
-                map(
-                        VertexInSubGraphOperatorNeo4j.props.shareLevel.name(), ShareLevel.PRIVATE.getIndex()
-                )
+                edgeCreateProperties
+        );
+    }
+
+    @Override
+    public EdgePojo createEdgeWithAdditionalProperties(Map<String, Object> props) {
+        props.putAll(
+                edgeCreateProperties
+        );
+        return createEdgeUsingInitialValues(
+                props
         );
     }
 

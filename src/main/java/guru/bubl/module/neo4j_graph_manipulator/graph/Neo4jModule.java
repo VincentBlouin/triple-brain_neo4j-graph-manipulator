@@ -252,6 +252,7 @@ public class Neo4jModule extends AbstractModule {
             graphDb.execute("CREATE INDEX ON :GraphElement(shareLevel)");
             graphDb.execute("CREATE INDEX ON :GraphElement(last_center_date)");
             graphDb.execute("CREATE INDEX ON :Meta(external_uri)");
+            graphDb.execute("CREATE INDEX ON :GraphElement(isUnderPattern)");
             tx.success();
             tx.close();
             registerShutdownHook(graphDb);

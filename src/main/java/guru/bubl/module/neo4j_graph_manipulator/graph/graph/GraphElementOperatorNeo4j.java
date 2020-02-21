@@ -227,6 +227,37 @@ public class GraphElementOperatorNeo4j implements GraphElementOperator, Operator
     }
 
     @Override
+    public Boolean isUnderPattern() {
+        try (Session session = driver.session()) {
+            Record record = session.run(
+                    queryPrefix() + "RETURN n.isUnderPattern",
+                    parameters(
+                            "uri", uri().toString()
+                    )
+            ).single();
+            return record.get("n.isUnderPattern").asObject() == null ?
+                    false :
+                    record.get("n.isUnderPattern").asBoolean();
+        }
+    }
+
+    @Override
+    public Boolean isPatternOrUnderPattern() {
+        try (Session session = driver.session()) {
+            Record record = session.run(
+                    queryPrefix() + "RETURN n.isUnderPattern,'Pattern' IN LABELS(n) as isPattern",
+                    parameters(
+                            "uri", uri().toString()
+                    )
+            ).single();
+            Boolean isUnderPattern = record.get("n.isUnderPattern").asObject() == null ?
+                    false :
+                    record.get("n.isUnderPattern").asBoolean();
+            return isUnderPattern || record.get("isPattern").asBoolean();
+        }
+    }
+
+    @Override
     public String getChildrenIndex() {
         try (Session session = driver.session()) {
             Record record = session.run(
@@ -428,7 +459,7 @@ public class GraphElementOperatorNeo4j implements GraphElementOperator, Operator
                     ).addMeta(
                             tagPojo
                     );
-                    if(tags.get(tag.getExternalResourceUri()) != null){
+                    if (tags.get(tag.getExternalResourceUri()) != null) {
                         tagPojo = tags.get(tag.getExternalResourceUri());
                     }
                 }

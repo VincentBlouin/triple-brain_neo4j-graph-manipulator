@@ -212,6 +212,16 @@ public class SchemaOperatorNeo4j implements SchemaOperator, OperatorNeo4j {
     }
 
     @Override
+    public Boolean isUnderPattern() {
+        return false;
+    }
+
+    @Override
+    public Boolean isPatternOrUnderPattern() {
+        return isUnderPattern();
+    }
+
+    @Override
     public String getChildrenIndex() {
         return graphElementOperator.getChildrenIndex();
     }
