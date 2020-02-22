@@ -49,7 +49,8 @@ public class PatternUserNeo4j implements PatternUser {
                 "CALL apoc.refactor.cloneSubgraph(nodes, relationships, {}) YIELD input, output, error " +
                 "WITH collect(output) as createdNodes " +
                 "UNWIND createdNodes as c " +
-                "REMOVE c:Pattern " +
+                "REMOVE c:Pattern, " +
+                "c.isUnderPattern " +
                 "SET c.owner=$owner, " +
                 "c.shareLevel=10," +
                 "c.creation_date=timestamp(), " +
