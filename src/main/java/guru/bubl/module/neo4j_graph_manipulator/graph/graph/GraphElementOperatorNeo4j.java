@@ -306,7 +306,7 @@ public class GraphElementOperatorNeo4j implements GraphElementOperator, Operator
             Tag identification
     ) {
         return addTagAndOriginalReferenceOnesOrNot(
-                identification,
+                (TagPojo) identification,
                 true
         );
     }
@@ -332,7 +332,7 @@ public class GraphElementOperatorNeo4j implements GraphElementOperator, Operator
         return this.getShareLevel().isPublic();
     }
 
-    private Map<URI, TagPojo> addTagAndOriginalReferenceOnesOrNot(Tag tag, Boolean addOriginalReferenceTags) {
+    private Map<URI, TagPojo> addTagAndOriginalReferenceOnesOrNot(TagPojo tag, Boolean addOriginalReferenceTags) {
         TagPojo identificationPojo;
         Boolean isIdentifyingToAnIdentification = UserUris.isUriOfAnIdentifier(
                 tag.getExternalResourceUri()
@@ -356,8 +356,8 @@ public class GraphElementOperatorNeo4j implements GraphElementOperator, Operator
         }
 
         identificationPojo.setCreationDate(new Date().getTime());
-        final FriendlyResourceNeo4j neo4jFriendlyResource = friendlyResourceFactory.withUri(
-                new UserUris(getOwnerUsername()).generateIdentificationUri()
+        identificationPojo.setUri(
+                tag.hasUri() && UserUris.isUriOfAnIdentifier(tag.uri()) ? tag.uri() : new UserUris(getOwnerUsername()).generateIdentificationUri()
         );
         Map<URI, TagPojo> identifications = new HashMap<>();
         Date tagCreationDate = new Date();
@@ -373,7 +373,7 @@ public class GraphElementOperatorNeo4j implements GraphElementOperator, Operator
                             "uri",
                             uri().toString(),
                             "metaUri",
-                            neo4jFriendlyResource.uri().toString(),
+                            identificationPojo.uri().toString(),
                             "label",
                             tag.label(),
                             "comment",
