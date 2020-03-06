@@ -103,6 +103,15 @@ public class GraphSearchNeo4j implements GraphSearch {
         );
     }
 
+    @Override
+    public List<GraphElementSearchResult> searchAllPatterns() {
+        return new Getter<GraphElementSearchResult>().get(
+                false,
+                "",
+                "patternLabel"
+        );
+    }
+
     private class Getter<ResultType extends GraphElementSearchResult> {
 
         public List<ResultType> get(

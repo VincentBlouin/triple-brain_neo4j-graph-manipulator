@@ -181,9 +181,10 @@ public class CenterGraphElementsOperatorNeo4j implements CenteredGraphElementsOp
                             "shareLevels", shareLevels
                     )
             );
+            Boolean includeLastCenterDate = shareLevels.length == 0 || Arrays.stream(shareLevels).anyMatch(ShareLevel.PRIVATE.getIndex()::equals);
             while (rs.hasNext()) {
                 Record record = rs.next();
-                Date lastCenterDate = null == record.get("lastCenterDate").asObject() ?
+                Date lastCenterDate = !includeLastCenterDate || null == record.get("lastCenterDate").asObject() ?
                         null :
                         new Date(record.get("lastCenterDate").asLong());
                 Integer numberOfVisits = null == record.get("numberOfVisits").asObject() ?
@@ -201,6 +202,9 @@ public class CenterGraphElementsOperatorNeo4j implements CenteredGraphElementsOp
                 Integer nbFriendNeighbors = null == record.get("nbFriendNeighbors").asObject() ?
                         null :
                         record.get("nbFriendNeighbors").asInt();
+                Long creationDate = null == record.get("creationDate").asObject() ?
+                        null :
+                        record.get("creationDate").asLong();
                 String colors = record.get("colors").asString();
                 ShareLevel shareLevel = record.get("n.shareLevel").asObject() == null ? ShareLevel.PRIVATE : ShareLevel.get(
                         record.get("n.shareLevel").asInt()
@@ -215,6 +219,7 @@ public class CenterGraphElementsOperatorNeo4j implements CenteredGraphElementsOp
                                 "id"
                         ).build()
                 );
+                graphElement.setCreationDate(creationDate);
                 graphElement.setColors(colors);
                 centerGraphElements.add(
                         new CenterGraphElementPojo(
