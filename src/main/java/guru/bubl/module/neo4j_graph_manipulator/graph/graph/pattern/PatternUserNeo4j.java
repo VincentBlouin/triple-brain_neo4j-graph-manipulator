@@ -47,7 +47,7 @@ public class PatternUserNeo4j implements PatternUser {
                 "WITH n " +
                 "CALL apoc.path.subgraphAll(n, {relationshipFilter:'SOURCE_VERTEX|DESTINATION_VERTEX|IDENTIFIED_TO>'}) YIELD nodes, relationships " +
                 "CALL apoc.refactor.cloneSubgraph(nodes, relationships, {}) YIELD input, output, error " +
-                "WITH collect(output) as createdNodes " +
+                "WITH collect(output) as createdNodes, n " +
                 "UNWIND createdNodes as c " +
                 "REMOVE c:Pattern, " +
                 "c.isUnderPattern " +
@@ -57,11 +57,11 @@ public class PatternUserNeo4j implements PatternUser {
                 "c.last_modification_date=timestamp(), " +
                 "c.pattern_uri = c.uri, " +
                 "c.uri=(CASE WHEN 'Edge' IN LABELS(c) THEN '" + userUris.baseEdgeUri() + "/' ELSE '" + userUris.baseVertexUri() + "/' END)+apoc.create.uuid() " +
-                "WITH c " +
+                "WITH c, n " +
                 "OPTIONAL MATCH (c)-[:IDENTIFIED_TO]->(tag) " +
-                "WITH c.uri as uri, c.pattern_uri as patternUri, tag, tag.external_uri as externalUri, tag.label as label, tag.comment as comment, tag.images as images " +
+                "WITH c.uri as uri, c.pattern_uri as patternUri, n.label as originalLabel, n.comment as originalComment, tag, tag.external_uri as externalUri, tag.label as label, tag.comment as comment, tag.images as images " +
                 "DETACH DELETE tag " +
-                "RETURN uri, patternUri, externalUri, label, comment, images";
+                "RETURN uri, originalLabel, originalComment, patternUri, externalUri, label, comment, images";
         try (Session session = driver.session()) {
             StatementResult rs = session.run(
                     query,
@@ -73,12 +73,23 @@ public class PatternUserNeo4j implements PatternUser {
                     )
             );
             URI centerUri = null;
+            TagPojo patternAsTag = new TagPojo(
+                    this.patternUri
+            );
             while (rs.hasNext()) {
                 Record record = rs.next();
                 String patternUri = record.get("patternUri").asString();
                 URI uri = URI.create(record.get("uri").asString());
                 if (patternUri.equals(this.patternUri.toString())) {
                     centerUri = uri;
+                    if (record.get("originalLabel").asObject() != null) {
+                        patternAsTag.setLabel(record.get("originalLabel").asString());
+                    }
+                    if (record.get("originalComment").asObject() != null) {
+                        patternAsTag.setComment(
+                                record.get("originalComment").asString()
+                        );
+                    }
                 }
                 if (record.get("externalUri").asObject() != null)
                     graphElementFactory.withUri(
@@ -95,6 +106,11 @@ public class PatternUserNeo4j implements PatternUser {
                             )
                     );
             }
+            graphElementFactory.withUri(
+                    centerUri
+            ).addMeta(
+                    patternAsTag
+            );
             return centerUri;
         }
     }

@@ -359,6 +359,9 @@ public class GraphElementOperatorNeo4j implements GraphElementOperator, Operator
         identificationPojo.setUri(
                 tag.hasUri() && UserUris.isUriOfAnIdentifier(tag.uri()) ? tag.uri() : new UserUris(getOwnerUsername()).generateIdentificationUri()
         );
+        if (!UserUris.ownerUserNameFromUri(identificationPojo.uri()).equals(getOwnerUsername())) {
+            return new HashMap<>();
+        }
         Map<URI, TagPojo> identifications = new HashMap<>();
         Date tagCreationDate = new Date();
         String searchContext = GraphIndexerNeo4j.descriptionToContext(
