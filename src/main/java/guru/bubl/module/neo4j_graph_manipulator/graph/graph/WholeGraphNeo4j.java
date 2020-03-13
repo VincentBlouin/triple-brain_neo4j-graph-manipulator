@@ -11,10 +11,8 @@ import guru.bubl.module.model.graph.GraphElementOperatorFactory;
 import guru.bubl.module.model.graph.edge.EdgeOperator;
 import guru.bubl.module.model.graph.tag.TagFactory;
 import guru.bubl.module.model.graph.tag.TagOperator;
-import guru.bubl.module.model.graph.schema.SchemaOperator;
 import guru.bubl.module.model.graph.vertex.VertexInSubGraphOperator;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.edge.EdgeFactoryNeo4j;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.schema.SchemaFactory;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.VertexFactoryNeo4j;
 import org.neo4j.driver.v1.Driver;
 import org.neo4j.driver.v1.Record;
@@ -38,9 +36,6 @@ public class WholeGraphNeo4j implements WholeGraph {
 
     @Inject
     protected EdgeFactoryNeo4j neo4jEdgeFactory;
-
-    @Inject
-    protected SchemaFactory schemaFactory;
 
     @Inject
     protected GraphElementOperatorFactory graphElementFactory;
@@ -121,28 +116,6 @@ public class WholeGraphNeo4j implements WholeGraph {
                 );
             }
             return edges;
-        }
-    }
-
-    @Override
-    public Set<SchemaOperator> getAllSchemas() {
-        String query = "MATCH(n:Schema) RETURN n.uri as uri";
-        Set<SchemaOperator> schemas = new HashSet<>();
-        try (Session session = driver.session()) {
-            StatementResult rs = session.run(
-                    query
-            );
-            while (rs.hasNext()) {
-                Record record = rs.next();
-                schemas.add(
-                        schemaFactory.withUri(
-                                URI.create(
-                                        record.get("uri").asString()
-                                )
-                        )
-                );
-            }
-            return schemas;
         }
     }
 

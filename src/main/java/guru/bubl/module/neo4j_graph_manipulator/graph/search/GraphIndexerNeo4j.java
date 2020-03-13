@@ -11,7 +11,6 @@ import guru.bubl.module.model.graph.GraphElementPojo;
 import guru.bubl.module.model.graph.ShareLevel;
 import guru.bubl.module.model.graph.edge.Edge;
 import guru.bubl.module.model.graph.tag.TagPojo;
-import guru.bubl.module.model.graph.schema.SchemaPojo;
 import guru.bubl.module.model.graph.subgraph.SubGraphPojo;
 import guru.bubl.module.model.graph.vertex.Vertex;
 import guru.bubl.module.model.graph.vertex.VertexInSubGraphPojo;
@@ -65,31 +64,6 @@ public class GraphIndexerNeo4j implements GraphIndexer {
                 sourceAndDestination,
                 sourceAndDestination,
                 edge
-        );
-    }
-
-    @Override
-    public void indexSchema(SchemaPojo schema) {
-        setPrivateFriendsAndPublicSearchContextToFriendlyResource(
-                schema.getProperties(),
-                schema.getProperties(),
-                schema.getProperties(),
-                schema
-        );
-    }
-
-    @Override
-    public void indexProperty(GraphElementPojo property, SchemaPojo schema) {
-        Map<URI, SchemaPojo> context = new HashMap<>();
-        context.put(
-                schema.uri(),
-                schema
-        );
-        setPrivateFriendsAndPublicSearchContextToFriendlyResource(
-                context,
-                context,
-                context,
-                property
         );
     }
 

@@ -8,21 +8,16 @@ import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 import guru.bubl.module.model.User;
 import guru.bubl.module.model.UserUris;
-import guru.bubl.module.model.graph.ShareLevel;
 import guru.bubl.module.model.graph.edge.EdgeOperator;
 import guru.bubl.module.model.graph.exceptions.InvalidDepthOfSubVerticesException;
 import guru.bubl.module.model.graph.exceptions.NonExistingResourceException;
-import guru.bubl.module.model.graph.schema.SchemaOperator;
-import guru.bubl.module.model.graph.schema.SchemaPojo;
 import guru.bubl.module.model.graph.subgraph.SubGraphPojo;
 import guru.bubl.module.model.graph.subgraph.UserGraph;
 import guru.bubl.module.model.graph.vertex.VertexOperator;
 import guru.bubl.module.model.graph.vertex.VertexPojo;
 import guru.bubl.module.neo4j_graph_manipulator.graph.FriendlyResourceNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.edge.EdgeFactoryNeo4j;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.schema.SchemaExtractorFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph.SubGraphExtractorFactoryNeo4j;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.schema.SchemaFactory;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.VertexFactoryNeo4j;
 import org.neo4j.driver.v1.Driver;
 import org.neo4j.driver.v1.Record;
@@ -30,7 +25,6 @@ import org.neo4j.driver.v1.Session;
 
 import javax.inject.Inject;
 import java.net.URI;
-import java.util.Set;
 
 import static org.neo4j.driver.v1.Values.parameters;
 
@@ -40,10 +34,8 @@ public class UserGraphNeo4j implements UserGraph {
 
     private User user;
     private VertexFactoryNeo4j vertexFactory;
-    private SchemaFactory schemaFactory;
     private SubGraphExtractorFactoryNeo4j subGraphExtractorFactory;
     private EdgeFactoryNeo4j edgeFactory;
-    private SchemaExtractorFactoryNeo4j schemaExtractorFactory;
 
     @Inject
     Driver driver;
@@ -53,16 +45,12 @@ public class UserGraphNeo4j implements UserGraph {
             VertexFactoryNeo4j vertexFactory,
             EdgeFactoryNeo4j edgeFactory,
             SubGraphExtractorFactoryNeo4j subGraphExtractorFactory,
-            SchemaExtractorFactoryNeo4j schemaExtractorFactory,
-            SchemaFactory schemaFactory,
             @Assisted User user
     ) {
         this.user = user;
         this.vertexFactory = vertexFactory;
         this.edgeFactory = edgeFactory;
         this.subGraphExtractorFactory = subGraphExtractorFactory;
-        this.schemaExtractorFactory = schemaExtractorFactory;
-        this.schemaFactory = schemaFactory;
     }
 
     @Override
@@ -149,34 +137,12 @@ public class UserGraphNeo4j implements UserGraph {
     }
 
     @Override
-    public SchemaPojo schemaPojoWithUri(URI uri) {
-        return schemaExtractorFactory.havingUri(
-                uri
-        ).load();
-    }
-
-    @Override
-    public SchemaOperator schemaOperatorWithUri(URI uri) {
-        return schemaFactory.withUri(uri);
-    }
-
-    @Override
     public VertexPojo createVertex() {
         VertexOperator operator = vertexFactory.createForOwner(
                 user.username()
         );
         return new VertexPojo(
                 operator.uri()
-        );
-    }
-
-    @Override
-    public SchemaPojo createSchema() {
-        SchemaOperator schemaOperator = schemaFactory.createForOwnerUsername(
-                user.username()
-        );
-        return new SchemaPojo(
-                schemaOperator.uri()
         );
     }
 

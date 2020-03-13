@@ -11,11 +11,9 @@ import guru.bubl.module.model.admin.WholeGraphAdmin;
 import guru.bubl.module.model.graph.FriendlyResourcePojo;
 import guru.bubl.module.model.graph.GraphElementPojo;
 import guru.bubl.module.model.graph.edge.EdgeOperator;
-import guru.bubl.module.model.graph.tag.TagOperator;
 import guru.bubl.module.model.graph.tag.Tag;
+import guru.bubl.module.model.graph.tag.TagOperator;
 import guru.bubl.module.model.graph.tag.TagPojo;
-import guru.bubl.module.model.graph.schema.SchemaOperator;
-import guru.bubl.module.model.graph.schema.SchemaPojo;
 import guru.bubl.module.model.graph.vertex.VertexOperator;
 import guru.bubl.module.model.search.GraphIndexer;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.tag.TagNeo4J;
@@ -56,13 +54,6 @@ public class WholeGraphAdminNeo4j implements WholeGraphAdmin {
         }
         for (EdgeOperator edge : wholeGraph.getAllEdges()) {
             graphIndexer.indexRelation(edge);
-        }
-        for (SchemaOperator schemaOperator : wholeGraph.getAllSchemas()) {
-            SchemaPojo schemaPojo = new SchemaPojo(schemaOperator);
-            graphIndexer.indexSchema(schemaPojo);
-            for (GraphElementPojo property : schemaPojo.getProperties().values()) {
-                graphIndexer.indexProperty(property, schemaPojo);
-            }
         }
         for (Tag tag : wholeGraph.getAllTags()) {
             graphIndexer.indexMeta(
