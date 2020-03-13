@@ -5,12 +5,10 @@
 package guru.bubl.module.neo4j_graph_manipulator.graph;
 
 import guru.bubl.module.model.FriendlyResourceFactory;
-import org.neo4j.graphdb.Node;
 
 import java.net.URI;
 
 public interface FriendlyResourceFactoryNeo4j extends FriendlyResourceFactory{
-    public FriendlyResourceNeo4j withNode(Node node);
     @Override
     FriendlyResourceNeo4j withUri(URI uri);
 }

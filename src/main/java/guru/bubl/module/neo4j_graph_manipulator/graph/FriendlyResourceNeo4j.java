@@ -20,7 +20,6 @@ import org.neo4j.driver.v1.Driver;
 import org.neo4j.driver.v1.Record;
 import org.neo4j.driver.v1.Session;
 import org.neo4j.driver.v1.StatementResult;
-import org.neo4j.graphdb.Node;
 
 import java.net.URI;
 import java.util.Date;
@@ -56,8 +55,6 @@ public class FriendlyResourceNeo4j implements FriendlyResourceOperator, Operator
 
     protected URI uri;
 
-    protected Node node;
-
     protected ImagesNeo4j images;
 
     protected Driver driver;
@@ -73,20 +70,6 @@ public class FriendlyResourceNeo4j implements FriendlyResourceOperator, Operator
                     )
             ).hasNext();
         }
-    }
-
-    @AssistedInject
-    protected FriendlyResourceNeo4j(
-            ImageFactoryNeo4j imageFactory,
-            Driver driver,
-            @Assisted Node node
-    ) {
-        this.images = imageFactory.forResource(this);
-        this.driver = driver;
-        this.node = node;
-        this.uri = Uris.get(node.getProperty(
-                UserGraphNeo4j.URI_PROPERTY_NAME
-        ).toString());
     }
 
     @AssistedInject
