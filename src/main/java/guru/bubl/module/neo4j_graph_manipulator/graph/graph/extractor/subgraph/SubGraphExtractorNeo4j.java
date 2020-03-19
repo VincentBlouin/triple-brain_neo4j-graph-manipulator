@@ -229,47 +229,9 @@ public class SubGraphExtractorNeo4j {
 
     private String vertexReturnQueryPart(String prefix) {
         return vertexSpecificPropertiesQueryPartUsingPrefix(prefix) +
-//                includedVertexQueryPart(INCLUDED_VERTEX_QUERY_KEY) +
-//                includedEdgeQueryPart(INCLUDED_EDGE_QUERY_KEY) +
                 FriendlyResourceQueryBuilder.imageReturnQueryPart(prefix);
     }
 
-    private static String includedVertexQueryPart(String key) {
-        return "COLLECT([" +
-                QueryUtils.getPropertyUsingContainerNameQueryPart(
-                        key,
-                        UserGraphNeo4j.URI_PROPERTY_NAME
-                ) +
-                QueryUtils.getLastPropertyUsingContainerNameQueryPart(
-                        key,
-                        FriendlyResourceNeo4j.props.label.toString()
-                ) +
-                "]) as " + key + ", ";
-    }
-
-    private static String includedEdgeQueryPart(String key) {
-        return "COLLECT([" +
-                edgeSpecificPropertiesQueryPartUsingPrefix(key) +
-                QueryUtils.getPropertyUsingContainerNameQueryPart(
-                        key,
-                        UserGraphNeo4j.URI_PROPERTY_NAME
-                ) +
-                QueryUtils.getLastPropertyUsingContainerNameQueryPart(
-                        key,
-                        FriendlyResourceNeo4j.props.label.toString()
-                ) +
-                "]) as " + key + ", ";
-    }
-
-    public static String includedElementQueryPart(String key) {
-        return QueryUtils.getPropertyUsingContainerNameQueryPart(
-                key,
-                UserGraphNeo4j.URI_PROPERTY_NAME
-        ) + QueryUtils.getPropertyUsingContainerNameQueryPart(
-                key,
-                FriendlyResourceNeo4j.props.label.toString()
-        );
-    }
 
     public static String edgeSpecificPropertiesQueryPartUsingPrefix(String prefix) {
         return QueryUtils.getPropertyUsingContainerNameQueryPart(

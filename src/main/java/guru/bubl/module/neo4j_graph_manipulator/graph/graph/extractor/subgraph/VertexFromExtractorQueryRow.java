@@ -4,22 +4,13 @@
 
 package guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph;
 
-import apoc.neighbors.Neighbors;
 import guru.bubl.module.model.graph.ShareLevel;
-import guru.bubl.module.model.graph.vertex.NbNeighbors;
 import guru.bubl.module.model.graph.vertex.NbNeighborsPojo;
 import guru.bubl.module.model.graph.vertex.VertexInSubGraph;
 import guru.bubl.module.model.graph.vertex.VertexInSubGraphPojo;
-import guru.bubl.module.model.json.SuggestionJson;
-import guru.bubl.module.model.suggestion.SuggestionPojo;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.VertexInSubGraphOperatorNeo4j;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.VertexTypeOperatorNeo4j;
 import org.neo4j.driver.v1.Record;
 
-import java.net.URI;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class VertexFromExtractorQueryRow {
 
@@ -42,9 +33,6 @@ public class VertexFromExtractorQueryRow {
                         keyPrefix
                 ).build(),
                 getNbNeighbors(),
-                null,
-                null,
-                getSuggestions(),
                 getShareLevel(keyPrefix, row)
         );
         vertexInSubGraphPojo.getGraphElement().setChildrenIndex(
@@ -82,17 +70,6 @@ public class VertexFromExtractorQueryRow {
         return nbNeighborsPojo;
     }
 
-    private Map<URI, SuggestionPojo> getSuggestions() {
-        Object suggestionValue = row.get(
-                keyPrefix + "." + VertexInSubGraphOperatorNeo4j.props.suggestions
-        ).asObject();
-        if (suggestionValue == null) {
-            return new HashMap<>();
-        }
-        return SuggestionJson.fromJsonArray(
-                suggestionValue.toString()
-        );
-    }
 
     public static String getChildrenIndexes(String keyPrefix, Record row) {
         String key = keyPrefix + "." + "childrenIndexes";

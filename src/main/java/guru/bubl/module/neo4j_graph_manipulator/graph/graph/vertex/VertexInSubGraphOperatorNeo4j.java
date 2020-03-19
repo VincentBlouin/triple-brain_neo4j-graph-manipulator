@@ -10,7 +10,6 @@ import com.google.inject.assistedinject.AssistedInject;
 import guru.bubl.module.model.Image;
 import guru.bubl.module.model.User;
 import guru.bubl.module.model.UserUris;
-import guru.bubl.module.model.graph.GraphElementPojo;
 import guru.bubl.module.model.graph.ShareLevel;
 import guru.bubl.module.model.graph.edge.Edge;
 import guru.bubl.module.model.graph.edge.EdgeOperator;
@@ -18,8 +17,6 @@ import guru.bubl.module.model.graph.edge.EdgePojo;
 import guru.bubl.module.model.graph.tag.Tag;
 import guru.bubl.module.model.graph.tag.TagPojo;
 import guru.bubl.module.model.graph.vertex.*;
-import guru.bubl.module.model.json.SuggestionJson;
-import guru.bubl.module.model.suggestion.SuggestionPojo;
 import guru.bubl.module.neo4j_graph_manipulator.graph.FriendlyResourceFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.FriendlyResourceNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.OperatorNeo4j;
@@ -27,7 +24,6 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.graph.GraphElementFactoryN
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.GraphElementOperatorNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.edge.EdgeFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.edge.EdgeOperatorNeo4j;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph.SubGraphExtractorNeo4j;
 import org.neo4j.driver.v1.Driver;
 import org.neo4j.driver.v1.Record;
 import org.neo4j.driver.v1.Session;
@@ -48,8 +44,7 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
 
     public enum props {
         shareLevel,
-        is_public,
-        suggestions
+        is_public
     }
 
     protected GraphElementOperatorNeo4j graphElementOperator;
@@ -315,103 +310,6 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
     }
 
     @Override
-    public EdgeOperator acceptSuggestion(final SuggestionPojo suggestion) {
-        return suggestion.isFromComparison() ?
-                acceptSuggestionFromComparison(suggestion) :
-                acceptSuggestionFromSchema(suggestion);
-    }
-
-    private EdgeOperator acceptSuggestionFromSchema(final SuggestionPojo suggestion) {
-        VertexOperator newVertex = vertexFactory.withUri(
-                new UserUris(
-                        getOwnerUsername()
-                ).generateVertexUri()
-        );
-        Edge newEdge = addVertexAndRelationIsUnderPatternOrNot(
-                newVertex.uri(),
-                null,
-                false
-        );
-        EdgeOperator newEdgeOperator = edgeFactory.withUri(
-                newEdge.uri()
-        );
-        newEdgeOperator.label(
-                suggestion.label()
-        );
-
-        if (suggestion.getSameAs() != null) {
-            newEdgeOperator.addTag(
-                    new TagPojo(
-                            suggestion.getSameAs().uri(),
-                            new GraphElementPojo(
-                                    suggestion.getSameAs()
-                            )
-                    )
-            );
-            newVertex.addTag(
-                    new TagPojo(
-                            suggestion.getSameAs().uri(),
-                            new GraphElementPojo(
-                                    suggestion.getSameAs()
-                            )
-                    )
-            );
-        }
-        if (suggestion.getType() != null) {
-            newVertex.addTag(
-                    new TagPojo(
-                            suggestion.getType().uri(),
-                            new GraphElementPojo(
-                                    suggestion.getType()
-                            )
-
-                    )
-            );
-        }
-        return newEdgeOperator;
-    }
-
-    private EdgeOperator acceptSuggestionFromComparison(final SuggestionPojo suggestion) {
-        VertexOperator newVertex = vertexFactory.withUri(
-                new UserUris(
-                        getOwnerUsername()
-                ).generateVertexUri()
-        );
-        EdgePojo newEdge = addVertexAndRelationIsUnderPatternOrNot(
-                newVertex.uri(),
-                null,
-                false
-        );
-        EdgeOperator newEdgeOperator = edgeFactory.withUri(
-                newEdge.uri()
-        );
-        newEdgeOperator.label(
-                suggestion.label()
-        );
-        newEdgeOperator.addTag(
-                new TagPojo(
-                        suggestion.getSameAs().uri(),
-                        new GraphElementPojo(
-                                suggestion.getSameAs()
-                        )
-                )
-        );
-        newVertex.addTag(
-                new TagPojo(
-                        suggestion.getType().uri(),
-                        new GraphElementPojo(
-                                suggestion.getType()
-                        )
-                )
-        );
-        newVertex.label(
-                suggestion.getType().label()
-        );
-        return newEdgeOperator;
-    }
-
-
-    @Override
     public void remove() {
         try (Session session = driver.session()) {
             session.run(
@@ -495,50 +393,6 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
     }
 
     @Override
-    public void setSuggestions(Map<URI, SuggestionPojo> suggestions) {
-        try (Session session = driver.session()) {
-            session.run(
-                    queryPrefix() + "SET n.suggestions=$suggestions",
-                    parameters(
-                            "uri",
-                            this.uri().toString(),
-                            "suggestions",
-                            SuggestionJson.multipleToJson(suggestions).toString()
-                    )
-            );
-        }
-    }
-
-    @Override
-    public void addSuggestions(final Map<URI, SuggestionPojo> suggestions) {
-        Map<URI, SuggestionPojo> current = getSuggestions();
-        current.putAll(suggestions);
-        setSuggestions(current);
-    }
-
-    @Override
-    public Map<URI, SuggestionPojo> getSuggestions() {
-        try (Session session = driver.session()) {
-            Record record = session.run(
-                    queryPrefix() + "RETURN n.suggestions as suggestions",
-                    parameters(
-                            "uri",
-                            this.uri().toString()
-                    )
-            ).single();
-            return record.get(
-                    "suggestions"
-            ).asObject() == null ?
-                    new HashMap<URI, SuggestionPojo>() :
-                    SuggestionJson.fromJsonArray(
-                            record.get(
-                                    "suggestions"
-                            ).asString()
-                    );
-        }
-    }
-
-    @Override
     public void removeTag(Tag tag) {
         graphElementOperator.removeTag(tag);
     }
@@ -563,91 +417,6 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
         return vertexTypeOperatorFactory.withUri(uri()).getNbNeighbors();
     }
 
-    @Override
-    public Map<URI, Vertex> getIncludedVertices() {
-        try (Session session = driver.session()) {
-            StatementResult rs = session.run(
-                    String.format(
-                            "%sMATCH (n)-[:HAS_INCLUDED_VERTEX]->(included_vertex) RETURN %s'dummy_return'",
-                            queryPrefix(),
-                            SubGraphExtractorNeo4j.includedElementQueryPart("included_vertex")
-                    ),
-                    parameters(
-                            "uri", this.uri().toString()
-                    )
-            );
-            Map<URI, Vertex> includedVertices = new HashMap<>();
-            while (rs.hasNext()) {
-                Record record = rs.next();
-                URI uri = URI.create(
-                        record.get("included_vertex.uri").asString()
-                );
-                includedVertices.put(
-                        uri,
-                        new VertexInSubGraphPojo(
-                                uri,
-                                record.get(
-                                        "included_vertex." + FriendlyResourceNeo4j.props.label.toString()
-                                ).asString()
-                        )
-                );
-            }
-            return includedVertices;
-        }
-    }
-
-    @Override
-    public Map<URI, Edge> getIncludedEdges() {
-        try (Session session = driver.session()) {
-            StatementResult rs = session.run(
-                    String.format(
-                            "%sMATCH n-[:HAS_INCLUDED_EDGE]->included_edge RETURN %s'dummy_return'",
-                            queryPrefix(),
-                            SubGraphExtractorNeo4j.includedElementQueryPart("included_edge")
-                    ),
-                    parameters(
-                            "uri",
-                            uri().toString()
-                    )
-            );
-            Map<URI, Edge> includedEdge = new HashMap<>();
-            while (rs.hasNext()) {
-                Record record = rs.next();
-                URI uri = URI.create(
-                        record.get("included_edge.uri").asString()
-                );
-                includedEdge.put(
-                        uri,
-                        new EdgePojo(
-                                uri,
-                                record.get(
-                                        "included_edge." + FriendlyResourceNeo4j.props.label.toString()
-                                ).asString()
-                        )
-                );
-            }
-            return includedEdge;
-        }
-    }
-
-
-//    public void setIncludedVertices(Set<Vertex> includedVertices) {
-//        for (Vertex vertex : includedVertices) {
-//            getNode().createRelationshipTo(
-//                    vertexFactory.withUri(vertex.uri()).getNode(),
-//                    Relationships.HAS_INCLUDED_VERTEX
-//            );
-//        }
-//    }
-//
-//    public void setIncludedEdges(Set<Edge> includedEdges) {
-//        for (Edge edge : includedEdges) {
-//            getNode().createRelationshipTo(
-//                    edgeFactory.withUri(edge.uri()).getNode(),
-//                    Relationships.HAS_INCLUDED_EDGE
-//            );
-//        }
-//    }
 
     @Override
     public Date creationDate() {
