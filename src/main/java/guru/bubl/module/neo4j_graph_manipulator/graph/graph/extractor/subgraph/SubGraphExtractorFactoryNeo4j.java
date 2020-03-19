@@ -11,10 +11,6 @@ import java.net.URI;
 import java.util.Set;
 
 public interface SubGraphExtractorFactoryNeo4j {
-    SubGraphExtractorNeo4j withCenterVertexAndDepth(
-            URI centerVertexUri,
-            @Assisted("depth") Integer depth
-    );
 
     SubGraphExtractorNeo4j withCenterVertexInShareLevels(
             URI centerVertexUri,
@@ -27,9 +23,4 @@ public interface SubGraphExtractorFactoryNeo4j {
             Integer... shareLevels
     );
 
-    SubGraphExtractorNeo4j withCenterVertexDepthAndResultsLimit(
-            URI centerVertexUri,
-            @Assisted("depth") Integer depth,
-            @Assisted("resultsLimit") Integer resultsLimit
-    );
 }

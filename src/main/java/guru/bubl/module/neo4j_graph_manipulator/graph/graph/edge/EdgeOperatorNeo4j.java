@@ -25,6 +25,7 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.graph.GraphElementFactoryN
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.GraphElementOperatorNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.VertexFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.VertexInSubGraphOperatorNeo4j;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.VertexTypeOperatorNeo4j;
 import org.neo4j.driver.v1.Driver;
 import org.neo4j.driver.v1.Record;
 import org.neo4j.driver.v1.Session;
@@ -268,10 +269,10 @@ public class EdgeOperatorNeo4j implements EdgeOperator, OperatorNeo4j {
                 relationshipToChange,
                 relationshipToKeep,
                 relationshipToChange,
-                VertexInSubGraphOperatorNeo4j.props.number_of_connected_edges_property_name,
-                VertexInSubGraphOperatorNeo4j.props.number_of_connected_edges_property_name,
-                VertexInSubGraphOperatorNeo4j.props.number_of_connected_edges_property_name,
-                VertexInSubGraphOperatorNeo4j.props.number_of_connected_edges_property_name,
+                VertexTypeOperatorNeo4j.props.nb_private_neighbors,
+                VertexTypeOperatorNeo4j.props.nb_private_neighbors,
+                VertexTypeOperatorNeo4j.props.nb_private_neighbors,
+                VertexTypeOperatorNeo4j.props.nb_private_neighbors,
                 FriendlyResourceNeo4j.LAST_MODIFICATION_QUERY_PART
         );
         try (Session session = driver.session()) {
@@ -338,34 +339,7 @@ public class EdgeOperatorNeo4j implements EdgeOperator, OperatorNeo4j {
 
     @Override
     public void remove() {
-        ShareLevel sourceVertexShareLevel = sourceVertex().getShareLevel();
-        ShareLevel destinationVertexShareLevel = destinationVertex().getShareLevel();
-        try (Session session = driver.session()) {
-            session.run(
-                    String.format(
-                            "%sMATCH (n)-[:SOURCE_VERTEX]->(s_v), (n)-[:DESTINATION_VERTEX]->(d_v) " +
-                                    "SET s_v.number_of_connected_edges_property_name = s_v.number_of_connected_edges_property_name - 1, " +
-                                    "d_v.number_of_connected_edges_property_name = d_v.number_of_connected_edges_property_name - 1" +
-                                    (sourceVertexShareLevel == ShareLevel.PRIVATE ? "" : decrementNbFriendsOrPublicQueryPart(sourceVertexShareLevel, "d_v", ", ")) +
-                                    (destinationVertexShareLevel == ShareLevel.PRIVATE ? "" : decrementNbFriendsOrPublicQueryPart(destinationVertexShareLevel, "s_v", ", ")),
-                            queryPrefix()
-                    ),
-                    parameters(
-                            "uri",
-                            uri().toString()
-                    )
-            );
-            graphElementOperator.removeAllIdentifications();
-            session.run(
-                    String.format(
-                            "%sDETACH DELETE n",
-                            queryPrefix()
-                    ),
-                    parameters(
-                            "uri", uri().toString()
-                    )
-            );
-        }
+        this.graphElementOperator.remove();
     }
 
     @Override
@@ -477,6 +451,17 @@ public class EdgeOperatorNeo4j implements EdgeOperator, OperatorNeo4j {
         return graphElementOperator.getPatternUri();
     }
 
+
+    @Override
+    public ShareLevel getShareLevel() {
+        return graphElementOperator.getShareLevel();
+    }
+
+    @Override
+    public Boolean isPublic() {
+        return graphElementOperator.isPublic();
+    }
+
     @Override
     public void create() {
         createEdge();
@@ -547,18 +532,18 @@ public class EdgeOperatorNeo4j implements EdgeOperator, OperatorNeo4j {
     }
 
     @Override
-    public void removeIdentification(Tag type) {
-        graphElementOperator.removeIdentification(type);
+    public void removeTag(Tag type) {
+        graphElementOperator.removeTag(type);
     }
 
     @Override
-    public Map<URI, TagPojo> addMeta(Tag friendlyResource) {
-        return graphElementOperator.addMeta(friendlyResource);
+    public Map<URI, TagPojo> addTag(Tag friendlyResource, ShareLevel sourceShareLevel) {
+        return graphElementOperator.addTag(friendlyResource, sourceShareLevel);
     }
 
     @Override
-    public Map<URI, TagPojo> getIdentifications() {
-        return graphElementOperator.getIdentifications();
+    public Map<URI, TagPojo> getTags() {
+        return graphElementOperator.getTags();
     }
 
     @Override
@@ -589,15 +574,5 @@ public class EdgeOperatorNeo4j implements EdgeOperator, OperatorNeo4j {
                 newMap
         );
         return newMap;
-    }
-
-    @Override
-    public Boolean isPublic() {
-        return graphElementOperator.isPublic();
-    }
-
-    @Override
-    public ShareLevel getShareLevel() {
-        return graphElementOperator.getShareLevel();
     }
 }

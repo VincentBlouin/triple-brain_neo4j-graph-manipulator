@@ -7,6 +7,7 @@ package guru.bubl.module.neo4j_graph_manipulator.graph.search;
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 import guru.bubl.module.model.User;
+import guru.bubl.module.model.graph.ShareLevel;
 import guru.bubl.module.model.search.GraphElementSearchResult;
 import guru.bubl.module.model.search.GraphSearch;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.TagQueryBuilder;
@@ -16,6 +17,7 @@ import org.neo4j.driver.v1.Session;
 import org.neo4j.driver.v1.StatementResult;
 
 import java.util.List;
+import java.util.Set;
 
 import static org.neo4j.driver.v1.Values.parameters;
 
@@ -59,15 +61,6 @@ public class GraphSearchNeo4j implements GraphSearch {
     }
 
     @Override
-    public List<GraphElementSearchResult> searchForAnyResourceThatCanBeUsedAsAnIdentifier(User user) {
-        return new Getter<>().get(
-                false,
-                user.username(),
-                "graphElementLabel"
-        );
-    }
-
-    @Override
     public List<GraphElementSearchResult> searchOnlyForOwnVerticesForAutoCompletionByLabel(User user) {
         return new Getter<>().get(
                 true,
@@ -95,15 +88,6 @@ public class GraphSearchNeo4j implements GraphSearch {
     }
 
     @Override
-    public List<GraphElementSearchResult> searchPublicVerticesOnly() {
-        return new Getter<GraphElementSearchResult>().get(
-                false,
-                "",
-                "vertexLabel"
-        );
-    }
-
-    @Override
     public List<GraphElementSearchResult> searchAllPatterns() {
         return new Getter<GraphElementSearchResult>().get(
                 false,
@@ -119,22 +103,24 @@ public class GraphSearchNeo4j implements GraphSearch {
                 String username,
                 String indexDomain
         ) {
+            Set<ShareLevel> inShareLevels = forPersonal ? ShareLevel.allShareLevels : ShareLevel.publicShareLevels;
             try (Session session = driver.session()) {
                 StatementResult rs = session.run(
-                        buildQuery(forPersonal, username, indexDomain),
+                        buildQuery(forPersonal, username, indexDomain, inShareLevels),
                         parameters(
                                 "label", formatSearchTerm(searchTerm) + "*",
                                 "owner", username
                         )
                 );
-                return new SearchResultGetter<ResultType>(rs).get();
+                return new SearchResultGetter<ResultType>(rs, inShareLevels).get();
             }
         }
 
         private String buildQuery(
                 Boolean forPersonal,
                 String username,
-                String indexDomain
+                String indexDomain,
+                Set<ShareLevel> inShareLevels
         ) {
             return
                     String.format(
@@ -145,13 +131,17 @@ public class GraphSearchNeo4j implements GraphSearch {
                                     "WHERE id." + (forPersonal ? "owner=$owner" : " shareLevel=40 ") +
                                     (!forPersonal && !StringUtils.isEmpty(username) ? "OR id.owner=$owner " : " ") +
                                     "RETURN " +
-                                    "score, n.uri, n.label, n.external_uri, n.colors, n.shareLevel as shareLevel, COALESCE(n.nb_references, 0) as nbReferences, COALESCE(n.number_of_visits, 0) as nbVisits, n.creation_date, n.last_modification_date, " +
+                                    "score, n.uri, n.label, n.external_uri, n.colors, n.shareLevel as shareLevel, n.nb_visits, n.nb_private_neighbors, n.nb_friend_neighbors, n.nb_public_neighbors, n.creation_date, n.last_modification_date, " +
                                     "(CASE WHEN n.owner=$owner THEN n.private_context ELSE n.public_context END) as context, " +
-                                    TagQueryBuilder.identificationReturnQueryPart() +
+                                    TagQueryBuilder.identificationReturnQueryPart(
+                                            inShareLevels
+                                    ) +
                                     "labels(n) as type " +
-                                    "ORDER BY nbVisits DESC," +
+                                    "ORDER BY n.nb_visits DESC," +
                                     "score DESC," +
-                                    "nbReferences DESC " +
+                                    "n.nb_public_neighbors DESC," +
+                                    "n.nb_friend_neighbors DESC," +
+                                    "n.nb_private_neighbors DESC " +
                                     "SKIP " + skip +
                                     " LIMIT " + limit,
                             indexDomain

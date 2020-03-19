@@ -94,7 +94,7 @@ public class PatternUserNeo4j implements PatternUser {
                 if (record.get("externalUri").asObject() != null)
                     graphElementFactory.withUri(
                             uri
-                    ).addMeta(
+                    ).addTag(
                             new TagPojo(
                                     URI.create(record.get("externalUri").asString()),
                                     new GraphElementPojo(
@@ -108,7 +108,7 @@ public class PatternUserNeo4j implements PatternUser {
             }
             graphElementFactory.withUri(
                     centerUri
-            ).addMeta(
+            ).addTag(
                     patternAsTag
             );
             return centerUri;

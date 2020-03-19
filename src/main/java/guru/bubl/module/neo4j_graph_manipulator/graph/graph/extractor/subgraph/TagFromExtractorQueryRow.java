@@ -1,7 +1,6 @@
 package guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph;
 
 import guru.bubl.module.model.graph.tag.TagPojo;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.tag.TagNeo4J;
 import org.neo4j.driver.v1.Record;
 
 import java.net.URI;
@@ -34,7 +33,27 @@ public class TagFromExtractorQueryRow {
                         key
                 ).build()
         );
-        tag.setNbRefences(getNbReferences());
+        if (record.get(key + ".nb_private_neighbors").asObject() != null) {
+            tag.getNbNeighbors().setPrivate(
+                    record.get(
+                            key + ".nb_private_neighbors"
+                    ).asInt()
+            );
+        }
+        if (record.get(key + ".nb_friend_neighbors").asObject() != null) {
+            tag.getNbNeighbors().setFriend(
+                    record.get(
+                            key + ".nb_friend_neighbors"
+                    ).asInt()
+            );
+        }
+        if (record.get(key + ".nb_public_neighbors").asObject() != null) {
+            tag.getNbNeighbors().setPublic(
+                    record.get(
+                            key + ".nb_public_neighbors"
+                    ).asInt()
+            );
+        }
         tag.setShareLevel(
                 VertexFromExtractorQueryRow.getShareLevel(
                         key,
@@ -65,12 +84,6 @@ public class TagFromExtractorQueryRow {
     private URI getExternalUri() {
         String externalUriKey = key + "." + "external_uri";
         return URI.create(record.get(externalUriKey).asString());
-    }
-
-    private Integer getNbReferences() {
-        return record.get(
-                key + "." + TagNeo4J.props.nb_references.name()
-        ).asInt();
     }
 
 }

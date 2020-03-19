@@ -7,10 +7,7 @@ package guru.bubl.module.neo4j_graph_manipulator.graph.graph;
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 import guru.bubl.module.model.User;
-import guru.bubl.module.model.UserUris;
 import guru.bubl.module.model.graph.edge.EdgeOperator;
-import guru.bubl.module.model.graph.exceptions.InvalidDepthOfSubVerticesException;
-import guru.bubl.module.model.graph.exceptions.NonExistingResourceException;
 import guru.bubl.module.model.graph.subgraph.SubGraphPojo;
 import guru.bubl.module.model.graph.subgraph.UserGraph;
 import guru.bubl.module.model.graph.vertex.VertexOperator;
@@ -20,13 +17,9 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.graph.edge.EdgeFactoryNeo4
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph.SubGraphExtractorFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.VertexFactoryNeo4j;
 import org.neo4j.driver.v1.Driver;
-import org.neo4j.driver.v1.Record;
-import org.neo4j.driver.v1.Session;
 
 import javax.inject.Inject;
 import java.net.URI;
-
-import static org.neo4j.driver.v1.Values.parameters;
 
 public class UserGraphNeo4j implements UserGraph {
 
@@ -54,11 +47,6 @@ public class UserGraphNeo4j implements UserGraph {
     }
 
     @Override
-    public VertexOperator defaultVertex() {
-        return getAnyVertex();
-    }
-
-    @Override
     public User user() {
         return user;
     }
@@ -69,12 +57,7 @@ public class UserGraphNeo4j implements UserGraph {
     }
 
     @Override
-    public SubGraphPojo graphWithDepthAndCenterBubbleUri(Integer depthOfSubVertices, URI centerBubbleUri) throws NonExistingResourceException {
-        return graphWithDepthResultsLimitAndCenterBubbleUri(depthOfSubVertices, null, centerBubbleUri);
-    }
-
-    @Override
-    public SubGraphPojo aroundVertexUriInShareLevels(URI centerVertexUri, Integer ... shareLevels) throws NonExistingResourceException {
+    public SubGraphPojo aroundVertexUriInShareLevels(URI centerVertexUri, Integer... shareLevels) {
         return subGraphExtractorFactory.withCenterVertexInShareLevels(
                 centerVertexUri,
                 shareLevels
@@ -82,44 +65,12 @@ public class UserGraphNeo4j implements UserGraph {
     }
 
     @Override
-    public SubGraphPojo aroundVertexUriWithDepthInShareLevels(URI centerVertexUri, Integer depth, Integer ... shareLevels) throws NonExistingResourceException {
+    public SubGraphPojo aroundVertexUriWithDepthInShareLevels(URI centerVertexUri, Integer depth, Integer... shareLevels) {
         return subGraphExtractorFactory.withCenterVertexInShareLevelsAndDepth(
                 centerVertexUri,
                 depth,
                 shareLevels
         ).load();
-    }
-
-    @Override
-    public SubGraphPojo graphWithDepthResultsLimitAndCenterBubbleUri(Integer depthOfSubVertices, Integer resultsLimit, URI centerBubbleUri) throws NonExistingResourceException {
-        if (depthOfSubVertices < 0) {
-            throw new InvalidDepthOfSubVerticesException(
-                    depthOfSubVertices,
-                    centerBubbleUri
-            );
-        }
-        SubGraphPojo subGraph = resultsLimit == null ? subGraphExtractorFactory.withCenterVertexAndDepth(
-                centerBubbleUri,
-                depthOfSubVertices
-        ).load() : subGraphExtractorFactory.withCenterVertexDepthAndResultsLimit(
-                centerBubbleUri,
-                depthOfSubVertices,
-                resultsLimit
-        ).load();
-        if (subGraph.vertices().isEmpty() && !UserUris.isUriOfAnIdentifier(centerBubbleUri)) {
-            throw new NonExistingResourceException(
-                    centerBubbleUri
-            );
-        }
-        return subGraph;
-    }
-
-    @Override
-    public SubGraphPojo graphWithAnyVertexAndDepth(Integer depth) throws InvalidDepthOfSubVerticesException {
-        return graphWithDepthAndCenterBubbleUri(
-                depth,
-                getAnyVertex().uri()
-        );
     }
 
     @Override
@@ -144,21 +95,5 @@ public class UserGraphNeo4j implements UserGraph {
         return new VertexPojo(
                 operator.uri()
         );
-    }
-
-    private VertexOperator getAnyVertex() {
-        try (Session session = driver.session()) {
-            Record record = session.run(
-                    "MATCH(n:Vertex{owner:$owner}) RETURN n.uri limit 1",
-                    parameters(
-                            "owner", user.username()
-                    )
-            ).single();
-            return vertexFactory.withUri(
-                    URI.create(
-                            record.get("n.uri").asString()
-                    )
-            );
-        }
     }
 }

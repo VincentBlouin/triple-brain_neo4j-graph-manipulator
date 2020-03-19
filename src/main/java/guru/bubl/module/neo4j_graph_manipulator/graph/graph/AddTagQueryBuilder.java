@@ -4,32 +4,35 @@
 
 package guru.bubl.module.neo4j_graph_manipulator.graph.graph;
 
+import guru.bubl.module.model.graph.ShareLevel;
 import guru.bubl.module.model.graph.tag.TagPojo;
 import guru.bubl.module.neo4j_graph_manipulator.graph.FriendlyResourceNeo4j;
 
 public class AddTagQueryBuilder {
 
-    private TagPojo identification;
-    private GraphElementOperatorNeo4j graphElement;
+    private String queryPrefix;
+    private ShareLevel sourceShareLevel;
 
     public static AddTagQueryBuilder usingIdentificationForGraphElement(
-            TagPojo identification, GraphElementOperatorNeo4j graphElement
+            String queryPrefix,
+            ShareLevel sourceShareLevel
     ) {
         return new AddTagQueryBuilder(
-                identification,
-                graphElement
+                queryPrefix,
+                sourceShareLevel
         );
     }
 
     protected AddTagQueryBuilder(
-            TagPojo identification,
-            GraphElementOperatorNeo4j graphElement
+            String queryPrefix,
+            ShareLevel sourceShareLevel
     ) {
-        this.identification = identification;
-        this.graphElement = graphElement;
+        this.queryPrefix = queryPrefix;
+        this.sourceShareLevel = sourceShareLevel;
     }
 
     public String build() {
+        String neighborsPropertyName = sourceShareLevel.getNbNeighborsPropertyName();
         return String.format(
                 "%sMERGE (f:Resource:GraphElement:Meta{external_uri:$external_uri, owner:$owner}) " +
                         "ON CREATE SET f.uri=$metaUri, " +
@@ -41,10 +44,12 @@ public class AddTagQueryBuilder {
                         "f.images=$images, " +
                         "f.creation_date=$creationDate, " +
                         "f.last_modification_date=timestamp(), " +
-                        "f.nb_references=0 " + //initial nb references
+                        "f.nb_private_neighbors=0," +
+                        "f.nb_friend_neighbors=0," +
+                        "f.nb_public_neighbors=0 " +
                         "CREATE UNIQUE (n)-[r:IDENTIFIED_TO]->(f) " +
                         "SET r.relation_external_uri=$relationExternalUri, " +
-                        "f.nb_references=f.nb_references + 1, " +
+                        "f.%s=f.%s + 1, " +
                         FriendlyResourceNeo4j.LAST_MODIFICATION_QUERY_PART +
                         "RETURN f.uri as uri, " +
                         "f.external_uri as external_uri, " +
@@ -53,9 +58,13 @@ public class AddTagQueryBuilder {
                         "f.images as images, " +
                         "f.creation_date as creation_date, " +
                         "f.last_modification_date as last_modification_date, " +
-                        "f.nb_references as nbReferences, " +
+                        "f.nb_private_neighbors as nbPrivateNeighbors, " +
+                        "f.nb_friend_neighbors as nbFriendNeighbors, " +
+                        "f.nb_public_neighbors as nbPublicNeighbors, " +
                         "f.shareLevel ",
-                this.graphElement.queryPrefix()
+                queryPrefix,
+                neighborsPropertyName,
+                neighborsPropertyName
         );
     }
 }

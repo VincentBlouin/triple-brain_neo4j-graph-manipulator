@@ -4,19 +4,22 @@
 
 package guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph;
 
+import apoc.neighbors.Neighbors;
 import guru.bubl.module.model.graph.ShareLevel;
+import guru.bubl.module.model.graph.vertex.NbNeighbors;
+import guru.bubl.module.model.graph.vertex.NbNeighborsPojo;
 import guru.bubl.module.model.graph.vertex.VertexInSubGraph;
 import guru.bubl.module.model.graph.vertex.VertexInSubGraphPojo;
 import guru.bubl.module.model.json.SuggestionJson;
 import guru.bubl.module.model.suggestion.SuggestionPojo;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.VertexInSubGraphOperatorNeo4j;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.VertexTypeOperatorNeo4j;
 import org.neo4j.driver.v1.Record;
 
 import java.net.URI;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 public class VertexFromExtractorQueryRow {
 
@@ -38,9 +41,7 @@ public class VertexFromExtractorQueryRow {
                         row,
                         keyPrefix
                 ).build(),
-                getNumberOfConnectedEdges(),
-                getNbPublicNeighbors(),
-                getNbFriendNeighbors(),
+                getNbNeighbors(),
                 null,
                 null,
                 getSuggestions(),
@@ -61,23 +62,24 @@ public class VertexFromExtractorQueryRow {
         return vertexInSubGraphPojo;
     }
 
-    private Integer getNumberOfConnectedEdges() {
-        return row.get(
-                keyPrefix + "." + VertexInSubGraphOperatorNeo4j.props.number_of_connected_edges_property_name
-        ).asInt();
-
-    }
-
-    private Integer getNbPublicNeighbors() {
-        return row.get(
-                keyPrefix + "." + VertexInSubGraphOperatorNeo4j.props.nb_public_neighbors
-        ).asInt();
-    }
-
-    private Integer getNbFriendNeighbors() {
-        return row.get(
-                keyPrefix + "." + VertexInSubGraphOperatorNeo4j.props.nb_friend_neighbors
-        ).asInt();
+    private NbNeighborsPojo getNbNeighbors() {
+        NbNeighborsPojo nbNeighborsPojo = new NbNeighborsPojo();
+        if (row.get(keyPrefix + ".nb_private_neighbors").asObject() != null) {
+            nbNeighborsPojo.setPrivate(row.get(
+                    keyPrefix + ".nb_private_neighbors"
+            ).asInt());
+        }
+        if (row.get(keyPrefix + ".nb_friend_neighbors").asObject() != null) {
+            nbNeighborsPojo.setFriend(row.get(
+                    keyPrefix + ".nb_friend_neighbors"
+            ).asInt());
+        }
+        if (row.get(keyPrefix + ".nb_public_neighbors").asObject() != null) {
+            nbNeighborsPojo.setPublic(row.get(
+                    keyPrefix + ".nb_public_neighbors"
+            ).asInt());
+        }
+        return nbNeighborsPojo;
     }
 
     private Map<URI, SuggestionPojo> getSuggestions() {

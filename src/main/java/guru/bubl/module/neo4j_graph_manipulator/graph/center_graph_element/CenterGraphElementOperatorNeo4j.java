@@ -21,7 +21,7 @@ import static org.neo4j.driver.v1.Values.parameters;
 public class CenterGraphElementOperatorNeo4j implements CenterGraphElementOperator {
 
     public enum props {
-        number_of_visits,
+        nb_visits,
         last_center_date
     }
 
@@ -44,7 +44,7 @@ public class CenterGraphElementOperatorNeo4j implements CenterGraphElementOperat
     public void incrementNumberOfVisits() {
         try (Session session = driver.session()) {
             session.run(
-                    neo4jFriendlyResource.queryPrefix() + "SET n.number_of_visits= CASE WHEN n.number_of_visits is null THEN 1 ELSE n.number_of_visits + 1 END",
+                    neo4jFriendlyResource.queryPrefix() + "SET n.nb_visits= CASE WHEN n.nb_visits is null THEN 1 ELSE n.nb_visits + 1 END",
                     parameters(
                             "uri",
                             neo4jFriendlyResource.uri().toString()
@@ -57,7 +57,7 @@ public class CenterGraphElementOperatorNeo4j implements CenterGraphElementOperat
     public Integer getNumberOfVisits() {
         try (Session session = driver.session()) {
             Record record = session.run(
-                    neo4jFriendlyResource.queryPrefix() + "RETURN n.number_of_visits as number;",
+                    neo4jFriendlyResource.queryPrefix() + "RETURN n.nb_visits as number;",
                     parameters(
                             "uri", neo4jFriendlyResource.uri().toString()
                     )
@@ -104,7 +104,7 @@ public class CenterGraphElementOperatorNeo4j implements CenterGraphElementOperat
     public void remove() {
         try (Session session = driver.session()) {
             session.run(
-                    "MATCH(n:GraphElement{uri:$uri}) REMOVE n.last_center_date, n.number_of_visits",
+                    "MATCH(n:GraphElement{uri:$uri}) REMOVE n.last_center_date, n.nb_visits",
                     parameters(
                             "uri", neo4jFriendlyResource.uri().toString()
                     )

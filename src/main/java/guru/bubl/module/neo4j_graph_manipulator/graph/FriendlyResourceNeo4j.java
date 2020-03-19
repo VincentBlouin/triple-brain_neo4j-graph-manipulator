@@ -6,7 +6,6 @@ package guru.bubl.module.neo4j_graph_manipulator.graph;
 
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
-import guru.bubl.module.common_utils.Uris;
 import guru.bubl.module.model.FriendlyResource;
 import guru.bubl.module.model.Image;
 import guru.bubl.module.model.UserUris;
@@ -368,20 +367,6 @@ public class FriendlyResourceNeo4j implements FriendlyResourceOperator, Operator
         }
     }
 
-    @Override
-    public Map<String, Object> addCreationProperties(Map<String, Object> map) {
-        Long now = new Date().getTime();
-        Map<String, Object> newMap = RestApiUtilsNeo4j.map(
-                UserGraphNeo4j.URI_PROPERTY_NAME, uri().toString(),
-                props.owner.name(), UserUris.ownerUserNameFromUri(uri()),
-                props.creation_date.name(), now,
-                props.last_modification_date.name(), now
-        );
-        newMap.putAll(
-                map
-        );
-        return newMap;
-    }
 
     @Override
     public boolean equals(Object friendlyResourceToCompareAsObject) {
@@ -394,22 +379,4 @@ public class FriendlyResourceNeo4j implements FriendlyResourceOperator, Operator
         return uri().hashCode();
     }
 
-    @Override
-    public String queryPrefix() {
-        return String.format(
-                "MATCH%s ",
-                addToSelectUsingVariableName(
-                        "n",
-                        "uri"
-                )
-        );
-    }
-
-    public String addToSelectUsingVariableName(String variableName, String uriName) {
-        return String.format(
-                "(%s:Resource{uri:$%s}) ",
-                variableName,
-                uriName
-        );
-    }
 }

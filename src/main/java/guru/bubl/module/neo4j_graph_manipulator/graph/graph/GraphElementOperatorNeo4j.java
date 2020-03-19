@@ -11,10 +11,12 @@ import guru.bubl.module.model.UserUris;
 import guru.bubl.module.model.graph.*;
 import guru.bubl.module.model.graph.tag.Tag;
 import guru.bubl.module.model.graph.tag.TagPojo;
+import guru.bubl.module.model.graph.vertex.NbNeighborsPojo;
 import guru.bubl.module.model.json.ImageJson;
 import guru.bubl.module.neo4j_graph_manipulator.graph.FriendlyResourceFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.FriendlyResourceNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.OperatorNeo4j;
+import guru.bubl.module.neo4j_graph_manipulator.graph.RestApiUtilsNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph.VertexFromExtractorQueryRow;
 import guru.bubl.module.neo4j_graph_manipulator.graph.image.ImagesNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.tag.TagFactoryNeo4J;
@@ -23,7 +25,6 @@ import org.neo4j.driver.v1.Driver;
 import org.neo4j.driver.v1.Record;
 import org.neo4j.driver.v1.Session;
 import org.neo4j.driver.v1.StatementResult;
-import org.neo4j.graphdb.Node;
 
 import java.net.URI;
 import java.util.*;
@@ -39,7 +40,6 @@ public class GraphElementOperatorNeo4j implements GraphElementOperator, Operator
         move_date
     }
 
-    protected Node node;
     protected FriendlyResourceNeo4j friendlyResource;
     protected FriendlyResourceFactoryNeo4j friendlyResourceFactory;
     protected Driver driver;
@@ -302,37 +302,10 @@ public class GraphElementOperatorNeo4j implements GraphElementOperator, Operator
     }
 
     @Override
-    public Map<URI, TagPojo> addMeta(
-            Tag identification
+    public Map<URI, TagPojo> addTag(
+            Tag tag,
+            ShareLevel sourceShareLevel
     ) {
-        return addTagAndOriginalReferenceOnesOrNot(
-                (TagPojo) identification,
-                true
-        );
-    }
-
-    public ShareLevel getShareLevel() {
-        try (Session session = driver.session()) {
-            Record record = session.run(
-                    queryPrefix() + "RETURN n.shareLevel as shareLevel",
-                    parameters(
-                            "uri",
-                            this.uri().toString()
-                    )
-            ).single();
-            if (record.get("shareLevel").asObject() == null) {
-                return ShareLevel.PRIVATE;
-            }
-            Integer shareLevel = record.get("shareLevel").asInt();
-            return ShareLevel.get(shareLevel);
-        }
-    }
-
-    public Boolean isPublic() {
-        return this.getShareLevel().isPublic();
-    }
-
-    private Map<URI, TagPojo> addTagAndOriginalReferenceOnesOrNot(TagPojo tag, Boolean addOriginalReferenceTags) {
         TagPojo identificationPojo;
         Boolean isIdentifyingToAnIdentification = UserUris.isUriOfAnIdentifier(
                 tag.getExternalResourceUri()
@@ -370,7 +343,7 @@ public class GraphElementOperatorNeo4j implements GraphElementOperator, Operator
         try (Session session = driver.session()) {
             StatementResult result = session.run(
                     AddTagQueryBuilder.usingIdentificationForGraphElement(
-                            identificationPojo, this
+                            queryPrefix(), sourceShareLevel
                     ).build(),
                     parameters(
                             "uri",
@@ -408,7 +381,6 @@ public class GraphElementOperatorNeo4j implements GraphElementOperator, Operator
                 );
                 TagPojo tagPojo = new TagPojo(
                         externalUri,
-                        record.get("nbReferences").asInt(),
                         new GraphElementPojo(
                                 new FriendlyResourcePojo(
                                         URI.create(
@@ -423,6 +395,11 @@ public class GraphElementOperatorNeo4j implements GraphElementOperator, Operator
                                         record.get("creation_date").asLong(),
                                         record.get("last_modification_date").asLong()
                                 )
+                        ),
+                        new NbNeighborsPojo(
+                                record.get("nbPrivateNeighbors").asInt(),
+                                record.get("nbFriendNeighbors").asInt(),
+                                record.get("nbPublicNeighbors").asInt()
                         )
                 );
                 tagPojo.setShareLevel(
@@ -431,41 +408,6 @@ public class GraphElementOperatorNeo4j implements GraphElementOperator, Operator
                                 record
                         )
                 );
-                Boolean isReference = tag.getExternalResourceUri().equals(
-                        this.uri()
-                );
-
-                Boolean isOwnerOfExternalUri = UserUris.ownerUserNameFromUri(
-                        tag.getExternalResourceUri()
-                ).equals(getOwnerUsername());
-
-//                if (isOwnerOfExternalUri && !isReference && addOriginalReferenceTags) {
-//                    Map<URI, TagPojo> existingTags = getIdentifications();
-//                    Map<URI, TagPojo> referenceTags = graphElementOperatorFactory.withUri(
-//                            tag.getExternalResourceUri()
-//                    ).getIdentifications();
-//                    for (TagPojo otherIdentifier : referenceTags.values()) {
-//                        if (!existingTags.containsKey(otherIdentifier.getExternalResourceUri())) {
-//                            otherIdentifier = addTagAndOriginalReferenceOnesOrNot(
-//                                    otherIdentifier,
-//                                    false
-//                            ).get(otherIdentifier.getExternalResourceUri());
-//                        }
-//                        identifications.put(otherIdentifier.getExternalResourceUri(), otherIdentifier);
-//                    }
-//                }
-                Boolean justCreatedTag = tagCreationDate.equals(tagPojo.creationDate());
-                Boolean isVoidReference = tag.getExternalResourceUri().toString().contains("/void/ref/");
-                if (!isReference && isOwnerOfExternalUri && justCreatedTag && !isVoidReference) {
-                    Map<URI, TagPojo> tags = graphElementOperatorFactory.withUri(
-                            tag.getExternalResourceUri()
-                    ).addMeta(
-                            tagPojo
-                    );
-                    if (tags.get(tag.getExternalResourceUri()) != null) {
-                        tagPojo = tags.get(tag.getExternalResourceUri());
-                    }
-                }
                 identifications.put(
                         tag.getExternalResourceUri(),
                         tagPojo
@@ -476,7 +418,25 @@ public class GraphElementOperatorNeo4j implements GraphElementOperator, Operator
     }
 
     @Override
-    public void removeIdentification(Tag identification) {
+    public ShareLevel getShareLevel() {
+        try (Session session = driver.session()) {
+            Record record = session.run(
+                    queryPrefix() + "RETURN n.shareLevel as shareLevel",
+                    parameters(
+                            "uri",
+                            this.uri().toString()
+                    )
+            ).single();
+            if (record.get("shareLevel").asObject() == null) {
+                return ShareLevel.PRIVATE;
+            }
+            Integer shareLevel = record.get("shareLevel").asInt();
+            return ShareLevel.get(shareLevel);
+        }
+    }
+
+    @Override
+    public void removeTag(Tag identification) {
         try (Session session = driver.session()) {
             session.run(
                     String.format(
@@ -506,7 +466,6 @@ public class GraphElementOperatorNeo4j implements GraphElementOperator, Operator
 
     @Override
     public void remove() {
-        removeAllIdentifications();
         friendlyResource.remove();
     }
 
@@ -527,8 +486,17 @@ public class GraphElementOperatorNeo4j implements GraphElementOperator, Operator
 
     @Override
     public Map<String, Object> addCreationProperties(Map<String, Object> map) {
-        return friendlyResource.addCreationProperties(
+        Map<String, Object> newMap = RestApiUtilsNeo4j.map(
+                "nb_private_neighbors", 0,
+                "nb_friend_neighbors", 0,
+                "nb_public_neighbors", 0,
+                "nb_visits", 0
+        );
+        newMap.putAll(
                 map
+        );
+        return friendlyResource.addCreationProperties(
+                newMap
         );
     }
 
@@ -541,15 +509,17 @@ public class GraphElementOperatorNeo4j implements GraphElementOperator, Operator
     }
 
     @Override
-    public Map<URI, TagPojo> getIdentifications() {
+    public Map<URI, TagPojo> getTags() {
         Map<URI, TagPojo> identifications = new HashMap<>();
         try (Session session = driver.session()) {
             StatementResult rs = session.run(
                     String.format(
-                            "%sMATCH (n)-[r:IDENTIFIED_TO]->(identification) " +
-                                    "RETURN identification.uri as uri, " +
-                                    "identification.external_uri as external_uri, " +
-                                    "identification.nb_references as nbReferences, " +
+                            "%sMATCH (n)-[r:IDENTIFIED_TO]->(tag) " +
+                                    "RETURN tag.uri as uri, " +
+                                    "tag.external_uri as external_uri, " +
+                                    "tag.nb_private_neighbors as nbPrivateNeighbors, " +
+                                    "tag.nb_friend_neighbors as nbFriendNeighbors, " +
+                                    "tag.nb_public_neighbors as nbPublicNeighbors, " +
                                     "r.relation_external_uri as r_x_u",
                             queryPrefix()
                     ),
@@ -565,17 +535,28 @@ public class GraphElementOperatorNeo4j implements GraphElementOperator, Operator
                 URI externalUri = URI.create(
                         record.get("external_uri").asString()
                 );
-                TagPojo identification = new TagPojo(
+                TagPojo tag = new TagPojo(
                         externalUri,
-                        new Integer(record.get("nbReferences").asInt()),
                         new GraphElementPojo(
                                 new FriendlyResourcePojo(
                                         uri
                                 )
                         )
                 );
+                tag.getNbNeighbors().setPrivate(
+                        record.get("nbPrivateNeighbors").asObject() == null ? 0 :
+                                record.get("nbPrivateNeighbors").asInt()
+                );
+                tag.getNbNeighbors().setFriend(
+                        record.get("nbFriendNeighbors").asObject() == null ? 0 :
+                                record.get("nbFriendNeighbors").asInt()
+                );
+                tag.getNbNeighbors().setPublic(
+                        record.get("nbPublicNeighbors").asObject() == null ? 0 :
+                                record.get("nbPublicNeighbors").asInt()
+                );
                 String relationExternalUriString = record.get("r_x_u").asString();
-                identification.setRelationExternalResourceUri(
+                tag.setRelationExternalResourceUri(
                         relationExternalUriString == null ? Tag.DEFAULT_IDENTIFIER_RELATION_EXTERNAL_URI :
                                 URI.create(
                                         relationExternalUriString
@@ -583,26 +564,10 @@ public class GraphElementOperatorNeo4j implements GraphElementOperator, Operator
                 );
                 identifications.put(
                         externalUri,
-                        identification
+                        tag
                 );
             }
             return identifications;
-        }
-    }
-
-    public void removeAllIdentifications() {
-        try (Session session = driver.session()) {
-            session.run(
-                    String.format(
-                            "%s MATCH (n)-[r:IDENTIFIED_TO]->(i) " +
-                                    "DELETE r " +
-                                    "SET i.nb_references=i.nb_references -1 ",
-                            queryPrefix()
-                    ),
-                    parameters(
-                            "uri", this.uri().toString()
-                    )
-            );
         }
     }
 
@@ -624,7 +589,7 @@ public class GraphElementOperatorNeo4j implements GraphElementOperator, Operator
         clone.createUsingInitialValues(
                 createValues
         );
-        clone.addMeta(
+        clone.addTag(
                 new TagPojo(
                         this.uri(),
                         new GraphElementPojo(
@@ -632,8 +597,8 @@ public class GraphElementOperatorNeo4j implements GraphElementOperator, Operator
                         )
                 )
         );
-        cache.getIdentifications().values().forEach(
-                clone::addMeta
+        cache.getTags().values().forEach(
+                clone::addTag
         );
         return clone;
     }

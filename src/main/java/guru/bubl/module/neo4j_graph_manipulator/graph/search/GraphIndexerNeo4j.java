@@ -7,7 +7,6 @@ package guru.bubl.module.neo4j_graph_manipulator.graph.search;
 import com.google.inject.Inject;
 import guru.bubl.module.model.FriendlyResource;
 import guru.bubl.module.model.graph.GraphElement;
-import guru.bubl.module.model.graph.GraphElementPojo;
 import guru.bubl.module.model.graph.ShareLevel;
 import guru.bubl.module.model.graph.edge.Edge;
 import guru.bubl.module.model.graph.tag.TagPojo;
@@ -101,9 +100,9 @@ public class GraphIndexerNeo4j implements GraphIndexer {
         ).load();
         subGraph.vertices().remove(friendlyResource.uri());
         setPrivateFriendsAndPublicSearchContextToFriendlyResource(
-                sortVerticesByNumberOfChild(subGraph.vertices()),
-                sortVerticesByNumberOfChild(subGraph.getFriendsAndPublicIndexableVertices()),
-                sortVerticesByNumberOfChild(subGraph.getPublicIndexableVertices()),
+                sortVerticesByNumberOfChild(subGraph.vertices(), ShareLevel.PRIVATE),
+                sortVerticesByNumberOfChild(subGraph.getFriendsAndPublicIndexableVertices(), ShareLevel.FRIENDS),
+                sortVerticesByNumberOfChild(subGraph.getPublicIndexableVertices(), ShareLevel.PUBLIC),
                 friendlyResource
         );
     }
@@ -194,16 +193,16 @@ public class GraphIndexerNeo4j implements GraphIndexer {
         );
     }
 
-    private Map<URI, VertexInSubGraphPojo> sortVerticesByNumberOfChild(Map<URI, VertexInSubGraphPojo> vertices) {
+    private Map<URI, VertexInSubGraphPojo> sortVerticesByNumberOfChild(Map<URI, VertexInSubGraphPojo> vertices, ShareLevel shareLevel) {
         List<Map.Entry<URI, VertexInSubGraphPojo>> list =
                 new LinkedList<>(vertices.entrySet());
 
         Collections.sort(list, new Comparator<Map.Entry<URI, VertexInSubGraphPojo>>() {
             public int compare(Map.Entry<URI, VertexInSubGraphPojo> o1,
                                Map.Entry<URI, VertexInSubGraphPojo> o2) {
-                if (o1.getValue().getNumberOfConnectedEdges() > o2.getValue().getNumberOfConnectedEdges()) {
+                if (o1.getValue().getNbNeighbors().getTotalForShareLevel(shareLevel) > o2.getValue().getNbNeighbors().getTotalForShareLevel(shareLevel)) {
                     return -1;
-                } else if (o1.getValue().getNumberOfConnectedEdges() == o2.getValue().getNumberOfConnectedEdges()) {
+                } else if (o1.getValue().getNbNeighbors().getTotalForShareLevel(shareLevel) == o2.getValue().getNbNeighbors().getTotalForShareLevel(shareLevel)) {
                     return 0;
                 } else {
                     return 1;

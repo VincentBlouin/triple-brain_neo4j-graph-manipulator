@@ -4,6 +4,7 @@
 
 package guru.bubl.module.neo4j_graph_manipulator.graph.center_graph_element;
 
+import apoc.neighbors.Neighbors;
 import com.google.gson.reflect.TypeToken;
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
@@ -14,6 +15,7 @@ import guru.bubl.module.model.friend.FriendStatus;
 import guru.bubl.module.model.graph.FriendlyResourcePojo;
 import guru.bubl.module.model.graph.GraphElementPojo;
 import guru.bubl.module.model.graph.ShareLevel;
+import guru.bubl.module.model.graph.vertex.NbNeighborsPojo;
 import guru.bubl.module.model.json.JsonUtils;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.TagQueryBuilder;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph.TagsFromExtractorQueryRowAsArray;
@@ -155,53 +157,51 @@ public class CenterGraphElementsOperatorNeo4j implements CenteredGraphElementsOp
     }
 
 
-    private List<CenterGraphElementPojo> get(String match, User user, Boolean filterOnUser, Boolean isPrivateContext, Boolean nbAll, Boolean nbPublic, Boolean nbFriends, String sortBy, Boolean includeNonCenters, Integer... shareLevels) {
+    private List<CenterGraphElementPojo> get(String match, User user, Boolean filterOnUser, Boolean isPrivateContext, Boolean nbPrivate, Boolean nbPublic, Boolean nbFriends, String sortBy, Boolean includeNonCenters, Integer... inShareLevelsIntegers) {
         List<CenterGraphElementPojo> centerGraphElements = new ArrayList<>();
+        Set<ShareLevel> inShareLevels = ShareLevel.arrayOfIntegersToSet(inShareLevelsIntegers);
         try (Session session = driver.session()) {
             StatementResult rs = session.run(
                     String.format(
                             match + " 1=1 " +
                                     (filterOnUser ? "AND n.owner=$owner" : "") + (includeNonCenters ? " " : " AND EXISTS(n.last_center_date) ") +
-                                    (shareLevels.length == 0 ? " " : "AND n.shareLevel IN {shareLevels} ") +
+                                    (inShareLevelsIntegers.length == 0 ? " " : "AND n.shareLevel IN {shareLevels} ") +
                                     "OPTIONAL MATCH (n)-[idr:IDENTIFIED_TO]->(id) " +
-                                    (shareLevels.length == 0 ? " " : "WHERE id.shareLevel IN {shareLevels} ") +
+                                    (inShareLevelsIntegers.length == 0 ? " " : "WHERE id.shareLevel IN {shareLevels} ") +
                                     "RETURN " +
-                                    TagQueryBuilder.identificationReturnQueryPart() +
-                                    "%s %s %s n.%s as context, n.number_of_visits as numberOfVisits, n.creation_date as creationDate, n.last_center_date as lastCenterDate, n.label as label, n.uri as uri, n.nb_references as nbReferences, n.colors as colors, n.shareLevel, 'Pattern' IN LABELS(n) as isPattern " +
+                                    TagQueryBuilder.identificationReturnQueryPart(inShareLevels) +
+                                    "%s %s %s n.%s as context, n.nb_visits as nbVisits, n.creation_date as creationDate, n.last_center_date as lastCenterDate, n.label as label, n.uri as uri, n.colors as colors, n.shareLevel, 'Pattern' IN LABELS(n) as isPattern " +
                                     "ORDER BY " + sortBy + " DESC " +
                                     "SKIP " + skip +
                                     " LIMIT " + limit,
-                            (nbAll ? "n.number_of_connected_edges_property_name as nbConnected," : ""),
-                            (nbPublic ? "n.nb_public_neighbors as nbPublic," : ""),
+                            (nbPrivate ? "n.nb_private_neighbors as nbPrivateNeighbors," : ""),
                             (nbFriends ? "n.nb_friend_neighbors as nbFriendNeighbors," : ""),
+                            (nbPublic ? "n.nb_public_neighbors as nbPublic," : ""),
                             (isPrivateContext ? "private_context" : "public_context")
                     ),
                     parameters(
                             "owner", user == null ? "" : user.username(),
-                            "shareLevels", shareLevels
+                            "shareLevels", inShareLevelsIntegers
                     )
             );
-            Boolean includeLastCenterDate = shareLevels.length == 0 || Arrays.stream(shareLevels).anyMatch(ShareLevel.PRIVATE.getIndex()::equals);
+            Boolean includeLastCenterDate = inShareLevelsIntegers.length == 0 || Arrays.stream(inShareLevelsIntegers).anyMatch(ShareLevel.PRIVATE.getIndex()::equals);
             while (rs.hasNext()) {
                 Record record = rs.next();
                 Date lastCenterDate = !includeLastCenterDate || null == record.get("lastCenterDate").asObject() ?
                         null :
                         new Date(record.get("lastCenterDate").asLong());
-                Integer numberOfVisits = null == record.get("numberOfVisits").asObject() ?
+                Integer nbVisits = null == record.get("nbVisits").asObject() ?
                         null :
-                        record.get("numberOfVisits").asInt();
-                Integer nbReferences = null == record.get("nbReferences").asObject() ?
+                        record.get("nbVisits").asInt();
+                Integer nbPrivateNeighbors = null == record.get("nbPrivateNeighbors").asObject() ?
                         null :
-                        record.get("nbReferences").asInt();
-                Integer nbConnected = null == record.get("nbConnected").asObject() ?
-                        null :
-                        record.get("nbConnected").asInt();
-                Integer nbPublicNeighbors = null == record.get("nbPublic").asObject() ?
-                        null :
-                        record.get("nbPublic").asInt();
+                        record.get("nbPrivateNeighbors").asInt();
                 Integer nbFriendNeighbors = null == record.get("nbFriendNeighbors").asObject() ?
                         null :
                         record.get("nbFriendNeighbors").asInt();
+                Integer nbPublicNeighbors = null == record.get("nbPublic").asObject() ?
+                        null :
+                        record.get("nbPublic").asInt();
                 Long creationDate = null == record.get("creationDate").asObject() ?
                         null :
                         record.get("creationDate").asLong();
@@ -223,16 +223,17 @@ public class CenterGraphElementsOperatorNeo4j implements CenteredGraphElementsOp
                 graphElement.setColors(colors);
                 centerGraphElements.add(
                         new CenterGraphElementPojo(
-                                numberOfVisits,
+                                nbVisits,
                                 lastCenterDate,
                                 graphElement,
                                 getContextFromRow(record),
-                                nbReferences,
                                 shareLevel,
                                 record.get("isPattern").asBoolean(),
-                                nbConnected,
-                                nbPublicNeighbors,
-                                nbFriendNeighbors
+                                new NbNeighborsPojo(
+                                        nbPrivateNeighbors,
+                                        nbFriendNeighbors,
+                                        nbPublicNeighbors
+                                )
                         )
                 );
             }

@@ -6,6 +6,8 @@ package guru.bubl.module.neo4j_graph_manipulator.graph.search.result_builder;
 
 import com.google.gson.reflect.TypeToken;
 import guru.bubl.module.model.graph.ShareLevel;
+import guru.bubl.module.model.graph.vertex.NbNeighbors;
+import guru.bubl.module.model.graph.vertex.NbNeighborsPojo;
 import guru.bubl.module.model.json.JsonUtils;
 import guru.bubl.module.model.search.GraphElementSearchResult;
 import org.neo4j.driver.v1.Record;
@@ -39,9 +41,29 @@ public interface SearchResultBuilder {
     }
 
     default Integer getNbVisits() {
-        return getRow().get("nbVisits").asObject() == null ?
-                0 : getRow().get("nbVisits").asInt();
+        return getRow().get("n.nb_visits").asObject() == null ?
+                0 : getRow().get("n.nb_visits").asInt();
+    }
+
+    default NbNeighborsPojo buildNbNeighbors() {
+        NbNeighborsPojo nbNeighborsPojo = new NbNeighborsPojo();
+        if (getInShareLevels().contains(ShareLevel.PRIVATE)) {
+            nbNeighborsPojo.setPrivate(getRow().get("n.nb_private_neighbors").asInt());
+        }
+        if (getInShareLevels().contains(ShareLevel.FRIENDS)) {
+            nbNeighborsPojo.setFriend(getRow().get(
+                    "n.nb_friend_neighbors"
+            ).asInt());
+        }
+        nbNeighborsPojo.setPublic(getRow().get(
+                "n.nb_public_neighbors"
+        ).asInt());
+        return nbNeighborsPojo;
     }
 
     Record getRow();
+
+    default Set<ShareLevel> getInShareLevels() {
+        return null;
+    }
 }

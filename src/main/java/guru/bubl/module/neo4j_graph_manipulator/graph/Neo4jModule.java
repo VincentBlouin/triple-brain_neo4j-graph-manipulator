@@ -35,8 +35,8 @@ import guru.bubl.module.model.graph.tag.TagFactory;
 import guru.bubl.module.model.graph.tag.TagOperator;
 import guru.bubl.module.model.graph.vertex.VertexFactory;
 import guru.bubl.module.model.graph.vertex.VertexInSubGraphOperator;
-import guru.bubl.module.model.tag.UserTagsOperator;
-import guru.bubl.module.model.tag.UserTagsOperatorFactory;
+import guru.bubl.module.model.graph.vertex.VertexTypeOperator;
+import guru.bubl.module.model.graph.vertex.VertexTypeOperatorFactory;
 import guru.bubl.module.model.test.GraphComponentTest;
 import guru.bubl.module.neo4j_graph_manipulator.graph.admin.WholeGraphAdminNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.center_graph_element.CenterGraphElementOperatorNeo4j;
@@ -50,10 +50,10 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.graph.subgraph.SubGraphFor
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.tag.TagNeo4J;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.VertexFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.VertexInSubGraphOperatorNeo4j;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.VertexTypeOperatorNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.image.ImageFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.search.GraphSearchModuleNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.tag.TagFactoryNeo4J;
-import guru.bubl.module.neo4j_graph_manipulator.graph.tag.UserTagsOperatorNeo4J;
 import guru.bubl.module.neo4j_graph_manipulator.graph.test.GraphComponentTestNeo4j;
 import org.neo4j.driver.v1.AuthTokens;
 import org.neo4j.driver.v1.Driver;
@@ -135,10 +135,6 @@ public class Neo4jModule extends AbstractModule {
                 .build(PatternUserFactory.class));
 
         install(factoryModuleBuilder
-                .implement(UserTagsOperator.class, UserTagsOperatorNeo4J.class)
-                .build(UserTagsOperatorFactory.class));
-
-        install(factoryModuleBuilder
                 .build(EdgeFactoryNeo4j.class));
 
         install(factoryModuleBuilder
@@ -165,6 +161,11 @@ public class Neo4jModule extends AbstractModule {
         install(factoryModuleBuilder
                 .implement(GraphElementOperator.class, GraphElementOperatorNeo4j.class)
                 .build(GraphElementOperatorFactory.class)
+        );
+
+        install(factoryModuleBuilder
+                .implement(VertexTypeOperator.class, VertexTypeOperatorNeo4j.class)
+                .build(VertexTypeOperatorFactory.class)
         );
 
         install(factoryModuleBuilder
@@ -233,6 +234,10 @@ public class Neo4jModule extends AbstractModule {
             graphDb.execute("CREATE INDEX ON :GraphElement(last_center_date)");
             graphDb.execute("CREATE INDEX ON :Meta(external_uri)");
             graphDb.execute("CREATE INDEX ON :GraphElement(isUnderPattern)");
+            graphDb.execute("CREATE INDEX ON :GraphElement(nb_visits)");
+            graphDb.execute("CREATE INDEX ON :GraphElement(nb_private_neighbors)");
+            graphDb.execute("CREATE INDEX ON :GraphElement(nb_friend_neighbors)");
+            graphDb.execute("CREATE INDEX ON :GraphElement(nb_public_neighbors)");
             tx.success();
             tx.close();
             registerShutdownHook(graphDb);

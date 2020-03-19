@@ -6,6 +6,7 @@ package guru.bubl.module.neo4j_graph_manipulator.graph.test;
 
 import guru.bubl.module.model.User;
 import guru.bubl.module.model.graph.GraphFactory;
+import guru.bubl.module.model.graph.ShareLevel;
 import guru.bubl.module.model.graph.edge.Edge;
 import guru.bubl.module.model.graph.edge.EdgeFactory;
 import guru.bubl.module.model.graph.edge.EdgePojo;
@@ -121,9 +122,10 @@ public class GraphComponentTestNeo4j implements GraphComponentTest {
     @Override
     public SubGraphPojo wholeGraphAroundDefaultCenterVertex() {
         Integer depthThatShouldCoverWholeGraph = 1000;
-        return neo4jSubGraphExtractorFactory.withCenterVertexAndDepth(
+        return neo4jSubGraphExtractorFactory.withCenterVertexInShareLevelsAndDepth(
                 vertexA.uri(),
-                depthThatShouldCoverWholeGraph
+                depthThatShouldCoverWholeGraph,
+                ShareLevel.allShareLevelsInt
         ).load();
     }
 

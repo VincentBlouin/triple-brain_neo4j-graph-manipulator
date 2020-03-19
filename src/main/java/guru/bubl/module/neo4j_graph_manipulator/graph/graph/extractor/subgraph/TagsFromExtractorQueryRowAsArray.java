@@ -65,23 +65,37 @@ public class TagsFromExtractorQueryRowAsArray {
                     )
             );
             friendlyResource.setCreationDate(
-                    new Long(properties.get(7).toString())
+                    new Long(properties.get(5).toString())
             );
-            if (properties.get(8) != null) {
+            if (properties.get(6) != null) {
                 friendlyResource.setColors(
-                        properties.get(8).toString()
+                        properties.get(6).toString()
                 );
             }
             TagPojo tag = new TagPojo(
                     externalUri,
-                    new Integer(properties.get(5).toString()),
                     new GraphElementPojo(
                             friendlyResource
                     )
             );
-            ShareLevel shareLevel = ShareLevel.PRIVATE;
+            if (properties.get(8) != null) {
+                tag.getNbNeighbors().setPrivate(
+                        ((Long) properties.get(8)).intValue()
+                );
+            }
             if (properties.get(9) != null) {
-                Long shareLevelLong = (Long) properties.get(9);
+                tag.getNbNeighbors().setFriend(
+                        ((Long) properties.get(9)).intValue()
+                );
+            }
+            if (properties.get(10) != null) {
+                tag.getNbNeighbors().setPublic(
+                        ((Long) properties.get(10)).intValue()
+                );
+            }
+            ShareLevel shareLevel = ShareLevel.PRIVATE;
+            if (properties.get(7) != null) {
+                Long shareLevelLong = (Long) properties.get(7);
                 shareLevel = ShareLevel.get(
                         shareLevelLong.intValue()
                 );
@@ -89,9 +103,6 @@ public class TagsFromExtractorQueryRowAsArray {
             tag.setShareLevel(
                     shareLevel
             );
-            tag.setRelationExternalResourceUri(URI.create(
-                    properties.get(6).toString()
-            ));
             tags.put(
                     externalUri,
                     tag

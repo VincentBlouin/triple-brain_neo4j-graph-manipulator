@@ -10,15 +10,19 @@ import guru.bubl.module.model.WholeGraph;
 import guru.bubl.module.model.admin.WholeGraphAdmin;
 import guru.bubl.module.model.graph.FriendlyResourcePojo;
 import guru.bubl.module.model.graph.GraphElementPojo;
+import guru.bubl.module.model.graph.ShareLevel;
 import guru.bubl.module.model.graph.edge.EdgeOperator;
 import guru.bubl.module.model.graph.tag.Tag;
 import guru.bubl.module.model.graph.tag.TagOperator;
 import guru.bubl.module.model.graph.tag.TagPojo;
+import guru.bubl.module.model.graph.vertex.NbNeighbors;
 import guru.bubl.module.model.graph.vertex.VertexOperator;
 import guru.bubl.module.model.search.GraphIndexer;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.tag.TagNeo4J;
 import org.neo4j.driver.v1.Driver;
+import org.neo4j.driver.v1.Record;
 import org.neo4j.driver.v1.Session;
+import org.neo4j.driver.v1.StatementResult;
 
 import static org.neo4j.driver.v1.Values.parameters;
 
@@ -34,16 +38,16 @@ public class WholeGraphAdminNeo4j implements WholeGraphAdmin {
     protected GraphIndexer graphIndexer;
 
     @Override
-    public void refreshNumberOfReferencesToAllIdentifications() {
+    public void refreshNbNeighborsToAllTags() {
         wholeGraph.getAllTags().forEach(
-                this::refreshNumberOfReferencesToIdentification
+                this::refreshNbNeighborsToTag
         );
     }
 
     @Override
     public void removeMetasHavingZeroReferences() {
         wholeGraph.getAllTags().forEach(
-                this::removeMetaIfNoReference
+                this::removeTagIfNoReference
         );
     }
 
@@ -94,23 +98,46 @@ public class WholeGraphAdminNeo4j implements WholeGraphAdmin {
         return wholeGraph;
     }
 
-    private void refreshNumberOfReferencesToIdentification(TagOperator identification) {
-        TagNeo4J neo4jIdentification = (TagNeo4J) identification;
+    private void refreshNbNeighborsToTag(TagOperator tag) {
+        TagNeo4J tagNeo4j = (TagNeo4J) tag;
         try (Session session = driver.session()) {
-            session.run(
-                    neo4jIdentification.queryPrefix() + "OPTIONAL MATCH (n)<-[r]-() " +
-                            "WITH n, count(r) as nbReferences " +
-                            "SET n.nb_references=nbReferences",
+            StatementResult rs = session.run(
+                    tagNeo4j.queryPrefix() + "OPTIONAL MATCH (n)<-[:IDENTIFIED_TO]-(ge) " +
+                            "return ge.shareLevel as shareLevel",
                     parameters(
-                            "uri", identification.uri().toString()
+                            "uri", tag.uri().toString()
                     )
             );
+            Integer nbPrivate = 0;
+            Integer nbFriend = 0;
+            Integer nbPublic = 0;
+            while (rs.hasNext()) {
+                Record record = rs.next();
+                if (record.get("shareLevel").asObject() != null) {
+                    ShareLevel graphElementShareLevel = ShareLevel.get(record.get("shareLevel").asInt());
+                    switch (graphElementShareLevel) {
+                        case PRIVATE:
+                            nbPrivate++;
+                            break;
+                        case FRIENDS:
+                            nbFriend++;
+                            break;
+                        default:
+                            nbPublic++;
+                    }
+                }
+            }
+            NbNeighbors nbNeighbors = tagNeo4j.getNbNeighbors();
+            nbNeighbors.setPrivate(nbPrivate);
+            nbNeighbors.setFriend(nbFriend);
+            nbNeighbors.setPublic(nbPublic);
         }
     }
 
-    private void removeMetaIfNoReference(TagOperator identification) {
-        if (0 == identification.getNbReferences()) {
-            identification.remove();
+    private void removeTagIfNoReference(TagOperator tag) {
+        NbNeighbors nbNeighbors = tag.getNbNeighbors();
+        if (0 == nbNeighbors.getTotal()) {
+            tag.remove();
         }
     }
 

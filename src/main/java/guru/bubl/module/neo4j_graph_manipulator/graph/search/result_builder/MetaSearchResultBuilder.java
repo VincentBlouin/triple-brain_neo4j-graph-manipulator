@@ -10,6 +10,8 @@ import guru.bubl.module.model.graph.GraphElementPojo;
 import guru.bubl.module.model.graph.GraphElementType;
 import guru.bubl.module.model.graph.ShareLevel;
 import guru.bubl.module.model.graph.tag.TagPojo;
+import guru.bubl.module.model.graph.vertex.NbNeighbors;
+import guru.bubl.module.model.graph.vertex.NbNeighborsPojo;
 import guru.bubl.module.model.search.GraphElementSearchResult;
 import guru.bubl.module.model.search.GraphElementSearchResultPojo;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.FriendlyResourceFromExtractorQueryRow;
@@ -23,10 +25,12 @@ public class MetaSearchResultBuilder implements SearchResultBuilder {
 
     private Record row;
     private String prefix;
+    private Set<ShareLevel> inShareLevels;
 
-    public MetaSearchResultBuilder(Record row, String prefix) {
+    public MetaSearchResultBuilder(Record row, String prefix, Set<ShareLevel> inShareLevels) {
         this.row = row;
         this.prefix = prefix;
+        this.inShareLevels = inShareLevels;
     }
 
     @Override
@@ -35,23 +39,17 @@ public class MetaSearchResultBuilder implements SearchResultBuilder {
                 row,
                 prefix
         ).build();
+        NbNeighborsPojo nbNeighbors = buildNbNeighbors();
         TagPojo tagPojo = new TagPojo(
-                new GraphElementPojo(
-                        friendlyResourcePojo
-                )
-        );
-
-        tagPojo.setExternalResourceUri(
                 URI.create(
                         row.get("n.external_uri").asString()
-                )
+                ),
+                new GraphElementPojo(
+                        friendlyResourcePojo
+                ),
+                nbNeighbors
         );
-
-        tagPojo.setNbRefences(
-                row.get("nbReferences").asInt()
-        );
-
-        GraphElementPojo identifierAsGraphElement = new GraphElementPojo(
+        GraphElementPojo tagAsGraphElement = new GraphElementPojo(
                 tagPojo.getGraphElement().getFriendlyResource(),
                 ImmutableMap.of(
                         tagPojo.getExternalResourceUri(),
@@ -60,7 +58,7 @@ public class MetaSearchResultBuilder implements SearchResultBuilder {
         );
         GraphElementSearchResultPojo searchResult = new GraphElementSearchResultPojo(
                 GraphElementType.Meta,
-                identifierAsGraphElement,
+                tagAsGraphElement,
                 getContext()
         );
         searchResult.getGraphElement().setColors(
@@ -69,10 +67,8 @@ public class MetaSearchResultBuilder implements SearchResultBuilder {
                         row
                 )
         );
+        searchResult.setNbNeighbors(nbNeighbors);
         searchResult.setShareLevel(this.extractShareLevel());
-        searchResult.setNbReferences(
-                tagPojo.getNbReferences()
-        );
         searchResult.setNbVisits(
                 getNbVisits()
         );
@@ -82,5 +78,10 @@ public class MetaSearchResultBuilder implements SearchResultBuilder {
     @Override
     public Record getRow() {
         return row;
+    }
+
+    @Override
+    public Set<ShareLevel> getInShareLevels() {
+        return this.inShareLevels;
     }
 }

@@ -41,16 +41,12 @@ import java.util.Map;
 import java.util.Set;
 
 import static guru.bubl.module.neo4j_graph_manipulator.graph.RestApiUtilsNeo4j.map;
-import static guru.bubl.module.neo4j_graph_manipulator.graph.graph.GraphElementOperatorNeo4j.decrementNbFriendsOrPublicQueryPart;
 import static guru.bubl.module.neo4j_graph_manipulator.graph.graph.GraphElementOperatorNeo4j.incrementNbFriendsOrPublicQueryPart;
 import static org.neo4j.driver.v1.Values.parameters;
 
 public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, OperatorNeo4j {
 
     public enum props {
-        number_of_connected_edges_property_name,
-        nb_public_neighbors,
-        nb_friend_neighbors,
         shareLevel,
         is_public,
         suggestions
@@ -65,6 +61,8 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
     protected Node node;
     protected Driver driver;
 
+    protected VertexTypeOperatorFactory vertexTypeOperatorFactory;
+
 
     @Inject
     protected FriendlyResourceFactoryNeo4j friendlyResourceFactory;
@@ -75,6 +73,7 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
             EdgeFactoryNeo4j edgeFactory,
             GraphElementFactoryNeo4j neo4jGraphElementFactory,
             Driver driver,
+            VertexTypeOperatorFactory vertexTypeOperatorFactory,
             @Assisted URI uri
     ) {
         this.vertexFactory = vertexFactory;
@@ -84,6 +83,7 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
         this.graphElementOperator = neo4jGraphElementFactory.withUri(
                 uri
         );
+        this.vertexTypeOperatorFactory = vertexTypeOperatorFactory;
     }
 
     @AssistedInject
@@ -92,6 +92,7 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
             EdgeFactoryNeo4j edgeFactory,
             GraphElementFactoryNeo4j neo4jGraphElementFactory,
             Driver driver,
+            VertexTypeOperatorFactory vertexTypeOperatorFactory,
             @Assisted String ownerUserName
     ) {
         this(
@@ -99,41 +100,10 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
                 edgeFactory,
                 neo4jGraphElementFactory,
                 driver,
+                vertexTypeOperatorFactory,
                 new UserUris(ownerUserName).generateVertexUri()
         );
         create();
-    }
-
-    @AssistedInject
-    protected VertexInSubGraphOperatorNeo4j(
-            final VertexFactoryNeo4j vertexFactory,
-            EdgeFactoryNeo4j edgeFactory,
-            GraphElementFactoryNeo4j neo4jGraphElementFactory,
-            Driver driver,
-            final @Assisted Set<Vertex> includedVertices,
-            final @Assisted Set<Edge> includedEdges
-    ) throws IllegalArgumentException {
-        this(
-                vertexFactory,
-                edgeFactory,
-                neo4jGraphElementFactory,
-                driver,
-                new UserUris(
-                        includedVertices.iterator().next().getOwnerUsername()
-                ).generateVertexUri()
-        );
-        if (includedVertices.size() <= 1) {
-            throw new IllegalArgumentException(
-                    "A minimum number of 2 vertices is required to create a vertex from included vertices"
-            );
-        }
-        create();
-//        setIncludedVertices(
-//                includedVertices
-//        );
-//        setIncludedEdges(
-//                includedEdges
-//        );
     }
 
     @Override
@@ -262,8 +232,8 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
         this.incrementNumberOfConnectedEdges();
         Boolean isPublic = isUnderPattern || this.isPublic();
         Map<String, Object> properties = map(
-                props.number_of_connected_edges_property_name.name(), 1,
-                props.nb_public_neighbors.name(), isPublic ? 1 : 0
+                VertexTypeOperatorNeo4j.props.nb_private_neighbors.name(), isPublic ? 0 : 1,
+                VertexTypeOperatorNeo4j.props.nb_public_neighbors.name(), isPublic ? 1 : 0
         );
         if (isUnderPattern) {
             properties.put(
@@ -325,10 +295,10 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
                         "d.%s=d.%s+1 " +
                         incrementNbFriendsOrPublicQueryPart(destinationShareLevel, "s", "WITH s,d SET ") +
                         incrementNbFriendsOrPublicQueryPart(sourceShareLevel, "d", "WITH s,d SET "),
-                props.number_of_connected_edges_property_name,
-                props.number_of_connected_edges_property_name,
-                props.number_of_connected_edges_property_name,
-                props.number_of_connected_edges_property_name
+                VertexTypeOperatorNeo4j.props.nb_private_neighbors,
+                VertexTypeOperatorNeo4j.props.nb_private_neighbors,
+                VertexTypeOperatorNeo4j.props.nb_private_neighbors,
+                VertexTypeOperatorNeo4j.props.nb_private_neighbors
         );
         try (Session session = driver.session()) {
             session.run(
@@ -370,7 +340,7 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
         );
 
         if (suggestion.getSameAs() != null) {
-            newEdgeOperator.addMeta(
+            newEdgeOperator.addTag(
                     new TagPojo(
                             suggestion.getSameAs().uri(),
                             new GraphElementPojo(
@@ -378,7 +348,7 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
                             )
                     )
             );
-            newVertex.addMeta(
+            newVertex.addTag(
                     new TagPojo(
                             suggestion.getSameAs().uri(),
                             new GraphElementPojo(
@@ -388,7 +358,7 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
             );
         }
         if (suggestion.getType() != null) {
-            newVertex.addMeta(
+            newVertex.addTag(
                     new TagPojo(
                             suggestion.getType().uri(),
                             new GraphElementPojo(
@@ -418,7 +388,7 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
         newEdgeOperator.label(
                 suggestion.label()
         );
-        newEdgeOperator.addMeta(
+        newEdgeOperator.addTag(
                 new TagPojo(
                         suggestion.getSameAs().uri(),
                         new GraphElementPojo(
@@ -426,7 +396,7 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
                         )
                 )
         );
-        newVertex.addMeta(
+        newVertex.addTag(
                 new TagPojo(
                         suggestion.getType().uri(),
                         new GraphElementPojo(
@@ -443,38 +413,14 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
 
     @Override
     public void remove() {
-        //todo batch
-        graphElementOperator.removeAllIdentifications();
         try (Session session = driver.session()) {
-            session.run(
-                    queryPrefix() +
-                            "MATCH " +
-                            "(n)<-[:SOURCE_VERTEX|DESTINATION_VERTEX]-(e),  " +
-                            "(e)-[:IDENTIFIED_TO]->(i) " +
-                            "SET " +
-                            "i.nb_references = i.nb_references - 1",
-                    parameters(
-                            "uri", this.uri().toString()
-                    )
-            );
-            ShareLevel shareLevel = getShareLevel();
-            String decrementQueryPart = shareLevel == ShareLevel.PRIVATE ? "" :
-                    decrementNbFriendsOrPublicQueryPart(shareLevel, "v", ", ") + " ";
             session.run(
                     queryPrefix() +
                             "OPTIONAL MATCH " +
                             "(n)<-[:SOURCE_VERTEX|DESTINATION_VERTEX]-(e), " +
                             "(e)-[:SOURCE_VERTEX|DESTINATION_VERTEX]->(v) " +
-                            "SET " +
-                            "v.number_of_connected_edges_property_name = " +
-                            "v.number_of_connected_edges_property_name - 1 " +
-                            decrementQueryPart +
                             "WITH e, n " +
-                            "OPTIONAL MATCH (e)-[e_r]-(), " +
-                            "(n)-[v_r]-() " +
-                            "DELETE " +
-                            "v_r, n, " +
-                            "e_r, e",
+                            "DETACH DELETE n, e",
                     parameters(
                             "uri",
                             this.uri().toString()
@@ -524,113 +470,12 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
         graphElementOperator.forkUsingCreationPropertiesAndCache(
                 clone,
                 map(
-                        props.number_of_connected_edges_property_name.name(),
-                        cache.getNumberOfConnectedEdges()
+                        VertexTypeOperatorNeo4j.props.nb_private_neighbors.name(),
+                        cache.getNbNeighbors().getPrivate()
                 ),
                 cache
         );
         return clone;
-    }
-
-    @Override
-    public Integer getNumberOfConnectedEdges() {
-        try (Session session = driver.session()) {
-            StatementResult rs = session.run(
-                    String.format(
-                            "%sRETURN n.%s as result",
-                            queryPrefix(),
-                            props.number_of_connected_edges_property_name
-                    ),
-                    parameters(
-                            "uri",
-                            uri().toString()
-                    )
-            );
-            Record record = rs.next();
-            return record.get("result").asInt();
-        }
-    }
-
-    @Override
-    public Integer getNbPublicNeighbors() {
-        try (Session session = driver.session()) {
-            StatementResult rs = session.run(
-                    String.format(
-                            "%sRETURN n.nb_public_neighbors as result",
-                            queryPrefix()
-                    ),
-                    parameters(
-                            "uri",
-                            this.uri().toString()
-                    )
-            );
-            Record record = rs.next();
-            return record.get("result").asInt();
-        }
-    }
-
-    @Override
-    public Integer getNbFriendNeighbors() {
-        try (Session session = driver.session()) {
-            StatementResult rs = session.run(
-                    queryPrefix() + "RETURN n.nb_friend_neighbors as result",
-                    parameters(
-                            "uri",
-                            uri().toString()
-                    )
-            );
-            Record record = rs.next();
-            return record.get("result").asInt();
-        }
-    }
-
-    @Override
-    public void setNumberOfConnectedEdges(Integer numberOfConnectedEdges) {
-        try (Session session = driver.session()) {
-            session.run(
-                    String.format(
-                            "%s SET n.%s=$nbConnectedEdges",
-                            queryPrefix(),
-                            props.number_of_connected_edges_property_name
-                    ),
-                    parameters(
-                            "uri",
-                            uri().toString(),
-                            "nbConnectedEdges",
-                            numberOfConnectedEdges
-                    )
-            );
-        }
-    }
-
-    @Override
-    public void setNumberOfPublicConnectedEdges(Integer nbPublicNeighbors) {
-        try (Session session = driver.session()) {
-            session.run(
-                    queryPrefix() + "SET n.nb_public_neighbors=$nbPublicNeighbors",
-                    parameters(
-                            "uri",
-                            uri().toString(),
-                            "nbPublicNeighbors",
-                            nbPublicNeighbors
-                    )
-            );
-        }
-    }
-
-    @Override
-    public void setNbFriendNeighbors(Integer nbFriendNeighbors) {
-        try (Session session = driver.session()) {
-            session.run(
-                    queryPrefix() + "SET n.nb_friend_neighbors=$nbFriendNeighbors",
-                    parameters(
-                            "uri",
-                            uri().toString(),
-                            "nbFriendNeighbors",
-                            nbFriendNeighbors
-                    )
-            );
-        }
     }
 
     protected void incrementNumberOfConnectedEdges() {
@@ -639,8 +484,8 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
                     String.format(
                             "%s SET n.%s= n.%s + 1",
                             queryPrefix(),
-                            props.number_of_connected_edges_property_name,
-                            props.number_of_connected_edges_property_name
+                            VertexTypeOperatorNeo4j.props.nb_private_neighbors,
+                            VertexTypeOperatorNeo4j.props.nb_private_neighbors
                     ),
                     parameters(
                             "uri", uri().toString()
@@ -694,18 +539,18 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
     }
 
     @Override
-    public void removeIdentification(Tag identification) {
-        graphElementOperator.removeIdentification(identification);
+    public void removeTag(Tag tag) {
+        graphElementOperator.removeTag(tag);
     }
 
     @Override
-    public Map<URI, TagPojo> addMeta(Tag friendlyResource) {
-        return graphElementOperator.addMeta(friendlyResource);
+    public Map<URI, TagPojo> addTag(Tag friendlyResource, ShareLevel sourceShareLevel) {
+        return graphElementOperator.addTag(friendlyResource, sourceShareLevel);
     }
 
     @Override
-    public Map<URI, TagPojo> getIdentifications() {
-        return graphElementOperator.getIdentifications();
+    public Map<URI, TagPojo> getTags() {
+        return graphElementOperator.getTags();
     }
 
     @Override
@@ -714,13 +559,8 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
     }
 
     @Override
-    public void makePublic() {
-        setShareLevel(ShareLevel.PUBLIC);
-    }
-
-    @Override
-    public void makePrivate() {
-        setShareLevel(ShareLevel.PRIVATE);
+    public NbNeighbors getNbNeighbors() {
+        return vertexTypeOperatorFactory.withUri(uri()).getNbNeighbors();
     }
 
     @Override
@@ -961,8 +801,8 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
                     }
                 }
         );
-        this.getIdentifications().values().forEach((tag) -> {
-            vertexOperator.addMeta(tag);
+        this.getTags().values().forEach((tag) -> {
+            vertexOperator.addTag(tag);
         });
         this.remove();
         return true;
@@ -970,26 +810,12 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
 
     @Override
     public void setShareLevel(ShareLevel shareLevel) {
-        ShareLevel previousShareLevel = this.getShareLevel();
-        String decrementQueryPart = decrementNbFriendsOrPublicQueryPart(previousShareLevel, "d", "SET ");
-        String incrementQueryPart = incrementNbFriendsOrPublicQueryPart(shareLevel, "d", "SET ");
-        try (Session session = driver.session()) {
-            session.run(
-                    queryPrefix()
-                            + "SET n.shareLevel=$shareLevel " +
-                            "WITH n " +
-                            "MATCH (n)<-[:SOURCE_VERTEX|DESTINATION_VERTEX]->(e), " +
-                            "(e)<-[:SOURCE_VERTEX|DESTINATION_VERTEX]->(d) " +
-                            decrementQueryPart + " " +
-                            incrementQueryPart + " " +
-                            "WITH d,n,e " +
-                            "SET e.shareLevel = CASE WHEN (n.shareLevel <= d.shareLevel) THEN n.shareLevel ELSE d.shareLevel END",
-                    parameters(
-                            "uri", uri().toString(),
-                            "shareLevel", shareLevel.getIndex()
-                    )
-            );
-        }
+        vertexTypeOperatorFactory.withUri(uri()).setShareLevel(shareLevel);
+    }
+
+    @Override
+    public void setShareLevel(ShareLevel shareLevel, ShareLevel previousShareLevel) {
+        vertexTypeOperatorFactory.withUri(uri()).setShareLevel(shareLevel, previousShareLevel);
     }
 
     @Override
@@ -1005,7 +831,8 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
                             "UNWIND nodes as s " +
                             "SET s.shareLevel=40," +
                             "s.isUnderPattern=true," +
-                            "s.nb_public_neighbors = s.number_of_connected_edges_property_name," +
+                            "s.nb_public_neighbors = s.nb_private_neighbors," +
+                            "s.nb_private_neighbors = 0," +
                             "s.nb_friend_neighbors = 0 " +
                             "WITH s,n " +
                             "REMOVE n.isUnderPattern " +
@@ -1086,17 +913,12 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
     }
 
     @Override
-    public String queryPrefix() {
-        return graphElementOperator.queryPrefix();
-    }
-
-    @Override
     public Map<String, Object> addCreationProperties(Map<String, Object> map) {
         Map<String, Object> newMap = map(
                 props.shareLevel.name(), ShareLevel.PRIVATE.getIndex(),
-                props.number_of_connected_edges_property_name.name(), 0,
-                props.nb_public_neighbors.name(), 0,
-                props.nb_friend_neighbors.name(), 0
+                VertexTypeOperatorNeo4j.props.nb_private_neighbors.name(), 0,
+                VertexTypeOperatorNeo4j.props.nb_public_neighbors.name(), 0,
+                VertexTypeOperatorNeo4j.props.nb_friend_neighbors.name(), 0
         );
         newMap.putAll(
                 map
@@ -1113,10 +935,10 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
                         creationProperties
                 )
         );
-        if (creationProperties.containsKey(props.nb_public_neighbors.name())) {
-            vertex.setNbPublicNeighbors(
+        if (creationProperties.containsKey(VertexTypeOperatorNeo4j.props.nb_public_neighbors.name())) {
+            vertex.getNbNeighbors().setPublic(
                     (Integer) creationProperties.get(
-                            props.nb_public_neighbors.name()
+                            VertexTypeOperatorNeo4j.props.nb_public_neighbors.name()
                     )
             );
         }

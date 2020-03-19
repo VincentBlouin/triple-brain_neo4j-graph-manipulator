@@ -6,6 +6,7 @@ package guru.bubl.module.neo4j_graph_manipulator.graph.search;
 
 import guru.bubl.module.common_utils.NoEx;
 import guru.bubl.module.model.graph.GraphElementType;
+import guru.bubl.module.model.graph.ShareLevel;
 import guru.bubl.module.model.search.GraphElementSearchResult;
 import guru.bubl.module.neo4j_graph_manipulator.graph.search.result_builder.*;
 import org.neo4j.driver.v1.Record;
@@ -13,10 +14,7 @@ import org.neo4j.driver.v1.StatementResult;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class SearchResultGetter<ResultType extends GraphElementSearchResult> {
 
@@ -25,10 +23,11 @@ public class SearchResultGetter<ResultType extends GraphElementSearchResult> {
     private List<ResultType> searchResults = new ArrayList<>();
 
     private StatementResult result;
+    private Set<ShareLevel> inShareLevels;
 
-
-    public SearchResultGetter(StatementResult result) {
+    public SearchResultGetter(StatementResult result, Set<ShareLevel> inShareLevels) {
         this.result = result;
+        this.inShareLevels = inShareLevels;
     }
 
     public List<ResultType> get() {
@@ -48,31 +47,14 @@ public class SearchResultGetter<ResultType extends GraphElementSearchResult> {
         );
     }
 
-    private void printRow(Map<String, Object> row) {
-        System.out.println("*************printing row*****************");
-        for (String key : row.keySet()) {
-            if (key.equals("related_nodes")) {
-                List collection = (List) row.get(key);
-                System.out.println(collection);
-
-            } else {
-                System.out.println(key + " " + row.get(key));
-            }
-        }
-    }
-
     private SearchResultBuilder getFromRow(Record record) {
         switch (nodeTypeInRow(record)) {
             case Vertex:
-                return new VertexSearchResultBuilder(record, nodePrefix);
+                return new VertexSearchResultBuilder(record, nodePrefix, inShareLevels);
             case Edge:
                 return new RelationSearchResultBuilder(record, nodePrefix);
-            case Schema:
-                return new SchemaSearchResultBuilder(record, nodePrefix);
-            case Property:
-                return new PropertySearchResultBuilder(record, nodePrefix);
             case Meta:
-                return new MetaSearchResultBuilder(record, nodePrefix);
+                return new MetaSearchResultBuilder(record, nodePrefix, inShareLevels);
             default:
                 return null;
         }
@@ -88,10 +70,5 @@ public class SearchResultGetter<ResultType extends GraphElementSearchResult> {
             }
         }
         return type;
-    }
-
-    private Integer getNbReferenceInRow(ResultSet row) throws SQLException {
-        String nbReferencesStr = row.getString("nb_references");
-        return nbReferencesStr == null ? 0 : new Integer(nbReferencesStr);
     }
 }

@@ -22,12 +22,13 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.graph.edge.EdgeOperatorNeo
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.FriendlyResourceQueryBuilder;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.TagQueryBuilder;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.QueryUtils;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.VertexInSubGraphOperatorNeo4j;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.VertexTypeOperatorNeo4j;
 import org.neo4j.driver.internal.InternalRelationship;
 import org.neo4j.driver.v1.Driver;
 import org.neo4j.driver.v1.Record;
 import org.neo4j.driver.v1.Session;
 import org.neo4j.driver.v1.StatementResult;
+import sun.security.provider.SHA;
 
 import java.net.URI;
 import java.util.*;
@@ -40,13 +41,14 @@ public class SubGraphExtractorNeo4j {
     private URI centerBubbleUri;
     private Boolean isCenterTagFlow;
     private Integer depth;
-    private Integer resultsLimit;
     private SubGraphPojo subGraph = SubGraphPojo.withVerticesAndEdges(
             new HashMap<>(),
             new HashMap<>()
     );
 
-    private Integer[] inShareLevels;
+    private Integer[] inShareLevelsArray;
+
+    private Set<ShareLevel> inShareLevels;
 
     protected Driver driver;
 
@@ -54,43 +56,13 @@ public class SubGraphExtractorNeo4j {
     protected SubGraphExtractorNeo4j(
             Driver driver,
             @Assisted URI centerBubbleUri,
-            @Assisted("depth") Integer depth
-    ) {
-        this(
-                driver,
-                centerBubbleUri,
-                depth,
-                ShareLevel.PRIVATE.getIndex()
-        );
-    }
-
-    @AssistedInject
-    protected SubGraphExtractorNeo4j(
-            Driver driver,
-            @Assisted URI centerBubbleUri,
-            @Assisted("depth") Integer depth,
-            @Assisted("resultsLimit") Integer resultsLimit
-    ) {
-        this.driver = driver;
-        this.centerBubbleUri = centerBubbleUri;
-        this.depth = depth;
-        this.resultsLimit = resultsLimit;
-        this.inShareLevels = new Integer[]{
-                ShareLevel.PRIVATE.getIndex()
-        };
-        this.isCenterTagFlow = UserUris.isUriOfAnIdentifier(centerBubbleUri);
-    }
-
-    @AssistedInject
-    protected SubGraphExtractorNeo4j(
-            Driver driver,
-            @Assisted URI centerBubbleUri,
-            @Assisted Integer... inShareLevels
+            @Assisted Integer... inShareLevelsArray
     ) {
         this.driver = driver;
         this.centerBubbleUri = centerBubbleUri;
         this.depth = 1;
-        this.inShareLevels = inShareLevels;
+        this.inShareLevelsArray = inShareLevelsArray;
+        inShareLevels = ShareLevel.arrayOfIntegersToSet(this.inShareLevelsArray);
         this.isCenterTagFlow = UserUris.isUriOfAnIdentifier(centerBubbleUri);
     }
 
@@ -99,12 +71,13 @@ public class SubGraphExtractorNeo4j {
             Driver driver,
             @Assisted URI centerBubbleUri,
             @Assisted Integer depth,
-            @Assisted Integer... inShareLevels
+            @Assisted Integer... inShareLevelsArray
     ) {
         this.driver = driver;
         this.centerBubbleUri = centerBubbleUri;
         this.depth = depth;
-        this.inShareLevels = inShareLevels;
+        this.inShareLevelsArray = inShareLevelsArray;
+        inShareLevels = ShareLevel.arrayOfIntegersToSet(this.inShareLevelsArray);
         this.isCenterTagFlow = UserUris.isUriOfAnIdentifier(centerBubbleUri);
     }
 
@@ -114,20 +87,13 @@ public class SubGraphExtractorNeo4j {
                     queryToGetGraph(),
                     parameters(
                             "centerUri", centerBubbleUri.toString(),
-                            "shareLevels", inShareLevels
+                            "shareLevels", inShareLevelsArray
                     )
             );
             Set<InternalRelationship> relationships = new HashSet<>();
             Map<Long, URI> idsUri = new HashMap<>();
             while (rs.hasNext()) {
                 Record record = rs.next();
-//            for (InternalRelationship type : types) {
-//                System.out.println(type.endNodeId());
-//                System.out.println(type.type());
-//            }
-//            if(record.get("endId").asObject() != null){
-//                System.out.println(record.get("endId").asString());
-//            }
                 List<InternalRelationship> relations = (List) record.get("rel").asList();
                 relationships.addAll(relations);
                 switch (getGraphElementTypeFromRow(record)) {
@@ -241,7 +207,7 @@ public class SubGraphExtractorNeo4j {
                         vertexReturnQueryPart(GRAPH_ELEMENT_QUERY_KEY) +
                         edgeReturnQueryPart(GRAPH_ELEMENT_QUERY_KEY) +
                         (isCenterTagFlow ? TagQueryBuilder.centerTagQueryPart(GRAPH_ELEMENT_QUERY_KEY) : "") +
-                        TagQueryBuilder.identificationReturnQueryPart() +
+                        TagQueryBuilder.identificationReturnQueryPart(inShareLevels) +
                         "labels(ge) as type, ID(ge) as nId, rel";
     }
 
@@ -317,22 +283,18 @@ public class SubGraphExtractorNeo4j {
     }
 
     private String vertexSpecificPropertiesQueryPartUsingPrefix(String prefix) {
-        return QueryUtils.getPropertyUsingContainerNameQueryPart(
+        return (inShareLevels.contains(ShareLevel.PRIVATE) ? QueryUtils.getPropertyUsingContainerNameQueryPart(
                 prefix,
-                VertexInSubGraphOperatorNeo4j.props.number_of_connected_edges_property_name.toString()
-        ) +
-                QueryUtils.getPropertyUsingContainerNameQueryPart(
+                VertexTypeOperatorNeo4j.props.nb_private_neighbors.toString()
+        ) : "") +
+                (inShareLevels.contains(ShareLevel.FRIENDS) ? QueryUtils.getPropertyUsingContainerNameQueryPart(
                         prefix,
-                        VertexInSubGraphOperatorNeo4j.props.nb_public_neighbors.name()
-                ) +
-                QueryUtils.getPropertyUsingContainerNameQueryPart(
+                        VertexTypeOperatorNeo4j.props.nb_friend_neighbors.toString()
+                ) : "") +
+                (inShareLevels.contains(ShareLevel.PUBLIC) || inShareLevels.contains(ShareLevel.PUBLIC_WITH_LINK) ? QueryUtils.getPropertyUsingContainerNameQueryPart(
                         prefix,
-                        VertexInSubGraphOperatorNeo4j.props.nb_friend_neighbors.name()
-                ) +
-                QueryUtils.getPropertyUsingContainerNameQueryPart(
-                        prefix,
-                        VertexInSubGraphOperatorNeo4j.props.suggestions.name()
-                ) +
+                        VertexTypeOperatorNeo4j.props.nb_public_neighbors.toString()
+                ) : "") +
                 QueryUtils.getPropertyUsingContainerNameQueryPart(
                         prefix,
                         "childrenIndexes"
