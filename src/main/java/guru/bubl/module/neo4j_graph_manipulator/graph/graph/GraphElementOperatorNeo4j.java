@@ -48,7 +48,7 @@ public class GraphElementOperatorNeo4j implements GraphElementOperator, Operator
 
     protected GraphElementOperatorFactory graphElementOperatorFactory;
 
-    public static String incrementNbFriendsOrPublicQueryPart(ShareLevel shareLevel, String variableName, String prefix) {
+    public static String incrementNbNeighborsQueryPart(ShareLevel shareLevel, String variableName, String prefix) {
         return incrementOrDecrementNbFriendsOrPublicQueryPart(
                 shareLevel,
                 variableName,
@@ -57,7 +57,7 @@ public class GraphElementOperatorNeo4j implements GraphElementOperator, Operator
         );
     }
 
-    public static String decrementNbFriendsOrPublicQueryPart(ShareLevel shareLevel, String variableName, String prefix) {
+    public static String decrementNbNeighborsQueryPart(ShareLevel shareLevel, String variableName, String prefix) {
         return incrementOrDecrementNbFriendsOrPublicQueryPart(
                 shareLevel,
                 variableName,
@@ -67,18 +67,13 @@ public class GraphElementOperatorNeo4j implements GraphElementOperator, Operator
     }
 
     private static String incrementOrDecrementNbFriendsOrPublicQueryPart(ShareLevel shareLevel, String variableName, String prefix, Boolean decrement) {
-        String queryPart = "";
-        if (shareLevel == ShareLevel.FRIENDS) {
-            queryPart = prefix + "%s.nb_friend_neighbors = %s.nb_friend_neighbors " + (decrement ? "-" : "+") + "1 ";
-        } else if (shareLevel.isPublic()) {
-            queryPart = prefix + "%s.nb_public_neighbors = %s.nb_public_neighbors " + (decrement ? "-" : "+") + "1 ";
-        } else {
-            return queryPart;
-        }
+        String propertyName = shareLevel.getNbNeighborsPropertyName();
         return String.format(
-                queryPart,
+                prefix + "%s.%s = %s.%s " + (decrement ? " - " : " + ") + " 1 ",
                 variableName,
-                variableName
+                propertyName,
+                variableName,
+                propertyName
         );
     }
 

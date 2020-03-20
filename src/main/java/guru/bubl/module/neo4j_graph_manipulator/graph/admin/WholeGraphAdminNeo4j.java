@@ -18,7 +18,7 @@ import guru.bubl.module.model.graph.tag.TagPojo;
 import guru.bubl.module.model.graph.vertex.NbNeighbors;
 import guru.bubl.module.model.graph.vertex.VertexOperator;
 import guru.bubl.module.model.search.GraphIndexer;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.tag.TagNeo4J;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.tag.TagOperatorNeo4J;
 import org.neo4j.driver.v1.Driver;
 import org.neo4j.driver.v1.Record;
 import org.neo4j.driver.v1.Session;
@@ -99,10 +99,10 @@ public class WholeGraphAdminNeo4j implements WholeGraphAdmin {
     }
 
     private void refreshNbNeighborsToTag(TagOperator tag) {
-        TagNeo4J tagNeo4j = (TagNeo4J) tag;
+        TagOperatorNeo4J tagOperatorNeo4J = (TagOperatorNeo4J) tag;
         try (Session session = driver.session()) {
             StatementResult rs = session.run(
-                    tagNeo4j.queryPrefix() + "OPTIONAL MATCH (n)<-[:IDENTIFIED_TO]-(ge) " +
+                    tagOperatorNeo4J.queryPrefix() + "OPTIONAL MATCH (n)<-[:IDENTIFIED_TO]-(ge) " +
                             "return ge.shareLevel as shareLevel",
                     parameters(
                             "uri", tag.uri().toString()
@@ -127,7 +127,7 @@ public class WholeGraphAdminNeo4j implements WholeGraphAdmin {
                     }
                 }
             }
-            NbNeighbors nbNeighbors = tagNeo4j.getNbNeighbors();
+            NbNeighbors nbNeighbors = tagOperatorNeo4J.getNbNeighbors();
             nbNeighbors.setPrivate(nbPrivate);
             nbNeighbors.setFriend(nbFriend);
             nbNeighbors.setPublic(nbPublic);

@@ -3,7 +3,6 @@ package guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex;
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 import guru.bubl.module.model.graph.vertex.NbNeighbors;
-import guru.bubl.module.model.graph.vertex.NbNeighborsPojo;
 import guru.bubl.module.model.graph.ShareLevel;
 import guru.bubl.module.model.graph.vertex.VertexTypeOperator;
 import guru.bubl.module.neo4j_graph_manipulator.graph.FriendlyResourceFactoryNeo4j;
@@ -16,8 +15,8 @@ import org.neo4j.driver.v1.StatementResult;
 
 import java.net.URI;
 
-import static guru.bubl.module.neo4j_graph_manipulator.graph.graph.GraphElementOperatorNeo4j.decrementNbFriendsOrPublicQueryPart;
-import static guru.bubl.module.neo4j_graph_manipulator.graph.graph.GraphElementOperatorNeo4j.incrementNbFriendsOrPublicQueryPart;
+import static guru.bubl.module.neo4j_graph_manipulator.graph.graph.GraphElementOperatorNeo4j.decrementNbNeighborsQueryPart;
+import static guru.bubl.module.neo4j_graph_manipulator.graph.graph.GraphElementOperatorNeo4j.incrementNbNeighborsQueryPart;
 import static org.neo4j.driver.v1.Values.parameters;
 
 public class VertexTypeOperatorNeo4j implements VertexTypeOperator, OperatorNeo4j {
@@ -59,14 +58,18 @@ public class VertexTypeOperatorNeo4j implements VertexTypeOperator, OperatorNeo4
 
     @Override
     public void setShareLevel(ShareLevel shareLevel, ShareLevel previousShareLevel) {
-        String decrementQueryPart = decrementNbFriendsOrPublicQueryPart(previousShareLevel, "d", "SET ");
-        String incrementQueryPart = incrementNbFriendsOrPublicQueryPart(shareLevel, "d", "SET ");
+        String decrementQueryPart = decrementNbNeighborsQueryPart(previousShareLevel, "d", "SET ");
+        String incrementQueryPart = incrementNbNeighborsQueryPart(shareLevel, "d", "SET ");
         try (Session session = driver.session()) {
             session.run(
                     queryPrefix()
                             + "SET n.shareLevel=$shareLevel " +
-                            "WITH n " +
-                            "MATCH (n)<-[:SOURCE_VERTEX|DESTINATION_VERTEX]->(e), " +
+                            "WITH n OPTIONAL MATCH " +
+                            "(n)-[:IDENTIFIED_TO]->(d)" +
+                            decrementQueryPart + " " +
+                            incrementQueryPart + " " +
+                            "WITH n MATCH" +
+                            "(n)<-[:SOURCE_VERTEX|DESTINATION_VERTEX]->(e), " +
                             "(e)<-[:SOURCE_VERTEX|DESTINATION_VERTEX]->(d) " +
                             decrementQueryPart + " " +
                             incrementQueryPart + " " +

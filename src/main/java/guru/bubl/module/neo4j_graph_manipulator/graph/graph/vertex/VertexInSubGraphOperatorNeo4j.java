@@ -37,7 +37,7 @@ import java.util.Map;
 import java.util.Set;
 
 import static guru.bubl.module.neo4j_graph_manipulator.graph.RestApiUtilsNeo4j.map;
-import static guru.bubl.module.neo4j_graph_manipulator.graph.graph.GraphElementOperatorNeo4j.incrementNbFriendsOrPublicQueryPart;
+import static guru.bubl.module.neo4j_graph_manipulator.graph.graph.GraphElementOperatorNeo4j.incrementNbNeighborsQueryPart;
 import static org.neo4j.driver.v1.Values.parameters;
 
 public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, OperatorNeo4j {
@@ -283,21 +283,11 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
         } else {
             edge.createWithShareLevel(ShareLevel.PRIVATE);
         }
-        String query = String.format(
-                "MATCH (s:Vertex {uri:$uri}), (d:Vertex {uri:$destinationUri}) " +
-                        "SET " +
-                        "s.%s=s.%s+1, " +
-                        "d.%s=d.%s+1 " +
-                        incrementNbFriendsOrPublicQueryPart(destinationShareLevel, "s", "WITH s,d SET ") +
-                        incrementNbFriendsOrPublicQueryPart(sourceShareLevel, "d", "WITH s,d SET "),
-                VertexTypeOperatorNeo4j.props.nb_private_neighbors,
-                VertexTypeOperatorNeo4j.props.nb_private_neighbors,
-                VertexTypeOperatorNeo4j.props.nb_private_neighbors,
-                VertexTypeOperatorNeo4j.props.nb_private_neighbors
-        );
         try (Session session = driver.session()) {
             session.run(
-                    query,
+                    "MATCH (s:Vertex {uri:$uri}), (d:Vertex {uri:$destinationUri}) " +
+                            incrementNbNeighborsQueryPart(destinationShareLevel, "s", "WITH s,d SET ") +
+                            incrementNbNeighborsQueryPart(sourceShareLevel, "d", "WITH s,d SET "),
                     parameters(
                             "uri",
                             this.uri().toString(),
@@ -600,9 +590,9 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
                             "UNWIND nodes as s " +
                             "SET s.shareLevel=40," +
                             "s.isUnderPattern=true," +
-                            "s.nb_public_neighbors = s.nb_private_neighbors," +
-                            "s.nb_private_neighbors = 0," +
-                            "s.nb_friend_neighbors = 0 " +
+                            "s.nb_public_neighbors=(s.nb_private_neighbors + s.nb_friend_neighbors + s.nb_public_neighbors)," +
+                            "s.nb_private_neighbors=0," +
+                            "s.nb_friend_neighbors=0 " +
                             "WITH s,n " +
                             "REMOVE n.isUnderPattern " +
                             "WITH s " +

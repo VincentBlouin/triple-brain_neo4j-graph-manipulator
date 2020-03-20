@@ -39,8 +39,8 @@ import java.util.Map;
 import java.util.Set;
 
 import static guru.bubl.module.neo4j_graph_manipulator.graph.RestApiUtilsNeo4j.map;
-import static guru.bubl.module.neo4j_graph_manipulator.graph.graph.GraphElementOperatorNeo4j.decrementNbFriendsOrPublicQueryPart;
-import static guru.bubl.module.neo4j_graph_manipulator.graph.graph.GraphElementOperatorNeo4j.incrementNbFriendsOrPublicQueryPart;
+import static guru.bubl.module.neo4j_graph_manipulator.graph.graph.GraphElementOperatorNeo4j.decrementNbNeighborsQueryPart;
+import static guru.bubl.module.neo4j_graph_manipulator.graph.graph.GraphElementOperatorNeo4j.incrementNbNeighborsQueryPart;
 import static org.neo4j.driver.v1.Values.parameters;
 
 public class EdgeOperatorNeo4j implements EdgeOperator, OperatorNeo4j {
@@ -224,31 +224,30 @@ public class EdgeOperatorNeo4j implements EdgeOperator, OperatorNeo4j {
             oldEndVertexShareLevel = destinationVertex.getShareLevel();
             keptEndVertexShareLevel = sourceVertex.getShareLevel();
         }
-        String decrementPreviousVertexQueryPart = keptEndVertexShareLevel == ShareLevel.PRIVATE ? "" :
-                decrementNbFriendsOrPublicQueryPart(
-                        keptEndVertexShareLevel,
-                        "prev_v",
-                        ", "
-                );
+        String decrementPreviousVertexQueryPart = decrementNbNeighborsQueryPart(
+                keptEndVertexShareLevel,
+                "prev_v",
+                "SET "
+        );
         String incrementKeptVertexQueryPart = "";
         String decrementKeptVertexQueryPart = "";
         if (oldEndVertexShareLevel.isSame(keptEndVertexShareLevel)) {
             if (!newEndVertexShareLevel.isSame(keptEndVertexShareLevel)) {
-                incrementKeptVertexQueryPart = incrementNbFriendsOrPublicQueryPart(
+                incrementKeptVertexQueryPart = incrementNbNeighborsQueryPart(
                         newEndVertexShareLevel,
                         "kept_v",
                         ", "
                 );
             }
         } else {
-            decrementKeptVertexQueryPart = decrementNbFriendsOrPublicQueryPart(
+            decrementKeptVertexQueryPart = decrementNbNeighborsQueryPart(
                     oldEndVertexShareLevel,
                     "kept_v",
                     ", "
             );
         }
 
-        String incrementNewEndVertexQueryPart = incrementNbFriendsOrPublicQueryPart(
+        String incrementNewEndVertexQueryPart = incrementNbNeighborsQueryPart(
                 keptEndVertexShareLevel,
                 "new_v",
                 ", "
@@ -259,20 +258,14 @@ public class EdgeOperatorNeo4j implements EdgeOperator, OperatorNeo4j {
                         "(n)-[:%s]->(kept_v) " +
                         "CREATE (n)-[:%s]->(new_v) " +
                         "DELETE prev_rel " +
-                        "SET prev_v.%s = prev_v.%s - 1, " +
-                        "new_v.%s = new_v.%s + 1, %s" +
                         decrementPreviousVertexQueryPart +
                         decrementKeptVertexQueryPart +
                         incrementKeptVertexQueryPart +
-                        incrementNewEndVertexQueryPart,
+                        incrementNewEndVertexQueryPart + ",%s",
                 queryPrefix(),
                 relationshipToChange,
                 relationshipToKeep,
                 relationshipToChange,
-                VertexTypeOperatorNeo4j.props.nb_private_neighbors,
-                VertexTypeOperatorNeo4j.props.nb_private_neighbors,
-                VertexTypeOperatorNeo4j.props.nb_private_neighbors,
-                VertexTypeOperatorNeo4j.props.nb_private_neighbors,
                 FriendlyResourceNeo4j.LAST_MODIFICATION_QUERY_PART
         );
         try (Session session = driver.session()) {

@@ -33,7 +33,7 @@ import java.util.Set;
 
 import static org.neo4j.driver.v1.Values.parameters;
 
-public class TagNeo4J implements TagOperator, OperatorNeo4j {
+public class TagOperatorNeo4J implements TagOperator, OperatorNeo4j {
 
     public enum props {
         external_uri,
@@ -48,7 +48,7 @@ public class TagNeo4J implements TagOperator, OperatorNeo4j {
     protected VertexTypeOperatorFactory vertexTypeOperatorFactory;
 
     @AssistedInject
-    protected TagNeo4J(
+    protected TagOperatorNeo4J(
             Driver driver,
             GraphElementFactoryNeo4j graphElementOperatorFactory,
             TagFactory tagFactory,
@@ -169,12 +169,21 @@ public class TagNeo4J implements TagOperator, OperatorNeo4j {
 
     @Override
     public void setShareLevel(ShareLevel shareLevel) {
-        vertexTypeOperatorFactory.withUri(uri()).setShareLevel(shareLevel);
+        try (Session session = driver.session()) {
+            session.run(
+                    queryPrefix()
+                            + "SET n.shareLevel=$shareLevel",
+                    parameters(
+                            "uri", uri().toString(),
+                            "shareLevel", shareLevel.getIndex()
+                    )
+            );
+        }
     }
 
     @Override
     public void setShareLevel(ShareLevel shareLevel, ShareLevel previousShareLevel) {
-        vertexTypeOperatorFactory.withUri(uri()).setShareLevel(shareLevel, previousShareLevel);
+        this.setShareLevel(shareLevel);
     }
 
     @Override

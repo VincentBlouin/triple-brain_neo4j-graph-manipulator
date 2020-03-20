@@ -47,7 +47,7 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.graph.edge.EdgeOperatorNeo
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph.SubGraphExtractorFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.pattern.PatternUserNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.subgraph.SubGraphForkerNeo4j;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.tag.TagNeo4J;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.tag.TagOperatorNeo4J;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.VertexFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.VertexInSubGraphOperatorNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.VertexTypeOperatorNeo4j;
@@ -183,7 +183,7 @@ public class Neo4jModule extends AbstractModule {
         );
 
         install(factoryModuleBuilder
-                .implement(TagOperator.class, TagNeo4J.class)
+                .implement(TagOperator.class, TagOperatorNeo4J.class)
                 .build(TagFactory.class)
         );
         install(factoryModuleBuilder

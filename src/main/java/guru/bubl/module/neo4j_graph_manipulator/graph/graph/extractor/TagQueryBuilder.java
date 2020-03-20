@@ -7,7 +7,7 @@ package guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor;
 import guru.bubl.module.model.graph.ShareLevel;
 import guru.bubl.module.neo4j_graph_manipulator.graph.FriendlyResourceNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.UserGraphNeo4j;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.tag.TagNeo4J;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.tag.TagOperatorNeo4J;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.VertexTypeOperatorNeo4j;
 
 import java.util.Set;
@@ -34,7 +34,7 @@ public class TagQueryBuilder {
         return "COLLECT([" +
                 QueryUtils.getPropertyUsingContainerNameQueryPart(
                         identificationKey,
-                        TagNeo4J.props.external_uri.name()
+                        TagOperatorNeo4J.props.external_uri.name()
                 ) +
                 QueryUtils.getPropertyUsingContainerNameQueryPart(
                         identificationKey,
