@@ -203,6 +203,7 @@ public class Neo4jModule extends AbstractModule {
                     .setConfig(boltConnector.enabled, "true")
                     .setConfig(boltConnector.type, "BOLT")
                     .setConfig(boltConnector.listen_address, "localhost:7687")
+                    .setConfig("cypher.lenient_create_relationship", "true")
                     .newGraphDatabase();
             bind(GraphDatabaseService.class).toInstance(graphDb);
             registerProceduresAndFunctions(

@@ -7,6 +7,7 @@ package guru.bubl.module.neo4j_graph_manipulator.graph.graph;
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 import guru.bubl.module.model.Image;
+import guru.bubl.module.model.User;
 import guru.bubl.module.model.UserUris;
 import guru.bubl.module.model.graph.*;
 import guru.bubl.module.model.graph.tag.Tag;
@@ -302,7 +303,7 @@ public class GraphElementOperatorNeo4j implements GraphElementOperator, Operator
             ShareLevel sourceShareLevel
     ) {
         TagPojo identificationPojo;
-        Boolean isIdentifyingToAnIdentification = UserUris.isUriOfAnIdentifier(
+        Boolean isIdentifyingToAnIdentification = UserUris.isUriOfATag(
                 tag.getExternalResourceUri()
         );
         if (isIdentifyingToAnIdentification) {
@@ -318,14 +319,14 @@ public class GraphElementOperatorNeo4j implements GraphElementOperator, Operator
             );
         } else {
             identificationPojo = new TagPojo(
-                    new UserUris(getOwnerUsername()).generateIdentificationUri(),
+                    new UserUris(getOwnerUsername()).generateTagUri(),
                     tag
             );
         }
 
         identificationPojo.setCreationDate(new Date().getTime());
         identificationPojo.setUri(
-                tag.hasUri() && UserUris.isUriOfAnIdentifier(tag.uri()) ? tag.uri() : new UserUris(getOwnerUsername()).generateIdentificationUri()
+                tag.hasUri() && UserUris.isUriOfATag(tag.uri()) ? tag.uri() : new UserUris(getOwnerUsername()).generateTagUri()
         );
         if (!UserUris.ownerUserNameFromUri(identificationPojo.uri()).equals(getOwnerUsername())) {
             return new HashMap<>();
@@ -335,10 +336,13 @@ public class GraphElementOperatorNeo4j implements GraphElementOperator, Operator
         String searchContext = GraphIndexerNeo4j.descriptionToContext(
                 tag.comment()
         );
+
         try (Session session = driver.session()) {
             StatementResult result = session.run(
                     AddTagQueryBuilder.usingIdentificationForGraphElement(
-                            queryPrefix(), sourceShareLevel
+                            queryPrefix(),
+                            sourceShareLevel,
+                            !tag.hasUri() && shouldTagExternalUri(tag.getExternalResourceUri())
                     ).build(),
                     parameters(
                             "uri",
@@ -410,6 +414,23 @@ public class GraphElementOperatorNeo4j implements GraphElementOperator, Operator
             }
             return identifications;
         }
+    }
+
+    private Boolean shouldTagExternalUri(URI externalUri) {
+        Boolean isSelfReference = externalUri.equals(
+                this.uri()
+        );
+        if (isSelfReference) {
+            return false;
+        }
+        if (!UserUris.isMindRespectUri(externalUri)) {
+            return false;
+        }
+        Boolean isOwnerOfExternalUri = UserUris.ownerUserNameFromUri(
+                externalUri
+        ).equals(getOwnerUsername());
+        Boolean isVoidReference = externalUri.toString().contains("/void/ref/");
+        return isOwnerOfExternalUri && !isVoidReference;
     }
 
     @Override

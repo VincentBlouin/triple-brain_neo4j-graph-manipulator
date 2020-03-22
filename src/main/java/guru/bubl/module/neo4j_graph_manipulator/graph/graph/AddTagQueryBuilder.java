@@ -12,27 +12,44 @@ public class AddTagQueryBuilder {
 
     private String queryPrefix;
     private ShareLevel sourceShareLevel;
+    private Boolean tagExternalUri;
 
     public static AddTagQueryBuilder usingIdentificationForGraphElement(
             String queryPrefix,
-            ShareLevel sourceShareLevel
+            ShareLevel sourceShareLevel,
+            Boolean tagExternalUri
     ) {
         return new AddTagQueryBuilder(
                 queryPrefix,
-                sourceShareLevel
+                sourceShareLevel,
+                tagExternalUri
         );
     }
 
     protected AddTagQueryBuilder(
             String queryPrefix,
-            ShareLevel sourceShareLevel
+            ShareLevel sourceShareLevel,
+            Boolean tagExternalUri
     ) {
         this.queryPrefix = queryPrefix;
         this.sourceShareLevel = sourceShareLevel;
+        this.tagExternalUri = tagExternalUri;
     }
 
     public String build() {
         String neighborsPropertyName = sourceShareLevel.getNbNeighborsPropertyName();
+        String tagExternalUriQueryPart;
+        if (tagExternalUri) {
+            tagExternalUriQueryPart = String.format("WITH f " +
+                            "OPTIONAL MATCH(e:Resource{uri:$external_uri}) " +
+                            "MERGE (e)-[:IDENTIFIED_TO]->(f)" +
+                            "ON CREATE SET f.%s=f.%s + 1 ",
+                    neighborsPropertyName,
+                    neighborsPropertyName
+            );
+        } else {
+            tagExternalUriQueryPart = "";
+        }
         return String.format(
                 "%sMERGE (f:Resource:GraphElement:Meta{external_uri:$external_uri, owner:$owner}) " +
                         "ON CREATE SET f.uri=$metaUri, " +
@@ -47,10 +64,11 @@ public class AddTagQueryBuilder {
                         "f.nb_private_neighbors=0," +
                         "f.nb_friend_neighbors=0," +
                         "f.nb_public_neighbors=0 " +
-                        "CREATE UNIQUE (n)-[r:IDENTIFIED_TO]->(f) " +
+                        "MERGE (n)-[r:IDENTIFIED_TO]->(f) " +
                         "SET r.relation_external_uri=$relationExternalUri, " +
                         "f.%s=f.%s + 1, " +
                         FriendlyResourceNeo4j.LAST_MODIFICATION_QUERY_PART +
+                        tagExternalUriQueryPart +
                         "RETURN f.uri as uri, " +
                         "f.external_uri as external_uri, " +
                         "f.label as label, " +
@@ -61,7 +79,7 @@ public class AddTagQueryBuilder {
                         "f.nb_private_neighbors as nbPrivateNeighbors, " +
                         "f.nb_friend_neighbors as nbFriendNeighbors, " +
                         "f.nb_public_neighbors as nbPublicNeighbors, " +
-                        "f.shareLevel ",
+                        "f.shareLevel",
                 queryPrefix,
                 neighborsPropertyName,
                 neighborsPropertyName

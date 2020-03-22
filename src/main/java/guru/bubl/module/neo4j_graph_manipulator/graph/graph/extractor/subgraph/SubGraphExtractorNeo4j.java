@@ -15,9 +15,7 @@ import guru.bubl.module.model.graph.subgraph.SubGraphPojo;
 import guru.bubl.module.model.graph.vertex.Vertex;
 import guru.bubl.module.model.graph.vertex.VertexInSubGraph;
 import guru.bubl.module.model.graph.vertex.VertexInSubGraphPojo;
-import guru.bubl.module.neo4j_graph_manipulator.graph.FriendlyResourceNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.Relationships;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.UserGraphNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.edge.EdgeOperatorNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.FriendlyResourceQueryBuilder;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.TagQueryBuilder;
@@ -28,7 +26,6 @@ import org.neo4j.driver.v1.Driver;
 import org.neo4j.driver.v1.Record;
 import org.neo4j.driver.v1.Session;
 import org.neo4j.driver.v1.StatementResult;
-import sun.security.provider.SHA;
 
 import java.net.URI;
 import java.util.*;
@@ -63,7 +60,7 @@ public class SubGraphExtractorNeo4j {
         this.depth = 1;
         this.inShareLevelsArray = inShareLevelsArray;
         inShareLevels = ShareLevel.arrayOfIntegersToSet(this.inShareLevelsArray);
-        this.isCenterTagFlow = UserUris.isUriOfAnIdentifier(centerBubbleUri);
+        this.isCenterTagFlow = UserUris.isUriOfATag(centerBubbleUri);
     }
 
     @AssistedInject
@@ -78,7 +75,7 @@ public class SubGraphExtractorNeo4j {
         this.depth = depth;
         this.inShareLevelsArray = inShareLevelsArray;
         inShareLevels = ShareLevel.arrayOfIntegersToSet(this.inShareLevelsArray);
-        this.isCenterTagFlow = UserUris.isUriOfAnIdentifier(centerBubbleUri);
+        this.isCenterTagFlow = UserUris.isUriOfATag(centerBubbleUri);
     }
 
     public SubGraphPojo load() {
