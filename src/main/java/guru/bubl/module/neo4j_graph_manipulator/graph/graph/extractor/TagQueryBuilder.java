@@ -82,10 +82,6 @@ public class TagQueryBuilder {
         return QueryUtils.getPropertyUsingContainerNameQueryPart(
                 prefix,
                 "external_uri"
-        ) +
-                QueryUtils.getPropertyUsingContainerNameQueryPart(
-                        prefix,
-                        "nb_references"
-                );
+        );
     }
 }

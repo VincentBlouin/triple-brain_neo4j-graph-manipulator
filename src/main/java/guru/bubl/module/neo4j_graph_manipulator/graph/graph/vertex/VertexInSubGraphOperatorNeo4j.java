@@ -383,8 +383,8 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
     }
 
     @Override
-    public void removeTag(Tag tag) {
-        graphElementOperator.removeTag(tag);
+    public void removeTag(Tag tag, ShareLevel sourceShareLevel) {
+        graphElementOperator.removeTag(tag, sourceShareLevel);
     }
 
     @Override

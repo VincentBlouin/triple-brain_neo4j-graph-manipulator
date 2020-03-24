@@ -280,7 +280,7 @@ public class TagOperatorNeo4J implements TagOperator, OperatorNeo4j {
     }
 
     @Override
-    public void removeTag(Tag type) {
+    public void removeTag(Tag tag, ShareLevel sourceShareLevel) {
 
     }
 

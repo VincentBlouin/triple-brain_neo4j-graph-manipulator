@@ -452,29 +452,32 @@ public class GraphElementOperatorNeo4j implements GraphElementOperator, Operator
     }
 
     @Override
-    public void removeTag(Tag identification) {
+    public void removeTag(Tag tag, ShareLevel sourceShareLevel) {
         try (Session session = driver.session()) {
+            String nbNeighborsPropertyName = sourceShareLevel.getNbNeighborsPropertyName();
             session.run(
                     String.format(
                             "%s MATCH (n)-[r:IDENTIFIED_TO]->(i{uri:$metaUri}) " +
                                     "DELETE r " +
-                                    "SET i.nb_references=i.nb_references -1, " +
+                                    "SET i.%s=i.%s -1, " +
                                     FriendlyResourceNeo4j.LAST_MODIFICATION_QUERY_PART +
                                     "RETURN i.uri as uri",
-                            queryPrefix()
+                            queryPrefix(),
+                            nbNeighborsPropertyName,
+                            nbNeighborsPropertyName
                     ),
                     parameters(
                             "uri",
                             uri().toString(),
                             "metaUri",
-                            identification.uri().toString(),
+                            tag.uri().toString(),
                             "last_modification_date",
                             new Date().getTime()
                     )
             );
-            if (identification.getExternalResourceUri() != null && identification.getExternalResourceUri().equals(this.uri())) {
-                identificationFactory.withUri(identification.uri()).setExternalResourceUri(
-                        identification.uri()
+            if (tag.getExternalResourceUri() != null && tag.getExternalResourceUri().equals(this.uri())) {
+                identificationFactory.withUri(tag.uri()).setExternalResourceUri(
+                        tag.uri()
                 );
             }
         }

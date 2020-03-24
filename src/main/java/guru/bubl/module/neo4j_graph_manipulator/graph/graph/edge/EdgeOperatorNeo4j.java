@@ -525,8 +525,8 @@ public class EdgeOperatorNeo4j implements EdgeOperator, OperatorNeo4j {
     }
 
     @Override
-    public void removeTag(Tag type) {
-        graphElementOperator.removeTag(type);
+    public void removeTag(Tag tag, ShareLevel sourceShareLevel) {
+        graphElementOperator.removeTag(tag, sourceShareLevel);
     }
 
     @Override
