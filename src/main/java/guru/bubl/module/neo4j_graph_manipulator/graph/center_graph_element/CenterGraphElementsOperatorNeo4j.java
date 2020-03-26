@@ -175,8 +175,8 @@ public class CenterGraphElementsOperatorNeo4j implements CenteredGraphElementsOp
                                     "SKIP " + skip +
                                     " LIMIT " + limit,
                             (nbPrivate ? "n.nb_private_neighbors as nbPrivateNeighbors," : ""),
-                            (nbFriends ? "n.nb_friend_neighbors as nbFriendNeighbors," : ""),
-                            (nbPublic ? "n.nb_public_neighbors as nbPublic," : ""),
+                            (nbPrivate || nbFriends ? "n.nb_friend_neighbors as nbFriendNeighbors," : ""),
+                            (nbPrivate || nbFriends || nbPublic ? "n.nb_public_neighbors as nbPublic," : ""),
                             (isPrivateContext ? "private_context" : "public_context")
                     ),
                     parameters(
