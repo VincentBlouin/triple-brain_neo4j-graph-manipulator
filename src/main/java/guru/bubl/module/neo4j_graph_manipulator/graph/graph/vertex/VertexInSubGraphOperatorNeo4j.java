@@ -323,7 +323,7 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
         try (Session session = driver.session()) {
             StatementResult rs = session.run(
                     queryPrefix() +
-                            "MATCH (n)<-[:SOURCE_VERTEX|DESTINATION_VERTEX]-(edge) " +
+                            "MATCH (n)<-[:SOURCE_VERTEX|DESTINATION_VERTEX]->(edge) " +
                             "RETURN edge.uri as uri",
                     parameters(
                             "uri",
