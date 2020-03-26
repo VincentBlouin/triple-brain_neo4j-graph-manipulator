@@ -102,7 +102,7 @@ public class WholeGraphAdminNeo4j implements WholeGraphAdmin {
         TagOperatorNeo4J tagOperatorNeo4J = (TagOperatorNeo4J) tag;
         try (Session session = driver.session()) {
             StatementResult rs = session.run(
-                    tagOperatorNeo4J.queryPrefix() + "OPTIONAL MATCH (n)<-[:IDENTIFIED_TO]-(ge) " +
+                    tagOperatorNeo4J.queryPrefix() + "MATCH (n)<-[:IDENTIFIED_TO]-(ge) " +
                             "return ge.shareLevel as shareLevel",
                     parameters(
                             "uri", tag.uri().toString()
