@@ -52,16 +52,17 @@ public class AddTagQueryBuilder {
         }
         return String.format(
                 "%sMERGE (f:Resource:GraphElement:Meta{external_uri:$external_uri, owner:$owner}) " +
-                        "ON CREATE SET f.uri=$metaUri, " +
-                        "f.shareLevel=$shareLevel, " +
-                        "f.label=$label, " +
-                        "f.comment=$comment, " +
-                        "f.private_context=$privateContext, " +
-                        "f.friend_context=$friendContext, " +
-                        "f.public_context=$publicContext, " +
-                        "f.images=$images, " +
-                        "f.creation_date=$creationDate, " +
-                        "f.last_modification_date=timestamp(), " +
+                        "ON CREATE SET f.uri=$metaUri," +
+                        "f.shareLevel=$shareLevel," +
+                        "f.label=$label," +
+                        "f.comment=$comment," +
+                        "f.private_context=$privateContext," +
+                        "f.friend_context=$friendContext," +
+                        "f.public_context=$publicContext," +
+                        "f.nb_visits=0," +
+                        "f.images=$images," +
+                        "f.creation_date=$creationDate," +
+                        "f.last_modification_date=timestamp()," +
                         "f.nb_private_neighbors=0," +
                         "f.nb_friend_neighbors=0," +
                         "f.nb_public_neighbors=0 " +
