@@ -41,7 +41,10 @@ import guru.bubl.module.model.test.GraphComponentTest;
 import guru.bubl.module.neo4j_graph_manipulator.graph.admin.WholeGraphAdminNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.center_graph_element.CenterGraphElementOperatorNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.center_graph_element.CenterGraphElementsOperatorNeo4j;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.*;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.GraphElementFactoryNeo4j;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.GraphElementOperatorNeo4j;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.GraphFactoryNeo4j;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.UserGraphFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.edge.EdgeFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.edge.EdgeOperatorNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph.SubGraphExtractorFactoryNeo4j;
@@ -55,6 +58,7 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.image.ImageFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.search.GraphSearchModuleNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.tag.TagFactoryNeo4J;
 import guru.bubl.module.neo4j_graph_manipulator.graph.test.GraphComponentTestNeo4j;
+import guru.bubl.module.neo4j_graph_manipulator.graph.test.WholeGraphNeo4j;
 import org.neo4j.driver.v1.AuthTokens;
 import org.neo4j.driver.v1.Driver;
 import org.neo4j.driver.v1.GraphDatabase;
@@ -114,11 +118,11 @@ public class Neo4jModule extends AbstractModule {
         bindForEmbedded();
         if (test) {
             bind(GraphComponentTest.class).to(GraphComponentTestNeo4j.class);
+            bind(WholeGraph.class).to(WholeGraphNeo4j.class);
         }
 
         install(new GraphSearchModuleNeo4j());
 
-        bind(WholeGraph.class).to(WholeGraphNeo4j.class);
         bind(WholeGraphAdmin.class).to(WholeGraphAdminNeo4j.class);
         FactoryModuleBuilder factoryModuleBuilder = new FactoryModuleBuilder();
 

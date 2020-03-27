@@ -66,7 +66,6 @@ public class CenterGraphElementsOperatorNeo4j implements CenteredGraphElementsOp
                 owner,
                 true,
                 true,
-                true,
                 false,
                 false,
                 "lastCenterDate",
@@ -79,7 +78,6 @@ public class CenterGraphElementsOperatorNeo4j implements CenteredGraphElementsOp
         return get(
                 GRAPH_ELEMENT_MATCH,
                 null,
-                false,
                 false,
                 false,
                 true,
@@ -97,7 +95,6 @@ public class CenterGraphElementsOperatorNeo4j implements CenteredGraphElementsOp
                 owner,
                 true,
                 false,
-                false,
                 true,
                 false,
                 "creationDate",
@@ -113,7 +110,6 @@ public class CenterGraphElementsOperatorNeo4j implements CenteredGraphElementsOp
                 null,
                 false,
                 false,
-                false,
                 true,
                 false,
                 "creationDate",
@@ -127,7 +123,6 @@ public class CenterGraphElementsOperatorNeo4j implements CenteredGraphElementsOp
         return get(
                 ALL_FRIENDS_MATCH,
                 user,
-                false,
                 false,
                 false,
                 true,
@@ -146,7 +141,6 @@ public class CenterGraphElementsOperatorNeo4j implements CenteredGraphElementsOp
                 friend,
                 true,
                 false,
-                false,
                 true,
                 true,
                 "creationDate",
@@ -157,9 +151,18 @@ public class CenterGraphElementsOperatorNeo4j implements CenteredGraphElementsOp
     }
 
 
-    private List<CenterGraphElementPojo> get(String match, User user, Boolean filterOnUser, Boolean isPrivateContext, Boolean nbPrivate, Boolean nbPublic, Boolean nbFriends, String sortBy, Boolean includeNonCenters, Integer... inShareLevelsIntegers) {
+    private List<CenterGraphElementPojo> get(String match, User user, Boolean filterOnUser, Boolean nbPrivate, Boolean nbPublic, Boolean nbFriends, String sortBy, Boolean includeNonCenters, Integer... inShareLevelsIntegers) {
         List<CenterGraphElementPojo> centerGraphElements = new ArrayList<>();
         Set<ShareLevel> inShareLevels = ShareLevel.arrayOfIntegersToSet(inShareLevelsIntegers);
+        String context;
+        Boolean shareLevelContainsPrivate = inShareLevelsIntegers.length == 0 || inShareLevels.contains(ShareLevel.PRIVATE);
+        if (shareLevelContainsPrivate) {
+            context = "private_context";
+        } else if (inShareLevels.contains(ShareLevel.FRIENDS)) {
+            context = "friend_context";
+        } else {
+            context = "public_context";
+        }
         try (Session session = driver.session()) {
             StatementResult rs = session.run(
                     String.format(
@@ -177,14 +180,14 @@ public class CenterGraphElementsOperatorNeo4j implements CenteredGraphElementsOp
                             (nbPrivate ? "n.nb_private_neighbors as nbPrivateNeighbors," : ""),
                             (nbPrivate || nbFriends ? "n.nb_friend_neighbors as nbFriendNeighbors," : ""),
                             (nbPrivate || nbFriends || nbPublic ? "n.nb_public_neighbors as nbPublic," : ""),
-                            (isPrivateContext ? "private_context" : "public_context")
+                            context
                     ),
                     parameters(
                             "owner", user == null ? "" : user.username(),
                             "shareLevels", inShareLevelsIntegers
                     )
             );
-            Boolean includeLastCenterDate = inShareLevelsIntegers.length == 0 || Arrays.stream(inShareLevelsIntegers).anyMatch(ShareLevel.PRIVATE.getIndex()::equals);
+            Boolean includeLastCenterDate = shareLevelContainsPrivate;
             while (rs.hasNext()) {
                 Record record = rs.next();
                 Date lastCenterDate = !includeLastCenterDate || null == record.get("lastCenterDate").asObject() ?
@@ -241,15 +244,8 @@ public class CenterGraphElementsOperatorNeo4j implements CenteredGraphElementsOp
         }
     }
 
-    private Map<URI, String> getContextFromRow(Record record) {
-        String contextStr = record.get("context").asString();
-        if (null == contextStr) {
-            return new HashMap<>();
-        }
-        return JsonUtils.getGson().fromJson(
-                contextStr,
-                new TypeToken<Map<URI, String>>() {
-                }.getType()
-        );
+    private String getContextFromRow(Record record) {
+        Value value = record.get("context");
+        return value.asObject() == null ? "" : value.asString();
     }
 }

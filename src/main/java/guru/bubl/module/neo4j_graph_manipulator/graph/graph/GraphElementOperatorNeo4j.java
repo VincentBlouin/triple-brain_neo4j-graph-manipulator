@@ -19,13 +19,10 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.FriendlyResourceNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.OperatorNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.RestApiUtilsNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph.VertexFromExtractorQueryRow;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.VertexTypeOperatorNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.image.ImagesNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.tag.TagFactoryNeo4J;
-import guru.bubl.module.neo4j_graph_manipulator.graph.search.GraphIndexerNeo4j;
-import org.neo4j.driver.v1.Driver;
-import org.neo4j.driver.v1.Record;
-import org.neo4j.driver.v1.Session;
-import org.neo4j.driver.v1.StatementResult;
+import org.neo4j.driver.v1.*;
 
 import java.net.URI;
 import java.util.*;
@@ -333,10 +330,6 @@ public class GraphElementOperatorNeo4j implements GraphElementOperator, Operator
         }
         Map<URI, TagPojo> identifications = new HashMap<>();
         Date tagCreationDate = new Date();
-        String searchContext = GraphIndexerNeo4j.descriptionToContext(
-                tag.comment()
-        );
-
         try (Session session = driver.session()) {
             StatementResult result = session.run(
                     AddTagQueryBuilder.usingIdentificationForGraphElement(
@@ -354,9 +347,11 @@ public class GraphElementOperatorNeo4j implements GraphElementOperator, Operator
                             "comment",
                             tag.comment(),
                             "privateContext",
-                            searchContext,
+                            tag.comment(),
+                            "friendContext",
+                            tag.comment(),
                             "publicContext",
-                            searchContext,
+                            tag.comment(),
                             ImagesNeo4j.props.images.name(),
                             ImageJson.toJsonArray(tag.images()),
                             "creationDate",
@@ -506,9 +501,9 @@ public class GraphElementOperatorNeo4j implements GraphElementOperator, Operator
     @Override
     public Map<String, Object> addCreationProperties(Map<String, Object> map) {
         Map<String, Object> newMap = RestApiUtilsNeo4j.map(
-                "nb_private_neighbors", 0,
-                "nb_friend_neighbors", 0,
-                "nb_public_neighbors", 0,
+                VertexTypeOperatorNeo4j.props.nb_private_neighbors.name(), 0,
+                VertexTypeOperatorNeo4j.props.nb_friend_neighbors.name(), 0,
+                VertexTypeOperatorNeo4j.props.nb_public_neighbors.name(), 0,
                 "nb_visits", 0
         );
         newMap.putAll(
@@ -620,5 +615,20 @@ public class GraphElementOperatorNeo4j implements GraphElementOperator, Operator
                 clone::addTag
         );
         return clone;
+    }
+
+    @Override
+    public String getPrivateContext() {
+        try (Session session = driver.session()) {
+            Record record = session.run(
+                    queryPrefix() + "RETURN n.private_context as privateContext",
+                    parameters(
+                            "uri",
+                            this.uri().toString()
+                    )
+            ).single();
+            Value privateContext = record.get("privateContext");
+            return privateContext.asObject() == null ? "" : privateContext.asString();
+        }
     }
 }

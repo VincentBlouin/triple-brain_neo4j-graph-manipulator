@@ -187,6 +187,11 @@ public class TagOperatorNeo4J implements TagOperator, OperatorNeo4j {
     }
 
     @Override
+    public String getPrivateContext() {
+        return graphElementOperator.getPrivateContext();
+    }
+
+    @Override
     public ShareLevel getShareLevel() {
         return graphElementOperator.getShareLevel();
     }

@@ -2,7 +2,7 @@
  * Copyright Vincent Blouin under the GPL License version 3
  */
 
-package guru.bubl.module.neo4j_graph_manipulator.graph.graph;
+package guru.bubl.module.neo4j_graph_manipulator.graph.test;
 
 import guru.bubl.module.model.User;
 import guru.bubl.module.model.WholeGraph;

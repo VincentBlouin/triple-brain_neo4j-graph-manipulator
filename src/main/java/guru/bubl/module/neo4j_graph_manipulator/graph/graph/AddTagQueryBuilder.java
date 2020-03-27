@@ -57,6 +57,7 @@ public class AddTagQueryBuilder {
                         "f.label=$label, " +
                         "f.comment=$comment, " +
                         "f.private_context=$privateContext, " +
+                        "f.friend_context=$friendContext, " +
                         "f.public_context=$publicContext, " +
                         "f.images=$images, " +
                         "f.creation_date=$creationDate, " +

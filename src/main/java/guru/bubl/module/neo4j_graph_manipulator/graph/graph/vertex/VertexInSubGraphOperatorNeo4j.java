@@ -323,7 +323,7 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
         try (Session session = driver.session()) {
             StatementResult rs = session.run(
                     queryPrefix() +
-                            "MATCH (n)<-[:SOURCE_VERTEX|DESTINATION_VERTEX]->(edge) " +
+                            "MATCH (n)<-[:SOURCE_VERTEX|DESTINATION_VERTEX]-(edge) " +
                             "RETURN edge.uri as uri",
                     parameters(
                             "uri",
@@ -578,6 +578,11 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
     }
 
     @Override
+    public String getPrivateContext() {
+        return graphElementOperator.getPrivateContext();
+    }
+
+    @Override
     public Boolean makePattern() {
         if (isPatternOrUnderPattern()) {
             return false;
@@ -674,10 +679,7 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
     @Override
     public Map<String, Object> addCreationProperties(Map<String, Object> map) {
         Map<String, Object> newMap = map(
-                props.shareLevel.name(), ShareLevel.PRIVATE.getIndex(),
-                VertexTypeOperatorNeo4j.props.nb_private_neighbors.name(), 0,
-                VertexTypeOperatorNeo4j.props.nb_public_neighbors.name(), 0,
-                VertexTypeOperatorNeo4j.props.nb_friend_neighbors.name(), 0
+                props.shareLevel.name(), ShareLevel.PRIVATE.getIndex()
         );
         newMap.putAll(
                 map

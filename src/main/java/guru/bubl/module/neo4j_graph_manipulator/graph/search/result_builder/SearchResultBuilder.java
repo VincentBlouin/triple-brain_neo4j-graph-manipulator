@@ -11,6 +11,7 @@ import guru.bubl.module.model.graph.vertex.NbNeighborsPojo;
 import guru.bubl.module.model.json.JsonUtils;
 import guru.bubl.module.model.search.GraphElementSearchResult;
 import org.neo4j.driver.v1.Record;
+import org.neo4j.driver.v1.Value;
 
 import java.net.URI;
 import java.util.HashMap;
@@ -20,16 +21,9 @@ import java.util.Set;
 public interface SearchResultBuilder {
     GraphElementSearchResult build();
 
-    default Map<URI, String> getContext() {
-        if (getRow().get("context").asObject() == null) {
-            return new HashMap<>();
-        }
-        String contextStr = getRow().get("context").asString();
-        return JsonUtils.getGson().fromJson(
-                contextStr,
-                new TypeToken<Map<URI, String>>() {
-                }.getType()
-        );
+    default String getContext() {
+        Value value = getRow().get("context");
+        return value.asObject() == null ? "" : value.asString();
     }
 
     default ShareLevel extractShareLevel() {

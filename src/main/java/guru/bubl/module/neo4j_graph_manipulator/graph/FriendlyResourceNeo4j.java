@@ -35,8 +35,7 @@ public class FriendlyResourceNeo4j implements FriendlyResourceOperator, Operator
         comment,
         creation_date,
         last_modification_date,
-        owner,
-        type
+        owner
     }
 
     public static final String LAST_MODIFICATION_QUERY_PART = String.format(

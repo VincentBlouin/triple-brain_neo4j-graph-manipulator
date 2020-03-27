@@ -7,13 +7,9 @@ package guru.bubl.module.neo4j_graph_manipulator.graph.test;
 import guru.bubl.module.model.User;
 import guru.bubl.module.model.graph.GraphFactory;
 import guru.bubl.module.model.graph.ShareLevel;
-import guru.bubl.module.model.graph.edge.Edge;
 import guru.bubl.module.model.graph.edge.EdgeFactory;
-import guru.bubl.module.model.graph.edge.EdgePojo;
 import guru.bubl.module.model.graph.subgraph.SubGraphPojo;
 import guru.bubl.module.model.graph.subgraph.UserGraph;
-import guru.bubl.module.model.graph.vertex.Vertex;
-import guru.bubl.module.model.graph.vertex.VertexInSubGraphPojo;
 import guru.bubl.module.model.graph.vertex.VertexOperator;
 import guru.bubl.module.model.test.GraphComponentTest;
 import guru.bubl.module.model.test.SubGraphOperator;
@@ -21,10 +17,10 @@ import guru.bubl.module.model.test.scenarios.TestScenarios;
 import guru.bubl.module.model.test.scenarios.VerticesCalledABAndC;
 import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jModule;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.UserGraphFactoryNeo4j;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.WholeGraphNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph.SubGraphExtractorFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.VertexFactoryNeo4j;
 import org.neo4j.driver.v1.Driver;
+import org.neo4j.driver.v1.Record;
 import org.neo4j.driver.v1.Session;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Transaction;
@@ -193,25 +189,17 @@ public class GraphComponentTestNeo4j implements GraphComponentTest {
         return vertexOfAnotherUser;
     }
 
-    @Override
-    public VertexInSubGraphPojo vertexInWholeConnectedGraph(Vertex vertex) {
-        return (VertexInSubGraphPojo) wholeGraphAroundDefaultCenterVertex().vertexWithIdentifier(
-                vertex.uri()
-        );
-    }
-
-    @Override
-    public EdgePojo edgeInWholeGraph(Edge edge) {
-        return (EdgePojo) wholeGraphAroundDefaultCenterVertex().edgeWithIdentifier(
-                edge.uri()
-        );
-    }
-
     protected int numberOfVertices() {
-        return wholeGraph.getAllVertices().size();
+        try (Session session = driver.session()) {
+            Record record = session.run("MATCH (n:Vertex) return count(n) as nbVertices").single();
+            return record.get("nbVertices").asInt();
+        }
     }
 
     protected int numberOfEdges() {
-        return wholeGraph.getAllEdges().size();
+        try (Session session = driver.session()) {
+            Record record = session.run("MATCH (n:Edge) return count(n) as nbEdges").single();
+            return record.get("nbEdges").asInt();
+        }
     }
 }

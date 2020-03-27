@@ -8,6 +8,7 @@ import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 import guru.bubl.module.model.Image;
 import guru.bubl.module.model.UserUris;
+import guru.bubl.module.model.graph.FriendlyResourcePojo;
 import guru.bubl.module.model.graph.GraphElementType;
 import guru.bubl.module.model.graph.ShareLevel;
 import guru.bubl.module.model.graph.edge.Edge;
@@ -435,6 +436,11 @@ public class EdgeOperatorNeo4j implements EdgeOperator, OperatorNeo4j {
     }
 
     @Override
+    public String getPrivateContext() {
+        return graphElementOperator.getPrivateContext();
+    }
+
+    @Override
     public String getChildrenIndex() {
         return graphElementOperator.getChildrenIndex();
     }
@@ -557,7 +563,6 @@ public class EdgeOperatorNeo4j implements EdgeOperator, OperatorNeo4j {
     @Override
     public Map<String, Object> addCreationProperties(Map<String, Object> map) {
         Map<String, Object> newMap = map(
-                FriendlyResourceNeo4j.props.type.name(), GraphElementType.Edge.name(),
                 VertexInSubGraphOperatorNeo4j.props.shareLevel.name(), ShareLevel.PRIVATE.getIndex()
         );
         newMap.putAll(
