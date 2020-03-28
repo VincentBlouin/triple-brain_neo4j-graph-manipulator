@@ -5,7 +5,6 @@
 package guru.bubl.module.neo4j_graph_manipulator.graph.admin;
 
 import com.google.inject.Inject;
-import guru.bubl.module.model.WholeGraph;
 import guru.bubl.module.model.admin.WholeGraphAdmin;
 import org.neo4j.driver.v1.Driver;
 import org.neo4j.driver.v1.Session;
@@ -14,9 +13,6 @@ public class WholeGraphAdminNeo4j implements WholeGraphAdmin {
 
     @Inject
     protected Driver driver;
-
-    @Inject
-    protected WholeGraph wholeGraph;
 
     @Override
     public void refreshNbNeighbors() {
