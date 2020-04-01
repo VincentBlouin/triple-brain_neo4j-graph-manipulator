@@ -16,7 +16,6 @@ import guru.bubl.module.model.graph.FriendlyResourcePojo;
 import guru.bubl.module.model.graph.GraphElementPojo;
 import guru.bubl.module.model.graph.ShareLevel;
 import guru.bubl.module.model.graph.vertex.NbNeighborsPojo;
-import guru.bubl.module.model.json.JsonUtils;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.TagQueryBuilder;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph.TagsFromExtractorQueryRowAsArray;
 import org.neo4j.driver.v1.*;
@@ -153,9 +152,9 @@ public class CenterGraphElementsOperatorNeo4j implements CenteredGraphElementsOp
 
     private List<CenterGraphElementPojo> get(String match, User user, Boolean filterOnUser, Boolean nbPrivate, Boolean nbPublic, Boolean nbFriends, String sortBy, Boolean includeNonCenters, Integer... inShareLevelsIntegers) {
         List<CenterGraphElementPojo> centerGraphElements = new ArrayList<>();
-        Set<ShareLevel> inShareLevels = ShareLevel.arrayOfIntegersToSet(inShareLevelsIntegers);
+        Set<ShareLevel> inShareLevels = inShareLevelsIntegers.length == 0 ? ShareLevel.allShareLevels : ShareLevel.arrayOfIntegersToSet(inShareLevelsIntegers);
         String context;
-        Boolean shareLevelContainsPrivate = inShareLevelsIntegers.length == 0 || inShareLevels.contains(ShareLevel.PRIVATE);
+        Boolean shareLevelContainsPrivate = inShareLevels.contains(ShareLevel.PRIVATE);
         if (shareLevelContainsPrivate) {
             context = "private_context";
         } else if (inShareLevels.contains(ShareLevel.FRIENDS)) {
