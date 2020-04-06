@@ -43,11 +43,6 @@ import static org.neo4j.driver.v1.Values.parameters;
 
 public class EdgeOperatorNeo4j implements EdgeOperator, OperatorNeo4j {
 
-    public enum props {
-        source_vertex_uri,
-        destination_vertex_uri
-    }
-
     protected Node node;
     protected GraphElementOperatorNeo4j graphElementOperator;
     protected VertexFactoryNeo4j vertexFactory;

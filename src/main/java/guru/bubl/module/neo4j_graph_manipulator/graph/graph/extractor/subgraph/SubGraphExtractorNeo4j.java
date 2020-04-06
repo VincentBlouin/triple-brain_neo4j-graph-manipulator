@@ -202,7 +202,6 @@ public class SubGraphExtractorNeo4j {
                         "RETURN " +
                         vertexAndEdgeCommonQueryPart(GRAPH_ELEMENT_QUERY_KEY) +
                         vertexReturnQueryPart(GRAPH_ELEMENT_QUERY_KEY) +
-                        edgeReturnQueryPart(GRAPH_ELEMENT_QUERY_KEY) +
                         (isCenterTagFlow ? TagQueryBuilder.centerTagQueryPart(GRAPH_ELEMENT_QUERY_KEY) : "") +
                         TagQueryBuilder.identificationReturnQueryPart(inShareLevels) +
                         "labels(ge) as type, ID(ge) as nId, rel";
@@ -220,25 +219,9 @@ public class SubGraphExtractorNeo4j {
         return FriendlyResourceQueryBuilder.returnQueryPartUsingPrefix(prefix);
     }
 
-    private String edgeReturnQueryPart(String prefix) {
-        return edgeSpecificPropertiesQueryPartUsingPrefix(prefix);
-    }
-
     private String vertexReturnQueryPart(String prefix) {
         return vertexSpecificPropertiesQueryPartUsingPrefix(prefix) +
                 FriendlyResourceQueryBuilder.imageReturnQueryPart(prefix);
-    }
-
-
-    public static String edgeSpecificPropertiesQueryPartUsingPrefix(String prefix) {
-        return QueryUtils.getPropertyUsingContainerNameQueryPart(
-                prefix,
-                EdgeOperatorNeo4j.props.source_vertex_uri.toString()
-        ) +
-                QueryUtils.getPropertyUsingContainerNameQueryPart(
-                        prefix,
-                        EdgeOperatorNeo4j.props.destination_vertex_uri.toString()
-                );
     }
 
     private String vertexSpecificPropertiesQueryPartUsingPrefix(String prefix) {
