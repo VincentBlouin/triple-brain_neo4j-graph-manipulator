@@ -8,8 +8,6 @@ import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 import guru.bubl.module.model.Image;
 import guru.bubl.module.model.UserUris;
-import guru.bubl.module.model.graph.FriendlyResourcePojo;
-import guru.bubl.module.model.graph.GraphElementType;
 import guru.bubl.module.model.graph.ShareLevel;
 import guru.bubl.module.model.graph.edge.Edge;
 import guru.bubl.module.model.graph.edge.EdgeOperator;
@@ -26,7 +24,6 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.graph.GraphElementFactoryN
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.GraphElementOperatorNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.VertexFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.VertexInSubGraphOperatorNeo4j;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.VertexTypeOperatorNeo4j;
 import org.neo4j.driver.v1.Driver;
 import org.neo4j.driver.v1.Record;
 import org.neo4j.driver.v1.Session;
@@ -125,7 +122,7 @@ public class EdgeOperatorNeo4j implements EdgeOperator, OperatorNeo4j {
         try (Session session = driver.session()) {
             Record record = session.run(
                     queryPrefix() +
-                            "MATCH (n)-[:SOURCE_VERTEX]->(v) " +
+                            "MATCH (n)-[:SOURCE]->(v) " +
                             "RETURN v.uri as uri",
                     parameters(
                             "uri",
@@ -143,7 +140,7 @@ public class EdgeOperatorNeo4j implements EdgeOperator, OperatorNeo4j {
         try (Session session = driver.session()) {
             Record record = session.run(
                     queryPrefix() +
-                            "MATCH (n)-[:DESTINATION_VERTEX]->(v) " +
+                            "MATCH (n)-[:DESTINATION]->(v) " +
                             "RETURN v.uri as uri",
                     parameters(
                             "uri",
@@ -191,7 +188,7 @@ public class EdgeOperatorNeo4j implements EdgeOperator, OperatorNeo4j {
     ) {
         changeEndVertex(
                 newSourceVertex,
-                Relationships.SOURCE_VERTEX
+                Relationships.SOURCE
         );
     }
 
@@ -201,7 +198,7 @@ public class EdgeOperatorNeo4j implements EdgeOperator, OperatorNeo4j {
     ) {
         changeEndVertex(
                 newDestinationVertex,
-                Relationships.DESTINATION_VERTEX
+                Relationships.DESTINATION
         );
     }
 
@@ -209,8 +206,8 @@ public class EdgeOperatorNeo4j implements EdgeOperator, OperatorNeo4j {
             Vertex newEndVertex,
             Relationships relationshipToChange
     ) {
-        Relationships relationshipToKeep = Relationships.SOURCE_VERTEX == relationshipToChange ?
-                Relationships.DESTINATION_VERTEX : Relationships.SOURCE_VERTEX;
+        Relationships relationshipToKeep = Relationships.SOURCE == relationshipToChange ?
+                Relationships.DESTINATION : Relationships.SOURCE;
         ShareLevel newEndVertexShareLevel = vertexFactory.withUri(
                 newEndVertex.uri()
         ).getShareLevel();
@@ -218,7 +215,7 @@ public class EdgeOperatorNeo4j implements EdgeOperator, OperatorNeo4j {
         ShareLevel keptEndVertexShareLevel;
         VertexOperator sourceVertex = sourceVertex();
         VertexOperator destinationVertex = destinationVertex();
-        if (relationshipToChange == Relationships.SOURCE_VERTEX) {
+        if (relationshipToChange == Relationships.SOURCE) {
             oldEndVertexShareLevel = sourceVertex.getShareLevel();
             keptEndVertexShareLevel = destinationVertex.getShareLevel();
         } else {
@@ -315,10 +312,10 @@ public class EdgeOperatorNeo4j implements EdgeOperator, OperatorNeo4j {
                                     "DELETE source_rel, destination_rel " +
                                     "SET %s",
                             queryPrefix(),
-                            Relationships.SOURCE_VERTEX,
-                            Relationships.DESTINATION_VERTEX,
-                            Relationships.DESTINATION_VERTEX,
-                            Relationships.SOURCE_VERTEX,
+                            Relationships.SOURCE,
+                            Relationships.DESTINATION,
+                            Relationships.DESTINATION,
+                            Relationships.SOURCE,
                             FriendlyResourceNeo4j.LAST_MODIFICATION_QUERY_PART
                     ),
                     parameters(
@@ -500,7 +497,7 @@ public class EdgeOperatorNeo4j implements EdgeOperator, OperatorNeo4j {
             session.run(
                     "MATCH (source_node:Resource{uri:$sourceUri}), " +
                             "(destination_node:Resource{uri:$destinationUri}) " +
-                            "CREATE (n:Resource:GraphElement:Edge $edge), (n)-[:SOURCE_VERTEX]->(source_node), (n)-[:DESTINATION_VERTEX]->(destination_node)",
+                            "CREATE (n:Resource:GraphElement:Edge $edge), (n)-[:SOURCE]->(source_node), (n)-[:DESTINATION]->(destination_node)",
                     parameters(
                             "sourceUri",
                             sourceVertex.uri().toString(),

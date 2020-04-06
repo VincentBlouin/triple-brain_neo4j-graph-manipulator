@@ -109,7 +109,7 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
         try (Session session = driver.session()) {
             StatementResult rs = session.run(
                     String.format(
-                            "%s, %s, (n)<-[:SOURCE_VERTEX|DESTINATION_VERTEX]-(edge) RETURN edge",
+                            "%s, %s, (n)<-[:SOURCE|DESTINATION]-(edge) RETURN edge",
                             queryPrefix(),
                             edgeFriendlyResource.addToSelectUsingVariableName("edge", "edgeUri")
                     ),
@@ -130,8 +130,8 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
         try (Session session = driver.session()) {
             StatementResult rs = session.run(
                     String.format(
-                            "%s, %s, (n)<-[:SOURCE_VERTEX|DESTINATION_VERTEX]-(r), " +
-                                    "(r)-[:SOURCE_VERTEX|DESTINATION_VERTEX]->(d) " +
+                            "%s, %s, (n)<-[:SOURCE|DESTINATION]-(r), " +
+                                    "(r)-[:SOURCE|DESTINATION]->(d) " +
                                     "RETURN r.uri as uri",
                             queryPrefix(),
                             destinationVertexOperator.addToSelectUsingVariableName("d", "destinationUri")
@@ -166,8 +166,8 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
             StatementResult rs = session.run(
                     String.format(
                             "%s, %s, " +
-                                    "(n)<-[:SOURCE_VERTEX]-(r), " +
-                                    "(r)-[:DESTINATION_VERTEX]->(d) " +
+                                    "(n)<-[:SOURCE]-(r), " +
+                                    "(r)-[:DESTINATION]->(d) " +
                                     "RETURN n.uri",
                             queryPrefix(),
                             destinationVertexOperator.addToSelectUsingVariableName("d", "destinationUri")
@@ -305,8 +305,8 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
             session.run(
                     queryPrefix() +
                             "OPTIONAL MATCH " +
-                            "(n)<-[:SOURCE_VERTEX|DESTINATION_VERTEX]-(e), " +
-                            "(e)-[:SOURCE_VERTEX|DESTINATION_VERTEX]->(v) " +
+                            "(n)<-[:SOURCE|DESTINATION]-(e), " +
+                            "(e)-[:SOURCE|DESTINATION]->(v) " +
                             "WITH e, n " +
                             "DETACH DELETE n, e",
                     parameters(
@@ -323,7 +323,7 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
         try (Session session = driver.session()) {
             StatementResult rs = session.run(
                     queryPrefix() +
-                            "MATCH (n)<-[:SOURCE_VERTEX|DESTINATION_VERTEX]-(edge) " +
+                            "MATCH (n)<-[:SOURCE|DESTINATION]-(edge) " +
                             "RETURN edge.uri as uri",
                     parameters(
                             "uri",
@@ -591,7 +591,7 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
             session.run(
                     queryPrefix() + "SET n:Pattern,n.nbPatternUsage=0 " +
                             "WITH n " +
-                            "CALL apoc.path.subgraphAll(n, {relationshipFilter:'SOURCE_VERTEX, DESTINATION_VERTEX'}) YIELD nodes " +
+                            "CALL apoc.path.subgraphAll(n, {relationshipFilter:'SOURCE, DESTINATION'}) YIELD nodes " +
                             "UNWIND nodes as s " +
                             "SET s.shareLevel=40," +
                             "s.isUnderPattern=true," +
@@ -618,7 +618,7 @@ public class VertexInSubGraphOperatorNeo4j implements VertexInSubGraphOperator, 
             session.run(
                     queryPrefix() + "remove n:Pattern " +
                             "WITH n " +
-                            "CALL apoc.path.subgraphAll(n, {relationshipFilter:'SOURCE_VERTEX, DESTINATION_VERTEX'}) YIELD nodes " +
+                            "CALL apoc.path.subgraphAll(n, {relationshipFilter:'SOURCE, DESTINATION'}) YIELD nodes " +
                             "UNWIND nodes as s " +
                             "REMOVE s.isUnderPattern",
                     parameters(

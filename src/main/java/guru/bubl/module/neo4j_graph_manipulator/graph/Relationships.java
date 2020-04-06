@@ -8,8 +8,8 @@ import org.neo4j.graphdb.RelationshipType;
 
 public enum Relationships implements RelationshipType {
     LABEL, //RDFS.LABEL
-    SOURCE_VERTEX,
-    DESTINATION_VERTEX,
+    SOURCE,
+    DESTINATION,
     HAS_TYPE, //RDF.TYPE
     SAME_AS, //OWL2.sameAs
     DOMAIN, //RDFS.DOMAIN

@@ -66,8 +66,8 @@ public class VertexTypeOperatorNeo4j implements VertexTypeOperator, OperatorNeo4
                             decrementQueryPart + " " +
                             incrementQueryPart + " " +
                             "WITH n MATCH" +
-                            "(n)<-[:SOURCE_VERTEX|DESTINATION_VERTEX]->(e), " +
-                            "(e)<-[:SOURCE_VERTEX|DESTINATION_VERTEX]->(d) " +
+                            "(n)<-[:SOURCE|DESTINATION]->(e), " +
+                            "(e)<-[:SOURCE|DESTINATION]->(d) " +
                             decrementQueryPart + " " +
                             incrementQueryPart + " " +
                             "WITH d,n,e " +

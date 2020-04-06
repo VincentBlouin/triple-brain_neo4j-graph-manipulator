@@ -135,7 +135,7 @@ public class SubGraphExtractorNeo4j {
                 );
                 URI uri = idsUri.get(relation.endNodeId());
                 if (uri == null || edge == null) {
-                } else if (relation.type().equals("SOURCE_VERTEX")) {
+                } else if (relation.type().equals("SOURCE")) {
                     edge.setSourceVertex(
                             new VertexInSubGraphPojo(
                                     uri
@@ -211,8 +211,8 @@ public class SubGraphExtractorNeo4j {
     private String getMatchQueryPart() {
         return "MATCH (start_node)<-[rel:" +
                 (isCenterTagFlow ? (Relationships.IDENTIFIED_TO + "|") : "") +
-                Relationships.SOURCE_VERTEX + "|" +
-                Relationships.DESTINATION_VERTEX + "*0.." + depth * 2 +
+                Relationships.SOURCE + "|" +
+                Relationships.DESTINATION + "*0.." + depth * 2 +
                 "]->(" + SubGraphExtractorNeo4j.GRAPH_ELEMENT_QUERY_KEY + ") ";
     }
 
