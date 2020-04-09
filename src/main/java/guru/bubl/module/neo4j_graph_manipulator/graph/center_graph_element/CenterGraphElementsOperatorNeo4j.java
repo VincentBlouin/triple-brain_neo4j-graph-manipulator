@@ -4,8 +4,6 @@
 
 package guru.bubl.module.neo4j_graph_manipulator.graph.center_graph_element;
 
-import apoc.neighbors.Neighbors;
-import com.google.gson.reflect.TypeToken;
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 import guru.bubl.module.model.User;
@@ -15,7 +13,7 @@ import guru.bubl.module.model.friend.FriendStatus;
 import guru.bubl.module.model.graph.FriendlyResourcePojo;
 import guru.bubl.module.model.graph.GraphElementPojo;
 import guru.bubl.module.model.graph.ShareLevel;
-import guru.bubl.module.model.graph.vertex.NbNeighborsPojo;
+import guru.bubl.module.model.graph.fork.NbNeighborsPojo;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.TagQueryBuilder;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph.TagsFromExtractorQueryRowAsArray;
 import org.neo4j.driver.v1.*;

@@ -10,13 +10,14 @@ import guru.bubl.module.model.Image;
 import guru.bubl.module.model.graph.FriendlyResourcePojo;
 import guru.bubl.module.model.graph.GraphElementPojo;
 import guru.bubl.module.model.graph.ShareLevel;
+import guru.bubl.module.model.graph.edge.EdgePojo;
 import guru.bubl.module.model.graph.tag.TagFactory;
 import guru.bubl.module.model.graph.tag.TagOperator;
 import guru.bubl.module.model.graph.tag.Tag;
 import guru.bubl.module.model.graph.tag.TagPojo;
-import guru.bubl.module.model.graph.vertex.NbNeighbors;
-import guru.bubl.module.model.graph.vertex.NbNeighborsPojo;
-import guru.bubl.module.model.graph.vertex.VertexTypeOperatorFactory;
+import guru.bubl.module.model.graph.fork.NbNeighbors;
+import guru.bubl.module.model.graph.fork.NbNeighborsPojo;
+import guru.bubl.module.model.graph.fork.ForkOperatorFactory;
 import guru.bubl.module.neo4j_graph_manipulator.graph.OperatorNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.GraphElementFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.GraphElementOperatorNeo4j;
@@ -45,14 +46,14 @@ public class TagOperatorNeo4J implements TagOperator, OperatorNeo4j {
     private Driver driver;
     private GraphElementFactoryNeo4j graphElementOperatorFactory;
     private TagFactory tagFactory;
-    protected VertexTypeOperatorFactory vertexTypeOperatorFactory;
+    protected ForkOperatorFactory forkOperatorFactory;
 
     @AssistedInject
     protected TagOperatorNeo4J(
             Driver driver,
             GraphElementFactoryNeo4j graphElementOperatorFactory,
             TagFactory tagFactory,
-            VertexTypeOperatorFactory vertexTypeOperatorFactory,
+            ForkOperatorFactory forkOperatorFactory,
             @Assisted URI uri
     ) {
         this.graphElementOperator = graphElementOperatorFactory.withUri(
@@ -61,7 +62,7 @@ public class TagOperatorNeo4J implements TagOperator, OperatorNeo4j {
         this.driver = driver;
         this.graphElementOperatorFactory = graphElementOperatorFactory;
         this.tagFactory = tagFactory;
-        this.vertexTypeOperatorFactory = vertexTypeOperatorFactory;
+        this.forkOperatorFactory = forkOperatorFactory;
     }
 
     @Override
@@ -187,6 +188,16 @@ public class TagOperatorNeo4J implements TagOperator, OperatorNeo4j {
     }
 
     @Override
+    public EdgePojo addVertexAndRelation() {
+        return null;
+    }
+
+    @Override
+    public EdgePojo addVertexAndRelationWithIds(String vertexId, String edgeId) {
+        return null;
+    }
+
+    @Override
     public String getPrivateContext() {
         return graphElementOperator.getPrivateContext();
     }
@@ -198,7 +209,7 @@ public class TagOperatorNeo4J implements TagOperator, OperatorNeo4j {
 
     @Override
     public NbNeighbors getNbNeighbors() {
-        return vertexTypeOperatorFactory.withUri(uri()).getNbNeighbors();
+        return forkOperatorFactory.withUri(uri()).getNbNeighbors();
     }
 
     @Override

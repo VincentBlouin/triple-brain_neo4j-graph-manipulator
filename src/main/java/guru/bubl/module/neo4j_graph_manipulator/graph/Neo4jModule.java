@@ -27,33 +27,34 @@ import guru.bubl.module.model.graph.GraphElementOperatorFactory;
 import guru.bubl.module.model.graph.GraphFactory;
 import guru.bubl.module.model.graph.edge.EdgeFactory;
 import guru.bubl.module.model.graph.edge.EdgeOperator;
+import guru.bubl.module.model.graph.fork.NbNeighbors;
+import guru.bubl.module.model.graph.fork.NbNeighborsOperatorFactory;
+import guru.bubl.module.model.graph.group_relation.GroupRelationFactory;
+import guru.bubl.module.model.graph.group_relation.GroupRelationOperator;
 import guru.bubl.module.model.graph.pattern.PatternUser;
 import guru.bubl.module.model.graph.pattern.PatternUserFactory;
-import guru.bubl.module.model.graph.subgraph.SubGraphForker;
-import guru.bubl.module.model.graph.subgraph.SubGraphForkerFactory;
 import guru.bubl.module.model.graph.tag.TagFactory;
 import guru.bubl.module.model.graph.tag.TagOperator;
 import guru.bubl.module.model.graph.vertex.VertexFactory;
-import guru.bubl.module.model.graph.vertex.VertexInSubGraphOperator;
-import guru.bubl.module.model.graph.vertex.VertexTypeOperator;
-import guru.bubl.module.model.graph.vertex.VertexTypeOperatorFactory;
+import guru.bubl.module.model.graph.vertex.VertexOperator;
+import guru.bubl.module.model.graph.fork.ForkOperator;
+import guru.bubl.module.model.graph.fork.ForkOperatorFactory;
 import guru.bubl.module.model.test.GraphComponentTest;
 import guru.bubl.module.neo4j_graph_manipulator.graph.admin.WholeGraphAdminNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.center_graph_element.CenterGraphElementOperatorNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.center_graph_element.CenterGraphElementsOperatorNeo4j;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.GraphElementFactoryNeo4j;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.GraphElementOperatorNeo4j;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.GraphFactoryNeo4j;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.UserGraphFactoryNeo4j;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.*;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.edge.EdgeFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.edge.EdgeOperatorNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph.SubGraphExtractorFactoryNeo4j;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.fork.NbNeighborsOperatorNeo4j;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.group_relation.GroupRelationFactoryNeo4j;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.group_relation.GroupRelationOperatorNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.pattern.PatternUserNeo4j;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.subgraph.SubGraphForkerNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.tag.TagOperatorNeo4J;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.VertexFactoryNeo4j;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.VertexInSubGraphOperatorNeo4j;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.VertexTypeOperatorNeo4j;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.VertexOperatorNeo4j;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.fork.ForkOperatorNeo4J;
 import guru.bubl.module.neo4j_graph_manipulator.graph.image.ImageFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.search.GraphSearchModuleNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.tag.TagFactoryNeo4J;
@@ -145,15 +146,11 @@ public class Neo4jModule extends AbstractModule {
                 .build(UserGraphFactoryNeo4j.class));
 
         install(factoryModuleBuilder
-                .implement(VertexInSubGraphOperator.class, VertexInSubGraphOperatorNeo4j.class)
+                .implement(VertexOperator.class, VertexOperatorNeo4j.class)
                 .build(VertexFactory.class));
 
         install(factoryModuleBuilder
                 .build(VertexFactoryNeo4j.class));
-
-        install(factoryModuleBuilder
-                .implement(SubGraphForker.class, SubGraphForkerNeo4j.class)
-                .build(SubGraphForkerFactory.class));
 
         install(factoryModuleBuilder
                 .build(SubGraphExtractorFactoryNeo4j.class));
@@ -168,8 +165,13 @@ public class Neo4jModule extends AbstractModule {
         );
 
         install(factoryModuleBuilder
-                .implement(VertexTypeOperator.class, VertexTypeOperatorNeo4j.class)
-                .build(VertexTypeOperatorFactory.class)
+                .implement(ForkOperator.class, ForkOperatorNeo4J.class)
+                .build(ForkOperatorFactory.class)
+        );
+
+        install(factoryModuleBuilder
+                .implement(NbNeighbors.class, NbNeighborsOperatorNeo4j.class)
+                .build(NbNeighborsOperatorFactory.class)
         );
 
         install(factoryModuleBuilder
@@ -193,7 +195,14 @@ public class Neo4jModule extends AbstractModule {
         install(factoryModuleBuilder
                 .build(TagFactoryNeo4J.class)
         );
+        install(factoryModuleBuilder
+                .implement(GroupRelationOperator.class, GroupRelationOperatorNeo4j.class)
+                .build(GroupRelationFactory.class)
+        );
+        install(factoryModuleBuilder
+                .build(GroupRelationFactoryNeo4j.class));
         bind(GraphFactory.class).to(GraphFactoryNeo4j.class).in(Singleton.class);
+        bind(GraphElementSpecialOperatorFactory.class);
     }
 
     private void bindForEmbedded() {

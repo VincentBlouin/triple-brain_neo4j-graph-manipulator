@@ -67,26 +67,26 @@ public class WholeGraphAdminNeo4j implements WholeGraphAdmin {
         try (Session session = driver.session()) {
             session.run(
                     "MATCH(n:Vertex) OPTIONAL MATCH (n)<-[:SOURCE|DESTINATION]->(e)," +
-                            "(e)<-[:SOURCE|DESTINATION]->(o) WHERE o.label <> '' " +
+                            "(e)<-[:SOURCE|DESTINATION*0..2]->(o:Vertex) WHERE o.label <> '' " +
                             "WITH n, o, (o.nb_private_neighbors + o.nb_friend_neighbors + o.nb_public_neighbors) as nbNeighbors " +
                             "ORDER BY nbNeighbors DESC " +
-                            "WITH reduce(a=\"\", os in collect(o) |  a + \"{{\" + substring(os.label, 0, 20)) as context, n " +
+                            "WITH reduce(a=\"\", os in collect(DISTINCT o) |  a + \"{{\" + substring(os.label, 0, 20)) as context, n " +
                             "SET n.private_context = substring(context, 2, 110)"
             );
             session.run(
                     "MATCH(n:Vertex) OPTIONAL MATCH (n)<-[:SOURCE|DESTINATION]->(e)," +
-                            "(e)-[:SOURCE|DESTINATION]->(o) WHERE o.shareLevel in [20,30,40] AND o.label <>'' " +
+                            "(e)-[:SOURCE|DESTINATION*0..2]->(o:Vertex) WHERE o.shareLevel in [20,30,40] AND o.label <>'' " +
                             "WITH n, o, (o.nb_friend_neighbors + o.nb_public_neighbors) as nbNeighbors " +
                             "ORDER BY nbNeighbors DESC " +
-                            "WITH reduce(a=\"\", os in collect(o) |  a + \"{{\" + substring(os.label, 0, 20)) as context, n " +
+                            "WITH reduce(a=\"\", os in collect(DISTINCT o) |  a + \"{{\" + substring(os.label, 0, 20)) as context, n " +
                             "SET n.friend_context = substring(context, 2, 110)"
             );
             session.run(
                     "MATCH(n:Vertex) OPTIONAL MATCH (n)<-[:SOURCE|DESTINATION]->(e)," +
-                            "(e)-[:SOURCE|DESTINATION]->(o) WHERE o.shareLevel in [30,40] AND o.label <>'' " +
+                            "(e)-[:SOURCE|DESTINATION*0..2]->(o:Vertex) WHERE o.shareLevel in [30,40] AND o.label <>'' " +
                             "WITH n, o " +
                             "ORDER BY o.nb_public_neighbors DESC " +
-                            "WITH reduce(a=\"\", os in collect(o) |  a + \"{{\" + substring(os.label, 0, 20)) as context, n " +
+                            "WITH reduce(a=\"\", os in collect(DISTINCT o) |  a + \"{{\" + substring(os.label, 0, 20)) as context, n " +
                             "SET n.public_context = substring(context, 2, 110)"
             );
             session.run(

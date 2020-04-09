@@ -5,13 +5,11 @@
 package guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph;
 
 import guru.bubl.module.model.graph.GraphElementPojo;
-import guru.bubl.module.model.graph.ShareLevel;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.FriendlyResourceFromExtractorQueryRow;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.TagQueryBuilder;
 import org.neo4j.driver.v1.Record;
 
 import java.net.URI;
-import java.util.Set;
 
 public class GraphElementFromExtractorQueryRow {
 

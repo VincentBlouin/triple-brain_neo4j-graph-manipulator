@@ -8,7 +8,7 @@ import guru.bubl.module.model.graph.ShareLevel;
 import guru.bubl.module.neo4j_graph_manipulator.graph.FriendlyResourceNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.UserGraphNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.tag.TagOperatorNeo4J;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.VertexTypeOperatorNeo4j;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.fork.ForkOperatorNeo4J;
 
 import java.util.Set;
 
@@ -65,15 +65,15 @@ public class TagQueryBuilder {
                 ) +
                 (inShareLevels.contains(ShareLevel.PRIVATE) ? QueryUtils.getPropertyUsingContainerNameQueryPart(
                         identificationKey,
-                        VertexTypeOperatorNeo4j.props.nb_private_neighbors.name()
+                        ForkOperatorNeo4J.props.nb_private_neighbors.name()
                 ) : "null,") +
                 (inShareLevels.contains(ShareLevel.FRIENDS) ? QueryUtils.getPropertyUsingContainerNameQueryPart(
                         identificationKey,
-                        VertexTypeOperatorNeo4j.props.nb_friend_neighbors.name()
+                        ForkOperatorNeo4J.props.nb_friend_neighbors.name()
                 ) : "null,") +
                 (inShareLevels.contains(ShareLevel.PUBLIC) || inShareLevels.contains(ShareLevel.PUBLIC_WITH_LINK) ? QueryUtils.getLastPropertyUsingContainerNameQueryPart(
                         identificationKey,
-                        VertexTypeOperatorNeo4j.props.nb_public_neighbors.name()
+                        ForkOperatorNeo4J.props.nb_public_neighbors.name()
                 ) : "null") +
                 "]) as " + identificationKey + ", ";
     }

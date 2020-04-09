@@ -5,9 +5,9 @@
 package guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph;
 
 import guru.bubl.module.model.graph.ShareLevel;
-import guru.bubl.module.model.graph.vertex.NbNeighborsPojo;
-import guru.bubl.module.model.graph.vertex.VertexInSubGraph;
-import guru.bubl.module.model.graph.vertex.VertexInSubGraphPojo;
+import guru.bubl.module.model.graph.fork.NbNeighborsPojo;
+import guru.bubl.module.model.graph.vertex.Vertex;
+import guru.bubl.module.model.graph.vertex.VertexPojo;
 import org.neo4j.driver.v1.Record;
 
 import java.util.List;
@@ -26,31 +26,31 @@ public class VertexFromExtractorQueryRow {
         this.keyPrefix = keyPrefix;
     }
 
-    public VertexInSubGraph build() {
-        VertexInSubGraphPojo vertexInSubGraphPojo = new VertexInSubGraphPojo(
+    public Vertex build() {
+        VertexPojo vertex = new VertexPojo(
                 GraphElementFromExtractorQueryRow.usingRowAndKey(
                         row,
                         keyPrefix
                 ).build(),
-                getNbNeighbors(),
+                getNbNeighbors(row, keyPrefix),
                 getShareLevel(keyPrefix, row)
         );
-        vertexInSubGraphPojo.getGraphElement().setChildrenIndex(
+        vertex.getGraphElement().setChildrenIndex(
                 getChildrenIndexes(keyPrefix, row)
         );
-        vertexInSubGraphPojo.getGraphElement().setColors(
+        vertex.getGraphElement().setColors(
                 getColors(keyPrefix, row)
         );
-        vertexInSubGraphPojo.getGraphElement().setFont(
+        vertex.getGraphElement().setFont(
                 getFont(keyPrefix, row)
         );
         if (this.isPattern()) {
-            vertexInSubGraphPojo.getVertex().setAsPattern();
+            vertex.setAsPattern();
         }
-        return vertexInSubGraphPojo;
+        return vertex;
     }
 
-    private NbNeighborsPojo getNbNeighbors() {
+    public static NbNeighborsPojo getNbNeighbors(Record row, String keyPrefix) {
         NbNeighborsPojo nbNeighborsPojo = new NbNeighborsPojo();
         if (row.get(keyPrefix + ".nb_private_neighbors").asObject() != null) {
             nbNeighborsPojo.setPrivate(row.get(

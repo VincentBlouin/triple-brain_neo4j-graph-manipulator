@@ -7,20 +7,21 @@ package guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph;
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 import guru.bubl.module.model.UserUris;
+import guru.bubl.module.model.graph.GraphElement;
 import guru.bubl.module.model.graph.GraphElementType;
 import guru.bubl.module.model.graph.ShareLevel;
 import guru.bubl.module.model.graph.edge.Edge;
 import guru.bubl.module.model.graph.edge.EdgePojo;
+import guru.bubl.module.model.graph.group_relation.GroupRelation;
+import guru.bubl.module.model.graph.group_relation.GroupRelationPojo;
 import guru.bubl.module.model.graph.subgraph.SubGraphPojo;
 import guru.bubl.module.model.graph.vertex.Vertex;
-import guru.bubl.module.model.graph.vertex.VertexInSubGraph;
-import guru.bubl.module.model.graph.vertex.VertexInSubGraphPojo;
+import guru.bubl.module.model.graph.vertex.VertexPojo;
 import guru.bubl.module.neo4j_graph_manipulator.graph.Relationships;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.edge.EdgeOperatorNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.FriendlyResourceQueryBuilder;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.TagQueryBuilder;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.QueryUtils;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.VertexTypeOperatorNeo4j;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.fork.ForkOperatorNeo4J;
 import org.neo4j.driver.internal.InternalRelationship;
 import org.neo4j.driver.v1.Driver;
 import org.neo4j.driver.v1.Record;
@@ -112,6 +113,15 @@ public class SubGraphExtractorNeo4j {
                                 edge.uri()
                         );
                         break;
+                    case GroupRelation:
+                        GroupRelation groupRelation = addGroupRelationUsingRow(
+                                record
+                        );
+                        idsUri.put(
+                                record.get("nId").asLong(),
+                                groupRelation.uri()
+                        );
+                        break;
                     case Meta:
                         URI uri = URI.create(record.get(
                                 "ge.uri"
@@ -136,14 +146,12 @@ public class SubGraphExtractorNeo4j {
                 URI uri = idsUri.get(relation.endNodeId());
                 if (uri == null || edge == null) {
                 } else if (relation.type().equals("SOURCE")) {
-                    edge.setSourceVertex(
-                            new VertexInSubGraphPojo(
-                                    uri
-                            )
+                    edge.setSource(
+                            uri
                     );
                 } else {
                     edge.setDestinationVertex(
-                            new VertexInSubGraphPojo(
+                            new VertexPojo(
                                     uri
                             )
                     );
@@ -152,13 +160,15 @@ public class SubGraphExtractorNeo4j {
             Iterator<EdgePojo> it = subGraph.edges().values().iterator();
             while (it.hasNext()) {
                 EdgePojo edge = it.next();
-                Boolean hasSourceVertex = edge.sourceVertex() != null && subGraph.vertices().containsKey(
-                        edge.sourceVertex().uri()
+                GraphElement source = edge.getSource();
+                Boolean hasSource = source != null && subGraph.containsGraphElement(
+                        edge
                 );
-                Boolean hasDestinationVertex = edge.destinationVertex() != null && subGraph.vertices().containsKey(
-                        edge.destinationVertex().uri()
+                GraphElement destination = edge.destinationFork();
+                Boolean hasDestinationVertex = destination != null && subGraph.vertices().containsKey(
+                        destination.uri()
                 );
-                if (!hasSourceVertex || !hasDestinationVertex) {
+                if (!hasSource || !hasDestinationVertex) {
                     it.remove();
                 }
             }
@@ -181,13 +191,13 @@ public class SubGraphExtractorNeo4j {
         return type;
     }
 
-    private VertexInSubGraph addVertexUsingRow(Record row) {
-        VertexInSubGraph vertex = new VertexFromExtractorQueryRow(
+    private Vertex addVertexUsingRow(Record row) {
+        Vertex vertex = new VertexFromExtractorQueryRow(
                 row,
                 SubGraphExtractorNeo4j.GRAPH_ELEMENT_QUERY_KEY
         ).build();
         subGraph.addVertex(
-                (VertexInSubGraphPojo) vertex
+                (VertexPojo) vertex
         );
         return vertex;
     }
@@ -227,15 +237,15 @@ public class SubGraphExtractorNeo4j {
     private String vertexSpecificPropertiesQueryPartUsingPrefix(String prefix) {
         return (inShareLevels.contains(ShareLevel.PRIVATE) ? QueryUtils.getPropertyUsingContainerNameQueryPart(
                 prefix,
-                VertexTypeOperatorNeo4j.props.nb_private_neighbors.toString()
+                ForkOperatorNeo4J.props.nb_private_neighbors.toString()
         ) : "") +
                 (inShareLevels.contains(ShareLevel.FRIENDS) ? QueryUtils.getPropertyUsingContainerNameQueryPart(
                         prefix,
-                        VertexTypeOperatorNeo4j.props.nb_friend_neighbors.toString()
+                        ForkOperatorNeo4J.props.nb_friend_neighbors.toString()
                 ) : "") +
                 (inShareLevels.contains(ShareLevel.PUBLIC) || inShareLevels.contains(ShareLevel.PUBLIC_WITH_LINK) ? QueryUtils.getPropertyUsingContainerNameQueryPart(
                         prefix,
-                        VertexTypeOperatorNeo4j.props.nb_public_neighbors.toString()
+                        ForkOperatorNeo4J.props.nb_public_neighbors.toString()
                 ) : "") +
                 QueryUtils.getPropertyUsingContainerNameQueryPart(
                         prefix,
@@ -261,5 +271,14 @@ public class SubGraphExtractorNeo4j {
         ).build();
         subGraph.addEdge(edge);
         return edge;
+    }
+
+    private GroupRelation addGroupRelationUsingRow(Record row) {
+        GroupRelationPojo groupRelation = GroupRelationFromExtractorQueryRow.withRowAndKeyPrefix(
+                row,
+                SubGraphExtractorNeo4j.GRAPH_ELEMENT_QUERY_KEY
+        ).build();
+        subGraph.addGroupRelation(groupRelation);
+        return groupRelation;
     }
 }

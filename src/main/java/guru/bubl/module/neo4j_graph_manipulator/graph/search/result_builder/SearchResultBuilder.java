@@ -4,18 +4,12 @@
 
 package guru.bubl.module.neo4j_graph_manipulator.graph.search.result_builder;
 
-import com.google.gson.reflect.TypeToken;
 import guru.bubl.module.model.graph.ShareLevel;
-import guru.bubl.module.model.graph.vertex.NbNeighbors;
-import guru.bubl.module.model.graph.vertex.NbNeighborsPojo;
-import guru.bubl.module.model.json.JsonUtils;
+import guru.bubl.module.model.graph.fork.NbNeighborsPojo;
 import guru.bubl.module.model.search.GraphElementSearchResult;
 import org.neo4j.driver.v1.Record;
 import org.neo4j.driver.v1.Value;
 
-import java.net.URI;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Set;
 
 public interface SearchResultBuilder {

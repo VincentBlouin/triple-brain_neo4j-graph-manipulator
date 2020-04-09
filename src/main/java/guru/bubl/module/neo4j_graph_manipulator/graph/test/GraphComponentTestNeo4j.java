@@ -14,7 +14,7 @@ import guru.bubl.module.model.graph.vertex.VertexOperator;
 import guru.bubl.module.model.test.GraphComponentTest;
 import guru.bubl.module.model.test.SubGraphOperator;
 import guru.bubl.module.model.test.scenarios.TestScenarios;
-import guru.bubl.module.model.test.scenarios.VerticesCalledABAndC;
+import guru.bubl.module.model.test.scenarios.GraphElementsOfTestScenario;
 import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jModule;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.UserGraphFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph.SubGraphExtractorFactoryNeo4j;
@@ -84,12 +84,12 @@ public class GraphComponentTestNeo4j implements GraphComponentTest {
         ).setUsername("colette_armande");
 
         userGraph = neo4jUserGraphFactory.withUser(user);
-        VerticesCalledABAndC verticesCalledABAndC = testScenarios.makeGraphHave3VerticesABCWhereAIsDefaultCenterVertexAndAPointsToBAndBPointsToC(
+        GraphElementsOfTestScenario graphElementsOfTestScenario = testScenarios.buildTestScenario(
                 userGraph
         );
-        vertexA = verticesCalledABAndC.vertexA();
-        vertexB = verticesCalledABAndC.vertexB();
-        vertexC = verticesCalledABAndC.vertexC();
+        vertexA = graphElementsOfTestScenario.getVertexA();
+        vertexB = graphElementsOfTestScenario.getVertexB();
+        vertexC = graphElementsOfTestScenario.getVertexC();
         anotherUserGraph = neo4jUserGraphFactory.withUser(anotherUser);
         vertexOfAnotherUser = vertexFactory.withUri(
                 anotherUserGraph.createVertex().uri()

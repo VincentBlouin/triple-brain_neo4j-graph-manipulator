@@ -11,7 +11,7 @@ import guru.bubl.module.model.graph.GraphElementOperatorFactory;
 import guru.bubl.module.model.graph.edge.EdgeOperator;
 import guru.bubl.module.model.graph.tag.TagFactory;
 import guru.bubl.module.model.graph.tag.TagOperator;
-import guru.bubl.module.model.graph.vertex.VertexInSubGraphOperator;
+import guru.bubl.module.model.graph.vertex.VertexOperator;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.edge.EdgeFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.VertexFactoryNeo4j;
 import org.neo4j.driver.v1.Driver;
@@ -44,21 +44,21 @@ public class WholeGraphNeo4j implements WholeGraph {
     protected TagFactory tagFactory;
 
     @Override
-    public Set<VertexInSubGraphOperator> getAllVertices() {
+    public Set<VertexOperator> getAllVertices() {
         return getAllVerticesOfUserOrNot(null);
     }
 
     @Override
-    public Set<VertexInSubGraphOperator> getAllVerticesOfUser(User user) {
+    public Set<VertexOperator> getAllVerticesOfUser(User user) {
         return getAllVerticesOfUserOrNot(user);
     }
 
-    private Set<VertexInSubGraphOperator> getAllVerticesOfUserOrNot(User user) {
+    private Set<VertexOperator> getAllVerticesOfUserOrNot(User user) {
         String query = String.format(
                 "MATCH(n:Vertex%s) RETURN n.uri as uri",
                 user == null ? "" : " {owner:$username}"
         );
-        Set<VertexInSubGraphOperator> vertices = new HashSet<>();
+        Set<VertexOperator> vertices = new HashSet<>();
         try (Session session = driver.session()) {
             StatementResult rs = session.run(
                     query,

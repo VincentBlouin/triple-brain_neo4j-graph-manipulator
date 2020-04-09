@@ -10,8 +10,8 @@ import java.net.URI;
 
 public interface VertexFactoryNeo4j extends VertexFactory {
     @Override
-    VertexInSubGraphOperatorNeo4j createForOwner(String username);
+    VertexOperatorNeo4j createForOwner(String username);
 
     @Override
-    VertexInSubGraphOperatorNeo4j withUri(URI uri);
+    VertexOperatorNeo4j withUri(URI uri);
 }

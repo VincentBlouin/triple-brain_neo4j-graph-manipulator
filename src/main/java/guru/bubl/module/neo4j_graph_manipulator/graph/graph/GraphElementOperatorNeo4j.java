@@ -7,19 +7,18 @@ package guru.bubl.module.neo4j_graph_manipulator.graph.graph;
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 import guru.bubl.module.model.Image;
-import guru.bubl.module.model.User;
 import guru.bubl.module.model.UserUris;
 import guru.bubl.module.model.graph.*;
 import guru.bubl.module.model.graph.tag.Tag;
 import guru.bubl.module.model.graph.tag.TagPojo;
-import guru.bubl.module.model.graph.vertex.NbNeighborsPojo;
+import guru.bubl.module.model.graph.fork.NbNeighborsPojo;
 import guru.bubl.module.model.json.ImageJson;
 import guru.bubl.module.neo4j_graph_manipulator.graph.FriendlyResourceFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.FriendlyResourceNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.OperatorNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.RestApiUtilsNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph.VertexFromExtractorQueryRow;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.VertexTypeOperatorNeo4j;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.fork.ForkOperatorNeo4J;
 import guru.bubl.module.neo4j_graph_manipulator.graph.image.ImagesNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.tag.TagFactoryNeo4J;
 import org.neo4j.driver.v1.*;
@@ -44,7 +43,7 @@ public class GraphElementOperatorNeo4j implements GraphElementOperator, Operator
 
     protected TagFactoryNeo4J identificationFactory;
 
-    protected GraphElementOperatorFactory graphElementOperatorFactory;
+    protected GraphElementSpecialOperatorFactory graphElementOperatorFactory;
 
     public static String incrementNbNeighborsQueryPart(ShareLevel shareLevel, String variableName, String prefix) {
         return incrementOrDecrementNbFriendsOrPublicQueryPart(
@@ -81,7 +80,7 @@ public class GraphElementOperatorNeo4j implements GraphElementOperator, Operator
             FriendlyResourceFactoryNeo4j friendlyResourceFactory,
             Driver driver,
             TagFactoryNeo4J identificationFactory,
-            GraphElementOperatorFactory graphElementOperatorFactory,
+            GraphElementSpecialOperatorFactory graphElementOperatorFactory,
             @Assisted URI uri
     ) {
         this.friendlyResource = friendlyResourceFactory.withUri(
@@ -501,9 +500,9 @@ public class GraphElementOperatorNeo4j implements GraphElementOperator, Operator
     @Override
     public Map<String, Object> addCreationProperties(Map<String, Object> map) {
         Map<String, Object> newMap = RestApiUtilsNeo4j.map(
-                VertexTypeOperatorNeo4j.props.nb_private_neighbors.name(), 0,
-                VertexTypeOperatorNeo4j.props.nb_friend_neighbors.name(), 0,
-                VertexTypeOperatorNeo4j.props.nb_public_neighbors.name(), 0,
+                ForkOperatorNeo4J.props.nb_private_neighbors.name(), 0,
+                ForkOperatorNeo4J.props.nb_friend_neighbors.name(), 0,
+                ForkOperatorNeo4J.props.nb_public_neighbors.name(), 0,
                 "nb_visits", 0
         );
         newMap.putAll(
