@@ -451,13 +451,14 @@ public class EdgeOperatorNeo4j implements EdgeOperator, OperatorNeo4j {
     }
 
     @Override
-    public GroupRelationPojo convertToGroupRelation(TagPojo tag, Boolean isNewTag, ShareLevel initialShareLevel) {
+    public GroupRelationPojo convertToGroupRelation(String newGroupRelationId, TagPojo tag, Boolean isNewTag, ShareLevel initialShareLevel) {
         String existingTagQueryPart = isNewTag ? "" : "WITH n, gr " +
                 "MATCH(tag:Resource{uri:$tagUri}), " +
                 "(n)-[t:IDENTIFIED_TO]->(tag) " +
                 "MERGE (gr)-[:IDENTIFIED_TO]->(tag) " +
                 "DELETE t";
-        URI newGroupRelationUri = new UserUris(graphElementOperator.getOwnerUsername()).generateGroupRelationUri();
+        UserUris userUris = new UserUris(graphElementOperator.getOwnerUsername());
+        URI newGroupRelationUri = userUris.groupRelationUriFromShortId(newGroupRelationId);
         GroupRelationOperatorNeo4j groupRelationOperator = groupRelationFactoryNeo4j.withUri(newGroupRelationUri);
         try (Session session = driver.session()) {
             session.run(
@@ -483,10 +484,10 @@ public class EdgeOperatorNeo4j implements EdgeOperator, OperatorNeo4j {
             );
         }
         if (isNewTag) {
-            groupRelationOperator.addTag(
+            tag = groupRelationOperator.addTag(
                     tag,
                     initialShareLevel
-            );
+            ).values().iterator().next();
         }
         return new GroupRelationPojo(
                 newGroupRelationUri,

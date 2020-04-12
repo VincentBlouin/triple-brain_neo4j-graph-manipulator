@@ -7,13 +7,11 @@ package guru.bubl.module.neo4j_graph_manipulator.graph.graph;
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 import guru.bubl.module.model.User;
-import guru.bubl.module.model.graph.edge.EdgeOperator;
 import guru.bubl.module.model.graph.subgraph.SubGraphPojo;
 import guru.bubl.module.model.graph.subgraph.UserGraph;
 import guru.bubl.module.model.graph.vertex.VertexOperator;
 import guru.bubl.module.model.graph.vertex.VertexPojo;
 import guru.bubl.module.neo4j_graph_manipulator.graph.FriendlyResourceNeo4j;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.edge.EdgeFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph.SubGraphExtractorFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.VertexFactoryNeo4j;
 import org.neo4j.driver.v1.Driver;
@@ -28,7 +26,6 @@ public class UserGraphNeo4j implements UserGraph {
     private User user;
     private VertexFactoryNeo4j vertexFactory;
     private SubGraphExtractorFactoryNeo4j subGraphExtractorFactory;
-    private EdgeFactoryNeo4j edgeFactory;
 
     @Inject
     Driver driver;
@@ -36,13 +33,11 @@ public class UserGraphNeo4j implements UserGraph {
     @AssistedInject
     protected UserGraphNeo4j(
             VertexFactoryNeo4j vertexFactory,
-            EdgeFactoryNeo4j edgeFactory,
             SubGraphExtractorFactoryNeo4j subGraphExtractorFactory,
             @Assisted User user
     ) {
         this.user = user;
         this.vertexFactory = vertexFactory;
-        this.edgeFactory = edgeFactory;
         this.subGraphExtractorFactory = subGraphExtractorFactory;
     }
 
@@ -71,20 +66,6 @@ public class UserGraphNeo4j implements UserGraph {
                 depth,
                 shareLevels
         ).load();
-    }
-
-    @Override
-    public VertexOperator vertexWithUri(URI uri) {
-        return vertexFactory.withUri(
-                uri
-        );
-    }
-
-    @Override
-    public EdgeOperator edgeWithUri(URI uri) {
-        return edgeFactory.withUri(
-                uri
-        );
     }
 
     @Override
