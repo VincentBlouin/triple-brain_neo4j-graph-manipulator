@@ -17,7 +17,6 @@ import guru.bubl.module.model.graph.group_relation.GroupRelationPojo;
 import guru.bubl.module.model.graph.tag.Tag;
 import guru.bubl.module.model.graph.tag.TagPojo;
 import guru.bubl.module.model.graph.vertex.VertexPojo;
-import guru.bubl.module.model.graph.vertex.VertexOperator;
 import guru.bubl.module.neo4j_graph_manipulator.graph.FriendlyResourceNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.OperatorNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.Relationships;
@@ -451,12 +450,7 @@ public class EdgeOperatorNeo4j implements EdgeOperator, OperatorNeo4j {
     }
 
     @Override
-    public GroupRelationPojo convertToGroupRelation(String newGroupRelationId, TagPojo tag, Boolean isNewTag, ShareLevel initialShareLevel) {
-        String existingTagQueryPart = isNewTag ? "" : "WITH n, gr " +
-                "MATCH(tag:Resource{uri:$tagUri}), " +
-                "(n)-[t:IDENTIFIED_TO]->(tag) " +
-                "MERGE (gr)-[:IDENTIFIED_TO]->(tag) " +
-                "DELETE t";
+    public GroupRelationPojo convertToGroupRelation(String newGroupRelationId, ShareLevel initialShareLevel, String label) {
         UserUris userUris = new UserUris(graphElementOperator.getOwnerUsername());
         URI newGroupRelationUri = userUris.groupRelationUriFromShortId(newGroupRelationId);
         GroupRelationOperatorNeo4j groupRelationOperator = groupRelationFactoryNeo4j.withUri(newGroupRelationUri);
@@ -470,28 +464,25 @@ public class EdgeOperatorNeo4j implements EdgeOperator, OperatorNeo4j {
                             "MERGE (gr)-[:DESTINATION]->(n) " +
                             "MERGE (n)-[:SOURCE]->(gr) " +
                             "DELETE r " +
-                            existingTagQueryPart,
+                            "WITH n,gr " +
+                            "MATCH (n)-[r:IDENTIFIED_TO]->(t) " +
+                            "MERGE (gr)-[:IDENTIFIED_TO]->(t) " +
+                            "DELETE r",
                     parameters(
                             "uri", uri().toString(),
                             "groupRelation",
                             groupRelationOperator.addCreationProperties(
                                     RestApiUtilsNeo4j.map(
-                                            "shareLevel", initialShareLevel.getIndex()
+                                            "shareLevel", initialShareLevel.getIndex(),
+                                            initialShareLevel.getNbNeighborsPropertyName(), 2,
+                                            "label", label
                                     )
-                            ),
-                            "tagUri", tag.hasUri() ? tag.uri().toString() : null
+                            )
                     )
             );
         }
-        if (isNewTag) {
-            tag = groupRelationOperator.addTag(
-                    tag,
-                    initialShareLevel
-            ).values().iterator().next();
-        }
         return new GroupRelationPojo(
-                newGroupRelationUri,
-                tag
+                newGroupRelationUri
         );
     }
 

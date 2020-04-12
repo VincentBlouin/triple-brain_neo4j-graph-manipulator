@@ -36,17 +36,10 @@ public class GroupRelationFromExtractorQueryRow {
 
     public GroupRelationPojo build() {
         GroupRelationPojo groupRelationPojo = new GroupRelationPojo(
-                new GraphElementPojo(
-                        URI.create(
-                                row.get(
-                                        "n.uri"
-                                ).asString()
-                        )
-                ),
-                TagsFromExtractorQueryRowAsArray.usingRowAndKey(
+                GraphElementFromExtractorQueryRow.usingRowAndKey(
                         row,
-                        TagQueryBuilder.IDENTIFIER_QUERY_KEY
-                ).build().values().iterator().next(),
+                        keyPrefix
+                ).build(),
                 getNbNeighbors(row, keyPrefix),
                 getShareLevel(keyPrefix, row)
         );

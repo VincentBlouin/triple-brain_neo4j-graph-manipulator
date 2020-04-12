@@ -6,13 +6,11 @@ import com.google.inject.assistedinject.AssistedInject;
 import guru.bubl.module.model.Image;
 import guru.bubl.module.model.graph.ShareLevel;
 import guru.bubl.module.model.graph.edge.EdgePojo;
+import guru.bubl.module.model.graph.fork.ForkOperatorFactory;
+import guru.bubl.module.model.graph.fork.NbNeighbors;
 import guru.bubl.module.model.graph.group_relation.GroupRelationOperator;
 import guru.bubl.module.model.graph.tag.Tag;
-import guru.bubl.module.model.graph.tag.TagFactory;
-import guru.bubl.module.model.graph.tag.TagOperator;
 import guru.bubl.module.model.graph.tag.TagPojo;
-import guru.bubl.module.model.graph.fork.NbNeighbors;
-import guru.bubl.module.model.graph.fork.ForkOperatorFactory;
 import guru.bubl.module.neo4j_graph_manipulator.graph.OperatorNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.GraphElementFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.GraphElementOperatorNeo4j;
@@ -29,14 +27,12 @@ import static guru.bubl.module.neo4j_graph_manipulator.graph.RestApiUtilsNeo4j.m
 public class GroupRelationOperatorNeo4j implements GroupRelationOperator, OperatorNeo4j {
 
     protected GraphElementOperatorNeo4j graphElementOperator;
-    protected TagOperator tagOperator;
 
     @Inject
     protected ForkOperatorFactory forkOperatorFactory;
 
     @AssistedInject
     protected GroupRelationOperatorNeo4j(
-            TagFactory tagFactory,
             GraphElementFactoryNeo4j graphElementFactory,
             @Assisted URI uri
     ) {
@@ -45,32 +41,19 @@ public class GroupRelationOperatorNeo4j implements GroupRelationOperator, Operat
         );
     }
 
-    @AssistedInject
-    protected GroupRelationOperatorNeo4j(
-            TagFactory tagFactory,
-            GraphElementFactoryNeo4j graphElementFactory,
-            @Assisted("self") URI uri,
-            @Assisted("tag") URI tagUri
-    ) {
-        this.graphElementOperator = graphElementFactory.withUri(
-                uri
-        );
-        this.tagOperator = tagFactory.withUri(tagUri);
-    }
-
     @Override
     public void comment(String comment) {
-        tagOperator.comment(comment);
+        graphElementOperator.comment(comment);
     }
 
     @Override
     public void label(String label) {
-        tagOperator.label(label);
+        graphElementOperator.label(label);
     }
 
     @Override
     public void addImages(Set<Image> images) {
-        tagOperator.addImages(images);
+        graphElementOperator.addImages(images);
     }
 
     @Override
@@ -90,7 +73,7 @@ public class GroupRelationOperatorNeo4j implements GroupRelationOperator, Operat
 
     @Override
     public void setColors(String colors) {
-        tagOperator.setColors(colors);
+        graphElementOperator.setColors(colors);
     }
 
     @Override
@@ -105,7 +88,7 @@ public class GroupRelationOperatorNeo4j implements GroupRelationOperator, Operat
 
     @Override
     public void setFont(String font) {
-        tagOperator.setFont(font);
+        graphElementOperator.setFont(font);
     }
 
     @Override
@@ -135,7 +118,7 @@ public class GroupRelationOperatorNeo4j implements GroupRelationOperator, Operat
 
     @Override
     public String getFont() {
-        return tagOperator.getFont();
+        return graphElementOperator.getFont();
     }
 
     @Override
@@ -150,7 +133,7 @@ public class GroupRelationOperatorNeo4j implements GroupRelationOperator, Operat
 
     @Override
     public ShareLevel getShareLevel() {
-        return tagOperator.getShareLevel();
+        return graphElementOperator.getShareLevel();
     }
 
     @Override
@@ -160,47 +143,47 @@ public class GroupRelationOperatorNeo4j implements GroupRelationOperator, Operat
 
     @Override
     public boolean hasLabel() {
-        return tagOperator.hasLabel();
+        return graphElementOperator.hasLabel();
     }
 
     @Override
     public String label() {
-        return tagOperator.label();
+        return graphElementOperator.label();
     }
 
     @Override
     public Set<Image> images() {
-        return tagOperator.images();
+        return graphElementOperator.images();
     }
 
     @Override
     public Boolean gotImages() {
-        return tagOperator.gotImages();
+        return graphElementOperator.gotImages();
     }
 
     @Override
     public String comment() {
-        return tagOperator.comment();
+        return graphElementOperator.comment();
     }
 
     @Override
     public Boolean gotComments() {
-        return tagOperator.gotComments();
+        return graphElementOperator.gotComments();
     }
 
     @Override
     public Date creationDate() {
-        return tagOperator.creationDate();
+        return graphElementOperator.creationDate();
     }
 
     @Override
     public Date lastModificationDate() {
-        return tagOperator.lastModificationDate();
+        return graphElementOperator.lastModificationDate();
     }
 
     @Override
     public String getColors() {
-        return tagOperator.getColors();
+        return graphElementOperator.getColors();
     }
 
     @Override

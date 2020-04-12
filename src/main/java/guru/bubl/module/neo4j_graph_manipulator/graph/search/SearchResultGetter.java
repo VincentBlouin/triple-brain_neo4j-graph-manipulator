@@ -55,6 +55,8 @@ public class SearchResultGetter<ResultType extends GraphElementSearchResult> {
                 return new RelationSearchResultBuilder(record, nodePrefix);
             case Meta:
                 return new MetaSearchResultBuilder(record, nodePrefix, inShareLevels);
+            case GroupRelation:
+                return new GroupRelationSearchResultBuilder(record, nodePrefix, inShareLevels);
             default:
                 return null;
         }
