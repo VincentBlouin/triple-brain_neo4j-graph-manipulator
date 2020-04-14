@@ -150,10 +150,8 @@ public class SubGraphExtractorNeo4j {
                             uri
                     );
                 } else {
-                    edge.setDestinationVertex(
-                            new VertexPojo(
-                                    uri
-                            )
+                    edge.setDestination(
+                            uri
                     );
                 }
             }
@@ -162,13 +160,13 @@ public class SubGraphExtractorNeo4j {
                 EdgePojo edge = it.next();
                 GraphElement source = edge.getSource();
                 Boolean hasSource = source != null && subGraph.containsGraphElement(
-                        edge
+                        source
                 );
-                GraphElement destination = edge.destinationFork();
-                Boolean hasDestinationVertex = destination != null && subGraph.vertices().containsKey(
-                        destination.uri()
+                GraphElement destination = edge.getDestination();
+                Boolean hasDestination = destination != null && subGraph.containsGraphElement(
+                        destination
                 );
-                if (!hasSource || !hasDestinationVertex) {
+                if (!hasSource || !hasDestination) {
                     it.remove();
                 }
             }
