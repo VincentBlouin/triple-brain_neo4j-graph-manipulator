@@ -2,24 +2,23 @@
  * Copyright Vincent Blouin under the GPL License version 3
  */
 
-package guru.bubl.module.neo4j_graph_manipulator.graph.graph.edge;
+package guru.bubl.module.neo4j_graph_manipulator.graph.graph.relation;
 
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 import guru.bubl.module.model.Image;
 import guru.bubl.module.model.UserUris;
 import guru.bubl.module.model.graph.GraphElement;
-import guru.bubl.module.model.graph.GraphElementOperator;
 import guru.bubl.module.model.graph.ShareLevel;
+import guru.bubl.module.model.graph.edge.EdgeOperatorFactory;
+import guru.bubl.module.model.graph.group_relation.GroupRelationPojo;
 import guru.bubl.module.model.graph.relation.RelationOperator;
 import guru.bubl.module.model.graph.relation.RelationPojo;
-import guru.bubl.module.model.graph.group_relation.GroupRelationPojo;
 import guru.bubl.module.model.graph.tag.Tag;
 import guru.bubl.module.model.graph.tag.TagPojo;
 import guru.bubl.module.model.graph.vertex.VertexPojo;
 import guru.bubl.module.neo4j_graph_manipulator.graph.FriendlyResourceNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.OperatorNeo4j;
-import guru.bubl.module.neo4j_graph_manipulator.graph.Relationships;
 import guru.bubl.module.neo4j_graph_manipulator.graph.RestApiUtilsNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.GraphElementFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.GraphElementOperatorNeo4j;
@@ -29,7 +28,6 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.graph.group_relation.Group
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.VertexFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.VertexOperatorNeo4j;
 import org.neo4j.driver.v1.Driver;
-import org.neo4j.driver.v1.Record;
 import org.neo4j.driver.v1.Session;
 
 import javax.inject.Inject;
@@ -39,15 +37,16 @@ import java.util.Map;
 import java.util.Set;
 
 import static guru.bubl.module.neo4j_graph_manipulator.graph.RestApiUtilsNeo4j.map;
-import static guru.bubl.module.neo4j_graph_manipulator.graph.graph.GraphElementOperatorNeo4j.decrementNbNeighborsQueryPart;
-import static guru.bubl.module.neo4j_graph_manipulator.graph.graph.GraphElementOperatorNeo4j.incrementNbNeighborsQueryPart;
 import static org.neo4j.driver.v1.Values.parameters;
 
 public class RelationOperatorNeo4J implements RelationOperator, OperatorNeo4j {
 
+    @Inject
+    private EdgeOperatorFactory edgeOperatorFactory;
+
     protected GraphElementOperatorNeo4j graphElementOperator;
     protected VertexFactoryNeo4j vertexFactory;
-    protected EdgeFactoryNeo4j edgeFactory;
+    protected RelationFactoryNeo4j edgeFactory;
 
     protected URI sourceUri;
     protected URI destinationUri;
@@ -63,13 +62,10 @@ public class RelationOperatorNeo4J implements RelationOperator, OperatorNeo4j {
     @Inject
     protected GroupRelationFactoryNeo4j groupRelationFactoryNeo4j;
 
-    @Inject
-    protected GraphElementSpecialOperatorFactory graphElementSpecialOperatorFactory;
-
     @AssistedInject
     protected RelationOperatorNeo4J(
             VertexFactoryNeo4j vertexFactory,
-            EdgeFactoryNeo4j edgeFactory,
+            RelationFactoryNeo4j edgeFactory,
             GraphElementFactoryNeo4j graphElementFactory,
             @Assisted URI uri
     ) {
@@ -83,7 +79,7 @@ public class RelationOperatorNeo4J implements RelationOperator, OperatorNeo4j {
     @AssistedInject
     protected RelationOperatorNeo4J(
             VertexFactoryNeo4j vertexFactory,
-            EdgeFactoryNeo4j edgeFactory,
+            RelationFactoryNeo4j edgeFactory,
             GraphElementFactoryNeo4j graphElementFactory,
             @Assisted("source") URI sourceUri,
             @Assisted("destination") URI destinationUri
@@ -104,7 +100,7 @@ public class RelationOperatorNeo4J implements RelationOperator, OperatorNeo4j {
     @AssistedInject
     protected RelationOperatorNeo4J(
             VertexFactoryNeo4j vertexFactory,
-            EdgeFactoryNeo4j edgeFactory,
+            RelationFactoryNeo4j edgeFactory,
             GraphElementFactoryNeo4j graphElementFactory,
             @Assisted URI uri,
             @Assisted("source") URI sourceUri,
@@ -121,146 +117,22 @@ public class RelationOperatorNeo4J implements RelationOperator, OperatorNeo4j {
 
     @Override
     public URI sourceUri() {
-        try (Session session = driver.session()) {
-            Record record = session.run(
-                    queryPrefix() +
-                            "MATCH (n)-[:SOURCE]->(v) " +
-                            "RETURN v.uri as uri",
-                    parameters(
-                            "uri",
-                            uri().toString()
-                    )
-            ).single();
-            return URI.create(record.get("uri").asString());
-        }
+        return edgeOperatorFactory.withUri(uri()).sourceUri();
     }
 
     @Override
     public URI destinationUri() {
-        try (Session session = driver.session()) {
-            Record record = session.run(
-                    queryPrefix() +
-                            "MATCH (n)-[:DESTINATION]->(v) " +
-                            "RETURN v.uri as uri",
-                    parameters(
-                            "uri",
-                            uri().toString()
-                    )
-            ).single();
-            return URI.create(record.get("uri").asString());
-        }
+        return edgeOperatorFactory.withUri(uri()).destinationUri();
     }
 
     @Override
-    public GraphElement sourceFork() {
-        return graphElementSpecialOperatorFactory.getFromUri(sourceUri());
+    public GraphElement source() {
+        return edgeOperatorFactory.withUri(uri()).source();
     }
 
     @Override
-    public GraphElement destinationFork() {
-        return graphElementSpecialOperatorFactory.getFromUri(destinationUri());
-    }
-
-    @Override
-    public void changeSource(
-            URI newSourceUri,
-            ShareLevel oldEndShareLevel,
-            ShareLevel keptEndShareLevel,
-            ShareLevel newEndShareLevel
-    ) {
-        changeEndVertex(
-                newSourceUri,
-                Relationships.SOURCE,
-                oldEndShareLevel,
-                keptEndShareLevel,
-                newEndShareLevel
-        );
-    }
-
-    @Override
-    public void changeDestination(
-            URI newDestinationUri,
-            ShareLevel oldEndShareLevel,
-            ShareLevel keptEndShareLevel,
-            ShareLevel newEndShareLevel
-    ) {
-        changeEndVertex(
-                newDestinationUri,
-                Relationships.DESTINATION,
-                oldEndShareLevel,
-                keptEndShareLevel,
-                newEndShareLevel
-        );
-    }
-
-    private void changeEndVertex(
-            URI newEndUri,
-            Relationships relationshipToChange,
-            ShareLevel oldEndShareLevel,
-            ShareLevel keptEndShareLevel,
-            ShareLevel newEndShareLevel
-    ) {
-        Relationships relationshipToKeep = Relationships.SOURCE == relationshipToChange ?
-                Relationships.DESTINATION : Relationships.SOURCE;
-        GraphElementOperator sourceVertex = graphElementSpecialOperatorFactory.getFromUri(sourceUri());
-        GraphElementOperator destinationVertex = graphElementSpecialOperatorFactory.getFromUri(destinationUri());
-        String decrementPreviousVertexQueryPart = decrementNbNeighborsQueryPart(
-                keptEndShareLevel,
-                "prev_v",
-                "SET "
-        );
-        String incrementKeptVertexQueryPart = "";
-        String decrementKeptVertexQueryPart = "";
-        if (oldEndShareLevel.isSame(keptEndShareLevel)) {
-            if (!newEndShareLevel.isSame(keptEndShareLevel)) {
-                incrementKeptVertexQueryPart = incrementNbNeighborsQueryPart(
-                        newEndShareLevel,
-                        "kept_v",
-                        ", "
-                );
-            }
-        } else {
-            decrementKeptVertexQueryPart = decrementNbNeighborsQueryPart(
-                    oldEndShareLevel,
-                    "kept_v",
-                    ", "
-            );
-        }
-
-        String incrementNewEndVertexQueryPart = incrementNbNeighborsQueryPart(
-                keptEndShareLevel,
-                "new_v",
-                ", "
-        );
-        String query = String.format(
-                "%s, (new_v:Resource{uri:$endVertexUri}), " +
-                        "(n)-[prev_rel:%s]->(prev_v), " +
-                        "(n)-[:%s]->(kept_v) " +
-                        "MERGE (n)-[:%s]->(new_v) " +
-                        "DELETE prev_rel " +
-                        decrementPreviousVertexQueryPart +
-                        decrementKeptVertexQueryPart +
-                        incrementKeptVertexQueryPart +
-                        incrementNewEndVertexQueryPart + ",%s",
-                queryPrefix(),
-                relationshipToChange,
-                relationshipToKeep,
-                relationshipToChange,
-                FriendlyResourceNeo4j.LAST_MODIFICATION_QUERY_PART
-        );
-        try (Session session = driver.session()) {
-            session.run(
-                    query,
-                    parameters(
-                            "uri",
-                            this.uri().toString(),
-                            "endVertexUri",
-                            newEndUri.toString(),
-                            "last_modification_date",
-                            new Date().getTime()
-                    )
-            );
-        }
+    public GraphElement destination() {
+        return edgeOperatorFactory.withUri(uri()).destination();
     }
 
     @Override
@@ -565,5 +437,25 @@ public class RelationOperatorNeo4J implements RelationOperator, OperatorNeo4j {
                 newMap
         );
         return newMap;
+    }
+
+    @Override
+    public void changeSource(URI newSourceUri, ShareLevel oldEndShareLevel, ShareLevel keptEndShareLevel, ShareLevel newEndShareLevel) {
+        edgeOperatorFactory.withUri(uri()).changeSource(
+                newSourceUri,
+                oldEndShareLevel,
+                keptEndShareLevel,
+                newEndShareLevel
+        );
+    }
+
+    @Override
+    public void changeDestination(URI newDestinationUri, ShareLevel oldEndShareLevel, ShareLevel keptEndShareLevel, ShareLevel newEndShareLevel) {
+        edgeOperatorFactory.withUri(uri()).changeDestination(
+                newDestinationUri,
+                oldEndShareLevel,
+                keptEndShareLevel,
+                newEndShareLevel
+        );
     }
 }

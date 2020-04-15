@@ -14,8 +14,8 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.FriendlyResourceFactoryNeo
 import guru.bubl.module.neo4j_graph_manipulator.graph.FriendlyResourceNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.OperatorNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.GraphElementFactoryNeo4j;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.edge.EdgeFactoryNeo4j;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.edge.RelationOperatorNeo4J;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.relation.RelationFactoryNeo4j;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.relation.RelationOperatorNeo4J;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.VertexFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.VertexOperatorNeo4j;
 import org.neo4j.driver.v1.*;
@@ -49,7 +49,7 @@ public class ForkOperatorNeo4J implements ForkOperator, OperatorNeo4j {
     protected VertexFactoryNeo4j vertexFactory;
 
     @Inject
-    protected EdgeFactoryNeo4j edgeFactory;
+    protected RelationFactoryNeo4j edgeFactory;
 
 
     @AssistedInject

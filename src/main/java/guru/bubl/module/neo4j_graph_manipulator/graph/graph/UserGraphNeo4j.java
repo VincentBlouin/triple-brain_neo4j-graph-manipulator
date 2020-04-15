@@ -52,7 +52,7 @@ public class UserGraphNeo4j implements UserGraph {
     }
 
     @Override
-    public SubGraphPojo aroundVertexUriInShareLevels(URI centerVertexUri, Integer... shareLevels) {
+    public SubGraphPojo aroundForkUriInShareLevels(URI centerVertexUri, Integer... shareLevels) {
         return subGraphExtractorFactory.withCenterVertexInShareLevels(
                 centerVertexUri,
                 shareLevels
@@ -60,7 +60,7 @@ public class UserGraphNeo4j implements UserGraph {
     }
 
     @Override
-    public SubGraphPojo aroundVertexUriWithDepthInShareLevels(URI centerVertexUri, Integer depth, Integer... shareLevels) {
+    public SubGraphPojo aroundForkUriWithDepthInShareLevels(URI centerVertexUri, Integer depth, Integer... shareLevels) {
         return subGraphExtractorFactory.withCenterVertexInShareLevelsAndDepth(
                 centerVertexUri,
                 depth,

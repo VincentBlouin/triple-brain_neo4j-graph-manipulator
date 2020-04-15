@@ -12,7 +12,7 @@ import guru.bubl.module.model.graph.relation.RelationOperator;
 import guru.bubl.module.model.graph.tag.TagFactory;
 import guru.bubl.module.model.graph.tag.TagOperator;
 import guru.bubl.module.model.graph.vertex.VertexOperator;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.edge.EdgeFactoryNeo4j;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.relation.RelationFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.VertexFactoryNeo4j;
 import org.neo4j.driver.v1.Driver;
 import org.neo4j.driver.v1.Record;
@@ -35,7 +35,7 @@ public class WholeGraphNeo4j implements WholeGraph {
     protected VertexFactoryNeo4j neo4jVertexFactory;
 
     @Inject
-    protected EdgeFactoryNeo4j neo4jEdgeFactory;
+    protected RelationFactoryNeo4j neo4jEdgeFactory;
 
     @Inject
     protected GraphElementOperatorFactory graphElementFactory;

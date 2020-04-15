@@ -25,6 +25,8 @@ import guru.bubl.module.model.graph.FriendlyResourceOperator;
 import guru.bubl.module.model.graph.GraphElementOperator;
 import guru.bubl.module.model.graph.GraphElementOperatorFactory;
 import guru.bubl.module.model.graph.GraphFactory;
+import guru.bubl.module.model.graph.edge.EdgeOperator;
+import guru.bubl.module.model.graph.edge.EdgeOperatorFactory;
 import guru.bubl.module.model.graph.relation.RelationFactory;
 import guru.bubl.module.model.graph.relation.RelationOperator;
 import guru.bubl.module.model.graph.fork.NbNeighbors;
@@ -44,8 +46,9 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.admin.WholeGraphAdminNeo4j
 import guru.bubl.module.neo4j_graph_manipulator.graph.center_graph_element.CenterGraphElementOperatorNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.center_graph_element.CenterGraphElementsOperatorNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.*;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.edge.EdgeFactoryNeo4j;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.edge.RelationOperatorNeo4J;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.EdgeOperatorNeo4j;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.relation.RelationFactoryNeo4j;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.relation.RelationOperatorNeo4J;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph.SubGraphExtractorFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.fork.NbNeighborsOperatorNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.group_relation.GroupRelationFactoryNeo4j;
@@ -140,7 +143,7 @@ public class Neo4jModule extends AbstractModule {
                 .build(PatternUserFactory.class));
 
         install(factoryModuleBuilder
-                .build(EdgeFactoryNeo4j.class));
+                .build(RelationFactoryNeo4j.class));
 
         install(factoryModuleBuilder
                 .build(UserGraphFactoryNeo4j.class));
@@ -172,6 +175,11 @@ public class Neo4jModule extends AbstractModule {
         install(factoryModuleBuilder
                 .implement(NbNeighbors.class, NbNeighborsOperatorNeo4j.class)
                 .build(NbNeighborsOperatorFactory.class)
+        );
+
+        install(factoryModuleBuilder
+                .implement(EdgeOperator.class, EdgeOperatorNeo4j.class)
+                .build(EdgeOperatorFactory.class)
         );
 
         install(factoryModuleBuilder

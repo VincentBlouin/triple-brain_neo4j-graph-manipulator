@@ -4,7 +4,9 @@ import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 import guru.bubl.module.model.Image;
+import guru.bubl.module.model.graph.GraphElement;
 import guru.bubl.module.model.graph.ShareLevel;
+import guru.bubl.module.model.graph.edge.EdgeOperatorFactory;
 import guru.bubl.module.model.graph.relation.RelationPojo;
 import guru.bubl.module.model.graph.fork.ForkOperatorFactory;
 import guru.bubl.module.model.graph.fork.NbNeighbors;
@@ -30,6 +32,9 @@ public class GroupRelationOperatorNeo4j implements GroupRelationOperator, Operat
 
     @Inject
     protected ForkOperatorFactory forkOperatorFactory;
+
+    @Inject
+    protected EdgeOperatorFactory edgeOperatorFactory;
 
     @AssistedInject
     protected GroupRelationOperatorNeo4j(
@@ -227,5 +232,45 @@ public class GroupRelationOperatorNeo4j implements GroupRelationOperator, Operat
                 vertexId,
                 edgeId
         );
+    }
+
+    @Override
+    public void changeSource(URI newSourceUri, ShareLevel oldEndShareLevel, ShareLevel keptEndShareLevel, ShareLevel newEndShareLevel) {
+        edgeOperatorFactory.withUri(uri()).changeSource(
+                newSourceUri,
+                oldEndShareLevel,
+                keptEndShareLevel,
+                newEndShareLevel
+        );
+    }
+
+    @Override
+    public void changeDestination(URI newDestinationUri, ShareLevel oldEndShareLevel, ShareLevel keptEndShareLevel, ShareLevel newEndShareLevel) {
+        edgeOperatorFactory.withUri(uri()).changeDestination(
+                newDestinationUri,
+                oldEndShareLevel,
+                keptEndShareLevel,
+                newEndShareLevel
+        );
+    }
+
+    @Override
+    public URI sourceUri() {
+        return edgeOperatorFactory.withUri(uri()).sourceUri();
+    }
+
+    @Override
+    public URI destinationUri() {
+        return edgeOperatorFactory.withUri(uri()).destinationUri();
+    }
+
+    @Override
+    public GraphElement source() {
+        return edgeOperatorFactory.withUri(uri()).source();
+    }
+
+    @Override
+    public GraphElement destination() {
+        return edgeOperatorFactory.withUri(uri()).destination();
     }
 }
