@@ -4,7 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 import guru.bubl.module.model.UserUris;
-import guru.bubl.module.model.graph.edge.EdgePojo;
+import guru.bubl.module.model.graph.relation.RelationPojo;
 import guru.bubl.module.model.graph.fork.NbNeighbors;
 import guru.bubl.module.model.graph.ShareLevel;
 import guru.bubl.module.model.graph.fork.NbNeighborsOperatorFactory;
@@ -15,7 +15,7 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.FriendlyResourceNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.OperatorNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.GraphElementFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.edge.EdgeFactoryNeo4j;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.edge.EdgeOperatorNeo4j;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.edge.RelationOperatorNeo4J;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.VertexFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.VertexOperatorNeo4j;
 import org.neo4j.driver.v1.*;
@@ -102,7 +102,7 @@ public class ForkOperatorNeo4J implements ForkOperator, OperatorNeo4j {
     }
 
     @Override
-    public EdgePojo addVertexAndRelation() {
+    public RelationPojo addVertexAndRelation() {
         return this.addVertexAndRelationIsUnderPatternOrNot(
                 new UserUris(
                         graphElementFactoryNeo4j.withUri(uri).getOwnerUsername()
@@ -113,7 +113,7 @@ public class ForkOperatorNeo4J implements ForkOperator, OperatorNeo4j {
     }
 
     @Override
-    public EdgePojo addVertexAndRelationWithIds(String vertexId, String edgeId) {
+    public RelationPojo addVertexAndRelationWithIds(String vertexId, String edgeId) {
         return this.addVertexAndRelationWithIdsUnderPatternOrNot(
                 vertexId,
                 edgeId,
@@ -131,7 +131,7 @@ public class ForkOperatorNeo4J implements ForkOperator, OperatorNeo4j {
         return uri;
     }
 
-    private EdgePojo addVertexAndRelationWithIdsUnderPatternOrNot(String vertexId, String edgeId, Boolean isUnderPattern) {
+    private RelationPojo addVertexAndRelationWithIdsUnderPatternOrNot(String vertexId, String edgeId, Boolean isUnderPattern) {
         UserUris userUri = new UserUris(
                 UserUris.ownerUserNameFromUri(uri())
         );
@@ -150,7 +150,7 @@ public class ForkOperatorNeo4J implements ForkOperator, OperatorNeo4j {
         );
     }
 
-    private EdgePojo addVertexAndRelationIsUnderPatternOrNot(URI newVertexUri, URI newEdgeUri, Boolean isUnderPattern) {
+    private RelationPojo addVertexAndRelationIsUnderPatternOrNot(URI newVertexUri, URI newEdgeUri, Boolean isUnderPattern) {
         VertexOperatorNeo4j newVertexOperator = vertexFactory.withUri(
                 newVertexUri
         );
@@ -173,7 +173,7 @@ public class ForkOperatorNeo4J implements ForkOperator, OperatorNeo4j {
         VertexPojo newVertex = newVertexOperator.createVertexUsingInitialValues(
                 properties
         );
-        EdgeOperatorNeo4j edgeOperator = newEdgeUri == null ? edgeFactory.withSourceAndDestinationUri(
+        RelationOperatorNeo4J edgeOperator = newEdgeUri == null ? edgeFactory.withSourceAndDestinationUri(
                 uri(),
                 newVertexOperator.uri()
         ) : edgeFactory.withUriAndSourceAndDestinationVertex(
@@ -181,7 +181,7 @@ public class ForkOperatorNeo4J implements ForkOperator, OperatorNeo4j {
                 uri(),
                 newVertexOperator.uri()
         );
-        EdgePojo newEdge = isUnderPattern ?
+        RelationPojo newEdge = isUnderPattern ?
                 edgeOperator.createEdgeWithAdditionalProperties(
                         map("isUnderPattern", true)
                 ) :

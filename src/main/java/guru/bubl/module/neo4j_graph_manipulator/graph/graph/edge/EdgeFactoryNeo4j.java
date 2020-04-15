@@ -5,21 +5,20 @@
 package guru.bubl.module.neo4j_graph_manipulator.graph.graph.edge;
 
 import com.google.inject.assistedinject.Assisted;
-import guru.bubl.module.model.graph.vertex.Vertex;
 
 import java.net.URI;
 
 public interface EdgeFactoryNeo4j {
-    EdgeOperatorNeo4j withSourceAndDestinationUri(
+    RelationOperatorNeo4J withSourceAndDestinationUri(
             @Assisted("source") URI sourceUri,
             @Assisted("destination") URI destinationUri
     );
-    EdgeOperatorNeo4j withUriAndSourceAndDestinationVertex(
+    RelationOperatorNeo4J withUriAndSourceAndDestinationVertex(
             URI uri,
             @Assisted("source") URI sourceUri,
             @Assisted("destination") URI destinationUri
     );
-    EdgeOperatorNeo4j withUri(
+    RelationOperatorNeo4J withUri(
             URI uri
     );
 }

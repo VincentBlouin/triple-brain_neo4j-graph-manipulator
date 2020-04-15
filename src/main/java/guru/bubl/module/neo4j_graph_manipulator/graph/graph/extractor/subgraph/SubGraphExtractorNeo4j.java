@@ -10,8 +10,8 @@ import guru.bubl.module.model.UserUris;
 import guru.bubl.module.model.graph.GraphElement;
 import guru.bubl.module.model.graph.GraphElementType;
 import guru.bubl.module.model.graph.ShareLevel;
-import guru.bubl.module.model.graph.edge.Edge;
-import guru.bubl.module.model.graph.edge.EdgePojo;
+import guru.bubl.module.model.graph.relation.Relation;
+import guru.bubl.module.model.graph.relation.RelationPojo;
 import guru.bubl.module.model.graph.group_relation.GroupRelation;
 import guru.bubl.module.model.graph.group_relation.GroupRelationPojo;
 import guru.bubl.module.model.graph.subgraph.SubGraphPojo;
@@ -105,12 +105,12 @@ public class SubGraphExtractorNeo4j {
                         );
                         break;
                     case Edge:
-                        Edge edge = addEdgeUsingRow(
+                        Relation relation = addEdgeUsingRow(
                                 record
                         );
                         idsUri.put(
                                 record.get("nId").asLong(),
-                                edge.uri()
+                                relation.uri()
                         );
                         break;
                     case GroupRelation:
@@ -140,7 +140,7 @@ public class SubGraphExtractorNeo4j {
                 }
             }
             for (InternalRelationship relation : relationships) {
-                EdgePojo edge = subGraph.edgeWithIdentifier(
+                RelationPojo edge = subGraph.edgeWithIdentifier(
                         idsUri.get(relation.startNodeId())
                 );
                 URI uri = idsUri.get(relation.endNodeId());
@@ -155,9 +155,9 @@ public class SubGraphExtractorNeo4j {
                     );
                 }
             }
-            Iterator<EdgePojo> it = subGraph.edges().values().iterator();
+            Iterator<RelationPojo> it = subGraph.edges().values().iterator();
             while (it.hasNext()) {
-                EdgePojo edge = it.next();
+                RelationPojo edge = it.next();
                 GraphElement source = edge.getSource();
                 Boolean hasSource = source != null && subGraph.containsGraphElement(
                         source
@@ -263,8 +263,8 @@ public class SubGraphExtractorNeo4j {
                 );
     }
 
-    private Edge addEdgeUsingRow(Record row) {
-        EdgePojo edge = (EdgePojo) EdgeFromExtractorQueryRow.usingRow(
+    private Relation addEdgeUsingRow(Record row) {
+        RelationPojo edge = (RelationPojo) RelationFromExtractorQueryRow.usingRow(
                 row
         ).build();
         subGraph.addEdge(edge);

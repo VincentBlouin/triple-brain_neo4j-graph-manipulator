@@ -11,9 +11,9 @@ import guru.bubl.module.model.Image;
 import guru.bubl.module.model.User;
 import guru.bubl.module.model.UserUris;
 import guru.bubl.module.model.graph.ShareLevel;
-import guru.bubl.module.model.graph.edge.Edge;
-import guru.bubl.module.model.graph.edge.EdgeOperator;
-import guru.bubl.module.model.graph.edge.EdgePojo;
+import guru.bubl.module.model.graph.relation.Relation;
+import guru.bubl.module.model.graph.relation.RelationOperator;
+import guru.bubl.module.model.graph.relation.RelationPojo;
 import guru.bubl.module.model.graph.fork.ForkOperatorFactory;
 import guru.bubl.module.model.graph.fork.NbNeighbors;
 import guru.bubl.module.model.graph.tag.Tag;
@@ -104,9 +104,9 @@ public class VertexOperatorNeo4j implements VertexOperator, OperatorNeo4j {
     }
 
     @Override
-    public boolean hasEdge(Edge edge) {
+    public boolean hasEdge(Relation relation) {
         FriendlyResourceNeo4j edgeFriendlyResource = friendlyResourceFactory.withUri(
-                edge.uri()
+                relation.uri()
         );
         try (Session session = driver.session()) {
             StatementResult rs = session.run(
@@ -125,7 +125,7 @@ public class VertexOperatorNeo4j implements VertexOperator, OperatorNeo4j {
     }
 
     @Override
-    public EdgeOperator getEdgeToDestinationVertex(Vertex destinationVertex) {
+    public RelationOperator getEdgeToDestinationVertex(Vertex destinationVertex) {
         FriendlyResourceNeo4j destinationVertexOperator = friendlyResourceFactory.withUri(
                 destinationVertex.uri()
         );
@@ -184,21 +184,21 @@ public class VertexOperatorNeo4j implements VertexOperator, OperatorNeo4j {
     }
 
     @Override
-    public EdgePojo addVertexAndRelation() {
+    public RelationPojo addVertexAndRelation() {
         return forkOperatorFactory.withUri(uri()).addVertexAndRelation();
     }
 
     @Override
-    public EdgePojo addVertexAndRelationWithIds(String vertexId, String edgeId) {
+    public RelationPojo addVertexAndRelationWithIds(String vertexId, String edgeId) {
         return forkOperatorFactory.withUri(uri()).addVertexAndRelationWithIds(vertexId, edgeId);
     }
 
     @Override
-    public EdgeOperator addRelationToVertex(final VertexOperator destinationVertex) {
+    public RelationOperator addRelationToVertex(final VertexOperator destinationVertex) {
         if (this.isPatternOrUnderPattern() || destinationVertex.isPatternOrUnderPattern()) {
             return null;
         }
-        EdgeOperator edge = edgeFactory.withSourceAndDestinationUri(
+        RelationOperator edge = edgeFactory.withSourceAndDestinationUri(
                 uri(),
                 destinationVertex.uri()
         );
@@ -246,8 +246,8 @@ public class VertexOperatorNeo4j implements VertexOperator, OperatorNeo4j {
     }
 
     @Override
-    public Map<URI, EdgeOperator> connectedEdges() {
-        Map<URI, EdgeOperator> edges = new HashMap<>();
+    public Map<URI, RelationOperator> connectedEdges() {
+        Map<URI, RelationOperator> edges = new HashMap<>();
         try (Session session = driver.session()) {
             StatementResult rs = session.run(
                     queryPrefix() +

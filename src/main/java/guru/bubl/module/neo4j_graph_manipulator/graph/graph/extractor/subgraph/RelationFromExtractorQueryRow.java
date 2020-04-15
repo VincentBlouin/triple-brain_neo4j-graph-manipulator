@@ -4,40 +4,40 @@
 
 package guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph;
 
-import guru.bubl.module.model.graph.edge.Edge;
-import guru.bubl.module.model.graph.edge.EdgePojo;
+import guru.bubl.module.model.graph.relation.Relation;
+import guru.bubl.module.model.graph.relation.RelationPojo;
 import org.neo4j.driver.v1.Record;
 
-public class EdgeFromExtractorQueryRow {
+public class RelationFromExtractorQueryRow {
 
     private Record row;
     private String key;
 
 
-    public static EdgeFromExtractorQueryRow usingRow(Record row) {
-        return new EdgeFromExtractorQueryRow(
+    public static RelationFromExtractorQueryRow usingRow(Record row) {
+        return new RelationFromExtractorQueryRow(
                 row
         );
     }
 
-    protected EdgeFromExtractorQueryRow(Record row) {
+    protected RelationFromExtractorQueryRow(Record row) {
         this(
                 row,
                 SubGraphExtractorNeo4j.GRAPH_ELEMENT_QUERY_KEY
         );
     }
 
-    protected EdgeFromExtractorQueryRow(Record row, String key) {
+    protected RelationFromExtractorQueryRow(Record row, String key) {
         this.row = row;
         this.key = key;
     }
 
-    public Edge build() {
+    public Relation build() {
         return init();
     }
 
-    private EdgePojo init() {
-        EdgePojo edge = new EdgePojo(
+    private RelationPojo init() {
+        RelationPojo edge = new RelationPojo(
                 GraphElementFromExtractorQueryRow.usingRowAndKey(
                         row, key
                 ).build()

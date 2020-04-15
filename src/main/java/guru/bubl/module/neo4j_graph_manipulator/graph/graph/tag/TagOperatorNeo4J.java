@@ -10,7 +10,7 @@ import guru.bubl.module.model.Image;
 import guru.bubl.module.model.graph.FriendlyResourcePojo;
 import guru.bubl.module.model.graph.GraphElementPojo;
 import guru.bubl.module.model.graph.ShareLevel;
-import guru.bubl.module.model.graph.edge.EdgePojo;
+import guru.bubl.module.model.graph.relation.RelationPojo;
 import guru.bubl.module.model.graph.tag.TagFactory;
 import guru.bubl.module.model.graph.tag.TagOperator;
 import guru.bubl.module.model.graph.tag.Tag;
@@ -188,12 +188,12 @@ public class TagOperatorNeo4J implements TagOperator, OperatorNeo4j {
     }
 
     @Override
-    public EdgePojo addVertexAndRelation() {
+    public RelationPojo addVertexAndRelation() {
         return null;
     }
 
     @Override
-    public EdgePojo addVertexAndRelationWithIds(String vertexId, String edgeId) {
+    public RelationPojo addVertexAndRelationWithIds(String vertexId, String edgeId) {
         return null;
     }
 

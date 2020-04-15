@@ -25,8 +25,8 @@ import guru.bubl.module.model.graph.FriendlyResourceOperator;
 import guru.bubl.module.model.graph.GraphElementOperator;
 import guru.bubl.module.model.graph.GraphElementOperatorFactory;
 import guru.bubl.module.model.graph.GraphFactory;
-import guru.bubl.module.model.graph.edge.EdgeFactory;
-import guru.bubl.module.model.graph.edge.EdgeOperator;
+import guru.bubl.module.model.graph.relation.RelationFactory;
+import guru.bubl.module.model.graph.relation.RelationOperator;
 import guru.bubl.module.model.graph.fork.NbNeighbors;
 import guru.bubl.module.model.graph.fork.NbNeighborsOperatorFactory;
 import guru.bubl.module.model.graph.group_relation.GroupRelationFactory;
@@ -45,7 +45,7 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.center_graph_element.Cente
 import guru.bubl.module.neo4j_graph_manipulator.graph.center_graph_element.CenterGraphElementsOperatorNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.*;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.edge.EdgeFactoryNeo4j;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.edge.EdgeOperatorNeo4j;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.edge.RelationOperatorNeo4J;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph.SubGraphExtractorFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.fork.NbNeighborsOperatorNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.group_relation.GroupRelationFactoryNeo4j;
@@ -156,8 +156,8 @@ public class Neo4jModule extends AbstractModule {
                 .build(SubGraphExtractorFactoryNeo4j.class));
 
         install(factoryModuleBuilder
-                .implement(EdgeOperator.class, EdgeOperatorNeo4j.class)
-                .build(EdgeFactory.class));
+                .implement(RelationOperator.class, RelationOperatorNeo4J.class)
+                .build(RelationFactory.class));
 
         install(factoryModuleBuilder
                 .implement(GraphElementOperator.class, GraphElementOperatorNeo4j.class)

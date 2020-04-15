@@ -11,8 +11,8 @@ import guru.bubl.module.model.UserUris;
 import guru.bubl.module.model.graph.GraphElement;
 import guru.bubl.module.model.graph.GraphElementOperator;
 import guru.bubl.module.model.graph.ShareLevel;
-import guru.bubl.module.model.graph.edge.EdgeOperator;
-import guru.bubl.module.model.graph.edge.EdgePojo;
+import guru.bubl.module.model.graph.relation.RelationOperator;
+import guru.bubl.module.model.graph.relation.RelationPojo;
 import guru.bubl.module.model.graph.group_relation.GroupRelationPojo;
 import guru.bubl.module.model.graph.tag.Tag;
 import guru.bubl.module.model.graph.tag.TagPojo;
@@ -43,7 +43,7 @@ import static guru.bubl.module.neo4j_graph_manipulator.graph.graph.GraphElementO
 import static guru.bubl.module.neo4j_graph_manipulator.graph.graph.GraphElementOperatorNeo4j.incrementNbNeighborsQueryPart;
 import static org.neo4j.driver.v1.Values.parameters;
 
-public class EdgeOperatorNeo4j implements EdgeOperator, OperatorNeo4j {
+public class RelationOperatorNeo4J implements RelationOperator, OperatorNeo4j {
 
     protected GraphElementOperatorNeo4j graphElementOperator;
     protected VertexFactoryNeo4j vertexFactory;
@@ -67,7 +67,7 @@ public class EdgeOperatorNeo4j implements EdgeOperator, OperatorNeo4j {
     protected GraphElementSpecialOperatorFactory graphElementSpecialOperatorFactory;
 
     @AssistedInject
-    protected EdgeOperatorNeo4j(
+    protected RelationOperatorNeo4J(
             VertexFactoryNeo4j vertexFactory,
             EdgeFactoryNeo4j edgeFactory,
             GraphElementFactoryNeo4j graphElementFactory,
@@ -81,7 +81,7 @@ public class EdgeOperatorNeo4j implements EdgeOperator, OperatorNeo4j {
     }
 
     @AssistedInject
-    protected EdgeOperatorNeo4j(
+    protected RelationOperatorNeo4J(
             VertexFactoryNeo4j vertexFactory,
             EdgeFactoryNeo4j edgeFactory,
             GraphElementFactoryNeo4j graphElementFactory,
@@ -102,7 +102,7 @@ public class EdgeOperatorNeo4j implements EdgeOperator, OperatorNeo4j {
     }
 
     @AssistedInject
-    protected EdgeOperatorNeo4j(
+    protected RelationOperatorNeo4J(
             VertexFactoryNeo4j vertexFactory,
             EdgeFactoryNeo4j edgeFactory,
             GraphElementFactoryNeo4j graphElementFactory,
@@ -423,14 +423,14 @@ public class EdgeOperatorNeo4j implements EdgeOperator, OperatorNeo4j {
     }
 
     @Override
-    public EdgePojo createEdge() {
+    public RelationPojo createEdge() {
         return createEdgeUsingInitialValues(
                 edgeCreateProperties
         );
     }
 
     @Override
-    public EdgePojo createEdgeWithAdditionalProperties(Map<String, Object> props) {
+    public RelationPojo createEdgeWithAdditionalProperties(Map<String, Object> props) {
         props.putAll(
                 edgeCreateProperties
         );
@@ -440,7 +440,7 @@ public class EdgeOperatorNeo4j implements EdgeOperator, OperatorNeo4j {
     }
 
     @Override
-    public EdgePojo createWithShareLevel(ShareLevel shareLevel) {
+    public RelationPojo createWithShareLevel(ShareLevel shareLevel) {
         return createEdgeUsingInitialValues(
                 map(
                         VertexOperatorNeo4j.props.shareLevel.name(),
@@ -487,7 +487,7 @@ public class EdgeOperatorNeo4j implements EdgeOperator, OperatorNeo4j {
     }
 
     @Override
-    public EdgePojo createEdgeUsingInitialValues(Map<String, Object> values) {
+    public RelationPojo createEdgeUsingInitialValues(Map<String, Object> values) {
         Map<String, Object> creationProperties = addCreationProperties(values);
         try (Session session = driver.session()) {
             session.run(
@@ -503,7 +503,7 @@ public class EdgeOperatorNeo4j implements EdgeOperator, OperatorNeo4j {
                             creationProperties
                     )
             );
-            EdgePojo edge = new EdgePojo(
+            RelationPojo edge = new RelationPojo(
                     graphElementOperator.pojoFromCreationProperties(
                             creationProperties
                     )

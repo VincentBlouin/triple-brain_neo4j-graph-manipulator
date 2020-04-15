@@ -5,7 +5,7 @@ import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 import guru.bubl.module.model.Image;
 import guru.bubl.module.model.graph.ShareLevel;
-import guru.bubl.module.model.graph.edge.EdgePojo;
+import guru.bubl.module.model.graph.relation.RelationPojo;
 import guru.bubl.module.model.graph.fork.ForkOperatorFactory;
 import guru.bubl.module.model.graph.fork.NbNeighbors;
 import guru.bubl.module.model.graph.group_relation.GroupRelationOperator;
@@ -217,12 +217,12 @@ public class GroupRelationOperatorNeo4j implements GroupRelationOperator, Operat
     }
 
     @Override
-    public EdgePojo addVertexAndRelation() {
+    public RelationPojo addVertexAndRelation() {
         return forkOperatorFactory.withUri(uri()).addVertexAndRelation();
     }
 
     @Override
-    public EdgePojo addVertexAndRelationWithIds(String vertexId, String edgeId) {
+    public RelationPojo addVertexAndRelationWithIds(String vertexId, String edgeId) {
         return forkOperatorFactory.withUri(uri()).addVertexAndRelationWithIds(
                 vertexId,
                 edgeId

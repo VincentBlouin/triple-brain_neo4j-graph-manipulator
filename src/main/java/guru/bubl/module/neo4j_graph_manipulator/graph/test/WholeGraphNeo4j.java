@@ -8,7 +8,7 @@ import guru.bubl.module.model.User;
 import guru.bubl.module.model.WholeGraph;
 import guru.bubl.module.model.graph.GraphElementOperator;
 import guru.bubl.module.model.graph.GraphElementOperatorFactory;
-import guru.bubl.module.model.graph.edge.EdgeOperator;
+import guru.bubl.module.model.graph.relation.RelationOperator;
 import guru.bubl.module.model.graph.tag.TagFactory;
 import guru.bubl.module.model.graph.tag.TagOperator;
 import guru.bubl.module.model.graph.vertex.VertexOperator;
@@ -82,21 +82,21 @@ public class WholeGraphNeo4j implements WholeGraph {
     }
 
     @Override
-    public Set<EdgeOperator> getAllEdges() {
+    public Set<RelationOperator> getAllEdges() {
         return getAllEdgesOfUserOrNot(null);
     }
 
     @Override
-    public Set<EdgeOperator> getAllEdgesOfUser(User user) {
+    public Set<RelationOperator> getAllEdgesOfUser(User user) {
         return getAllEdgesOfUserOrNot(user);
     }
 
-    private Set<EdgeOperator> getAllEdgesOfUserOrNot(User user) {
+    private Set<RelationOperator> getAllEdgesOfUserOrNot(User user) {
         String query = String.format(
                 "MATCH(n:Edge%s) RETURN n.uri as uri",
                 user == null ? "" : "{owner:$username}"
         );
-        Set<EdgeOperator> edges = new HashSet<>();
+        Set<RelationOperator> edges = new HashSet<>();
         try (Session session = driver.session()) {
             StatementResult rs = session.run(
                     query,

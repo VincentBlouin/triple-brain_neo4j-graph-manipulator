@@ -4,8 +4,6 @@
 
 package guru.bubl.module.neo4j_graph_manipulator.graph.graph.group_relation;
 
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.edge.EdgeOperatorNeo4j;
-
 import java.net.URI;
 
 public interface GroupRelationFactoryNeo4j {

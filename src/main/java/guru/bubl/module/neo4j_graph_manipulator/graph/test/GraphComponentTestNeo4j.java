@@ -7,7 +7,7 @@ package guru.bubl.module.neo4j_graph_manipulator.graph.test;
 import guru.bubl.module.model.User;
 import guru.bubl.module.model.graph.GraphFactory;
 import guru.bubl.module.model.graph.ShareLevel;
-import guru.bubl.module.model.graph.edge.EdgeFactory;
+import guru.bubl.module.model.graph.relation.RelationFactory;
 import guru.bubl.module.model.graph.subgraph.SubGraphPojo;
 import guru.bubl.module.model.graph.subgraph.UserGraph;
 import guru.bubl.module.model.graph.vertex.VertexOperator;
@@ -42,7 +42,7 @@ public class GraphComponentTestNeo4j implements GraphComponentTest {
     GraphDatabaseService graphDatabaseService;
 
     @Inject
-    protected EdgeFactory edgeFactory;
+    protected RelationFactory relationFactory;
 
     @Inject
     protected VertexFactoryNeo4j vertexFactory;
