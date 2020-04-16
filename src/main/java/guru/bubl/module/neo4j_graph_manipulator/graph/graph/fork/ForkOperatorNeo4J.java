@@ -4,10 +4,13 @@ import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 import guru.bubl.module.model.UserUris;
+import guru.bubl.module.model.graph.GraphElementOperator;
+import guru.bubl.module.model.graph.relation.RelationOperator;
 import guru.bubl.module.model.graph.relation.RelationPojo;
 import guru.bubl.module.model.graph.fork.NbNeighbors;
 import guru.bubl.module.model.graph.ShareLevel;
 import guru.bubl.module.model.graph.fork.NbNeighborsOperatorFactory;
+import guru.bubl.module.model.graph.vertex.VertexOperator;
 import guru.bubl.module.model.graph.vertex.VertexPojo;
 import guru.bubl.module.model.graph.fork.ForkOperator;
 import guru.bubl.module.neo4j_graph_manipulator.graph.FriendlyResourceFactoryNeo4j;
@@ -119,6 +122,42 @@ public class ForkOperatorNeo4J implements ForkOperator, OperatorNeo4j {
                 edgeId,
                 graphElementFactoryNeo4j.withUri(uri).isPatternOrUnderPattern()
         );
+    }
+
+    @Override
+    public RelationOperator addRelationToFork(final ForkOperator destinationFork) {
+        GraphElementOperator source = graphElementFactoryNeo4j.withUri(uri);
+        GraphElementOperator destination = graphElementFactoryNeo4j.withUri(destinationFork.uri());
+        if (source.isPatternOrUnderPattern() || destination.isPatternOrUnderPattern()) {
+            return null;
+        }
+        RelationOperator edge = edgeFactory.withSourceAndDestinationUri(
+                uri(),
+                destination.uri()
+        );
+        ShareLevel sourceShareLevel = source.getShareLevel();
+        ShareLevel destinationShareLevel = destination.getShareLevel();
+        if (sourceShareLevel == ShareLevel.FRIENDS && destinationShareLevel == ShareLevel.FRIENDS) {
+            edge.createWithShareLevel(ShareLevel.FRIENDS);
+        } else if (sourceShareLevel.isPublic() && destinationShareLevel.isPublic()) {
+            edge.createWithShareLevel(ShareLevel.PUBLIC_WITH_LINK);
+        } else {
+            edge.createWithShareLevel(ShareLevel.PRIVATE);
+        }
+        try (Session session = driver.session()) {
+            session.run(
+                    "MATCH (s:Vertex {uri:$uri}), (d:Vertex {uri:$destinationUri}) " +
+                            incrementNbNeighborsQueryPart(destinationShareLevel, "s", "WITH s,d SET ") +
+                            incrementNbNeighborsQueryPart(sourceShareLevel, "d", "WITH s,d SET "),
+                    parameters(
+                            "uri",
+                            this.uri().toString(),
+                            "destinationUri",
+                            destination.uri().toString()
+                    )
+            );
+            return edge;
+        }
     }
 
     @Override

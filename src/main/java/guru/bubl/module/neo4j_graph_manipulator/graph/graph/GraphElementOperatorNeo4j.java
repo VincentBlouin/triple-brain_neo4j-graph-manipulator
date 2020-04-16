@@ -584,38 +584,6 @@ public class GraphElementOperatorNeo4j implements GraphElementOperator, Operator
         }
     }
 
-    public GraphElementOperator forkUsingCreationPropertiesAndCache(GraphElementOperator clone, Map<String, Object> additionalCreateValues, GraphElement cache) {
-        FriendlyResourcePojo original = new FriendlyResourcePojo(
-                uri(),
-                cache.label()
-        );
-        original.setComment(
-                cache.comment()
-        );
-        Map<String, Object> createValues = map(
-                FriendlyResourceNeo4j.props.label.name(), original.label(),
-                FriendlyResourceNeo4j.props.comment.name(), original.comment()
-        );
-        createValues.putAll(
-                additionalCreateValues
-        );
-        clone.createUsingInitialValues(
-                createValues
-        );
-        clone.addTag(
-                new TagPojo(
-                        this.uri(),
-                        new GraphElementPojo(
-                                original
-                        )
-                )
-        );
-        cache.getTags().values().forEach(
-                clone::addTag
-        );
-        return clone;
-    }
-
     @Override
     public String getPrivateContext() {
         try (Session session = driver.session()) {

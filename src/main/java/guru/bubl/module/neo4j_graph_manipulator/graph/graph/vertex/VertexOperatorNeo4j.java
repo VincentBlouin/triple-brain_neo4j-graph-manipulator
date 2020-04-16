@@ -8,9 +8,9 @@ import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 import guru.bubl.module.model.Image;
-import guru.bubl.module.model.User;
 import guru.bubl.module.model.UserUris;
 import guru.bubl.module.model.graph.ShareLevel;
+import guru.bubl.module.model.graph.fork.ForkOperator;
 import guru.bubl.module.model.graph.relation.Relation;
 import guru.bubl.module.model.graph.relation.RelationOperator;
 import guru.bubl.module.model.graph.relation.RelationPojo;
@@ -39,7 +39,6 @@ import java.util.Map;
 import java.util.Set;
 
 import static guru.bubl.module.neo4j_graph_manipulator.graph.RestApiUtilsNeo4j.map;
-import static guru.bubl.module.neo4j_graph_manipulator.graph.graph.GraphElementOperatorNeo4j.incrementNbNeighborsQueryPart;
 import static org.neo4j.driver.v1.Values.parameters;
 
 public class VertexOperatorNeo4j implements VertexOperator, OperatorNeo4j {
@@ -194,37 +193,10 @@ public class VertexOperatorNeo4j implements VertexOperator, OperatorNeo4j {
     }
 
     @Override
-    public RelationOperator addRelationToVertex(final VertexOperator destinationVertex) {
-        if (this.isPatternOrUnderPattern() || destinationVertex.isPatternOrUnderPattern()) {
-            return null;
-        }
-        RelationOperator edge = edgeFactory.withSourceAndDestinationUri(
-                uri(),
-                destinationVertex.uri()
+    public RelationOperator addRelationToFork(ForkOperator destinationFork) {
+        return forkOperatorFactory.withUri(uri()).addRelationToFork(
+                destinationFork
         );
-        ShareLevel sourceShareLevel = this.getShareLevel();
-        ShareLevel destinationShareLevel = destinationVertex.getShareLevel();
-        if (sourceShareLevel == ShareLevel.FRIENDS && destinationShareLevel == ShareLevel.FRIENDS) {
-            edge.createWithShareLevel(ShareLevel.FRIENDS);
-        } else if (sourceShareLevel.isPublic() && destinationShareLevel.isPublic()) {
-            edge.createWithShareLevel(ShareLevel.PUBLIC_WITH_LINK);
-        } else {
-            edge.createWithShareLevel(ShareLevel.PRIVATE);
-        }
-        try (Session session = driver.session()) {
-            session.run(
-                    "MATCH (s:Vertex {uri:$uri}), (d:Vertex {uri:$destinationUri}) " +
-                            incrementNbNeighborsQueryPart(destinationShareLevel, "s", "WITH s,d SET ") +
-                            incrementNbNeighborsQueryPart(sourceShareLevel, "d", "WITH s,d SET "),
-                    parameters(
-                            "uri",
-                            this.uri().toString(),
-                            "destinationUri",
-                            destinationVertex.uri().toString()
-                    )
-            );
-            return edge;
-        }
     }
 
     @Override
@@ -274,24 +246,6 @@ public class VertexOperatorNeo4j implements VertexOperator, OperatorNeo4j {
             }
             return edges;
         }
-    }
-
-    @Override
-    public VertexOperator forkForUserUsingCache(User user, Vertex cache) {
-        VertexOperator clone = vertexFactory.withUri(
-                new UserUris(
-                        user.username()
-                ).generateVertexUri()
-        );
-        graphElementOperator.forkUsingCreationPropertiesAndCache(
-                clone,
-                map(
-                        ForkOperatorNeo4J.props.nb_private_neighbors.name(),
-                        cache.getNbNeighbors().getPrivate()
-                ),
-                cache
-        );
-        return clone;
     }
 
     @Override
