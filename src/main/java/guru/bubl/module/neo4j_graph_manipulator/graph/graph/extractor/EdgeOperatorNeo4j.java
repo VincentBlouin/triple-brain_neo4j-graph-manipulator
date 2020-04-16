@@ -4,7 +4,6 @@ import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 import guru.bubl.module.model.graph.GraphElement;
-import guru.bubl.module.model.graph.GraphElementOperator;
 import guru.bubl.module.model.graph.ShareLevel;
 import guru.bubl.module.model.graph.edge.EdgeOperator;
 import guru.bubl.module.neo4j_graph_manipulator.graph.FriendlyResourceNeo4j;
@@ -80,8 +79,6 @@ public class EdgeOperatorNeo4j implements EdgeOperator, OperatorNeo4j {
     ) {
         Relationships relationshipToKeep = Relationships.SOURCE == relationshipToChange ?
                 Relationships.DESTINATION : Relationships.SOURCE;
-        GraphElementOperator sourceVertex = graphElementSpecialOperatorFactory.getFromUri(sourceUri());
-        GraphElementOperator destinationVertex = graphElementSpecialOperatorFactory.getFromUri(destinationUri());
         String decrementPreviousVertexQueryPart = decrementNbNeighborsQueryPart(
                 keptEndShareLevel,
                 "prev_v",
