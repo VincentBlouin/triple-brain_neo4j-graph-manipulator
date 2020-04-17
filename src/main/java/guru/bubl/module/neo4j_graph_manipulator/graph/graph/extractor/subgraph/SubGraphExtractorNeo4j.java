@@ -7,9 +7,9 @@ package guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph;
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 import guru.bubl.module.model.UserUris;
-import guru.bubl.module.model.graph.GraphElement;
 import guru.bubl.module.model.graph.GraphElementType;
 import guru.bubl.module.model.graph.ShareLevel;
+import guru.bubl.module.model.graph.edge.EdgePojo;
 import guru.bubl.module.model.graph.relation.Relation;
 import guru.bubl.module.model.graph.relation.RelationPojo;
 import guru.bubl.module.model.graph.group_relation.GroupRelation;
@@ -38,8 +38,9 @@ public class SubGraphExtractorNeo4j {
     public final static String GRAPH_ELEMENT_QUERY_KEY = "ge";
     private URI centerBubbleUri;
     private Boolean isCenterTagFlow;
+    private Boolean isCenterGroupRelationFlow;
     private Integer depth;
-    private SubGraphPojo subGraph = SubGraphPojo.withVerticesAndEdges(
+    private SubGraphPojo subGraph = SubGraphPojo.withCenterUriVerticesAndEdges(
             new HashMap<>(),
             new HashMap<>()
     );
@@ -62,6 +63,7 @@ public class SubGraphExtractorNeo4j {
         this.inShareLevelsArray = inShareLevelsArray;
         inShareLevels = ShareLevel.arrayOfIntegersToSet(this.inShareLevelsArray);
         this.isCenterTagFlow = UserUris.isUriOfATag(centerBubbleUri);
+        this.isCenterGroupRelationFlow = UserUris.isUriOfAGroupRelation(centerBubbleUri);
     }
 
     @AssistedInject
@@ -77,6 +79,7 @@ public class SubGraphExtractorNeo4j {
         this.inShareLevelsArray = inShareLevelsArray;
         inShareLevels = ShareLevel.arrayOfIntegersToSet(this.inShareLevelsArray);
         this.isCenterTagFlow = UserUris.isUriOfATag(centerBubbleUri);
+        this.isCenterGroupRelationFlow = UserUris.isUriOfAGroupRelation(centerBubbleUri);
     }
 
     public SubGraphPojo load() {
@@ -140,38 +143,28 @@ public class SubGraphExtractorNeo4j {
                 }
             }
             for (InternalRelationship relation : relationships) {
-                RelationPojo edge = subGraph.edgeWithIdentifier(
-                        idsUri.get(relation.startNodeId())
+                URI edgeUri = idsUri.get(relation.startNodeId());
+                EdgePojo edge = subGraph.edgeWithIdentifier(
+                        edgeUri
                 );
-                URI uri = idsUri.get(relation.endNodeId());
-                if (uri == null || edge == null) {
-                } else if (relation.type().equals("SOURCE")) {
-                    edge.setSource(
-                            uri
-                    );
-                } else {
-                    edge.setDestination(
-                            uri
-                    );
+                if (edge == null) {
+                    edge = subGraph.getGroupRelations().get(edgeUri);
+                }
+                URI endForkUri = idsUri.get(relation.endNodeId());
+                if (edge != null && endForkUri != null) {
+                    if (relation.type().equals("SOURCE")) {
+                        edge.setSourceUri(
+                                endForkUri
+                        );
+                    } else {
+                        edge.setDestinationUri(
+                                endForkUri
+                        );
+                    }
                 }
             }
-            Iterator<RelationPojo> it = subGraph.edges().values().iterator();
-            while (it.hasNext()) {
-                RelationPojo edge = it.next();
-                GraphElement source = edge.getSource();
-                Boolean hasSource = source != null && subGraph.containsGraphElement(
-                        source
-                );
-                GraphElement destination = edge.getDestination();
-                Boolean hasDestination = destination != null && subGraph.containsGraphElement(
-                        destination
-                );
-                if (!hasSource || !hasDestination) {
-                    it.remove();
-                }
-            }
-            return subGraph;
         }
+        return subGraph;
     }
 
     private GraphElementType getGraphElementTypeFromRow(Record record) {

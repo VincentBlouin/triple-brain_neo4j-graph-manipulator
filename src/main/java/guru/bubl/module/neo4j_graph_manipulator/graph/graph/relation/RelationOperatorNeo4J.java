@@ -333,7 +333,6 @@ public class RelationOperatorNeo4J implements RelationOperator, OperatorNeo4j {
                             "WITH n, gr " +
                             "MATCH (n)-[r:SOURCE]->(s) " +
                             "MERGE (gr)-[:SOURCE]->(s) " +
-                            "MERGE (gr)-[:DESTINATION]->(n) " +
                             "MERGE (n)-[:SOURCE]->(gr) " +
                             "DELETE r " +
                             "WITH n,gr " +

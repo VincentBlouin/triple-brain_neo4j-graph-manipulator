@@ -417,19 +417,32 @@ public class VertexOperatorNeo4j implements VertexOperator, OperatorNeo4j {
         if (this.isPatternOrUnderPattern() || vertexOperator.isPatternOrUnderPattern()) {
             return false;
         }
-        this.connectedEdges().values().forEach(
-                (edge) -> {
-                    if (edge.destinationUri().equals(this.uri())) {
-                        edge.changeDestination(vertexOperator.uri(), ShareLevel.PRIVATE, ShareLevel.PRIVATE, ShareLevel.PRIVATE);
-                    } else {
-                        edge.changeSource(vertexOperator.uri(), ShareLevel.PRIVATE, ShareLevel.PRIVATE, ShareLevel.PRIVATE);
-                    }
-                }
-        );
-        this.getTags().values().forEach((tag) -> {
-            vertexOperator.addTag(tag);
-        });
-        this.remove();
+        try (Session session = driver.session()) {
+            session.run(
+                    queryPrefix() + ", (mergeTo:Resource{uri:$mergeToUri}) " +
+                            "SET mergeTo.nb_private_neighbors = mergeTo.nb_private_neighbors + n.nb_private_neighbors," +
+                            "mergeTo.nb_friend_neighbors = mergeTo.nb_friend_neighbors + n.nb_friend_neighbors," +
+                            "mergeTo.nb_public_neighbors = mergeTo.nb_public_neighbors + n.nb_public_neighbors " +
+                            "WITH mergeTo, n " +
+                            "OPTIONAL MATCH (n)<-[r:SOURCE]-(e) " +
+                            "MERGE (mergeTo)<-[:SOURCE]-(e) " +
+                            "DELETE r " +
+                            "WITH mergeTo, n " +
+                            "OPTIONAL MATCH (n)<-[r:DESTINATION]-(e) " +
+                            "MERGE (mergeTo)<-[:DESTINATION]-(e) " +
+                            "DELETE r " +
+                            "WITH mergeTo, n " +
+                            "OPTIONAL MATCH (n)-[r:IDENTIFIED_TO]->(t) " +
+                            "MERGE (mergeTo)-[:IDENTIFIED_TO]->(t) " +
+                            "DELETE r " +
+                            "WITH n " +
+                            "DETACH DELETE n",
+                    parameters(
+                            "uri", this.uri().toString(),
+                            "mergeToUri", vertexOperator.uri().toString()
+                    )
+            );
+        }
         return true;
     }
 

@@ -109,8 +109,8 @@ public class EdgeOperatorNeo4j implements EdgeOperator, OperatorNeo4j {
         );
         String query = String.format(
                 "%s, (new_v:Resource{uri:$endVertexUri}), " +
-                        "(n)-[prev_rel:%s]->(prev_v), " +
-                        "(n)-[:%s]->(kept_v) " +
+                        "(n)-[prev_rel:%s]->(prev_v) " +
+                        "OPTIONAL MATCH (n)-[:%s]->(kept_v) " +
                         "MERGE (n)-[:%s]->(new_v) " +
                         "DELETE prev_rel " +
                         decrementPreviousVertexQueryPart +
