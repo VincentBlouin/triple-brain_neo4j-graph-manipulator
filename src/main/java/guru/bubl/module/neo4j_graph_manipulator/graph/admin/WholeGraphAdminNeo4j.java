@@ -6,8 +6,14 @@ package guru.bubl.module.neo4j_graph_manipulator.graph.admin;
 
 import com.google.inject.Inject;
 import guru.bubl.module.model.admin.WholeGraphAdmin;
+import guru.bubl.module.model.graph.GraphElementType;
+import guru.bubl.module.model.graph.ShareLevel;
 import org.neo4j.driver.v1.Driver;
 import org.neo4j.driver.v1.Session;
+
+import java.util.Set;
+
+import static org.neo4j.driver.v1.Values.parameters;
 
 public class WholeGraphAdminNeo4j implements WholeGraphAdmin {
 
@@ -64,68 +70,10 @@ public class WholeGraphAdminNeo4j implements WholeGraphAdmin {
 
     @Override
     public void reindexAll() {
+        indexForksOfType(GraphElementType.Vertex);
+        indexForksOfType(GraphElementType.GroupRelation);
+        indexTags();
         try (Session session = driver.session()) {
-            session.run(
-                    "MATCH(n:Vertex) OPTIONAL MATCH (n)<-[:SOURCE|DESTINATION]->(e)," +
-                            "(e)<-[:SOURCE|DESTINATION*0..2]->(o:Vertex) WHERE o.label <> '' " +
-                            "WITH n, o, (o.nb_private_neighbors + o.nb_friend_neighbors + o.nb_public_neighbors) as nbNeighbors " +
-                            "ORDER BY nbNeighbors DESC " +
-                            "WITH reduce(a=\"\", os in collect(DISTINCT o) |  a + \"{{\" + substring(os.label, 0, 20)) as context, n " +
-                            "SET n.private_context = substring(context, 2, 110)"
-            );
-            session.run(
-                    "MATCH(n:Vertex) OPTIONAL MATCH (n)<-[:SOURCE|DESTINATION]->(e)," +
-                            "(e)-[:SOURCE|DESTINATION*0..2]->(o:Vertex) WHERE o.shareLevel in [20,30,40] AND o.label <>'' " +
-                            "WITH n, o, (o.nb_friend_neighbors + o.nb_public_neighbors) as nbNeighbors " +
-                            "ORDER BY nbNeighbors DESC " +
-                            "WITH reduce(a=\"\", os in collect(DISTINCT o) |  a + \"{{\" + substring(os.label, 0, 20)) as context, n " +
-                            "SET n.friend_context = substring(context, 2, 110)"
-            );
-            session.run(
-                    "MATCH(n:Vertex) OPTIONAL MATCH (n)<-[:SOURCE|DESTINATION]->(e)," +
-                            "(e)-[:SOURCE|DESTINATION*0..2]->(o:Vertex) WHERE o.shareLevel in [30,40] AND o.label <>'' " +
-                            "WITH n, o " +
-                            "ORDER BY o.nb_public_neighbors DESC " +
-                            "WITH reduce(a=\"\", os in collect(DISTINCT o) |  a + \"{{\" + substring(os.label, 0, 20)) as context, n " +
-                            "SET n.public_context = substring(context, 2, 110)"
-            );
-            session.run(
-                    "MATCH(n:Meta) OPTIONAL MATCH (n)<-[:IDENTIFIED_TO]-(ov) WHERE 'Vertex' in labels(ov) AND ov.label <>'' " +
-                            "WITH n,ov OPTIONAL MATCH (n)<-[:IDENTIFIED_TO]-(e) WHERE 'Edge' in labels(e) " +
-                            "WITH n,COLLECT(ov) as ovList,e " +
-                            "OPTIONAL MATCH (e)-[:DESTINATION]->(v) WHERE v.label <>'' " +
-                            "WITH n, ovList + collect(v) as allVertices " +
-                            "UNWIND  allVertices as tv " +
-                            "WITH n, tv, (tv.nb_private_neighbors + tv.nb_friend_neighbors + tv.nb_public_neighbors) as nbNeighbors " +
-                            "ORDER BY nbNeighbors DESC " +
-                            "WITH reduce(a=\"\", os in collect(tv) |  a + \"{{\" + substring(os.label, 0, 20)) as context, n " +
-                            "SET n.private_context = CASE n.comment WHEN \"\" THEN substring(context, 2, 110) ELSE n.comment END"
-            );
-
-            session.run(
-                    "MATCH(n:Meta) OPTIONAL MATCH (n)<-[:IDENTIFIED_TO]-(ov) WHERE 'Vertex' in labels(ov) and ov.shareLevel in [20,30,40] AND ov.label <>'' " +
-                            "WITH n,ov OPTIONAL MATCH (n)<-[:IDENTIFIED_TO]-(e) WHERE 'Edge' in labels(e) and ov.shareLevel in [20,30,40] " +
-                            "WITH n,COLLECT(ov) as ovList,e " +
-                            "OPTIONAL MATCH (e)-[:DESTINATION]->(v) WHERE v.label <>'' " +
-                            "WITH n, ovList + collect(v) as allVertices " +
-                            "UNWIND  allVertices as tv " +
-                            "WITH n, tv, (tv.nb_friend_neighbors + tv.nb_public_neighbors) as nbNeighbors " +
-                            "ORDER BY nbNeighbors DESC " +
-                            "WITH reduce(a=\"\", os in collect(tv) |  a + \"{{\" + substring(os.label, 0, 20)) as context, n " +
-                            "SET n.friend_context = CASE n.comment WHEN \"\" THEN substring(context, 2, 110) ELSE n.comment END"
-            );
-            session.run(
-                    "MATCH(n:Meta) OPTIONAL MATCH (n)<-[:IDENTIFIED_TO]-(ov) WHERE 'Vertex' in labels(ov) and ov.shareLevel in [30,40] AND ov.label <>'' " +
-                            "WITH n,ov OPTIONAL MATCH (n)<-[:IDENTIFIED_TO]-(e) WHERE 'Edge' in labels(e) and ov.shareLevel in [30,40] " +
-                            "WITH n,COLLECT(ov) as ovList,e " +
-                            "OPTIONAL MATCH (e)-[:DESTINATION]->(v) WHERE v.label <>'' " +
-                            "WITH n, ovList + collect(v) as allVertices " +
-                            "UNWIND  allVertices as tv " +
-                            "WITH n, tv, tv.nb_public_neighbors as nbNeighbors " +
-                            "ORDER BY nbNeighbors DESC " +
-                            "WITH reduce(a=\"\", os in collect(tv) |  a + \"{{\" + substring(os.label, 0, 20)) as context, n " +
-                            "SET n.public_context = CASE n.comment WHEN \"\" THEN substring(context, 2, 110) ELSE n.comment END"
-            );
             session.run(
                     "MATCH(n:Edge) MATCH (n)-[:SOURCE|DESTINATION]->(v) " +
                             "WITH n, v, (v.nb_private_neighbors + v.nb_friend_neighbors + v.nb_public_neighbors) as nbNeighbors " +
@@ -135,5 +83,109 @@ public class WholeGraphAdminNeo4j implements WholeGraphAdmin {
                             "SET n.private_context = context, n.friend_context = context, n.public_context = context"
             );
         }
+    }
+
+    private void indexTags() {
+        indexTagsInShareLevel(
+                ShareLevel.allShareLevels,
+                "private_context"
+        );
+        indexTagsInShareLevel(
+                ShareLevel.friendShareLevels,
+                "friend_context"
+        );
+        indexTagsInShareLevel(
+                ShareLevel.publicShareLevels,
+                "public_context"
+        );
+    }
+
+    private void indexTagsInShareLevel(Set<ShareLevel> shareLevels, String contextName) {
+        String nbNeighborsTemplate = buildNbNeighborsTemplateForShareLevels(shareLevels);
+        String nbNeighborsSum = nbNeighborsTemplate.replaceAll("%s", "allGraphElements");
+        try (Session session = driver.session()) {
+            session.run(
+                    String.format("MATCH(n:Meta) OPTIONAL MATCH (n)<-[:IDENTIFIED_TO]-(ov:Vertex) WHERE  ov.label <>'' AND ov.shareLevel in $shareLevels " +
+                                    "WITH n,ov OPTIONAL MATCH (n)<-[:IDENTIFIED_TO]-(e:Edge) WHERE e.shareLevel in $shareLevels " +
+                                    "WITH n,COLLECT(ov) as ovList,e " +
+                                    "OPTIONAL MATCH (e)-[:DESTINATION]->(v) WHERE v.label <>'' " +
+                                    "WITH n, ovList + collect(v) as allVertices " +
+                                    "OPTIONAL MATCH (n)<-[:IDENTIFIED_TO]->(gr:GroupRelation) WHERE gr.label <>'' AND gr.shareLevel in $shareLevels " +
+                                    "WITH n, allVertices + collect(gr) as allGraphElementsList " +
+                                    "UNWIND  allGraphElementsList as allGraphElements " +
+                                    "WITH n, allGraphElements, (%s) as nbNeighbors " +
+                                    "ORDER BY nbNeighbors DESC " +
+                                    "WITH reduce(a=\"\", os in collect(allGraphElements) |  a + \"{{\" + substring(os.label, 0, 20)) as context, n " +
+                                    "SET n.%s = CASE n.comment WHEN \"\" THEN substring(context, 2, 110) ELSE n.comment END",
+                            nbNeighborsSum,
+                            contextName
+                    ),
+                    parameters(
+                            "shareLevels", ShareLevel.shareLevelsToIntegers(shareLevels)
+                    )
+            );
+        }
+    }
+
+    private void indexForksOfType(GraphElementType graphElementType) {
+        indexForksOfTypeInShareLevels(
+                graphElementType,
+                ShareLevel.allShareLevels,
+                "private_context"
+        );
+        indexForksOfTypeInShareLevels(
+                graphElementType,
+                ShareLevel.friendShareLevels,
+                "friend_context"
+        );
+        indexForksOfTypeInShareLevels(
+                graphElementType,
+                ShareLevel.publicShareLevels,
+                "public_context"
+        );
+    }
+
+    private void indexForksOfTypeInShareLevels(GraphElementType graphElementType, Set<ShareLevel> shareLevels, String contextName) {
+        String nbNeighborsTemplate = buildNbNeighborsTemplateForShareLevels(shareLevels);
+        String verticesNbNeighborsSum = nbNeighborsTemplate.replaceAll("%s", "o");
+        String groupRelationsNbNeighborsSum = nbNeighborsTemplate.replaceAll("%s", "gr");
+        String closeVerticesNbNeighborsSum = nbNeighborsTemplate.replaceAll("%s", "closeVertex");
+        try (Session session = driver.session()) {
+            session.run(
+                    String.format("MATCH(n:%s) OPTIONAL MATCH (n)<-[:SOURCE|DESTINATION]->(e:Edge)," +
+                                    "(e)<-[:SOURCE|DESTINATION]->(o:Vertex) WHERE o.label <> '' AND o.shareLevel in $shareLevels " +
+                                    "WITH n,o, COLLECT({label:o.label, nbNeighbors:%s}) as vertices " +
+                                    "OPTIONAL MATCH (n)<-[:SOURCE|DESTINATION]->(gr:GroupRelation) WHERE gr.label <> '' AND gr.shareLevel in $shareLevels " +
+                                    "WITH n, vertices, COLLECT({label:gr.label, nbNeighbors: %s}) as groupRelations " +
+                                    "OPTIONAL MATCH (n)<-[:SOURCE|DESTINATION]->(closeVertex:Vertex) WHERE closeVertex.label <> '' AND closeVertex.shareLevel in $shareLevels " +
+                                    "WITH n, vertices, groupRelations, COLLECT({label:closeVertex.label, nbNeighbors: %s}) as closeVertices " +
+                                    "WITH n, vertices + groupRelations + closeVertices as allGraphElements " +
+                                    "UNWIND allGraphElements as o " +
+                                    "WITH n,o.label as label, o.nbNeighbors as nbNeighbors " +
+                                    "ORDER BY nbNeighbors DESC " +
+                                    "WITH reduce(a=\"\", oneLabel in collect(DISTINCT label) |  a + \"{{\" + substring(oneLabel, 0, 20)) as context, n " +
+                                    "SET n.%s = substring(context, 2, 110)",
+                            graphElementType.name(),
+                            verticesNbNeighborsSum,
+                            groupRelationsNbNeighborsSum,
+                            closeVerticesNbNeighborsSum,
+                            contextName
+                    ),
+                    parameters(
+                            "shareLevels", ShareLevel.shareLevelsToIntegers(shareLevels)
+                    )
+            );
+        }
+    }
+
+    private String buildNbNeighborsTemplateForShareLevels(Set<ShareLevel> shareLevels) {
+        String nbNeighborsTemplate = "%s.nb_public_neighbors";
+        if (shareLevels.contains(ShareLevel.FRIENDS)) {
+            nbNeighborsTemplate += " + %s.nb_friend_neighbors ";
+        }
+        if (shareLevels.contains(ShareLevel.PRIVATE)) {
+            nbNeighborsTemplate += " + %s.nb_private_neighbors ";
+        }
+        return nbNeighborsTemplate;
     }
 }
