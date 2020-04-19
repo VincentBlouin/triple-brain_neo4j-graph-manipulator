@@ -6,8 +6,8 @@ package guru.bubl.module.neo4j_graph_manipulator.graph.test;
 
 import guru.bubl.module.model.User;
 import guru.bubl.module.model.WholeGraph;
-import guru.bubl.module.model.graph.GraphElementOperator;
-import guru.bubl.module.model.graph.GraphElementOperatorFactory;
+import guru.bubl.module.model.graph.graph_element.GraphElementOperator;
+import guru.bubl.module.model.graph.graph_element.GraphElementOperatorFactory;
 import guru.bubl.module.model.graph.relation.RelationOperator;
 import guru.bubl.module.model.graph.tag.TagFactory;
 import guru.bubl.module.model.graph.tag.TagOperator;

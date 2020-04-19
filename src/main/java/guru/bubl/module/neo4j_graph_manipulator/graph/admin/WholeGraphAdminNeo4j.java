@@ -6,7 +6,8 @@ package guru.bubl.module.neo4j_graph_manipulator.graph.admin;
 
 import com.google.inject.Inject;
 import guru.bubl.module.model.admin.WholeGraphAdmin;
-import guru.bubl.module.model.graph.GraphElementType;
+import guru.bubl.module.model.graph.graph_element.GraphElement;
+import guru.bubl.module.model.graph.graph_element.GraphElementType;
 import guru.bubl.module.model.graph.ShareLevel;
 import org.neo4j.driver.v1.Driver;
 import org.neo4j.driver.v1.Session;
@@ -22,48 +23,77 @@ public class WholeGraphAdminNeo4j implements WholeGraphAdmin {
 
     @Override
     public void refreshNbNeighbors() {
+        refreshNbNeighborsOfForks(GraphElementType.Vertex);
+        refreshNbNeighborsOfForks(GraphElementType.GroupRelation);
+    }
+
+    private void refreshNbNeighborsOfForks(GraphElementType graphElementType) {
+        refreshNbNeighborsToForksInShareLevels(
+                graphElementType,
+                ShareLevel.shareLevelsToSet(ShareLevel.PRIVATE),
+                "nb_private_neighbors"
+        );
+        refreshNbNeighborsToForksInShareLevels(
+                graphElementType,
+                ShareLevel.shareLevelsToSet(ShareLevel.FRIENDS),
+                "nb_friend_neighbors"
+        );
+        refreshNbNeighborsToForksInShareLevels(
+                graphElementType,
+                ShareLevel.publicShareLevels,
+                "nb_public_neighbors"
+        );
+    }
+
+    private void refreshNbNeighborsToForksInShareLevels(GraphElementType graphElementType, Set<ShareLevel> shareLevels, String nbNeighborsName) {
         try (Session session = driver.session()) {
             session.run(
-                    "MATCH(n:Vertex) OPTIONAL MATCH (n)<-[:SOURCE|DESTINATION]-(e)," +
-                            "(e)-[:SOURCE|DESTINATION]->(o) WHERE o.shareLevel=10 " +
-                            "WITH n, count(o) as nbPrivate " +
-                            "SET n.nb_private_neighbors=nbPrivate"
-            );
-            session.run(
-                    "MATCH(n:Vertex) OPTIONAL MATCH (n)<-[:SOURCE|DESTINATION]-(e)," +
-                            "(e)-[:SOURCE|DESTINATION]->(o) WHERE o.shareLevel=20 " +
-                            "WITH n, count(o) as nbFriend " +
-                            "SET n.nb_friend_neighbors=nbFriend;"
-            );
-            session.run(
-                    "MATCH(n:Vertex) OPTIONAL MATCH (n)<-[:SOURCE|DESTINATION]-(e)," +
-                            "(e)-[:SOURCE|DESTINATION]->(o) where o.shareLevel=30 or o.shareLevel=40 " +
-                            "WITH n, count(o) as nbPublic " +
-                            "SET n.nb_public_neighbors=nbPublic;"
+                    String.format(
+                            "MATCH(n:%s) OPTIONAL MATCH (n)<-[:SOURCE|DESTINATION]-(e:Edge)," +
+                                    "(e)-[:SOURCE|DESTINATION]->(o:Vertex) WHERE o.shareLevel in $shareLevels " +
+                                    "WITH n,o " +
+                                    "OPTIONAL MATCH (n)-[:SOURCE]->(closeVertex:Vertex) WHERE closeVertex.shareLevel in $shareLevels " +
+                                    "WITH n,o, closeVertex " +
+                                    "OPTIONAL MATCH (n)<-[:SOURCE|DESTINATION]-(groupRelation:GroupRelation) WHERE groupRelation.shareLevel in $shareLevels " +
+                                    "WITH n, COUNT(o) + COUNT(DISTINCT closeVertex) + COUNT(groupRelation) as nbNeighbors " +
+                                    "SET n.%s=nbNeighbors",
+                            graphElementType.name(),
+                            nbNeighborsName
+                    ),
+                    parameters(
+                            "shareLevels", ShareLevel.shareLevelsToIntegers(shareLevels)
+                    )
             );
         }
     }
 
+
     @Override
-    public void refreshNbNeighborsToAllTags() {
+    public void refreshNbNeighborsOfTags() {
+        refreshNbNeighborsToTagsInShareLevels(
+                ShareLevel.shareLevelsToSet(ShareLevel.PRIVATE), "nb_private_neighbors"
+        );
+        refreshNbNeighborsToTagsInShareLevels(
+                ShareLevel.shareLevelsToSet(ShareLevel.FRIENDS), "nb_friend_neighbors"
+        );
+        refreshNbNeighborsToTagsInShareLevels(
+                ShareLevel.publicShareLevels, "nb_public_neighbors"
+        );
+    }
+
+    private void refreshNbNeighborsToTagsInShareLevels(Set<ShareLevel> shareLevels, String nbNeighborsName) {
         try (Session session = driver.session()) {
             session.run(
-                    "MATCH(n:Meta) OPTIONAL MATCH (n)<-[:IDENTIFIED_TO]-(ge) " +
-                            "WHERE ge.shareLevel=10 " +
-                            "WITH n, count(ge) as nbPrivate " +
-                            "SET n.nb_private_neighbors=nbPrivate"
-            );
-            session.run(
-                    "MATCH(n:Meta) OPTIONAL MATCH (n)<-[:IDENTIFIED_TO]-(ge) " +
-                            "WHERE ge.shareLevel=20 " +
-                            "WITH n, count(ge) as nbFriend " +
-                            "SET n.nb_friend_neighbors=nbFriend"
-            );
-            session.run(
-                    "MATCH(n:Meta) OPTIONAL MATCH (n)<-[:IDENTIFIED_TO]-(ge) " +
-                            "WHERE ge.shareLevel=30 or ge.shareLevel=40 " +
-                            "WITH n, count(ge) as nbPublic " +
-                            "SET n.nb_public_neighbors=nbPublic;"
+                    String.format(
+                            "MATCH(n:Meta) OPTIONAL MATCH (n)<-[:IDENTIFIED_TO]-(ge) " +
+                                    "WHERE ge.shareLevel in $shareLevels " +
+                                    "WITH n, count(ge) as nbNeighbors " +
+                                    "SET n.%s=nbNeighbors",
+                            nbNeighborsName
+                    ),
+                    parameters(
+                            "shareLevels", ShareLevel.shareLevelsToIntegers(shareLevels)
+                    )
             );
         }
     }
@@ -73,6 +103,10 @@ public class WholeGraphAdminNeo4j implements WholeGraphAdmin {
         indexForksOfType(GraphElementType.Vertex);
         indexForksOfType(GraphElementType.GroupRelation);
         indexTags();
+        indexEdges();
+    }
+
+    private void indexEdges() {
         try (Session session = driver.session()) {
             session.run(
                     "MATCH(n:Edge) MATCH (n)-[:SOURCE|DESTINATION]->(v) " +

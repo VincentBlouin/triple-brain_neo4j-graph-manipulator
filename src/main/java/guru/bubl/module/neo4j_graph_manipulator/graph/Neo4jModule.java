@@ -22,8 +22,10 @@ import guru.bubl.module.model.center_graph_element.CenterGraphElementOperatorFac
 import guru.bubl.module.model.center_graph_element.CenterGraphElementsOperatorFactory;
 import guru.bubl.module.model.center_graph_element.CenteredGraphElementsOperator;
 import guru.bubl.module.model.graph.FriendlyResourceOperator;
-import guru.bubl.module.model.graph.GraphElementOperator;
-import guru.bubl.module.model.graph.GraphElementOperatorFactory;
+import guru.bubl.module.model.graph.graph_element.ForkCollectionOperator;
+import guru.bubl.module.model.graph.graph_element.ForkCollectionOperatorFactory;
+import guru.bubl.module.model.graph.graph_element.GraphElementOperator;
+import guru.bubl.module.model.graph.graph_element.GraphElementOperatorFactory;
 import guru.bubl.module.model.graph.GraphFactory;
 import guru.bubl.module.model.graph.edge.EdgeOperator;
 import guru.bubl.module.model.graph.edge.EdgeOperatorFactory;
@@ -47,6 +49,10 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.center_graph_element.Cente
 import guru.bubl.module.neo4j_graph_manipulator.graph.center_graph_element.CenterGraphElementsOperatorNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.*;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.EdgeOperatorNeo4j;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.graph_element.ForkCollectionOperatorNeo4J;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.graph_element.GraphElementFactoryNeo4j;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.graph_element.GraphElementOperatorNeo4j;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.graph_element.GraphElementSpecialOperatorFactory;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.relation.RelationFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.relation.RelationOperatorNeo4J;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph.SubGraphExtractorFactoryNeo4j;
@@ -166,6 +172,10 @@ public class Neo4jModule extends AbstractModule {
                 .implement(GraphElementOperator.class, GraphElementOperatorNeo4j.class)
                 .build(GraphElementOperatorFactory.class)
         );
+
+        install(factoryModuleBuilder
+                .implement(ForkCollectionOperator.class, ForkCollectionOperatorNeo4J.class)
+                .build(ForkCollectionOperatorFactory.class));
 
         install(factoryModuleBuilder
                 .implement(ForkOperator.class, ForkOperatorNeo4J.class)

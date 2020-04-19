@@ -2,13 +2,15 @@
  * Copyright Vincent Blouin under the GPL License version 3
  */
 
-package guru.bubl.module.neo4j_graph_manipulator.graph.graph;
+package guru.bubl.module.neo4j_graph_manipulator.graph.graph.graph_element;
 
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 import guru.bubl.module.model.Image;
 import guru.bubl.module.model.UserUris;
 import guru.bubl.module.model.graph.*;
+import guru.bubl.module.model.graph.graph_element.GraphElementOperator;
+import guru.bubl.module.model.graph.graph_element.GraphElementPojo;
 import guru.bubl.module.model.graph.tag.Tag;
 import guru.bubl.module.model.graph.tag.TagPojo;
 import guru.bubl.module.model.graph.fork.NbNeighborsPojo;
@@ -17,6 +19,7 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.FriendlyResourceFactoryNeo
 import guru.bubl.module.neo4j_graph_manipulator.graph.FriendlyResourceNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.OperatorNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.RestApiUtilsNeo4j;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.AddTagQueryBuilder;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph.VertexFromExtractorQueryRow;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.fork.ForkOperatorNeo4J;
 import guru.bubl.module.neo4j_graph_manipulator.graph.image.ImagesNeo4j;

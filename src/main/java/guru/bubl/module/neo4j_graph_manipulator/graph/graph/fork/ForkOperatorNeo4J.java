@@ -4,19 +4,18 @@ import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 import guru.bubl.module.model.UserUris;
-import guru.bubl.module.model.graph.GraphElementOperator;
+import guru.bubl.module.model.graph.graph_element.GraphElementOperator;
 import guru.bubl.module.model.graph.relation.RelationOperator;
 import guru.bubl.module.model.graph.relation.RelationPojo;
 import guru.bubl.module.model.graph.fork.NbNeighbors;
 import guru.bubl.module.model.graph.ShareLevel;
 import guru.bubl.module.model.graph.fork.NbNeighborsOperatorFactory;
-import guru.bubl.module.model.graph.vertex.VertexOperator;
 import guru.bubl.module.model.graph.vertex.VertexPojo;
 import guru.bubl.module.model.graph.fork.ForkOperator;
 import guru.bubl.module.neo4j_graph_manipulator.graph.FriendlyResourceFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.FriendlyResourceNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.OperatorNeo4j;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.GraphElementFactoryNeo4j;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.graph_element.GraphElementFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.relation.RelationFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.relation.RelationOperatorNeo4J;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.VertexFactoryNeo4j;
@@ -27,8 +26,8 @@ import java.net.URI;
 import java.util.Map;
 
 import static guru.bubl.module.neo4j_graph_manipulator.graph.RestApiUtilsNeo4j.map;
-import static guru.bubl.module.neo4j_graph_manipulator.graph.graph.GraphElementOperatorNeo4j.decrementNbNeighborsQueryPart;
-import static guru.bubl.module.neo4j_graph_manipulator.graph.graph.GraphElementOperatorNeo4j.incrementNbNeighborsQueryPart;
+import static guru.bubl.module.neo4j_graph_manipulator.graph.graph.graph_element.GraphElementOperatorNeo4j.decrementNbNeighborsQueryPart;
+import static guru.bubl.module.neo4j_graph_manipulator.graph.graph.graph_element.GraphElementOperatorNeo4j.incrementNbNeighborsQueryPart;
 import static org.neo4j.driver.v1.Values.parameters;
 
 public class ForkOperatorNeo4J implements ForkOperator, OperatorNeo4j {
@@ -168,6 +167,23 @@ public class ForkOperatorNeo4J implements ForkOperator, OperatorNeo4j {
     @Override
     public URI uri() {
         return uri;
+    }
+
+    @Override
+    public void remove() {
+        try (Session session = driver.session()) {
+            session.run(
+                    queryPrefix() +
+                            "OPTIONAL MATCH " +
+                            "(n)<-[:SOURCE|DESTINATION]-(e:Edge) " +
+                            "WITH e, n " +
+                            "DETACH DELETE n, e",
+                    parameters(
+                            "uri",
+                            this.uri().toString()
+                    )
+            );
+        }
     }
 
     private RelationPojo addVertexAndRelationWithIdsUnderPatternOrNot(String vertexId, String edgeId, Boolean isUnderPattern) {

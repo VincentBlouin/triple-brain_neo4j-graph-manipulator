@@ -4,7 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 import guru.bubl.module.model.Image;
-import guru.bubl.module.model.graph.GraphElement;
+import guru.bubl.module.model.graph.graph_element.GraphElement;
 import guru.bubl.module.model.graph.ShareLevel;
 import guru.bubl.module.model.graph.edge.EdgeOperatorFactory;
 import guru.bubl.module.model.graph.fork.ForkOperator;
@@ -16,8 +16,8 @@ import guru.bubl.module.model.graph.group_relation.GroupRelationOperator;
 import guru.bubl.module.model.graph.tag.Tag;
 import guru.bubl.module.model.graph.tag.TagPojo;
 import guru.bubl.module.neo4j_graph_manipulator.graph.OperatorNeo4j;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.GraphElementFactoryNeo4j;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.GraphElementOperatorNeo4j;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.graph_element.GraphElementFactoryNeo4j;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.graph_element.GraphElementOperatorNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.VertexOperatorNeo4j;
 
 import java.net.URI;
@@ -75,7 +75,7 @@ public class GroupRelationOperatorNeo4j implements GroupRelationOperator, Operat
 
     @Override
     public void remove() {
-        graphElementOperator.remove();
+        forkOperatorFactory.withUri(uri()).remove();
     }
 
     @Override

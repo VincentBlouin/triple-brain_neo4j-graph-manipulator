@@ -22,8 +22,8 @@ import guru.bubl.module.model.graph.vertex.*;
 import guru.bubl.module.neo4j_graph_manipulator.graph.FriendlyResourceFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.FriendlyResourceNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.OperatorNeo4j;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.GraphElementFactoryNeo4j;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.GraphElementOperatorNeo4j;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.graph_element.GraphElementFactoryNeo4j;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.graph_element.GraphElementOperatorNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.relation.RelationFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.fork.ForkOperatorNeo4J;
 import org.neo4j.driver.v1.Driver;
@@ -201,20 +201,7 @@ public class VertexOperatorNeo4j implements VertexOperator, OperatorNeo4j {
 
     @Override
     public void remove() {
-        try (Session session = driver.session()) {
-            session.run(
-                    queryPrefix() +
-                            "OPTIONAL MATCH " +
-                            "(n)<-[:SOURCE|DESTINATION]-(e), " +
-                            "(e)-[:SOURCE|DESTINATION]->(v) " +
-                            "WITH e, n " +
-                            "DETACH DELETE n, e",
-                    parameters(
-                            "uri",
-                            this.uri().toString()
-                    )
-            );
-        }
+        forkOperatorFactory.withUri(uri()).remove();
     }
 
     @Override

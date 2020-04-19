@@ -4,12 +4,8 @@
 
 package guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph;
 
-import guru.bubl.module.model.graph.GraphElementPojo;
 import guru.bubl.module.model.graph.group_relation.GroupRelationPojo;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.TagQueryBuilder;
 import org.neo4j.driver.v1.Record;
-
-import java.net.URI;
 
 import static guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph.VertexFromExtractorQueryRow.*;
 

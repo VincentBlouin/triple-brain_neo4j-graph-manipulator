@@ -1,11 +1,7 @@
-package guru.bubl.module.neo4j_graph_manipulator.graph.graph;
+package guru.bubl.module.neo4j_graph_manipulator.graph.graph.graph_element;
 
-import guru.bubl.module.model.UserUris;
-import guru.bubl.module.model.graph.GraphElementOperator;
-import guru.bubl.module.model.graph.edge.EdgeOperatorFactory;
-import guru.bubl.module.model.graph.relation.RelationFactory;
-import guru.bubl.module.model.graph.relation.RelationOperator;
-import guru.bubl.module.model.graph.tag.TagFactory;
+import guru.bubl.module.model.graph.fork.ForkOperator;
+import guru.bubl.module.model.graph.graph_element.GraphElementOperator;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.group_relation.GroupRelationFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.relation.RelationFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.VertexFactoryNeo4j;
@@ -38,6 +34,19 @@ public class GraphElementSpecialOperatorFactory {
                 return groupRelationFactory.withUri(uri);
             case Edge:
                 return relationOperator.withUri(uri);
+            case Meta:
+                return tagFactoryNeo4J.withUri(uri);
+            default:
+                return null;
+        }
+    }
+
+    public ForkOperator getForkFromUri(URI uri) {
+        switch (getGraphElementTypeFromUri(uri)) {
+            case Vertex:
+                return vertexFactory.withUri(uri);
+            case GroupRelation:
+                return groupRelationFactory.withUri(uri);
             case Meta:
                 return tagFactoryNeo4J.withUri(uri);
             default:
