@@ -193,9 +193,11 @@ public class VertexOperatorNeo4j implements VertexOperator, OperatorNeo4j {
     }
 
     @Override
-    public RelationOperator addRelationToFork(ForkOperator destinationFork) {
+    public RelationOperator addRelationToFork(URI destinationUri, ShareLevel sourceShareLevel, ShareLevel destinationShareLevel) {
         return forkOperatorFactory.withUri(uri()).addRelationToFork(
-                destinationFork
+                destinationUri,
+                sourceShareLevel,
+                destinationShareLevel
         );
     }
 

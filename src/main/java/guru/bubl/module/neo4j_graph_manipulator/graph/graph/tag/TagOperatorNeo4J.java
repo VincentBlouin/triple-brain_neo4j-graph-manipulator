@@ -200,7 +200,7 @@ public class TagOperatorNeo4J implements TagOperator, OperatorNeo4j {
     }
 
     @Override
-    public RelationOperator addRelationToFork(ForkOperator destinationFork) {
+    public RelationOperator addRelationToFork(URI destinationUri, ShareLevel sourceShareLevel, ShareLevel destinationShareLevel) {
         return null;
     }
 

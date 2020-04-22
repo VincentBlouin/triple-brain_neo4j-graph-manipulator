@@ -321,7 +321,7 @@ public class RelationOperatorNeo4J implements RelationOperator, OperatorNeo4j {
     }
 
     @Override
-    public GroupRelationPojo convertToGroupRelation(String newGroupRelationId, ShareLevel initialShareLevel, String label) {
+    public GroupRelationPojo convertToGroupRelation(String newGroupRelationId, ShareLevel initialShareLevel, String label, String note) {
         UserUris userUris = new UserUris(graphElementOperator.getOwnerUsername());
         URI newGroupRelationUri = userUris.groupRelationUriFromShortId(newGroupRelationId);
         GroupRelationOperatorNeo4j groupRelationOperator = groupRelationFactoryNeo4j.withUri(newGroupRelationUri);
@@ -345,7 +345,8 @@ public class RelationOperatorNeo4J implements RelationOperator, OperatorNeo4j {
                                     RestApiUtilsNeo4j.map(
                                             "shareLevel", initialShareLevel.getIndex(),
                                             initialShareLevel.getNbNeighborsPropertyName(), 2,
-                                            "label", label
+                                            "label", label,
+                                            "comment", note
                                     )
                             )
                     )

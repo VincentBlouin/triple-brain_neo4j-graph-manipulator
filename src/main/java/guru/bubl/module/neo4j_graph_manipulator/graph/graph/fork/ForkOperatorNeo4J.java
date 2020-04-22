@@ -124,18 +124,16 @@ public class ForkOperatorNeo4J implements ForkOperator, OperatorNeo4j {
     }
 
     @Override
-    public RelationOperator addRelationToFork(final ForkOperator destinationFork) {
+    public RelationOperator addRelationToFork(URI destinationUri, ShareLevel sourceShareLevel, ShareLevel destinationShareLevel) {
         GraphElementOperator source = graphElementFactoryNeo4j.withUri(uri);
-        GraphElementOperator destination = graphElementFactoryNeo4j.withUri(destinationFork.uri());
+        GraphElementOperator destination = graphElementFactoryNeo4j.withUri(destinationUri);
         if (source.isPatternOrUnderPattern() || destination.isPatternOrUnderPattern()) {
             return null;
         }
         RelationOperator edge = edgeFactory.withSourceAndDestinationUri(
                 uri(),
-                destination.uri()
+                destinationUri
         );
-        ShareLevel sourceShareLevel = source.getShareLevel();
-        ShareLevel destinationShareLevel = destination.getShareLevel();
         if (sourceShareLevel == ShareLevel.FRIENDS && destinationShareLevel == ShareLevel.FRIENDS) {
             edge.createWithShareLevel(ShareLevel.FRIENDS);
         } else if (sourceShareLevel.isPublic() && destinationShareLevel.isPublic()) {
@@ -145,14 +143,14 @@ public class ForkOperatorNeo4J implements ForkOperator, OperatorNeo4j {
         }
         try (Session session = driver.session()) {
             session.run(
-                    "MATCH (s:Vertex {uri:$uri}), (d:Vertex {uri:$destinationUri}) " +
+                    "MATCH (s:Resource {uri:$uri}), (d:Resource {uri:$destinationUri}) " +
                             incrementNbNeighborsQueryPart(destinationShareLevel, "s", "WITH s,d SET ") +
                             incrementNbNeighborsQueryPart(sourceShareLevel, "d", "WITH s,d SET "),
                     parameters(
                             "uri",
                             this.uri().toString(),
                             "destinationUri",
-                            destination.uri().toString()
+                            destinationUri.toString()
                     )
             );
             return edge;
