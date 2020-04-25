@@ -169,7 +169,7 @@ public class CenterGraphElementsOperatorNeo4j implements CenteredGraphElementsOp
                                     "OPTIONAL MATCH (n)-[idr:IDENTIFIED_TO]->(id) " +
                                     (inShareLevelsIntegers.length == 0 ? " " : "WHERE id.shareLevel IN {shareLevels} ") +
                                     "RETURN " +
-                                    TagQueryBuilder.identificationReturnQueryPart(inShareLevels) +
+                                    TagQueryBuilder.tagReturnQueryPart(inShareLevels) +
                                     "%s %s %s n.%s as context, n.nb_visits as nbVisits, n.creation_date as creationDate, n.last_center_date as lastCenterDate, n.label as label, n.uri as uri, n.colors as colors, n.shareLevel, 'Pattern' IN LABELS(n) as isPattern " +
                                     "ORDER BY " + sortBy + " DESC " +
                                     "SKIP " + skip +

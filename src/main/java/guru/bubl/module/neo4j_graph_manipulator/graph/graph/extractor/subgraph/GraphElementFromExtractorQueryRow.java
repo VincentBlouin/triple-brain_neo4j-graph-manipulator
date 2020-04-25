@@ -15,7 +15,7 @@ public class GraphElementFromExtractorQueryRow {
 
     private Record record;
     private String key;
-    private String identificationKey = TagQueryBuilder.IDENTIFIER_QUERY_KEY;
+    private String identificationKey = TagQueryBuilder.TAG_QUERY_KEY;
 
     public static GraphElementFromExtractorQueryRow usingRowAndKey(
             Record record,

@@ -133,7 +133,7 @@ public class GraphSearchNeo4j implements GraphSearch {
                                     "RETURN " +
                                     "score, n.uri, n.label, n.external_uri, n.colors, n.shareLevel as shareLevel, n.nb_visits, n.nb_private_neighbors, n.nb_friend_neighbors, n.nb_public_neighbors, n.creation_date, n.last_modification_date, " +
                                     "(CASE WHEN n.owner=$owner THEN n.private_context ELSE n.public_context END) as context, " +
-                                    TagQueryBuilder.identificationReturnQueryPart(
+                                    TagQueryBuilder.tagReturnQueryPart(
                                             inShareLevels
                                     ) +
                                     "labels(n) as type " +

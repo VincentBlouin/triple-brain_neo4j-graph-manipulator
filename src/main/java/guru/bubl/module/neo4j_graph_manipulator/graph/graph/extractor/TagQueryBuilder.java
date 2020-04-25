@@ -15,73 +15,73 @@ import java.util.Set;
 public class TagQueryBuilder {
 
     public static final String
-            IDENTIFIER_QUERY_KEY = "id",
-            IDENTIFICATION_RELATION_QUERY_KEY = "idr";
+            TAG_QUERY_KEY = "id",
+            TAG_RELATION_QUERY_KEY = "idr";
 
-    public static String identificationReturnQueryPart(Set<ShareLevel> inShareLevels) {
-        return identificationReturnQueryPartUsingKeysForIdentificationRelationAndAlias(
-                IDENTIFIER_QUERY_KEY,
-                IDENTIFICATION_RELATION_QUERY_KEY,
+    public static String tagReturnQueryPart(Set<ShareLevel> inShareLevels) {
+        return tagReturnQueryPartUsingKeysForIdentificationRelationAndAlias(
+                TAG_QUERY_KEY,
+                TAG_RELATION_QUERY_KEY,
                 inShareLevels
         );
     }
 
-    public static String identificationReturnQueryPartUsingKeysForIdentificationRelationAndAlias(
-            String identificationKey,
+    public static String tagReturnQueryPartUsingKeysForIdentificationRelationAndAlias(
+            String tagKey,
             String relationKey,
             Set<ShareLevel> inShareLevels
     ) {
         return "COLLECT([" +
                 QueryUtils.getPropertyUsingContainerNameQueryPart(
-                        identificationKey,
+                        tagKey,
                         TagOperatorNeo4J.props.external_uri.name()
                 ) +
                 QueryUtils.getPropertyUsingContainerNameQueryPart(
-                        identificationKey,
+                        tagKey,
                         UserGraphNeo4j.URI_PROPERTY_NAME
                 ) +
                 QueryUtils.getPropertyUsingContainerNameQueryPart(
-                        identificationKey,
+                        tagKey,
                         FriendlyResourceNeo4j.props.label.toString()
                 ) +
                 QueryUtils.getPropertyUsingContainerNameQueryPart(
-                        identificationKey,
+                        tagKey,
                         FriendlyResourceNeo4j.props.comment.toString()
                 ) +
                 FriendlyResourceQueryBuilder.imageReturnQueryPart(
-                        identificationKey
+                        tagKey
                 ) +
                 QueryUtils.getPropertyUsingContainerNameQueryPart(
-                        identificationKey,
+                        tagKey,
                         FriendlyResourceNeo4j.props.creation_date.name()
                 ) +
                 QueryUtils.getPropertyUsingContainerNameQueryPart(
-                        identificationKey,
+                        tagKey,
                         "colors"
                 ) +
                 QueryUtils.getPropertyUsingContainerNameQueryPart(
-                        identificationKey,
+                        tagKey,
                         "shareLevel"
                 ) +
                 (inShareLevels.contains(ShareLevel.PRIVATE) ? QueryUtils.getPropertyUsingContainerNameQueryPart(
-                        identificationKey,
+                        tagKey,
                         ForkOperatorNeo4J.props.nb_private_neighbors.name()
                 ) : "null,") +
                 (inShareLevels.contains(ShareLevel.FRIENDS) ? QueryUtils.getPropertyUsingContainerNameQueryPart(
-                        identificationKey,
+                        tagKey,
                         ForkOperatorNeo4J.props.nb_friend_neighbors.name()
                 ) : "null,") +
                 (inShareLevels.contains(ShareLevel.PUBLIC) || inShareLevels.contains(ShareLevel.PUBLIC_WITH_LINK) ? QueryUtils.getLastPropertyUsingContainerNameQueryPart(
-                        identificationKey,
+                        tagKey,
                         ForkOperatorNeo4J.props.nb_public_neighbors.name()
                 ) : "null") +
-                "]) as " + identificationKey + ", ";
+                "]) as " + tagKey + ", ";
     }
 
     public static String centerTagQueryPart(String prefix) {
         return QueryUtils.getPropertyUsingContainerNameQueryPart(
                 prefix,
-                "external_uri"
+                "external_ui"
         );
     }
 }
