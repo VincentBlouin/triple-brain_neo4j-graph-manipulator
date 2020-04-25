@@ -69,6 +69,11 @@ public class SubGraphExtractorNeo4j {
     ) {
         this.driver = driver;
         this.centerBubbleUri = centerBubbleUri;
+        /*
+        this.depth = depth != 0 && depth % 2 == 0 ? depth + 1 : depth;
+        because when depth is even it needs one more depth to get the edge
+        except when it's zero just return the center
+         */
         this.depth = depth != 0 && depth % 2 == 0 ? depth + 1 : depth;
         this.inShareLevelsArray = inShareLevelsArray;
         inShareLevels = ShareLevel.arrayOfIntegersToSet(this.inShareLevelsArray);
@@ -203,7 +208,7 @@ public class SubGraphExtractorNeo4j {
                         "MATCH(n:Resource{uri:$centerUri}) %s " +
                                 "WITH %s, ge MATCH(ge) WHERE ge.shareLevel IN {shareLevels} " +
                                 "OPTIONAL MATCH (ge)-[:IDENTIFIED_TO]->(id) WHERE id.shareLevel IN {shareLevels} " +
-                                "RETURN ge.childrenIndexes, " +
+                                "RETURN ge.childrenIndexes, ge.external_uri, " +
                                 vertexAndEdgeCommonQueryPart(GRAPH_ELEMENT_QUERY_KEY) +
                                 vertexReturnQueryPart(GRAPH_ELEMENT_QUERY_KEY) +
                                 (isCenterTagFlow ? TagQueryBuilder.centerTagQueryPart(GRAPH_ELEMENT_QUERY_KEY) : "") +
