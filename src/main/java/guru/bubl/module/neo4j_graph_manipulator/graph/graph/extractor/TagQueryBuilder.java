@@ -14,21 +14,17 @@ import java.util.Set;
 
 public class TagQueryBuilder {
 
-    public static final String
-            TAG_QUERY_KEY = "id",
-            TAG_RELATION_QUERY_KEY = "idr";
+    public static final String TAG_QUERY_KEY = "id";
 
     public static String tagReturnQueryPart(Set<ShareLevel> inShareLevels) {
         return tagReturnQueryPartUsingKeysForIdentificationRelationAndAlias(
                 TAG_QUERY_KEY,
-                TAG_RELATION_QUERY_KEY,
                 inShareLevels
         );
     }
 
     public static String tagReturnQueryPartUsingKeysForIdentificationRelationAndAlias(
             String tagKey,
-            String relationKey,
             Set<ShareLevel> inShareLevels
     ) {
         return "COLLECT([" +

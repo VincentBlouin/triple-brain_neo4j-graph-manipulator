@@ -166,7 +166,7 @@ public class CenterGraphElementsOperatorNeo4j implements CenteredGraphElementsOp
                             match + " 1=1 " +
                                     (filterOnUser ? "AND n.owner=$owner" : "") + (includeNonCenters ? " " : " AND EXISTS(n.last_center_date) ") +
                                     (inShareLevelsIntegers.length == 0 ? " " : "AND n.shareLevel IN {shareLevels} ") +
-                                    "OPTIONAL MATCH (n)-[idr:IDENTIFIED_TO]->(id) " +
+                                    "OPTIONAL MATCH (n)-[:IDENTIFIED_TO]->(id) " +
                                     (inShareLevelsIntegers.length == 0 ? " " : "WHERE id.shareLevel IN {shareLevels} ") +
                                     "RETURN " +
                                     TagQueryBuilder.tagReturnQueryPart(inShareLevels) +

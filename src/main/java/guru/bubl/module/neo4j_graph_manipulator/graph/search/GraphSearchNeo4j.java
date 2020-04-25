@@ -127,7 +127,7 @@ public class GraphSearchNeo4j implements GraphSearch {
                             "CALL db.index.fulltext.queryNodes('%s', $label) YIELD node as n, score " +
                                     "WHERE n.isUnderPattern is NULL AND (n." + (forPersonal ? "owner=$owner" : "shareLevel=40 ") +
                                     (!forPersonal && !StringUtils.isEmpty(username) ? "OR n.owner=$owner " : " ") +
-                                    ")OPTIONAL MATCH (n)-[idr:IDENTIFIED_TO]->(id) " +
+                                    ")OPTIONAL MATCH (n)-[:IDENTIFIED_TO]->(id) " +
                                     "WHERE id." + (forPersonal ? "owner=$owner" : " shareLevel=40 ") +
                                     (!forPersonal && !StringUtils.isEmpty(username) ? "OR id.owner=$owner " : " ") +
                                     "RETURN " +

@@ -202,7 +202,7 @@ public class SubGraphExtractorNeo4j {
                 String.format(
                         "MATCH(n:Resource{uri:$centerUri}) %s " +
                                 "WITH %s, ge MATCH(ge) WHERE ge.shareLevel IN {shareLevels} " +
-                                "OPTIONAL MATCH (ge)-[idr:IDENTIFIED_TO]->(id) WHERE id.shareLevel IN {shareLevels} " +
+                                "OPTIONAL MATCH (ge)-[:IDENTIFIED_TO]->(id) WHERE id.shareLevel IN {shareLevels} " +
                                 "RETURN ge.childrenIndexes, " +
                                 vertexAndEdgeCommonQueryPart(GRAPH_ELEMENT_QUERY_KEY) +
                                 vertexReturnQueryPart(GRAPH_ELEMENT_QUERY_KEY) +
