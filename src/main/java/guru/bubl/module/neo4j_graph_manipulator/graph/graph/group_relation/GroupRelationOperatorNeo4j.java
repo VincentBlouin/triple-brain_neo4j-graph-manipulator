@@ -85,7 +85,7 @@ public class GroupRelationOperatorNeo4j implements GroupRelationOperator, Operat
 
     @Override
     public void removeTag(Tag tag, ShareLevel sourceShareLevel) {
-
+        graphElementOperator.removeTag(tag, sourceShareLevel);
     }
 
     @Override
