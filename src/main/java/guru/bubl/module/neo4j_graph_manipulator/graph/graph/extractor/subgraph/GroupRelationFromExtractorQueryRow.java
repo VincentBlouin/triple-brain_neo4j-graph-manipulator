@@ -7,6 +7,8 @@ package guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph;
 import guru.bubl.module.model.graph.group_relation.GroupRelationPojo;
 import org.neo4j.driver.v1.Record;
 
+import java.net.URI;
+
 import static guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph.VertexFromExtractorQueryRow.*;
 
 public class GroupRelationFromExtractorQueryRow {
@@ -42,7 +44,16 @@ public class GroupRelationFromExtractorQueryRow {
         groupRelationPojo.getGraphElement().setChildrenIndex(
                 getChildrenIndexes(keyPrefix, row)
         );
+        groupRelationPojo.setIndexVertexUri(getIndexVertexUri());
         return groupRelationPojo;
+    }
+
+    private URI getIndexVertexUri() {
+        return URI.create(
+                row.get(
+                        keyPrefix + ".indexVertexUri"
+                ).asString()
+        );
     }
 
 }
