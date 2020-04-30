@@ -50,7 +50,7 @@ public class WholeGraphAdminNeo4j implements WholeGraphAdmin {
             session.run(
                     String.format(
                             "MATCH(n:%s) OPTIONAL MATCH (n)<-[:SOURCE|DESTINATION]-(e:Edge)," +
-                                    "(e)-[:SOURCE|DESTINATION]->(o:Vertex) WHERE o.shareLevel in $shareLevels " +
+                                    "(e)-[:SOURCE|DESTINATION]->(o) WHERE o.shareLevel in $shareLevels " +
                                     "WITH n,o " +
                                     "OPTIONAL MATCH (n)-[:SOURCE]->(closeVertex:Vertex) WHERE closeVertex.shareLevel in $shareLevels " +
                                     "WITH n,o, closeVertex " +
@@ -187,7 +187,7 @@ public class WholeGraphAdminNeo4j implements WholeGraphAdmin {
         try (Session session = driver.session()) {
             session.run(
                     String.format("MATCH(n:%s) OPTIONAL MATCH (n)<-[:SOURCE|DESTINATION]->(e:Edge)," +
-                                    "(e)<-[:SOURCE|DESTINATION]->(o:Vertex) WHERE o.label <> '' AND o.shareLevel in $shareLevels " +
+                                    "(e)<-[:SOURCE|DESTINATION]->(o) WHERE o.label <> '' AND o.shareLevel in $shareLevels " +
                                     "WITH n,o, COLLECT({label:o.label, nbNeighbors:%s}) as vertices " +
                                     "OPTIONAL MATCH (n)<-[:SOURCE|DESTINATION]->(gr:GroupRelation) WHERE gr.label <> '' AND gr.shareLevel in $shareLevels " +
                                     "WITH n, vertices, COLLECT({label:gr.label, nbNeighbors: %s}) as groupRelations " +
