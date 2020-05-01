@@ -60,12 +60,6 @@ public class TagFromExtractorQueryRow {
                         record
                 )
         );
-        tag.getGraphElement().setChildrenIndex(
-                VertexFromExtractorQueryRow.getChildrenIndexes(
-                        key,
-                        record
-                )
-        );
         tag.getGraphElement().setColors(
                 VertexFromExtractorQueryRow.getColors(
                         key,

@@ -41,9 +41,6 @@ public class GroupRelationFromExtractorQueryRow {
                 getNbNeighbors(row, keyPrefix),
                 getShareLevel(keyPrefix, row)
         );
-        groupRelationPojo.getGraphElement().setChildrenIndex(
-                getChildrenIndexes(keyPrefix, row)
-        );
         groupRelationPojo.setIndexVertexUri(getIndexVertexUri());
         return groupRelationPojo;
     }

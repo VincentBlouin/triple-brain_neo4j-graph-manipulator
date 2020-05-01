@@ -9,6 +9,7 @@ import com.google.inject.assistedinject.AssistedInject;
 import guru.bubl.module.model.UserUris;
 import guru.bubl.module.model.graph.ShareLevel;
 import guru.bubl.module.model.graph.edge.EdgePojo;
+import guru.bubl.module.model.graph.graph_element.GraphElementPojo;
 import guru.bubl.module.model.graph.graph_element.GraphElementType;
 import guru.bubl.module.model.graph.group_relation.GroupRelation;
 import guru.bubl.module.model.graph.group_relation.GroupRelationPojo;
@@ -91,6 +92,7 @@ public class SubGraphExtractorNeo4j {
             );
             Set<Relationship> relationships = new HashSet<>();
             Map<Long, URI> idsUri = new HashMap<>();
+            String childIndex = null;
             while (rs.hasNext()) {
                 Record record = rs.next();
                 Value relationship1 = record.get("rel1");
@@ -104,6 +106,9 @@ public class SubGraphExtractorNeo4j {
                 Value relationshipList = record.get("relList");
                 if (!relationshipList.isNull()) {
                     relationships.addAll((List) relationshipList.asList());
+                }
+                if (childIndex == null && !record.get("childIndex").isNull()) {
+                    childIndex = record.get("childIndex").asString();
                 }
                 switch (getGraphElementTypeFromRow(record)) {
                     case Vertex:
@@ -171,8 +176,27 @@ public class SubGraphExtractorNeo4j {
                     }
                 }
             }
+            setChildrenIndex(childIndex);
         }
         return subGraph;
+    }
+
+    private void setChildrenIndex(String childIndex) {
+        if (!subGraph.hasCenter(centerBubbleUri)) {
+            return;
+        }
+        if (this.isCenterTagFlow) {
+            subGraph.getCenterMeta().getGraphElement().setChildrenIndex(
+                    childIndex
+            );
+        } else {
+            GraphElementPojo graphElement = UserUris.isUriOfAGroupRelation(this.centerBubbleUri) ?
+                    subGraph.getGroupRelations().get(this.centerBubbleUri).getGraphElement() :
+                    subGraph.vertexWithIdentifier(this.centerBubbleUri).getGraphElement();
+            graphElement.setChildrenIndex(
+                    childIndex
+            );
+        }
     }
 
     private GraphElementType getGraphElementTypeFromRow(Record record) {
@@ -206,17 +230,17 @@ public class SubGraphExtractorNeo4j {
         return
                 String.format(
                         "MATCH(n:Resource{uri:$centerUri}) %s " +
-                                "WITH %s, ge MATCH(ge) WHERE ge.shareLevel IN {shareLevels} " +
+                                "WITH %s, ge, childIndex MATCH(ge) WHERE ge.shareLevel IN {shareLevels} " +
                                 "OPTIONAL MATCH (ge)-[:IDENTIFIED_TO]->(id) WHERE id.shareLevel IN {shareLevels} " +
-                                "RETURN ge.childrenIndexes, ge.external_uri, ge.indexVertexUri, " +
+                                "RETURN childIndex, ge.external_uri, ge.indexVertexUri, " +
                                 vertexAndEdgeCommonQueryPart(GRAPH_ELEMENT_QUERY_KEY) +
                                 vertexReturnQueryPart(GRAPH_ELEMENT_QUERY_KEY) +
                                 (isCenterTagFlow ? TagQueryBuilder.centerTagQueryPart(GRAPH_ELEMENT_QUERY_KEY) : "") +
                                 TagQueryBuilder.tagReturnQueryPart(inShareLevels) +
                                 "labels(ge) as type, ID(ge) as nId, %s",
                         (this.isCenterTagFlow ?
-                                "OPTIONAL MATCH (n)<-[IDENTIFIED_TO*0..1]-(t) OPTIONAL MATCH (t:GroupRelation)-[rel1:SOURCE]->(gt) OPTIONAL MATCH (t:Edge)-[rel2:SOURCE|DESTINATION]->(ef) WITH rel1, rel2, COLLECT(t) + collect(gt) + collect(ef) as geList UNWIND geList as ge" :
-                                "OPTIONAL MATCH (n)<-[relList:SOURCE|DESTINATION*0.." + depth + "]->(e) OPTIONAL MATCH (e:Edge)-[rel1:SOURCE|DESTINATION]->(ef) WITH relList, rel1, COLLECT(e) + collect(ef) as geList UNWIND geList as ge"),
+                                "OPTIONAL MATCH (n)<-[IDENTIFIED_TO*0..1]-(t) OPTIONAL MATCH (t:GroupRelation)-[rel1:SOURCE]->(gt) OPTIONAL MATCH (t:Edge)-[rel2:SOURCE|DESTINATION]->(ef) WITH n.childrenIndexes as childIndex, rel1, rel2, COLLECT(t) + collect(gt) + collect(ef) as geList UNWIND geList as ge" :
+                                "OPTIONAL MATCH (n)<-[relList:SOURCE|DESTINATION*0.." + depth + "]->(e) OPTIONAL MATCH (e:Edge)-[rel1:SOURCE|DESTINATION]->(ef) WITH n.childrenIndexes as childIndex, relList, rel1, COLLECT(e) + collect(ef) as geList UNWIND geList as ge"),
                         relVariables,
                         relVariables
                 );

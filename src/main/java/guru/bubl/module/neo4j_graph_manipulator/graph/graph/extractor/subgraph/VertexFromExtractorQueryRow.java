@@ -35,9 +35,6 @@ public class VertexFromExtractorQueryRow {
                 getNbNeighbors(row, keyPrefix),
                 getShareLevel(keyPrefix, row)
         );
-        vertex.getGraphElement().setChildrenIndex(
-                getChildrenIndexes(keyPrefix, row)
-        );
         vertex.getGraphElement().setColors(
                 getColors(keyPrefix, row)
         );
@@ -68,17 +65,6 @@ public class VertexFromExtractorQueryRow {
             ).asInt());
         }
         return nbNeighborsPojo;
-    }
-
-
-    public static String getChildrenIndexes(String keyPrefix, Record row) {
-        String key = keyPrefix + "." + "childrenIndexes";
-        if (row.get(key) == null) {
-            return null;
-        }
-        return row.get(
-                key
-        ).asString();
     }
 
     public static String getColors(String keyPrefix, Record row) {
