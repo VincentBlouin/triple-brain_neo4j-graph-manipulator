@@ -324,8 +324,9 @@ public class GraphElementOperatorNeo4j implements GraphElementOperator, Operator
         }
 
         identificationPojo.setCreationDate(new Date().getTime());
+        Boolean tagAlreadyHasUri = tag.hasUri() && UserUris.isUriOfATag(tag.uri());
         identificationPojo.setUri(
-                tag.hasUri() && UserUris.isUriOfATag(tag.uri()) ? tag.uri() : new UserUris(getOwnerUsername()).generateTagUri()
+                tagAlreadyHasUri ? tag.uri() : new UserUris(getOwnerUsername()).generateTagUri()
         );
         if (!UserUris.ownerUserNameFromUri(identificationPojo.uri()).equals(getOwnerUsername())) {
             return new HashMap<>();
@@ -337,7 +338,7 @@ public class GraphElementOperatorNeo4j implements GraphElementOperator, Operator
                     AddTagQueryBuilder.usingIdentificationForGraphElement(
                             queryPrefix(),
                             sourceShareLevel,
-                            !tag.hasUri() && shouldTagExternalUri(tag.getExternalResourceUri())
+                            !tagAlreadyHasUri && shouldTagExternalUri(tag.getExternalResourceUri())
                     ).build(),
                     parameters(
                             "uri",
