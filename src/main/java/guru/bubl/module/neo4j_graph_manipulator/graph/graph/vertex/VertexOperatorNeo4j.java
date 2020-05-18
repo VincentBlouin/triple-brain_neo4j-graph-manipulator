@@ -412,7 +412,11 @@ public class VertexOperatorNeo4j implements VertexOperator, OperatorNeo4j {
                             "SET mergeTo.nb_private_neighbors = mergeTo.nb_private_neighbors + n.nb_private_neighbors," +
                             "mergeTo.nb_friend_neighbors = mergeTo.nb_friend_neighbors + n.nb_friend_neighbors," +
                             "mergeTo.nb_public_neighbors = mergeTo.nb_public_neighbors + n.nb_public_neighbors " +
-                            "WITH mergeTo, n " +
+                            "WITH n,mergeTo " +
+                            "OPTIONAL MATCH (n)<-[r:SOURCE|DESTINATION]-(e) " +
+                            "OPTIONAL MATCH (e)-[:SOURCE|DESTINATION]-(nv)-[:SOURCE|DESTINATION]-(nve)-[:SOURCE|DESTINATION]-(mergeTo) " +
+                            "DETACH DELETE nve " +
+                            "WITH n, mergeTo " +
                             "OPTIONAL MATCH (n)<-[r:SOURCE]-(e) " +
                             "MERGE (mergeTo)<-[:SOURCE]-(e) " +
                             "DELETE r " +
@@ -425,7 +429,7 @@ public class VertexOperatorNeo4j implements VertexOperator, OperatorNeo4j {
                             "MERGE (mergeTo)-[:IDENTIFIED_TO]->(t) " +
                             "DELETE r " +
                             "WITH n " +
-                            "DETACH DELETE n",
+                            "DETACH DELETE n ",
                     parameters(
                             "uri", this.uri().toString(),
                             "mergeToUri", vertexOperator.uri().toString()

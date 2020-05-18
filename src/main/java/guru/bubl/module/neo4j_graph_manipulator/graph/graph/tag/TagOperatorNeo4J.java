@@ -148,25 +148,22 @@ public class TagOperatorNeo4J implements TagOperator, OperatorNeo4j {
     }
 
     @Override
-    public void mergeTo(Tag tag) {
+    public void mergeTo(Tag mergeTo) {
         try (Session session = driver.session()) {
-            StatementResult sr = session.run(
-                    queryPrefix() + "MATCH (n)<-[:IDENTIFIED_TO]-(tagged) RETURN tagged.uri",
+            session.run(
+                    queryPrefix() + ", (mergeTo:Resource{uri:$mergeToUri}) " +
+                            "SET mergeTo.nb_private_neighbors = mergeTo.nb_private_neighbors + n.nb_private_neighbors," +
+                            "mergeTo.nb_friend_neighbors = mergeTo.nb_friend_neighbors + n.nb_friend_neighbors," +
+                            "mergeTo.nb_public_neighbors = mergeTo.nb_public_neighbors + n.nb_public_neighbors " +
+                            "WITH n, mergeTo " +
+                            "OPTIONAL MATCH (n)<-[:IDENTIFIED_TO]-(ge) " +
+                            "MERGE (mergeTo)<-[:IDENTIFIED_TO]-(ge) " +
+                            "DETACH DELETE n ",
                     parameters(
-                            "uri", this.uri().toString()
+                            "uri", this.uri().toString(),
+                            "mergeToUri", mergeTo.uri().toString()
                     )
             );
-            TagPojo mergeWithPojo = tagFactory.withUri(
-                    tag.uri()
-            ).buildPojo();
-            while (sr.hasNext()) {
-                graphElementOperatorFactory.withUri(
-                        URI.create(sr.next().get("tagged.uri").asString())
-                ).addTag(
-                        mergeWithPojo
-                );
-            }
-            this.remove();
         }
     }
 
