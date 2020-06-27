@@ -89,7 +89,7 @@ import static java.util.Arrays.asList;
 public class Neo4jModule extends AbstractModule {
 
     public static final String
-            DB_PATH = "/var/lib/triple_brain/neo4j/db",
+            DB_PATH = "/tmp/triple_brain/neo4j/db",
             DB_PATH_FOR_TESTS = "/tmp/triple_brain/neo4j/db";
 
     private Boolean useEmbedded, test;
