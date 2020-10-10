@@ -4,9 +4,7 @@
 
 package guru.bubl.module.neo4j_graph_manipulator.graph;
 
-import org.neo4j.graphdb.RelationshipType;
-
-public enum Relationships implements RelationshipType {
+public enum Relationships{
     LABEL, //RDFS.LABEL
     SOURCE,
     DESTINATION,

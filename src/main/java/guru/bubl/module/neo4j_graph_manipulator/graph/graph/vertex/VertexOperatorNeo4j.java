@@ -30,7 +30,6 @@ import org.neo4j.driver.Driver;
 import org.neo4j.driver.Record;
 import org.neo4j.driver.Session;
 import org.neo4j.driver.Result;
-import org.neo4j.graphdb.Node;
 
 import java.net.URI;
 import java.util.Date;
@@ -54,7 +53,6 @@ public class VertexOperatorNeo4j implements VertexOperator, OperatorNeo4j {
     protected RelationFactoryNeo4j edgeFactory;
 
     protected GraphElementFactoryNeo4j neo4jGraphElementFactory;
-    protected Node node;
     protected Driver driver;
 
     protected ForkOperatorFactory forkOperatorFactory;

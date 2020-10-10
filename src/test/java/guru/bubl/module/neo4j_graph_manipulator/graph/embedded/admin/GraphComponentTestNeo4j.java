@@ -2,7 +2,7 @@
  * Copyright Vincent Blouin under the GPL License version 3
  */
 
-package guru.bubl.module.neo4j_graph_manipulator.graph.test;
+package guru.bubl.module.neo4j_graph_manipulator.graph.embedded.admin;
 
 import guru.bubl.module.model.User;
 import guru.bubl.module.model.graph.GraphFactory;
@@ -15,7 +15,6 @@ import guru.bubl.module.model.test.GraphComponentTest;
 import guru.bubl.module.model.test.SubGraphOperator;
 import guru.bubl.module.model.test.scenarios.TestScenarios;
 import guru.bubl.module.model.test.scenarios.GraphElementsOfTestScenario;
-import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jModule;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.UserGraphFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph.SubGraphExtractorFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.VertexFactoryNeo4j;
@@ -105,7 +104,7 @@ public class GraphComponentTestNeo4j implements GraphComponentTest {
 
     @Override
     public void afterClass() {
-        Neo4jModule.clearDb();
+        Neo4jModuleForTests.clearDb();
     }
 
     @Override
