@@ -10,13 +10,13 @@ import guru.bubl.module.model.FriendlyResource;
 import guru.bubl.module.model.center_graph_element.CenterGraphElementOperator;
 import guru.bubl.module.neo4j_graph_manipulator.graph.FriendlyResourceFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.FriendlyResourceNeo4j;
-import org.neo4j.driver.v1.Driver;
-import org.neo4j.driver.v1.Record;
-import org.neo4j.driver.v1.Session;
+import org.neo4j.driver.Driver;
+import org.neo4j.driver.Record;
+import org.neo4j.driver.Session;
 
 import java.util.Date;
 
-import static org.neo4j.driver.v1.Values.parameters;
+import static org.neo4j.driver.Values.parameters;
 
 public class CenterGraphElementOperatorNeo4j implements CenterGraphElementOperator {
 

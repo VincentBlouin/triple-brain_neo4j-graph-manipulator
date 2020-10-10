@@ -8,7 +8,7 @@ import guru.bubl.module.model.graph.ShareLevel;
 import guru.bubl.module.model.graph.fork.NbNeighborsPojo;
 import guru.bubl.module.model.graph.vertex.Vertex;
 import guru.bubl.module.model.graph.vertex.VertexPojo;
-import org.neo4j.driver.v1.Record;
+import org.neo4j.driver.Record;
 
 import java.util.List;
 

@@ -14,7 +14,7 @@ import guru.bubl.module.model.graph.vertex.VertexPojo;
 import guru.bubl.module.neo4j_graph_manipulator.graph.FriendlyResourceNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph.SubGraphExtractorFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.VertexFactoryNeo4j;
-import org.neo4j.driver.v1.Driver;
+import org.neo4j.driver.Driver;
 
 import javax.inject.Inject;
 import java.net.URI;

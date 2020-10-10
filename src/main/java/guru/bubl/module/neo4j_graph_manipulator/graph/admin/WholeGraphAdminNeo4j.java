@@ -9,12 +9,12 @@ import guru.bubl.module.model.admin.WholeGraphAdmin;
 import guru.bubl.module.model.graph.graph_element.GraphElement;
 import guru.bubl.module.model.graph.graph_element.GraphElementType;
 import guru.bubl.module.model.graph.ShareLevel;
-import org.neo4j.driver.v1.Driver;
-import org.neo4j.driver.v1.Session;
+import org.neo4j.driver.Driver;
+import org.neo4j.driver.Session;
 
 import java.util.Set;
 
-import static org.neo4j.driver.v1.Values.parameters;
+import static org.neo4j.driver.Values.parameters;
 
 public class WholeGraphAdminNeo4j implements WholeGraphAdmin {
 

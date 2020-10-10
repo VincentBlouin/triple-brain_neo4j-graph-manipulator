@@ -7,8 +7,8 @@ package guru.bubl.module.neo4j_graph_manipulator.graph.search.result_builder;
 import guru.bubl.module.model.graph.ShareLevel;
 import guru.bubl.module.model.graph.fork.NbNeighborsPojo;
 import guru.bubl.module.model.search.GraphElementSearchResult;
-import org.neo4j.driver.v1.Record;
-import org.neo4j.driver.v1.Value;
+import org.neo4j.driver.Record;
+import org.neo4j.driver.Value;
 
 import java.util.Set;
 

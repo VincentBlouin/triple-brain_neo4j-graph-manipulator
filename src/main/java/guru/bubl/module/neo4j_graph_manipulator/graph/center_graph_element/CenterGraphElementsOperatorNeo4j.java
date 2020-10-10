@@ -11,17 +11,20 @@ import guru.bubl.module.model.center_graph_element.CenterGraphElementPojo;
 import guru.bubl.module.model.center_graph_element.CenteredGraphElementsOperator;
 import guru.bubl.module.model.friend.FriendStatus;
 import guru.bubl.module.model.graph.FriendlyResourcePojo;
-import guru.bubl.module.model.graph.graph_element.GraphElementPojo;
 import guru.bubl.module.model.graph.ShareLevel;
 import guru.bubl.module.model.graph.fork.NbNeighborsPojo;
+import guru.bubl.module.model.graph.graph_element.GraphElementPojo;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.TagQueryBuilder;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph.TagsFromExtractorQueryRowAsArray;
-import org.neo4j.driver.v1.*;
+import org.neo4j.driver.*;
 
 import java.net.URI;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Set;
 
-import static org.neo4j.driver.v1.Values.parameters;
+import static org.neo4j.driver.Values.parameters;
 
 public class CenterGraphElementsOperatorNeo4j implements CenteredGraphElementsOperator {
 
@@ -161,13 +164,13 @@ public class CenterGraphElementsOperatorNeo4j implements CenteredGraphElementsOp
             context = "public_context";
         }
         try (Session session = driver.session()) {
-            StatementResult rs = session.run(
+            Result rs = session.run(
                     String.format(
                             match + " 1=1 " +
                                     (filterOnUser ? "AND n.owner=$owner" : "") + (includeNonCenters ? " " : " AND EXISTS(n.last_center_date) ") +
-                                    (inShareLevelsIntegers.length == 0 ? " " : "AND n.shareLevel IN {shareLevels} ") +
+                                    (inShareLevelsIntegers.length == 0 ? " " : "AND n.shareLevel IN $shareLevels ") +
                                     "OPTIONAL MATCH (n)-[:IDENTIFIED_TO]->(id) " +
-                                    (inShareLevelsIntegers.length == 0 ? " " : "WHERE id.shareLevel IN {shareLevels} ") +
+                                    (inShareLevelsIntegers.length == 0 ? " " : "WHERE id.shareLevel IN $shareLevels ") +
                                     "RETURN " +
                                     TagQueryBuilder.tagReturnQueryPart(inShareLevels) +
                                     "%s %s %s n.%s as context, n.nb_visits as nbVisits, n.creation_date as creationDate, n.last_center_date as lastCenterDate, n.label as label, n.uri as uri, n.colors as colors, n.shareLevel, 'Pattern' IN LABELS(n) as isPattern " +

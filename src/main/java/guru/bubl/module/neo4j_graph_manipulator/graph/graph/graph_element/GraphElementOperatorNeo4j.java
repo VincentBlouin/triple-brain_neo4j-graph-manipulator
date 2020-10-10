@@ -24,13 +24,13 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph.V
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.fork.ForkOperatorNeo4J;
 import guru.bubl.module.neo4j_graph_manipulator.graph.image.ImagesNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.tag.TagFactoryNeo4J;
-import org.neo4j.driver.v1.*;
+import org.neo4j.driver.*;
 
 import java.net.URI;
 import java.util.*;
 
 import static guru.bubl.module.neo4j_graph_manipulator.graph.RestApiUtilsNeo4j.map;
-import static org.neo4j.driver.v1.Values.parameters;
+import static org.neo4j.driver.Values.parameters;
 
 public class GraphElementOperatorNeo4j implements GraphElementOperator, OperatorNeo4j {
 
@@ -334,7 +334,7 @@ public class GraphElementOperatorNeo4j implements GraphElementOperator, Operator
         Map<URI, TagPojo> identifications = new HashMap<>();
         Date tagCreationDate = new Date();
         try (Session session = driver.session()) {
-            StatementResult result = session.run(
+            Result result = session.run(
                     AddTagQueryBuilder.usingIdentificationForGraphElement(
                             queryPrefix(),
                             sourceShareLevel,
@@ -529,7 +529,7 @@ public class GraphElementOperatorNeo4j implements GraphElementOperator, Operator
     public Map<URI, TagPojo> getTags() {
         Map<URI, TagPojo> identifications = new HashMap<>();
         try (Session session = driver.session()) {
-            StatementResult rs = session.run(
+            Result rs = session.run(
                     String.format(
                             "%sMATCH (n)-[r:IDENTIFIED_TO]->(tag) " +
                                     "RETURN tag.uri as uri, " +

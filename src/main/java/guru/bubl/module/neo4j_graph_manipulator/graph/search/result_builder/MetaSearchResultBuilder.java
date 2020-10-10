@@ -15,7 +15,7 @@ import guru.bubl.module.model.search.GraphElementSearchResult;
 import guru.bubl.module.model.search.GraphElementSearchResultPojo;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.FriendlyResourceFromExtractorQueryRow;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph.VertexFromExtractorQueryRow;
-import org.neo4j.driver.v1.Record;
+import org.neo4j.driver.Record;
 
 import java.net.URI;
 import java.util.Set;

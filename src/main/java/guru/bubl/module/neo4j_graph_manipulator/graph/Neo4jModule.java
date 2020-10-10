@@ -4,14 +4,6 @@
 
 package guru.bubl.module.neo4j_graph_manipulator.graph;
 
-import apoc.convert.Json;
-import apoc.create.Create;
-import apoc.help.Help;
-import apoc.load.LoadJson;
-import apoc.load.Xml;
-import apoc.meta.Meta;
-import apoc.path.PathExplorer;
-import apoc.refactor.GraphRefactoring;
 import com.google.inject.AbstractModule;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
 import guru.bubl.module.model.FriendlyResourceFactory;
@@ -22,69 +14,77 @@ import guru.bubl.module.model.center_graph_element.CenterGraphElementOperatorFac
 import guru.bubl.module.model.center_graph_element.CenterGraphElementsOperatorFactory;
 import guru.bubl.module.model.center_graph_element.CenteredGraphElementsOperator;
 import guru.bubl.module.model.graph.FriendlyResourceOperator;
+import guru.bubl.module.model.graph.GraphFactory;
+import guru.bubl.module.model.graph.edge.EdgeOperator;
+import guru.bubl.module.model.graph.edge.EdgeOperatorFactory;
+import guru.bubl.module.model.graph.fork.ForkOperator;
+import guru.bubl.module.model.graph.fork.ForkOperatorFactory;
+import guru.bubl.module.model.graph.fork.NbNeighbors;
+import guru.bubl.module.model.graph.fork.NbNeighborsOperatorFactory;
 import guru.bubl.module.model.graph.graph_element.ForkCollectionOperator;
 import guru.bubl.module.model.graph.graph_element.ForkCollectionOperatorFactory;
 import guru.bubl.module.model.graph.graph_element.GraphElementOperator;
 import guru.bubl.module.model.graph.graph_element.GraphElementOperatorFactory;
-import guru.bubl.module.model.graph.GraphFactory;
-import guru.bubl.module.model.graph.edge.EdgeOperator;
-import guru.bubl.module.model.graph.edge.EdgeOperatorFactory;
-import guru.bubl.module.model.graph.relation.RelationFactory;
-import guru.bubl.module.model.graph.relation.RelationOperator;
-import guru.bubl.module.model.graph.fork.NbNeighbors;
-import guru.bubl.module.model.graph.fork.NbNeighborsOperatorFactory;
 import guru.bubl.module.model.graph.group_relation.GroupRelationFactory;
 import guru.bubl.module.model.graph.group_relation.GroupRelationOperator;
 import guru.bubl.module.model.graph.pattern.PatternUser;
 import guru.bubl.module.model.graph.pattern.PatternUserFactory;
+import guru.bubl.module.model.graph.relation.RelationFactory;
+import guru.bubl.module.model.graph.relation.RelationOperator;
 import guru.bubl.module.model.graph.tag.TagFactory;
 import guru.bubl.module.model.graph.tag.TagOperator;
 import guru.bubl.module.model.graph.vertex.VertexFactory;
 import guru.bubl.module.model.graph.vertex.VertexOperator;
-import guru.bubl.module.model.graph.fork.ForkOperator;
-import guru.bubl.module.model.graph.fork.ForkOperatorFactory;
 import guru.bubl.module.model.test.GraphComponentTest;
 import guru.bubl.module.neo4j_graph_manipulator.graph.admin.WholeGraphAdminNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.center_graph_element.CenterGraphElementOperatorNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.center_graph_element.CenterGraphElementsOperatorNeo4j;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.*;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.GraphFactoryNeo4j;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.UserGraphFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.EdgeOperatorNeo4j;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph.SubGraphExtractorFactoryNeo4j;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.fork.ForkOperatorNeo4J;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.fork.NbNeighborsOperatorNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.graph_element.ForkCollectionOperatorNeo4J;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.graph_element.GraphElementFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.graph_element.GraphElementOperatorNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.graph_element.GraphElementSpecialOperatorFactory;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.relation.RelationFactoryNeo4j;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.relation.RelationOperatorNeo4J;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph.SubGraphExtractorFactoryNeo4j;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.fork.NbNeighborsOperatorNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.group_relation.GroupRelationFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.group_relation.GroupRelationOperatorNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.pattern.PatternUserNeo4j;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.relation.RelationFactoryNeo4j;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.relation.RelationOperatorNeo4J;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.tag.TagOperatorNeo4J;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.VertexFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.VertexOperatorNeo4j;
-import guru.bubl.module.neo4j_graph_manipulator.graph.graph.fork.ForkOperatorNeo4J;
 import guru.bubl.module.neo4j_graph_manipulator.graph.image.ImageFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.search.GraphSearchModuleNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.tag.TagFactoryNeo4J;
 import guru.bubl.module.neo4j_graph_manipulator.graph.test.GraphComponentTestNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.test.WholeGraphNeo4j;
-import org.neo4j.driver.v1.AuthTokens;
-import org.neo4j.driver.v1.Driver;
-import org.neo4j.driver.v1.GraphDatabase;
+import org.neo4j.configuration.GraphDatabaseSettings;
+import org.neo4j.configuration.connectors.BoltConnector;
+import org.neo4j.configuration.helpers.SocketAddress;
+import org.neo4j.dbms.api.DatabaseManagementService;
+import org.neo4j.dbms.api.DatabaseManagementServiceBuilder;
+import org.neo4j.driver.AuthTokens;
+import org.neo4j.driver.Driver;
+import org.neo4j.driver.GraphDatabase;
+import org.neo4j.exceptions.KernelException;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Transaction;
-import org.neo4j.graphdb.factory.GraphDatabaseFactory;
-import org.neo4j.internal.kernel.api.exceptions.KernelException;
-import org.neo4j.kernel.configuration.BoltConnector;
-import org.neo4j.kernel.impl.proc.Procedures;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
 import javax.inject.Singleton;
 import java.io.File;
-import java.util.List;
 
-import static java.util.Arrays.asList;
+import apoc.path.PathExplorer;
+import apoc.create.Create;
+import apoc.meta.Meta;
+import apoc.refactor.GraphRefactoring;
+
+import static org.neo4j.configuration.GraphDatabaseSettings.DEFAULT_DATABASE_NAME;
 
 public class Neo4jModule extends AbstractModule {
 
@@ -224,53 +224,41 @@ public class Neo4jModule extends AbstractModule {
     }
 
     private void bindForEmbedded() {
-        BoltConnector boltConnector = new BoltConnector("bolt");
         GraphDatabaseService graphDb;
         Driver driver;
         if (test) {
-            graphDb = new GraphDatabaseFactory().newEmbeddedDatabaseBuilder(
-                    new File(test ? DB_PATH_FOR_TESTS : DB_PATH)
-            )
-                    .setConfig(boltConnector.enabled, "true")
-                    .setConfig(boltConnector.type, "BOLT")
-                    .setConfig(boltConnector.listen_address, "localhost:7687")
-                    .setConfig("cypher.lenient_create_relationship", "true")
-                    .newGraphDatabase();
+            DatabaseManagementService databaseManagementService = new DatabaseManagementServiceBuilder(new File(test ? DB_PATH_FOR_TESTS : DB_PATH))
+                    .setConfig(BoltConnector.enabled, true)
+                    .setConfig(BoltConnector.listen_address, new SocketAddress("localhost", 7687))
+                    .setConfig(GraphDatabaseSettings.cypher_lenient_create_relationship, true)
+//                    .setConfig(GraphDatabaseSettings.procedure_unrestricted, List.of(
+//                            "apoc.*"
+//                    ))
+                    .build();
+            graphDb = databaseManagementService.database(DEFAULT_DATABASE_NAME);
+            registerProcedure(graphDb, PathExplorer.class);
+            registerProcedure(graphDb, GraphRefactoring.class);
+            registerProcedure(graphDb, Meta.class);
+            registerProcedure(graphDb, Create.class);
             bind(GraphDatabaseService.class).toInstance(graphDb);
-            registerProceduresAndFunctions(
-                    graphDb,
-                    asList(
-                            Help.class,
-                            Json.class,
-                            LoadJson.class,
-                            Xml.class,
-                            PathExplorer.class,
-                            Meta.class,
-                            GraphRefactoring.class
-                    ),
-                    asList(
-                            Create.class
-                    )
-
-            );
             Transaction tx = graphDb.beginTx();
-            graphDb.execute("CREATE INDEX ON :Resource(uri)");
-            graphDb.execute("CREATE CONSTRAINT ON (n:User) ASSERT n.email IS UNIQUE");
-            graphDb.execute("CREATE INDEX ON :GraphElement(owner)");
-            graphDb.execute("CALL db.index.fulltext.createNodeIndex('graphElementLabel',['GraphElement'],['label'])");
-            graphDb.execute("CALL db.index.fulltext.createNodeIndex('vertexLabel',['Vertex'],['label'])");
-            graphDb.execute("CALL db.index.fulltext.createNodeIndex('tagLabel',['Meta'],['label'])");
-            graphDb.execute("CALL db.index.fulltext.createNodeIndex('patternLabel',['Pattern'],['label'])");
-            graphDb.execute("CALL db.index.fulltext.createNodeIndex('username',['User'],['username'])");
-            graphDb.execute("CREATE INDEX ON :GraphElement(shareLevel)");
-            graphDb.execute("CREATE INDEX ON :GraphElement(last_center_date)");
-            graphDb.execute("CREATE INDEX ON :Meta(external_uri)");
-            graphDb.execute("CREATE INDEX ON :GraphElement(isUnderPattern)");
-            graphDb.execute("CREATE INDEX ON :GraphElement(nb_visits)");
-            graphDb.execute("CREATE INDEX ON :GraphElement(nb_private_neighbors)");
-            graphDb.execute("CREATE INDEX ON :GraphElement(nb_friend_neighbors)");
-            graphDb.execute("CREATE INDEX ON :GraphElement(nb_public_neighbors)");
-            tx.success();
+            graphDb.executeTransactionally("CREATE INDEX ON :Resource(uri)");
+            graphDb.executeTransactionally("CREATE CONSTRAINT ON (n:User) ASSERT n.email IS UNIQUE");
+            graphDb.executeTransactionally("CREATE INDEX ON :GraphElement(owner)");
+            graphDb.executeTransactionally("CALL db.index.fulltext.createNodeIndex('graphElementLabel',['GraphElement'],['label'])");
+            graphDb.executeTransactionally("CALL db.index.fulltext.createNodeIndex('vertexLabel',['Vertex'],['label'])");
+            graphDb.executeTransactionally("CALL db.index.fulltext.createNodeIndex('tagLabel',['Meta'],['label'])");
+            graphDb.executeTransactionally("CALL db.index.fulltext.createNodeIndex('patternLabel',['Pattern'],['label'])");
+            graphDb.executeTransactionally("CALL db.index.fulltext.createNodeIndex('username',['User'],['username'])");
+            graphDb.executeTransactionally("CREATE INDEX ON :GraphElement(shareLevel)");
+            graphDb.executeTransactionally("CREATE INDEX ON :GraphElement(last_center_date)");
+            graphDb.executeTransactionally("CREATE INDEX ON :Meta(external_uri)");
+            graphDb.executeTransactionally("CREATE INDEX ON :GraphElement(isUnderPattern)");
+            graphDb.executeTransactionally("CREATE INDEX ON :GraphElement(nb_visits)");
+            graphDb.executeTransactionally("CREATE INDEX ON :GraphElement(nb_private_neighbors)");
+            graphDb.executeTransactionally("CREATE INDEX ON :GraphElement(nb_friend_neighbors)");
+            graphDb.executeTransactionally("CREATE INDEX ON :GraphElement(nb_public_neighbors)");
+            tx.commit();
             tx.close();
             registerShutdownHook(graphDb);
             driver = GraphDatabase.driver(
@@ -289,22 +277,17 @@ public class Neo4jModule extends AbstractModule {
         );
     }
 
-    private void registerProceduresAndFunctions(GraphDatabaseService graphDb, List<Class<?>> toRegister, List<Class<?>> functionsToRegister) {
-        Procedures procedures = ((GraphDatabaseAPI) graphDb).getDependencyResolver().resolveDependency(Procedures.class);
-        toRegister.forEach((proc) -> {
+    public static void registerProcedure(GraphDatabaseService db, Class<?>... procedures) {
+        GlobalProcedures globalProcedures = ((GraphDatabaseAPI) db).getDependencyResolver().resolveDependency(GlobalProcedures.class);
+        for (Class<?> procedure : procedures) {
             try {
-                procedures.registerProcedure(proc);
+                globalProcedures.registerProcedure(procedure, true);
+                globalProcedures.registerFunction(procedure, true);
+                globalProcedures.registerAggregationFunction(procedure, true);
             } catch (KernelException e) {
-                throw new RuntimeException("Error registering " + proc, e);
+                throw new RuntimeException("while registering " + procedure, e);
             }
-        });
-        functionsToRegister.forEach((functionToRegister) -> {
-            try {
-                procedures.registerFunction(functionToRegister);
-            } catch (KernelException e) {
-                throw new RuntimeException("Error registering " + functionToRegister, e);
-            }
-        });
+        }
     }
 
     private void registerShutdownHook(final GraphDatabaseService graphDb) {
@@ -314,7 +297,6 @@ public class Neo4jModule extends AbstractModule {
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
             public void run() {
-                graphDb.shutdown();
                 clearDb();
             }
         });

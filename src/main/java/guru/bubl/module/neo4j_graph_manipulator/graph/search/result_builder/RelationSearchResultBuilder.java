@@ -8,7 +8,7 @@ import guru.bubl.module.model.graph.graph_element.GraphElementType;
 import guru.bubl.module.model.search.GraphElementSearchResult;
 import guru.bubl.module.model.search.GraphElementSearchResultPojo;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph.GraphElementFromExtractorQueryRow;
-import org.neo4j.driver.v1.Record;
+import org.neo4j.driver.Record;
 
 public class RelationSearchResultBuilder implements SearchResultBuilder {
 

@@ -19,9 +19,9 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jModule;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.UserGraphFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph.SubGraphExtractorFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.VertexFactoryNeo4j;
-import org.neo4j.driver.v1.Driver;
-import org.neo4j.driver.v1.Record;
-import org.neo4j.driver.v1.Session;
+import org.neo4j.driver.Driver;
+import org.neo4j.driver.Record;
+import org.neo4j.driver.Session;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Transaction;
 
@@ -99,13 +99,12 @@ public class GraphComponentTestNeo4j implements GraphComponentTest {
 
     @Override
     public void after() {
-        transaction.failure();
+        transaction.rollback();
         transaction.close();
     }
 
     @Override
     public void afterClass() {
-        graphDatabaseService.shutdown();
         Neo4jModule.clearDb();
     }
 

@@ -26,10 +26,10 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.graph.graph_element.GraphE
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.graph_element.GraphElementOperatorNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.relation.RelationFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.fork.ForkOperatorNeo4J;
-import org.neo4j.driver.v1.Driver;
-import org.neo4j.driver.v1.Record;
-import org.neo4j.driver.v1.Session;
-import org.neo4j.driver.v1.StatementResult;
+import org.neo4j.driver.Driver;
+import org.neo4j.driver.Record;
+import org.neo4j.driver.Session;
+import org.neo4j.driver.Result;
 import org.neo4j.graphdb.Node;
 
 import java.net.URI;
@@ -39,7 +39,7 @@ import java.util.Map;
 import java.util.Set;
 
 import static guru.bubl.module.neo4j_graph_manipulator.graph.RestApiUtilsNeo4j.map;
-import static org.neo4j.driver.v1.Values.parameters;
+import static org.neo4j.driver.Values.parameters;
 
 public class VertexOperatorNeo4j implements VertexOperator, OperatorNeo4j {
 
@@ -108,7 +108,7 @@ public class VertexOperatorNeo4j implements VertexOperator, OperatorNeo4j {
                 relation.uri()
         );
         try (Session session = driver.session()) {
-            StatementResult rs = session.run(
+            Result rs = session.run(
                     String.format(
                             "%s, %s, (n)<-[:SOURCE|DESTINATION]-(edge) RETURN edge",
                             queryPrefix(),
@@ -129,7 +129,7 @@ public class VertexOperatorNeo4j implements VertexOperator, OperatorNeo4j {
                 destinationVertex.uri()
         );
         try (Session session = driver.session()) {
-            StatementResult rs = session.run(
+            Result rs = session.run(
                     String.format(
                             "%s, %s, (n)<-[:SOURCE|DESTINATION]-(r), " +
                                     "(r)-[:SOURCE|DESTINATION]->(d) " +
@@ -164,7 +164,7 @@ public class VertexOperatorNeo4j implements VertexOperator, OperatorNeo4j {
                 destinationVertex.uri()
         );
         try (Session session = driver.session()) {
-            StatementResult rs = session.run(
+            Result rs = session.run(
                     String.format(
                             "%s, %s, " +
                                     "(n)<-[:SOURCE]-(r), " +
@@ -210,7 +210,7 @@ public class VertexOperatorNeo4j implements VertexOperator, OperatorNeo4j {
     public Map<URI, RelationOperator> connectedEdges() {
         Map<URI, RelationOperator> edges = new HashMap<>();
         try (Session session = driver.session()) {
-            StatementResult rs = session.run(
+            Result rs = session.run(
                     queryPrefix() +
                             "MATCH (n)<-[:SOURCE|DESTINATION]-(edge) " +
                             "RETURN edge.uri as uri",

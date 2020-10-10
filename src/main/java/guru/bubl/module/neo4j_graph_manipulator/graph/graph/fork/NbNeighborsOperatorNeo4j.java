@@ -5,14 +5,14 @@ import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 import guru.bubl.module.model.graph.fork.NbNeighbors;
 import guru.bubl.module.neo4j_graph_manipulator.graph.OperatorNeo4j;
-import org.neo4j.driver.v1.Driver;
-import org.neo4j.driver.v1.Record;
-import org.neo4j.driver.v1.Session;
-import org.neo4j.driver.v1.StatementResult;
+import org.neo4j.driver.Driver;
+import org.neo4j.driver.Record;
+import org.neo4j.driver.Session;
+import org.neo4j.driver.Result;
 
 import java.net.URI;
 
-import static org.neo4j.driver.v1.Values.parameters;
+import static org.neo4j.driver.Values.parameters;
 
 public class NbNeighborsOperatorNeo4j implements NbNeighbors, OperatorNeo4j {
 
@@ -32,7 +32,7 @@ public class NbNeighborsOperatorNeo4j implements NbNeighbors, OperatorNeo4j {
     @Override
     public Integer getPrivate() {
         try (Session session = driver.session()) {
-            StatementResult rs = session.run(
+            Result rs = session.run(
                     String.format(
                             "%sRETURN n.nb_private_neighbors as result",
                             queryPrefix()
@@ -69,7 +69,7 @@ public class NbNeighborsOperatorNeo4j implements NbNeighbors, OperatorNeo4j {
     @Override
     public Integer getFriend() {
         try (Session session = driver.session()) {
-            StatementResult rs = session.run(
+            Result rs = session.run(
                     queryPrefix() + "RETURN n.nb_friend_neighbors as result",
                     parameters(
                             "uri",
@@ -99,7 +99,7 @@ public class NbNeighborsOperatorNeo4j implements NbNeighbors, OperatorNeo4j {
     @Override
     public Integer getPublic() {
         try (Session session = driver.session()) {
-            StatementResult rs = session.run(
+            Result rs = session.run(
                     String.format(
                             "%sRETURN n.nb_public_neighbors as result",
                             queryPrefix()

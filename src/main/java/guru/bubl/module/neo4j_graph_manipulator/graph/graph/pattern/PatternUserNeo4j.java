@@ -9,14 +9,14 @@ import guru.bubl.module.model.graph.graph_element.GraphElementOperatorFactory;
 import guru.bubl.module.model.graph.graph_element.GraphElementPojo;
 import guru.bubl.module.model.graph.tag.TagPojo;
 import guru.bubl.module.model.graph.pattern.PatternUser;
-import org.neo4j.driver.v1.Driver;
-import org.neo4j.driver.v1.Record;
-import org.neo4j.driver.v1.Session;
-import org.neo4j.driver.v1.StatementResult;
+import org.neo4j.driver.Driver;
+import org.neo4j.driver.Record;
+import org.neo4j.driver.Session;
+import org.neo4j.driver.Result;
 
 import java.net.URI;
 
-import static org.neo4j.driver.v1.Values.parameters;
+import static org.neo4j.driver.Values.parameters;
 
 public class PatternUserNeo4j implements PatternUser {
 
@@ -63,7 +63,7 @@ public class PatternUserNeo4j implements PatternUser {
                 "DETACH DELETE tag " +
                 "RETURN uri, originalLabel, originalComment, patternUri, externalUri, label, comment, images";
         try (Session session = driver.session()) {
-            StatementResult rs = session.run(
+            Result rs = session.run(
                     query,
                     parameters(
                             "uri",

@@ -9,7 +9,7 @@ import guru.bubl.module.model.graph.graph_element.GraphElementPojo;
 import guru.bubl.module.model.graph.ShareLevel;
 import guru.bubl.module.model.graph.tag.TagPojo;
 import guru.bubl.module.model.json.ImageJson;
-import org.neo4j.driver.v1.Record;
+import org.neo4j.driver.Record;
 
 import java.net.URI;
 import java.util.HashMap;

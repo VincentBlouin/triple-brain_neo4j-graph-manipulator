@@ -26,8 +26,8 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.graph.group_relation.Group
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.group_relation.GroupRelationOperatorNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.VertexFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.VertexOperatorNeo4j;
-import org.neo4j.driver.v1.Driver;
-import org.neo4j.driver.v1.Session;
+import org.neo4j.driver.Driver;
+import org.neo4j.driver.Session;
 
 import javax.inject.Inject;
 import java.net.URI;
@@ -36,7 +36,7 @@ import java.util.Map;
 import java.util.Set;
 
 import static guru.bubl.module.neo4j_graph_manipulator.graph.RestApiUtilsNeo4j.map;
-import static org.neo4j.driver.v1.Values.parameters;
+import static org.neo4j.driver.Values.parameters;
 
 public class RelationOperatorNeo4J implements RelationOperator, OperatorNeo4j {
 

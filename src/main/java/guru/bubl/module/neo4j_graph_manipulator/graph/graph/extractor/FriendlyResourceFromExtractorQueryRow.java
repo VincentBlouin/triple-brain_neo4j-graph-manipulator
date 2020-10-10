@@ -11,7 +11,7 @@ import guru.bubl.module.model.json.ImageJson;
 import guru.bubl.module.neo4j_graph_manipulator.graph.FriendlyResourceNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.UserGraphNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.image.ImagesNeo4j;
-import org.neo4j.driver.v1.Record;
+import org.neo4j.driver.Record;
 
 import java.net.URI;
 import java.util.Date;

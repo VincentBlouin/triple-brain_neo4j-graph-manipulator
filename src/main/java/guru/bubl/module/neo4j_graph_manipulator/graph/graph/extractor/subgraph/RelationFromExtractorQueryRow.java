@@ -6,7 +6,7 @@ package guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph;
 
 import guru.bubl.module.model.graph.relation.Relation;
 import guru.bubl.module.model.graph.relation.RelationPojo;
-import org.neo4j.driver.v1.Record;
+import org.neo4j.driver.Record;
 
 public class RelationFromExtractorQueryRow {
 

@@ -9,8 +9,8 @@ import guru.bubl.module.model.graph.graph_element.GraphElementType;
 import guru.bubl.module.model.graph.ShareLevel;
 import guru.bubl.module.model.search.GraphElementSearchResult;
 import guru.bubl.module.neo4j_graph_manipulator.graph.search.result_builder.*;
-import org.neo4j.driver.v1.Record;
-import org.neo4j.driver.v1.StatementResult;
+import org.neo4j.driver.Record;
+import org.neo4j.driver.Result;
 
 import java.util.*;
 
@@ -20,10 +20,10 @@ public class SearchResultGetter<ResultType extends GraphElementSearchResult> {
 
     private List<ResultType> searchResults = new ArrayList<>();
 
-    private StatementResult result;
+    private Result result;
     private Set<ShareLevel> inShareLevels;
 
-    public SearchResultGetter(StatementResult result, Set<ShareLevel> inShareLevels) {
+    public SearchResultGetter(Result result, Set<ShareLevel> inShareLevels) {
         this.result = result;
         this.inShareLevels = inShareLevels;
     }

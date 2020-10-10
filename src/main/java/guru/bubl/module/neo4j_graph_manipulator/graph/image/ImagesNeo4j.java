@@ -9,15 +9,15 @@ import com.google.inject.assistedinject.AssistedInject;
 import guru.bubl.module.model.Image;
 import guru.bubl.module.model.json.ImageJson;
 import guru.bubl.module.neo4j_graph_manipulator.graph.FriendlyResourceNeo4j;
-import org.neo4j.driver.v1.Driver;
-import org.neo4j.driver.v1.Record;
-import org.neo4j.driver.v1.Session;
+import org.neo4j.driver.Driver;
+import org.neo4j.driver.Record;
+import org.neo4j.driver.Session;
 
 import javax.inject.Inject;
 import java.util.HashSet;
 import java.util.Set;
 
-import static org.neo4j.driver.v1.Values.parameters;
+import static org.neo4j.driver.Values.parameters;
 
 public class ImagesNeo4j {
 

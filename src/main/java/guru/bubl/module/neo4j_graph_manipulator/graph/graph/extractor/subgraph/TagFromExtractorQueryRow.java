@@ -1,7 +1,7 @@
 package guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph;
 
 import guru.bubl.module.model.graph.tag.TagPojo;
-import org.neo4j.driver.v1.Record;
+import org.neo4j.driver.Record;
 
 import java.net.URI;
 

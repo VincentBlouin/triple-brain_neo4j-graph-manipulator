@@ -15,17 +15,18 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.graph.UserGraphNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.image.ImageFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.image.ImagesNeo4j;
 import org.apache.commons.lang.StringUtils;
-import org.neo4j.driver.v1.Driver;
-import org.neo4j.driver.v1.Record;
-import org.neo4j.driver.v1.Session;
-import org.neo4j.driver.v1.StatementResult;
+import org.neo4j.driver.Driver;
+import org.neo4j.driver.Record;
+import org.neo4j.driver.Session;
+import org.neo4j.driver.Result;
 
 import java.net.URI;
 import java.util.Date;
 import java.util.Map;
 import java.util.Set;
 
-import static org.neo4j.driver.v1.Values.parameters;
+import static org.neo4j.driver.Values.parameters;
+
 
 public class FriendlyResourceNeo4j implements FriendlyResourceOperator, OperatorNeo4j {
 
@@ -119,7 +120,7 @@ public class FriendlyResourceNeo4j implements FriendlyResourceOperator, Operator
                 queryPrefix()
         );
         try (Session session = driver.session()) {
-            StatementResult rs = session.run(
+            Result rs = session.run(
                     query,
                     parameters(
                             "uri", uri.toString()

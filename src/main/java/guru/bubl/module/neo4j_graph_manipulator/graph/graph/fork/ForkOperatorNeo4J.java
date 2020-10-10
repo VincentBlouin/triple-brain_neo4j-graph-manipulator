@@ -20,7 +20,8 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.graph.relation.RelationFac
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.relation.RelationOperatorNeo4J;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.VertexFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.VertexOperatorNeo4j;
-import org.neo4j.driver.v1.*;
+import org.neo4j.driver.Driver;
+import org.neo4j.driver.Session;
 
 import java.net.URI;
 import java.util.Map;
@@ -28,7 +29,7 @@ import java.util.Map;
 import static guru.bubl.module.neo4j_graph_manipulator.graph.RestApiUtilsNeo4j.map;
 import static guru.bubl.module.neo4j_graph_manipulator.graph.graph.graph_element.GraphElementOperatorNeo4j.decrementNbNeighborsQueryPart;
 import static guru.bubl.module.neo4j_graph_manipulator.graph.graph.graph_element.GraphElementOperatorNeo4j.incrementNbNeighborsQueryPart;
-import static org.neo4j.driver.v1.Values.parameters;
+import static org.neo4j.driver.Values.parameters;
 
 public class ForkOperatorNeo4J implements ForkOperator, OperatorNeo4j {
 

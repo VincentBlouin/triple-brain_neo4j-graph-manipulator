@@ -14,17 +14,17 @@ import guru.bubl.module.model.graph.tag.TagOperator;
 import guru.bubl.module.model.graph.vertex.VertexOperator;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.relation.RelationFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.VertexFactoryNeo4j;
-import org.neo4j.driver.v1.Driver;
-import org.neo4j.driver.v1.Record;
-import org.neo4j.driver.v1.Session;
-import org.neo4j.driver.v1.StatementResult;
+import org.neo4j.driver.Driver;
+import org.neo4j.driver.Record;
+import org.neo4j.driver.Session;
+import org.neo4j.driver.Result;
 
 import javax.inject.Inject;
 import java.net.URI;
 import java.util.HashSet;
 import java.util.Set;
 
-import static org.neo4j.driver.v1.Values.parameters;
+import static org.neo4j.driver.Values.parameters;
 
 public class WholeGraphNeo4j implements WholeGraph {
 
@@ -60,7 +60,7 @@ public class WholeGraphNeo4j implements WholeGraph {
         );
         Set<VertexOperator> vertices = new HashSet<>();
         try (Session session = driver.session()) {
-            StatementResult rs = session.run(
+            Result rs = session.run(
                     query,
                     user == null ? parameters() : parameters(
                             "username",
@@ -98,7 +98,7 @@ public class WholeGraphNeo4j implements WholeGraph {
         );
         Set<RelationOperator> edges = new HashSet<>();
         try (Session session = driver.session()) {
-            StatementResult rs = session.run(
+            Result rs = session.run(
                     query,
                     user == null ? parameters() : parameters(
                             "username",
@@ -131,7 +131,7 @@ public class WholeGraphNeo4j implements WholeGraph {
         );
         Set<GraphElementOperator> graphElements = new HashSet<>();
         try (Session session = driver.session()) {
-            StatementResult rs = session.run(
+            Result rs = session.run(
                     query,
                     user == null ? parameters() : parameters(
                             "owner", user.username()
@@ -168,7 +168,7 @@ public class WholeGraphNeo4j implements WholeGraph {
         );
         Set<TagOperator> identifications = new HashSet<>();
         try (Session session = driver.session()) {
-            StatementResult rs = session.run(
+            Result rs = session.run(
                     query,
                     user == null ? parameters() : parameters(
                             "username",

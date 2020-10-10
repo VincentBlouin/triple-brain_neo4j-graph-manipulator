@@ -22,13 +22,13 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.FriendlyRe
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.QueryUtils;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.TagQueryBuilder;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.fork.ForkOperatorNeo4J;
-import org.neo4j.driver.v1.*;
-import org.neo4j.driver.v1.types.Relationship;
+import org.neo4j.driver.*;
+import org.neo4j.driver.types.Relationship;
 
 import java.net.URI;
 import java.util.*;
 
-import static org.neo4j.driver.v1.Values.parameters;
+import static org.neo4j.driver.Values.parameters;
 
 public class SubGraphExtractorNeo4j {
 
@@ -83,7 +83,7 @@ public class SubGraphExtractorNeo4j {
 
     public SubGraphPojo load() {
         try (Session session = driver.session()) {
-            StatementResult rs = session.run(
+            Result rs = session.run(
                     queryToGetGraph(),
                     parameters(
                             "centerUri", centerBubbleUri.toString(),
@@ -230,8 +230,8 @@ public class SubGraphExtractorNeo4j {
         return
                 String.format(
                         "MATCH(n:Resource{uri:$centerUri}) %s " +
-                                "WITH %s, ge, childIndex MATCH(ge) WHERE ge.shareLevel IN {shareLevels} " +
-                                "OPTIONAL MATCH (ge)-[:IDENTIFIED_TO]->(id) WHERE id.shareLevel IN {shareLevels} " +
+                                "WITH %s, ge, childIndex MATCH(ge) WHERE ge.shareLevel IN $shareLevels " +
+                                "OPTIONAL MATCH (ge)-[:IDENTIFIED_TO]->(id) WHERE id.shareLevel IN $shareLevels " +
                                 "RETURN childIndex, ge.external_uri, ge.indexVertexUri, " +
                                 vertexAndEdgeCommonQueryPart(GRAPH_ELEMENT_QUERY_KEY) +
                                 vertexReturnQueryPart(GRAPH_ELEMENT_QUERY_KEY) +
