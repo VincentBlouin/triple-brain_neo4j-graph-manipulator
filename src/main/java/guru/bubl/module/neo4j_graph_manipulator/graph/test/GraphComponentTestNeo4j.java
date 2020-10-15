@@ -2,27 +2,23 @@
  * Copyright Vincent Blouin under the GPL License version 3
  */
 
-package guru.bubl.module.neo4j_graph_manipulator.graph.embedded.admin;
+package guru.bubl.module.neo4j_graph_manipulator.graph.test;
 
 import guru.bubl.module.model.User;
 import guru.bubl.module.model.graph.GraphFactory;
 import guru.bubl.module.model.graph.ShareLevel;
-import guru.bubl.module.model.graph.relation.RelationFactory;
 import guru.bubl.module.model.graph.subgraph.SubGraphPojo;
 import guru.bubl.module.model.graph.subgraph.UserGraph;
 import guru.bubl.module.model.graph.vertex.VertexOperator;
 import guru.bubl.module.model.test.GraphComponentTest;
-import guru.bubl.module.model.test.SubGraphOperator;
-import guru.bubl.module.model.test.scenarios.TestScenarios;
 import guru.bubl.module.model.test.scenarios.GraphElementsOfTestScenario;
+import guru.bubl.module.model.test.scenarios.TestScenarios;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.UserGraphFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph.SubGraphExtractorFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.VertexFactoryNeo4j;
 import org.neo4j.driver.Driver;
 import org.neo4j.driver.Record;
 import org.neo4j.driver.Session;
-import org.neo4j.graphdb.GraphDatabaseService;
-import org.neo4j.graphdb.Transaction;
 
 import javax.inject.Inject;
 
@@ -33,15 +29,6 @@ public class GraphComponentTestNeo4j implements GraphComponentTest {
 
     @Inject
     protected SubGraphExtractorFactoryNeo4j neo4jSubGraphExtractorFactory;
-
-    @Inject
-    WholeGraphNeo4j wholeGraph;
-
-    @Inject
-    GraphDatabaseService graphDatabaseService;
-
-    @Inject
-    protected RelationFactory relationFactory;
 
     @Inject
     protected VertexFactoryNeo4j vertexFactory;
@@ -64,8 +51,6 @@ public class GraphComponentTestNeo4j implements GraphComponentTest {
     protected static User anotherUser;
     protected static UserGraph anotherUserGraph;
     protected static VertexOperator vertexOfAnotherUser;
-
-    protected Transaction transaction;
 
     protected UserGraph userGraph;
 
@@ -98,13 +83,11 @@ public class GraphComponentTestNeo4j implements GraphComponentTest {
 
     @Override
     public void after() {
-        transaction.rollback();
-        transaction.close();
     }
 
     @Override
     public void afterClass() {
-        Neo4jModuleForTests.clearDb();
+        removeWholeGraph();
     }
 
     @Override
@@ -123,20 +106,20 @@ public class GraphComponentTestNeo4j implements GraphComponentTest {
         ).load();
     }
 
-
     @Override
-    public SubGraphOperator wholeGraph() {
-        return SubGraphOperator.withVerticesAndEdges(
-                wholeGraph.getAllVertices(),
-                wholeGraph.getAllEdges()
-        );
-    }
-
-    @Override
-    public void removeWholeGraph() {
+    public void removeGraphElements() {
         try (Session session = driver.session()) {
             session.run(
                     "MATCH (n:GraphElement) DETACH DELETE n"
+            );
+        }
+    }
+
+    @Override
+    public void removeUsers() {
+        try (Session session = driver.session()) {
+            session.run(
+                    "MATCH (n:User) DETACH DELETE n"
             );
         }
     }

@@ -66,46 +66,33 @@ import javax.inject.Singleton;
 
 public class Neo4jModule extends AbstractModule {
 
-    public static final String
-            DB_PATH = "/tmp/triple_brain/neo4j/db",
-            DB_PATH_FOR_TESTS = "/tmp/triple_brain/neo4j/db";
+    public static final Integer BOLT_PORT_FOR_PROD = 7687;
+    public static final Integer BOLT_PORT_FOR_TESTS = 8022;
+    public static final String DB_PATH_FOR_TESTS = "/tmp/triple_brain/neo4j/db";
+    public static final String NEO4J_PASSWORD_FOR_TESTS = "proute";
 
-    private Boolean useEmbedded, test;
     private String dbUser, dbPassword;
+    private Integer boltPort;
 
-    public static Neo4jModule forTestingUsingRest() {
-        return new Neo4jModule(false, true);
+    public static Neo4jModule usingEmbedded() {
+        return new Neo4jModule("", "", -1);
     }
 
-    public static Neo4jModule notForTestingUsingRest() {
-        return new Neo4jModule(false, false);
+    public static Neo4jModule withUserPasswordAndPort(String dbUser, String dbPassword, Integer boltPort) {
+        return new Neo4jModule(dbUser, dbPassword, boltPort);
     }
 
-    public static Neo4jModule notForTestingUsingEmbedded(String dbUser, String dbPassword) {
-        return new Neo4jModule(true, false, dbUser, dbPassword);
-    }
-
-    public static Neo4jModule forTestingUsingEmbedded() {
-        return new Neo4jModule(true, true);
-    }
-
-    protected Neo4jModule(Boolean useEmbedded, Boolean test) {
-        this.useEmbedded = useEmbedded;
-        this.test = test;
-    }
-
-    protected Neo4jModule(Boolean useEmbedded, Boolean test, String dbUser, String dbPassword) {
-        this.useEmbedded = useEmbedded;
-        this.test = test;
+    protected Neo4jModule(String dbUser, String dbPassword, Integer boltPort) {
         this.dbUser = dbUser;
         this.dbPassword = dbPassword;
+        this.boltPort = boltPort;
     }
 
     @Override
     protected void configure() {
-        if(!test){
+        if (boltPort > -1) {
             Driver driver = GraphDatabase.driver(
-                    "bolt://localhost:7687",
+                    "bolt://localhost:" + this.boltPort,
                     AuthTokens.basic(this.dbUser, this.dbPassword)
             );
             bind(Driver.class).toInstance(

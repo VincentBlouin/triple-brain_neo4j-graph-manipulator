@@ -5,8 +5,9 @@ import apoc.meta.Meta;
 import apoc.path.PathExplorer;
 import apoc.refactor.GraphRefactoring;
 import com.google.inject.AbstractModule;
-import guru.bubl.module.model.WholeGraph;
 import guru.bubl.module.model.test.GraphComponentTest;
+import guru.bubl.module.neo4j_graph_manipulator.graph.test.GraphComponentTestNeo4j;
+import guru.bubl.module.neo4j_graph_manipulator.graph.test.SetupNeo4jDatabaseForTests;
 import org.neo4j.configuration.GraphDatabaseSettings;
 import org.neo4j.configuration.connectors.BoltConnector;
 import org.neo4j.configuration.helpers.SocketAddress;
@@ -23,14 +24,33 @@ import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
 import java.io.File;
 
+import static guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jModule.*;
 import static org.neo4j.configuration.GraphDatabaseSettings.DEFAULT_DATABASE_NAME;
+
 public class Neo4jModuleForTests extends AbstractModule {
 
-    public static final String DB_PATH_FOR_TESTS = "/tmp/triple_brain/neo4j/db";
+    private static final Integer BOLT_PORT_FOR_EMBEDDED = 8099;
+
+    private Boolean useEmbedded;
+
+    public static Neo4jModuleForTests usingEmbedded() {
+        return new Neo4jModuleForTests(true);
+    }
+
+    public static Neo4jModuleForTests notUsingEmbedded() {
+        return new Neo4jModuleForTests(false);
+    }
+
+    protected Neo4jModuleForTests(Boolean useEmbedded) {
+        this.useEmbedded = useEmbedded;
+    }
 
     @Override
     protected void configure() {
-        bindForEmbedded();
+        if (useEmbedded) {
+            bindForEmbedded();
+        }
+        bind(GraphComponentTest.class).to(GraphComponentTestNeo4j.class);
     }
 
     private void bindForEmbedded() {
@@ -38,7 +58,7 @@ public class Neo4jModuleForTests extends AbstractModule {
         Driver driver;
         DatabaseManagementService databaseManagementService = new DatabaseManagementServiceBuilder(new File(DB_PATH_FOR_TESTS))
                 .setConfig(BoltConnector.enabled, true)
-                .setConfig(BoltConnector.listen_address, new SocketAddress("localhost", 7687))
+                .setConfig(BoltConnector.listen_address, new SocketAddress("localhost", BOLT_PORT_FOR_EMBEDDED))
                 .setConfig(GraphDatabaseSettings.cypher_lenient_create_relationship, true)
 //                    .setConfig(GraphDatabaseSettings.procedure_unrestricted, List.of(
 //                            "apoc.*"
@@ -50,36 +70,16 @@ public class Neo4jModuleForTests extends AbstractModule {
         registerProcedure(graphDb, Meta.class);
         registerProcedure(graphDb, Create.class);
         bind(GraphDatabaseService.class).toInstance(graphDb);
-        Transaction tx = graphDb.beginTx();
-        graphDb.executeTransactionally("CREATE INDEX ON :Resource(uri)");
-        graphDb.executeTransactionally("CREATE CONSTRAINT ON (n:User) ASSERT n.email IS UNIQUE");
-        graphDb.executeTransactionally("CREATE INDEX ON :GraphElement(owner)");
-        graphDb.executeTransactionally("CALL db.index.fulltext.createNodeIndex('graphElementLabel',['GraphElement'],['label'])");
-        graphDb.executeTransactionally("CALL db.index.fulltext.createNodeIndex('vertexLabel',['Vertex'],['label'])");
-        graphDb.executeTransactionally("CALL db.index.fulltext.createNodeIndex('tagLabel',['Meta'],['label'])");
-        graphDb.executeTransactionally("CALL db.index.fulltext.createNodeIndex('patternLabel',['Pattern'],['label'])");
-        graphDb.executeTransactionally("CALL db.index.fulltext.createNodeIndex('username',['User'],['username'])");
-        graphDb.executeTransactionally("CREATE INDEX ON :GraphElement(shareLevel)");
-        graphDb.executeTransactionally("CREATE INDEX ON :GraphElement(last_center_date)");
-        graphDb.executeTransactionally("CREATE INDEX ON :Meta(external_uri)");
-        graphDb.executeTransactionally("CREATE INDEX ON :GraphElement(isUnderPattern)");
-        graphDb.executeTransactionally("CREATE INDEX ON :GraphElement(nb_visits)");
-        graphDb.executeTransactionally("CREATE INDEX ON :GraphElement(nb_private_neighbors)");
-        graphDb.executeTransactionally("CREATE INDEX ON :GraphElement(nb_friend_neighbors)");
-        graphDb.executeTransactionally("CREATE INDEX ON :GraphElement(nb_public_neighbors)");
-        tx.commit();
-        tx.close();
         registerShutdownHook(graphDb);
         driver = GraphDatabase.driver(
-                "bolt://localhost:7687",
-                AuthTokens.basic("user", "password")
+                "bolt://localhost:" + BOLT_PORT_FOR_EMBEDDED,
+                AuthTokens.basic("neo4j", NEO4J_PASSWORD_FOR_TESTS)
         );
 
         bind(Driver.class).toInstance(
                 driver
         );
-        bind(GraphComponentTest.class).to(GraphComponentTestNeo4j.class);
-        bind(WholeGraph.class).to(WholeGraphNeo4j.class);
+        new SetupNeo4jDatabaseForTests().doItWithDriver(driver);
     }
 
     public static void registerProcedure(GraphDatabaseService db, Class<?>... procedures) {
