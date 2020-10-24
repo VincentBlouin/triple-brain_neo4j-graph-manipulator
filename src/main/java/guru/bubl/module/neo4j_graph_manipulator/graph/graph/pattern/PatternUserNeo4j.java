@@ -5,8 +5,11 @@ import com.google.inject.assistedinject.AssistedInject;
 import guru.bubl.module.model.User;
 import guru.bubl.module.model.UserUris;
 import guru.bubl.module.model.graph.FriendlyResourcePojo;
+import guru.bubl.module.model.graph.ShareLevel;
+import guru.bubl.module.model.graph.graph_element.GraphElementOperator;
 import guru.bubl.module.model.graph.graph_element.GraphElementOperatorFactory;
 import guru.bubl.module.model.graph.graph_element.GraphElementPojo;
+import guru.bubl.module.model.graph.tag.Tag;
 import guru.bubl.module.model.graph.tag.TagPojo;
 import guru.bubl.module.model.graph.pattern.PatternUser;
 import org.neo4j.driver.Driver;
@@ -15,6 +18,10 @@ import org.neo4j.driver.Session;
 import org.neo4j.driver.Result;
 
 import java.net.URI;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 import static org.neo4j.driver.Values.parameters;
 
@@ -42,6 +49,9 @@ public class PatternUserNeo4j implements PatternUser {
     @Override
     public URI use() {
         UserUris userUris = new UserUris(user);
+        URI centerUri = null;
+        TagPojo patternAsTag;
+        Map<URI, Set<TagPojo>> tagThoseGraphElements = new HashMap<URI, Set<TagPojo>>();
         String query = "MATCH (n:Pattern{uri:$uri}) " +
                 "SET n.nbPatternUsage=n.nbPatternUsage+1 " +
                 "WITH n " +
@@ -72,8 +82,7 @@ public class PatternUserNeo4j implements PatternUser {
                             user.username()
                     )
             );
-            URI centerUri = null;
-            TagPojo patternAsTag = new TagPojo(
+            patternAsTag = new TagPojo(
                     this.patternUri
             );
             while (rs.hasNext()) {
@@ -91,26 +100,38 @@ public class PatternUserNeo4j implements PatternUser {
                         );
                     }
                 }
-                if (record.get("externalUri").asObject() != null)
-                    graphElementFactory.withUri(
-                            uri
-                    ).addTag(
-                            new TagPojo(
-                                    URI.create(record.get("externalUri").asString()),
-                                    new GraphElementPojo(
-                                            new FriendlyResourcePojo(
-                                                    record.get("label").asString(),
-                                                    record.get("comment").asString()
-                                            )
+                if (record.get("externalUri").asObject() != null) {
+                    if (!tagThoseGraphElements.containsKey(uri)) {
+                        tagThoseGraphElements.put(uri, new HashSet<>());
+                    }
+                    Set<TagPojo> tagsForUri = (HashSet) tagThoseGraphElements.get(uri);
+                    tagsForUri.add(new TagPojo(
+                            URI.create(record.get("externalUri").asString()),
+                            new GraphElementPojo(
+                                    new FriendlyResourcePojo(
+                                            record.get("label").asString(),
+                                            record.get("comment").asString()
                                     )
                             )
-                    );
+                    ));
+                }
             }
             graphElementFactory.withUri(
                     centerUri
             ).addTag(
-                    patternAsTag
+                    patternAsTag,
+                    ShareLevel.PRIVATE
             );
+            for (URI uri : tagThoseGraphElements.keySet()) {
+                GraphElementOperator graphElementOperator = graphElementFactory.withUri(uri);
+                Set<TagPojo> tags = tagThoseGraphElements.get(uri);
+                for (TagPojo tag : tags) {
+                    graphElementOperator.addTag(
+                            tag,
+                            ShareLevel.PRIVATE
+                    );
+                }
+            }
             return centerUri;
         }
     }
