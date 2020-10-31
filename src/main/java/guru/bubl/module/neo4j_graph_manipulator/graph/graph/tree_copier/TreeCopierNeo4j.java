@@ -46,10 +46,9 @@ public class TreeCopierNeo4j implements TreeCopier {
     @Override
     public URI ofAnotherUser(Tree tree, User copiedUser) {
         UserUris userUris = new UserUris(copier);
-        URI newRootUri = tree.getRootUri();
+        URI newRootUri = null;
         Map<URI, Set<TagPojo>> tagsOfUri = new HashMap<>();
         Map<URI, URI> uriAndCopyUri = new HashMap<>();
-        TagPojo rootAsTag;
         String query = "MATCH (n:GraphElement) " +
                 "WHERE n.uri IN $geUris " +
                 "OPTIONAL MATCH (n)-[:IDENTIFIED_TO]->(t), " +
@@ -81,6 +80,12 @@ public class TreeCopierNeo4j implements TreeCopier {
                 URI uri = URI.create(record.get("uri").asString());
                 URI originalUri = URI.create(record.get("originalUri").asString());
                 uriAndCopyUri.put(originalUri, uri);
+                if (newRootUri == null && originalUri.equals(tree.getRootUri())) {
+                    newRootUri = uri;
+                    graphElementOperatorFactory.withUri(uri).addTag(
+                            tree.getRootAsTag(), ShareLevel.PRIVATE
+                    );
+                }
                 Integer nbTags = record.get("nbTags").asInt();
                 if (nbTags >= 1) {
                     URI originalUriTags = URI.create(record.get("tagsForUri").asString());
@@ -108,42 +113,15 @@ public class TreeCopierNeo4j implements TreeCopier {
                         );
                     }
                 }
-                if (originalUri.equals(tree.getRootUri())) {
-                    newRootUri = uri;
-//                    if (record.get("originalLabel").asObject() != null) {
-//                        patternAsTag.setLabel(record.get("originalLabel").asString());
-//                    }
-//                    if (record.get("originalComment").asObject() != null) {
-//                        patternAsTag.setComment(
-//                                record.get("originalComment").asString()
-//                        );
-//                    }
-                }
-//                if (record.get("externalUri").asObject() != null) {
-//                    if (!tagThoseGraphElements.containsKey(uri)) {
-//                        tagThoseGraphElements.put(uri, new HashSet<>());
-//                    }
-//                    Set<TagPojo> tagsForUri = (HashSet) tagThoseGraphElements.get(uri);
-//                    tagsForUri.add(new TagPojo(
-//                            URI.create(record.get("externalUri").asString()),
-//                            new GraphElementPojo(
-//                                    new FriendlyResourcePojo(
-//                                            record.get("label").asString(),
-//                                            record.get("comment").asString()
-//                                    )
-//                            )
-//                    ));
-//                }
-
             }
         } catch (JSONException e) {
             e.printStackTrace();
         }
-        for (
-                URI originalUri : tagsOfUri.keySet()) {
+        for (URI originalUri : tagsOfUri.keySet()) {
             URI copiedUri = uriAndCopyUri.get(originalUri);
+            GraphElementOperator copiedGe = graphElementOperatorFactory.withUri(copiedUri);
             for (TagPojo tag : tagsOfUri.get(originalUri)) {
-                graphElementOperatorFactory.withUri(copiedUri).addTag(
+                copiedGe.addTag(
                         tag,
                         ShareLevel.PRIVATE
                 );
