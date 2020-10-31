@@ -10,6 +10,7 @@ import org.neo4j.driver.Session;
 import java.net.URI;
 import java.util.Set;
 
+import static guru.bubl.module.model.UserUris.urisToString;
 import static org.neo4j.driver.Values.parameters;
 
 public class ForkCollectionOperatorNeo4J implements ForkCollectionOperator {
@@ -41,9 +42,5 @@ public class ForkCollectionOperatorNeo4J implements ForkCollectionOperator {
                     )
             );
         }
-    }
-
-    private String[] urisToString(Set<URI> uris) {
-        return uris.stream().map(URI::toString).toArray(String[]::new);
     }
 }

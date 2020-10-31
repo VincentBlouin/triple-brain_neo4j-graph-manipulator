@@ -14,6 +14,7 @@ import guru.bubl.module.model.center_graph_element.CenterGraphElementsOperatorFa
 import guru.bubl.module.model.center_graph_element.CenteredGraphElementsOperator;
 import guru.bubl.module.model.graph.FriendlyResourceOperator;
 import guru.bubl.module.model.graph.GraphFactory;
+import guru.bubl.module.model.graph.tree_copier.TreeCopier;
 import guru.bubl.module.model.graph.edge.EdgeOperator;
 import guru.bubl.module.model.graph.edge.EdgeOperatorFactory;
 import guru.bubl.module.model.graph.fork.ForkOperator;
@@ -53,6 +54,8 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.graph.pattern.PatternUserN
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.relation.RelationFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.relation.RelationOperatorNeo4J;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.tag.TagOperatorNeo4J;
+import guru.bubl.module.model.graph.tree_copier.TreeCopierFactory;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.tree_copier.TreeCopierNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.VertexFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.VertexOperatorNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.image.ImageFactoryNeo4j;
@@ -188,6 +191,11 @@ public class Neo4jModule extends AbstractModule {
         );
         install(factoryModuleBuilder
                 .build(GroupRelationFactoryNeo4j.class));
+
+        install(factoryModuleBuilder
+                .implement(TreeCopier.class, TreeCopierNeo4j.class)
+                .build(TreeCopierFactory.class));
+
         bind(GraphFactory.class).to(GraphFactoryNeo4j.class).in(Singleton.class);
         bind(GraphElementSpecialOperatorFactory.class);
     }
