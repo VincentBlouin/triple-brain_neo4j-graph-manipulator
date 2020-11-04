@@ -3,27 +3,34 @@ package guru.bubl.module.neo4j_graph_manipulator.graph.graph.tree_copier;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
-import guru.bubl.module.model.FriendlyResource;
 import guru.bubl.module.model.User;
 import guru.bubl.module.model.UserUris;
+import guru.bubl.module.model.friend.FriendManager;
+import guru.bubl.module.model.friend.FriendManagerFactory;
+import guru.bubl.module.model.friend.FriendStatus;
 import guru.bubl.module.model.graph.FriendlyResourcePojo;
 import guru.bubl.module.model.graph.ShareLevel;
 import guru.bubl.module.model.graph.Tree;
 import guru.bubl.module.model.graph.graph_element.GraphElementOperator;
 import guru.bubl.module.model.graph.graph_element.GraphElementOperatorFactory;
-import guru.bubl.module.model.graph.graph_element.GraphElementPojo;
 import guru.bubl.module.model.graph.tag.TagPojo;
 import guru.bubl.module.model.graph.tree_copier.TreeCopier;
 import guru.bubl.module.model.json.ImageJson;
-import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
-import org.neo4j.driver.*;
+import org.neo4j.driver.Driver;
+import org.neo4j.driver.Record;
+import org.neo4j.driver.Result;
+import org.neo4j.driver.Session;
 
 import java.net.URI;
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 import static guru.bubl.module.model.UserUris.urisToString;
+import static guru.bubl.module.model.graph.ShareLevel.shareLevelsToIntegers;
 import static org.neo4j.driver.Values.parameters;
 
 public class TreeCopierNeo4j implements TreeCopier {
@@ -36,6 +43,9 @@ public class TreeCopierNeo4j implements TreeCopier {
     @Inject
     private GraphElementOperatorFactory graphElementOperatorFactory;
 
+    @Inject
+    private FriendManagerFactory friendManagerFactory;
+
     @AssistedInject
     protected TreeCopierNeo4j(
             @Assisted User copier
@@ -45,38 +55,57 @@ public class TreeCopierNeo4j implements TreeCopier {
 
     @Override
     public URI ofAnotherUser(Tree tree, User copiedUser) {
+        Boolean isFriend = FriendStatus.confirmed == friendManagerFactory.forUser(
+                copier
+        ).getStatusWithUser(copiedUser);
         UserUris userUris = new UserUris(copier);
         URI newRootUri = null;
         Map<URI, Set<TagPojo>> tagsOfUri = new HashMap<>();
         Map<URI, URI> uriAndCopyUri = new HashMap<>();
         String query = "MATCH (n:GraphElement) " +
-                "WHERE n.uri IN $geUris " +
-                "OPTIONAL MATCH (n)-[:IDENTIFIED_TO]->(t), " +
-                "(n)-[rels:SOURCE|DESTINATION]-() " +
-                "WITH n, rels, COLLECT({externalUri:'\"'+t.external_uri+'\"',label:'\"'+t.label+'\"',desc:'\"'+t.comment+'\"', images: t.images}) as tags, count(t) as nbTags " +
-                "CALL apoc.refactor.cloneSubgraph([n], [rels], {}) YIELD input, output, error " +
-                "WITH n.uri as tagsForUri, tags, nbTags, collect(output) as createdNodes " +
-                "UNWIND createdNodes as c " +
-                "SET c.owner=$owner, " +
-                "c.shareLevel=10," +
-                "c.creation_date=timestamp(), " +
-                "c.last_modification_date=timestamp(), " +
-                "c.original_uri = c.uri, " +
-                "c.uri='" + userUris.graphUri() + "/'+ split(c.uri, '/')[5] + '/' + apoc.create.uuid() " +
-                "WITH tagsForUri, tags, c, nbTags " +
-                "RETURN c.uri as uri, c.original_uri as originalUri, tagsForUri, tags, nbTags";
+                "WHERE n.uri IN $geUris AND " +
+                "n.owner=$copiedUser AND " +
+                "n.shareLevel IN $shareLevels " +
+                "RETURN count(n) as nbGe ";
+        String[] urisAsString = urisToString(tree.getUrisOfGraphElements());
         try (Session session = driver.session()) {
+            Record record = session.run(query, parameters(
+                    "geUris",
+                    urisAsString,
+                    "copiedUser",
+                    copiedUser.username(),
+                    "shareLevels",
+                    shareLevelsToIntegers(isFriend ? ShareLevel.friendShareLevels : ShareLevel.publicShareLevels)
+            )).single();
+            if (record.get("nbGe").asInt() != tree.getUrisOfGraphElements().size()) {
+                return null;
+            }
+            query = "MATCH (n:GraphElement) WHERE n.uri IN $geUris " +
+                    "OPTIONAL MATCH (n)-[:IDENTIFIED_TO]->(t), " +
+                    "(n)-[rels:SOURCE|DESTINATION]-() " +
+                    "WITH n,rels, COLLECT({externalUri:'\"'+t.external_uri+'\"',label:'\"'+t.label+'\"',desc:'\"'+t.comment+'\"', images: t.images}) as tags, count(t) as nbTags " +
+                    "CALL apoc.refactor.cloneSubgraph([n], [rels], {}) YIELD input, output, error " +
+                    "WITH n.uri as tagsForUri, tags, nbTags, collect(output) as createdNodes " +
+                    "UNWIND createdNodes as c " +
+                    "SET c.owner=$copier, " +
+                    "c.shareLevel=10," +
+                    "c.creation_date=timestamp(), " +
+                    "c.last_modification_date=timestamp(), " +
+                    "c.original_uri = c.uri, " +
+                    "c.uri='" + userUris.graphUri() + "/'+ split(c.uri, '/')[5] + '/' + apoc.create.uuid() " +
+                    "WITH tagsForUri, tags, c, nbTags " +
+                    "RETURN c.uri as uri, c.original_uri as originalUri, tagsForUri, tags, nbTags";
             Result rs = session.run(
                     query,
                     parameters(
                             "geUris",
-                            urisToString(tree.getUrisOfGraphElements()),
-                            "owner",
+                            urisAsString,
+                            "copier",
                             copier.username()
                     )
             );
             while (rs.hasNext()) {
-                Record record = rs.next();
+                record = rs.next();
                 URI uri = URI.create(record.get("uri").asString());
                 URI originalUri = URI.create(record.get("originalUri").asString());
                 uriAndCopyUri.put(originalUri, uri);
@@ -115,8 +144,9 @@ public class TreeCopierNeo4j implements TreeCopier {
                 }
             }
         } catch (JSONException e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
+
         for (URI originalUri : tagsOfUri.keySet()) {
             URI copiedUri = uriAndCopyUri.get(originalUri);
             GraphElementOperator copiedGe = graphElementOperatorFactory.withUri(copiedUri);
