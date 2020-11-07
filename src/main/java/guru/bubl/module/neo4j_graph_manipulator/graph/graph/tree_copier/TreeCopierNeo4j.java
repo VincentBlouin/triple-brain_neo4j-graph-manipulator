@@ -54,36 +54,33 @@ public class TreeCopierNeo4j implements TreeCopier {
     }
 
     @Override
-    public URI ofAnotherUser(Tree tree, User copiedUser) {
-        Boolean isFriend = FriendStatus.confirmed == friendManagerFactory.forUser(
-                copier
-        ).getStatusWithUser(copiedUser);
+    public URI copyTreeOfUser(Tree tree, User copiedUser) {
+        Boolean isOwner = copier.username().equals(copiedUser.username());
+        Set<ShareLevel> inShareLevels;
+        if (isOwner) {
+            inShareLevels = ShareLevel.allShareLevels;
+        } else {
+            Boolean isFriend = FriendStatus.confirmed == friendManagerFactory.forUser(
+                    copier
+            ).getStatusWithUser(copiedUser);
+            inShareLevels = isFriend ? ShareLevel.friendShareLevels : ShareLevel.publicShareLevels;
+        }
         UserUris userUris = new UserUris(copier);
         URI newRootUri = null;
         Map<URI, Set<TagPojo>> tagsOfUri = new HashMap<>();
         Map<URI, URI> uriAndCopyUri = new HashMap<>();
-        String query = "MATCH (n:GraphElement) " +
-                "WHERE n.uri IN $geUris AND " +
-                "n.owner=$copiedUser AND " +
-                "n.shareLevel IN $shareLevels " +
-                "RETURN count(n) as nbGe ";
         String[] urisAsString = urisToString(tree.getUrisOfGraphElements());
         try (Session session = driver.session()) {
-            Record record = session.run(query, parameters(
-                    "geUris",
-                    urisAsString,
-                    "copiedUser",
-                    copiedUser.username(),
-                    "shareLevels",
-                    shareLevelsToIntegers(isFriend ? ShareLevel.friendShareLevels : ShareLevel.publicShareLevels)
-            )).single();
-            if (record.get("nbGe").asInt() != tree.getUrisOfGraphElements().size()) {
-                return null;
-            }
-            query = "MATCH (n:GraphElement) WHERE n.uri IN $geUris " +
+            String query = "MATCH (n:GraphElement) " +
+                    "WHERE n.uri IN $geUris AND " +
+                    "n.owner=$copiedUser AND " +
+                    "n.shareLevel IN $shareLevels " +
+                    "WITH count(n) as nbGe, COLLECT(n) as nArray " +
+                    "WITH (CASE WHEN nbGe = $nbGeExpected THEN nArray ELSE null END) as nArray " +
+                    "UNWIND(nArray) as n " +
                     "OPTIONAL MATCH (n)-[:IDENTIFIED_TO]->(t), " +
                     "(n)-[rels:SOURCE|DESTINATION]-() " +
-                    "WITH n,rels, COLLECT({externalUri:'\"'+t.external_uri+'\"',label:'\"'+t.label+'\"',desc:'\"'+t.comment+'\"', images: t.images}) as tags, count(t) as nbTags " +
+                    "WITH n,rels,COLLECT({externalUri:'\"'+t.external_uri+'\"',label:'\"'+t.label+'\"',desc:'\"'+t.comment+'\"', images: t.images}) as tags, count(t) as nbTags " +
                     "CALL apoc.refactor.cloneSubgraph([n], [rels], {}) YIELD input, output, error " +
                     "WITH n.uri as tagsForUri, tags, nbTags, collect(output) as createdNodes " +
                     "UNWIND createdNodes as c " +
@@ -101,11 +98,17 @@ public class TreeCopierNeo4j implements TreeCopier {
                             "geUris",
                             urisAsString,
                             "copier",
-                            copier.username()
+                            copier.username(),
+                            "nbGeExpected",
+                            tree.getUrisOfGraphElements().size(),
+                            "copiedUser",
+                            copiedUser.username(),
+                            "shareLevels",
+                            shareLevelsToIntegers(inShareLevels)
                     )
             );
             while (rs.hasNext()) {
-                record = rs.next();
+                Record record = rs.next();
                 URI uri = URI.create(record.get("uri").asString());
                 URI originalUri = URI.create(record.get("originalUri").asString());
                 uriAndCopyUri.put(originalUri, uri);
