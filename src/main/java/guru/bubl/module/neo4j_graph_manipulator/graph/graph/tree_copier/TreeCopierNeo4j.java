@@ -24,10 +24,9 @@ import org.neo4j.driver.Result;
 import org.neo4j.driver.Session;
 
 import java.net.URI;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static guru.bubl.module.model.UserUris.urisToString;
 import static guru.bubl.module.model.graph.ShareLevel.shareLevelsToIntegers;
@@ -54,7 +53,7 @@ public class TreeCopierNeo4j implements TreeCopier {
     }
 
     @Override
-    public URI copyTreeOfUser(Tree tree, User copiedUser) {
+    public Map<URI, URI> copyTreeOfUser(Tree tree, User copiedUser) {
         Boolean isOwner = copier.username().equals(copiedUser.username());
         Set<ShareLevel> inShareLevels;
         if (isOwner) {
@@ -66,10 +65,15 @@ public class TreeCopierNeo4j implements TreeCopier {
             inShareLevels = isFriend ? ShareLevel.friendShareLevels : ShareLevel.publicShareLevels;
         }
         UserUris userUris = new UserUris(copier);
-        URI newRootUri = null;
+        Boolean areTagsAdded = false;
         Map<URI, Set<TagPojo>> tagsOfUri = new HashMap<>();
         Map<URI, URI> uriAndCopyUri = new HashMap<>();
         String[] urisAsString = urisToString(tree.getUrisOfGraphElements());
+        Set<TagPojo> tagsOfRootBubble = new HashSet<>();
+        tagsOfRootBubble.add(tree.getRootAsTag());
+        tagsOfUri.put(
+                tree.getRootUri(), tagsOfRootBubble
+        );
         try (Session session = driver.session()) {
             String query = "MATCH (n:GraphElement) " +
                     "WHERE n.uri IN $geUris AND " +
@@ -78,11 +82,11 @@ public class TreeCopierNeo4j implements TreeCopier {
                     "WITH count(n) as nbGe, COLLECT(n) as nArray " +
                     "WITH (CASE WHEN nbGe = $nbGeExpected THEN nArray ELSE null END) as nArray " +
                     "UNWIND(nArray) as n " +
-                    "OPTIONAL MATCH (n)-[:IDENTIFIED_TO]->(t), " +
-                    "(n)-[rels:SOURCE|DESTINATION]-() " +
-                    "WITH n,rels,COLLECT({externalUri:'\"'+t.external_uri+'\"',label:'\"'+t.label+'\"',desc:'\"'+t.comment+'\"', images: t.images}) as tags, count(t) as nbTags " +
-                    "CALL apoc.refactor.cloneSubgraph([n], [rels], {}) YIELD input, output, error " +
-                    "WITH n.uri as tagsForUri, tags, nbTags, collect(output) as createdNodes " +
+                    "OPTIONAL MATCH (n)<-[r:SOURCE|DESTINATION]->() " +
+                    "OPTIONAL MATCH (n)-[:IDENTIFIED_TO]->(t) " +
+                    "WITH nArray,COLLECT(r) as rArray, COLLECT({nUri:'\"'+n.uri+'\"', externalUri:'\"'+t.external_uri+'\"',label:'\"'+t.label+'\"',desc:'\"'+t.comment+'\"', images: t.images}) as tags " +
+                    "CALL apoc.refactor.cloneSubgraph(nArray, rArray, {}) YIELD input, output, error " +
+                    "WITH collect(output) as createdNodes, tags " +
                     "UNWIND createdNodes as c " +
                     "SET c.owner=$copier, " +
                     "c.shareLevel=10," +
@@ -90,8 +94,8 @@ public class TreeCopierNeo4j implements TreeCopier {
                     "c.last_modification_date=timestamp(), " +
                     "c.original_uri = c.uri, " +
                     "c.uri='" + userUris.graphUri() + "/'+ split(c.uri, '/')[5] + '/' + apoc.create.uuid() " +
-                    "WITH tagsForUri, tags, c, nbTags " +
-                    "RETURN c.uri as uri, c.original_uri as originalUri, tagsForUri, tags, nbTags";
+                    "WITH c, tags " +
+                    "RETURN c.uri as uri, c.original_uri as originalUri, tags";
             Result rs = session.run(
                     query,
                     parameters(
@@ -112,37 +116,34 @@ public class TreeCopierNeo4j implements TreeCopier {
                 URI uri = URI.create(record.get("uri").asString());
                 URI originalUri = URI.create(record.get("originalUri").asString());
                 uriAndCopyUri.put(originalUri, uri);
-                if (newRootUri == null && originalUri.equals(tree.getRootUri())) {
-                    newRootUri = uri;
-                    graphElementOperatorFactory.withUri(uri).addTag(
-                            tree.getRootAsTag(), ShareLevel.PRIVATE
-                    );
-                }
-                Integer nbTags = record.get("nbTags").asInt();
-                if (nbTags >= 1) {
-                    URI originalUriTags = URI.create(record.get("tagsForUri").asString());
-                    if (!tagsOfUri.containsKey(originalUriTags)) {
-                        tagsOfUri.put(
-                                originalUriTags,
-                                new HashSet<>()
-                        );
-                    }
-                    Set<TagPojo> tags = tagsOfUri.get(originalUriTags);
+                if (!areTagsAdded) {
+                    areTagsAdded = true;
                     for (Object tagObject : record.get("tags").asList()) {
                         JSONObject tagJson = new JSONObject(tagObject.toString());
-                        FriendlyResourcePojo friendlyResourcePojo = new FriendlyResourcePojo(
-                                tagJson.optString("label"),
-                                tagJson.optString("desc")
-                        );
-                        friendlyResourcePojo.setImages(
-                                ImageJson.fromJson(tagJson.optString("images"))
-                        );
-                        tags.add(
-                                new TagPojo(
-                                        URI.create(tagJson.getString("externalUri")),
-                                        friendlyResourcePojo
-                                )
-                        );
+                        String externalUriAsString = tagJson.getString("externalUri");
+                        if (externalUriAsString != null) {
+                            URI graphElementUri = URI.create(tagJson.getString("nUri"));
+                            if (!tagsOfUri.containsKey(graphElementUri)) {
+                                tagsOfUri.put(
+                                        graphElementUri,
+                                        new HashSet<>()
+                                );
+                            }
+                            Set<TagPojo> tags = tagsOfUri.get(graphElementUri);
+                            FriendlyResourcePojo friendlyResourcePojo = new FriendlyResourcePojo(
+                                    tagJson.optString("label"),
+                                    tagJson.optString("desc")
+                            );
+                            friendlyResourcePojo.setImages(
+                                    ImageJson.fromJson(tagJson.optString("images"))
+                            );
+                            tags.add(
+                                    new TagPojo(
+                                            URI.create(externalUriAsString),
+                                            friendlyResourcePojo
+                                    )
+                            );
+                        }
                     }
                 }
             }
@@ -152,14 +153,17 @@ public class TreeCopierNeo4j implements TreeCopier {
 
         for (URI originalUri : tagsOfUri.keySet()) {
             URI copiedUri = uriAndCopyUri.get(originalUri);
-            GraphElementOperator copiedGe = graphElementOperatorFactory.withUri(copiedUri);
-            for (TagPojo tag : tagsOfUri.get(originalUri)) {
-                copiedGe.addTag(
-                        tag,
-                        ShareLevel.PRIVATE
-                );
+            if (copiedUri != null) {
+                GraphElementOperator copiedGe = graphElementOperatorFactory.withUri(copiedUri);
+                for (TagPojo tag : tagsOfUri.get(originalUri)) {
+                    copiedGe.addTag(
+                            tag,
+                            ShareLevel.PRIVATE
+                    );
+                }
             }
+
         }
-        return newRootUri;
+        return uriAndCopyUri;
     }
 }
