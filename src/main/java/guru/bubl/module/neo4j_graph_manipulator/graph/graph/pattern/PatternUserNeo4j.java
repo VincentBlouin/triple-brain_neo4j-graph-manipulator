@@ -65,13 +65,13 @@ public class PatternUserNeo4j implements PatternUser {
                 "c.shareLevel=10," +
                 "c.creation_date=timestamp(), " +
                 "c.last_modification_date=timestamp(), " +
-                "c.pattern_uri = c.uri, " +
+                "c.copied_from_uri = c.uri, " +
                 "c.uri='" + userUris.graphUri() + "/'+ split(c.uri, '/')[5] + '/' + apoc.create.uuid() " +
                 "WITH c, n " +
                 "OPTIONAL MATCH (c)-[:IDENTIFIED_TO]->(tag) " +
-                "WITH c.uri as uri, c.pattern_uri as patternUri, n.label as originalLabel, n.comment as originalComment, tag, tag.external_uri as externalUri, tag.label as label, tag.comment as comment, tag.images as images " +
+                "WITH c.uri as uri, c.copied_from_uri as copiedFromUri, n.label as originalLabel, n.comment as originalComment, tag, tag.external_uri as externalUri, tag.label as label, tag.comment as comment, tag.images as images " +
                 "DETACH DELETE tag " +
-                "RETURN uri, originalLabel, originalComment, patternUri, externalUri, label, comment, images";
+                "RETURN uri, originalLabel, originalComment, copiedFromUri, externalUri, label, comment, images";
         try (Session session = driver.session()) {
             Result rs = session.run(
                     query,
@@ -87,7 +87,7 @@ public class PatternUserNeo4j implements PatternUser {
             );
             while (rs.hasNext()) {
                 Record record = rs.next();
-                String patternUri = record.get("patternUri").asString();
+                String patternUri = record.get("copiedFromUri").asString();
                 URI uri = URI.create(record.get("uri").asString());
                 if (patternUri.equals(this.patternUri.toString())) {
                     centerUri = uri;

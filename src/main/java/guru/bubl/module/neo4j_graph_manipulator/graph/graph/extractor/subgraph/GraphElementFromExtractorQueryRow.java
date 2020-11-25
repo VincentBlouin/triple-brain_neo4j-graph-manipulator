@@ -60,12 +60,12 @@ public class GraphElementFromExtractorQueryRow {
                         record,
                         identificationKey
                 ).build(),
-                getPatternUri()
+                getCopiedFromUri()
         );
     }
 
-    private URI getPatternUri() {
-        String patternKey = key + "." + "pattern_uri";
-        return record.get(patternKey).asObject() == null ? null : URI.create(record.get(patternKey).asString());
+    private URI getCopiedFromUri() {
+        String copiedFromKey = key + "." + "copied_from_uri";
+        return record.get(copiedFromKey).asObject() == null ? null : URI.create(record.get(copiedFromKey).asString());
     }
 }

@@ -273,8 +273,8 @@ public class RelationOperatorNeo4J implements RelationOperator, OperatorNeo4j {
     }
 
     @Override
-    public URI getPatternUri() {
-        return graphElementOperator.getPatternUri();
+    public URI getCopiedFromUri() {
+        return graphElementOperator.getCopiedFromUri();
     }
 
 

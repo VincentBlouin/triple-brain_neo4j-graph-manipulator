@@ -10,7 +10,6 @@ import com.google.inject.assistedinject.AssistedInject;
 import guru.bubl.module.model.Image;
 import guru.bubl.module.model.UserUris;
 import guru.bubl.module.model.graph.ShareLevel;
-import guru.bubl.module.model.graph.fork.ForkOperator;
 import guru.bubl.module.model.graph.relation.Relation;
 import guru.bubl.module.model.graph.relation.RelationOperator;
 import guru.bubl.module.model.graph.relation.RelationPojo;
@@ -373,8 +372,8 @@ public class VertexOperatorNeo4j implements VertexOperator, OperatorNeo4j {
     }
 
     @Override
-    public URI getPatternUri() {
-        return graphElementOperator.getPatternUri();
+    public URI getCopiedFromUri() {
+        return graphElementOperator.getCopiedFromUri();
     }
 
     @Override

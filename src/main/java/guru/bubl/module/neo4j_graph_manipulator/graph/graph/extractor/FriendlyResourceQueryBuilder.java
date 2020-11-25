@@ -30,7 +30,7 @@ public class FriendlyResourceQueryBuilder {
                         ) +
                         QueryUtils.getPropertyUsingContainerNameQueryPart(
                                 prefix,
-                                "pattern_uri"
+                                "copied_from_uri"
                         ) +
                         QueryUtils.getPropertyUsingContainerNameQueryPart(
                                 prefix,

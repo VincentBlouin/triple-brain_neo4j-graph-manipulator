@@ -366,7 +366,7 @@ public class TagOperatorNeo4J implements TagOperator, OperatorNeo4j {
     }
 
     @Override
-    public URI getPatternUri() {
+    public URI getCopiedFromUri() {
         return null;
     }
 }

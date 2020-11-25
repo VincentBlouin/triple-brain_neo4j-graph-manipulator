@@ -269,18 +269,18 @@ public class GraphElementOperatorNeo4j implements GraphElementOperator, Operator
     }
 
     @Override
-    public URI getPatternUri() {
+    public URI getCopiedFromUri() {
         try (Session session = driver.session()) {
             Record record = session.run(
-                    queryPrefix() + "RETURN n.pattern_uri as patternUri",
+                    queryPrefix() + "RETURN n.copied_from_uri as copiedFromUri",
                     parameters(
                             "uri",
                             this.uri().toString()
                     )
             ).single();
             return record.get(
-                    "patternUri"
-            ).asObject() == null ? null : URI.create(record.get("patternUri").asString());
+                    "copiedFromUri"
+            ).asObject() == null ? null : URI.create(record.get("copiedFromUri").asString());
         }
     }
 

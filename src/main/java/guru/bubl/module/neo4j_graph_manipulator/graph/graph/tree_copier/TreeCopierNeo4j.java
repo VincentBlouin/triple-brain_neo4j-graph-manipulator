@@ -92,10 +92,10 @@ public class TreeCopierNeo4j implements TreeCopier {
                     "c.shareLevel=10," +
                     "c.creation_date=timestamp(), " +
                     "c.last_modification_date=timestamp(), " +
-                    "c.original_uri = c.uri, " +
+                    "c.copied_from_uri = c.uri, " +
                     "c.uri='" + userUris.graphUri() + "/'+ split(c.uri, '/')[5] + '/' + apoc.create.uuid() " +
                     "WITH c, tags " +
-                    "RETURN c.uri as uri, c.original_uri as originalUri, tags";
+                    "RETURN c.uri as uri, c.copied_from_uri as originalUri, tags";
             Result rs = session.run(
                     query,
                     parameters(

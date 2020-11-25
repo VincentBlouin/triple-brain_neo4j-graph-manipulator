@@ -7,7 +7,6 @@ import guru.bubl.module.model.Image;
 import guru.bubl.module.model.graph.graph_element.GraphElement;
 import guru.bubl.module.model.graph.ShareLevel;
 import guru.bubl.module.model.graph.edge.EdgeOperatorFactory;
-import guru.bubl.module.model.graph.fork.ForkOperator;
 import guru.bubl.module.model.graph.relation.RelationOperator;
 import guru.bubl.module.model.graph.relation.RelationPojo;
 import guru.bubl.module.model.graph.fork.ForkOperatorFactory;
@@ -134,8 +133,8 @@ public class GroupRelationOperatorNeo4j implements GroupRelationOperator, Operat
     }
 
     @Override
-    public URI getPatternUri() {
-        return graphElementOperator.getPatternUri();
+    public URI getCopiedFromUri() {
+        return graphElementOperator.getCopiedFromUri();
     }
 
     @Override
