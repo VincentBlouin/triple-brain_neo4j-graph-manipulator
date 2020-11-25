@@ -64,6 +64,9 @@ public class PatternUserNeo4j implements PatternUser {
                 "SET c.owner=$owner, " +
                 "c.shareLevel=10," +
                 "c.creation_date=timestamp(), " +
+                "c.nb_private_neighbors=c.nb_public_neighbors, " +
+                "c.nb_public_neighbors=0," +
+                "c.nb_friend_neighbors=0, " +
                 "c.last_modification_date=timestamp(), " +
                 "c.copied_from_uri = c.uri, " +
                 "c.uri='" + userUris.graphUri() + "/'+ split(c.uri, '/')[5] + '/' + apoc.create.uuid() " +

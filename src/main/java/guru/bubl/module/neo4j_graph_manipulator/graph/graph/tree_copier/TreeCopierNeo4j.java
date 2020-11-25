@@ -3,6 +3,7 @@ package guru.bubl.module.neo4j_graph_manipulator.graph.graph.tree_copier;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
+import guru.bubl.module.common_utils.Uris;
 import guru.bubl.module.model.User;
 import guru.bubl.module.model.UserUris;
 import guru.bubl.module.model.friend.FriendManager;
@@ -30,6 +31,7 @@ import java.util.stream.Stream;
 
 import static guru.bubl.module.model.UserUris.urisToString;
 import static guru.bubl.module.model.graph.ShareLevel.shareLevelsToIntegers;
+import static guru.bubl.module.neo4j_graph_manipulator.graph.graph.graph_element.GraphElementOperatorNeo4j.incrementNbNeighborsQueryPart;
 import static org.neo4j.driver.Values.parameters;
 
 public class TreeCopierNeo4j implements TreeCopier {
@@ -54,6 +56,19 @@ public class TreeCopierNeo4j implements TreeCopier {
 
     @Override
     public Map<URI, URI> copyTreeOfUser(Tree tree, User copiedUser) {
+        return copyTreeOfUserWithNewParentUri(tree, copiedUser, null);
+    }
+
+    @Override
+    public Map<URI, URI> copyTreeOfUserWithNewParentUri(Tree tree, User copiedUser, URI newParentUri) {
+        Map<URI, URI> uriAndCopyUri = new HashMap<>();
+        UserUris userUris = new UserUris(copier);
+        if (newParentUri != null && !userUris.isOwnerOfUri(newParentUri)) {
+            return uriAndCopyUri;
+        }
+        if (UserUris.isUriOfAGroupRelation(tree.getRootUri()) && newParentUri == null) {
+            return uriAndCopyUri;
+        }
         Boolean isOwner = copier.username().equals(copiedUser.username());
         Set<ShareLevel> inShareLevels;
         if (isOwner) {
@@ -64,10 +79,8 @@ public class TreeCopierNeo4j implements TreeCopier {
             ).getStatusWithUser(copiedUser);
             inShareLevels = isFriend ? ShareLevel.friendShareLevels : ShareLevel.publicShareLevels;
         }
-        UserUris userUris = new UserUris(copier);
         Boolean areTagsAdded = false;
         Map<URI, Set<TagPojo>> tagsOfUri = new HashMap<>();
-        Map<URI, URI> uriAndCopyUri = new HashMap<>();
         String[] urisAsString = urisToString(tree.getUrisOfGraphElements());
         Set<TagPojo> tagsOfRootBubble = new HashSet<>();
         tagsOfRootBubble.add(tree.getRootAsTag());
@@ -163,6 +176,28 @@ public class TreeCopierNeo4j implements TreeCopier {
                 }
             }
 
+        }
+        if (UserUris.isUriOfAGroupRelation(tree.getRootUri())) {
+            String nbNeighborsProperty = ShareLevel.PRIVATE.getNbNeighborsPropertyName();
+            String query = String.format(
+                    "MATCH(gr:GroupRelation{uri:$grUri})  " +
+                            "MATCH(source:GraphElement{uri:$sourceUri}) " +
+                            "MERGE (gr)-[:SOURCE]->(source) " +
+                            "SET source.%s = source.%s + 1",
+                    nbNeighborsProperty,
+                    nbNeighborsProperty
+            );
+            try (Session session = driver.session()) {
+                session.run(
+                        query,
+                        parameters(
+                                "grUri",
+                                tree.getRootUri().toString(),
+                                "sourceUri",
+                                newParentUri.toString()
+                        )
+                );
+            }
         }
         return uriAndCopyUri;
     }
