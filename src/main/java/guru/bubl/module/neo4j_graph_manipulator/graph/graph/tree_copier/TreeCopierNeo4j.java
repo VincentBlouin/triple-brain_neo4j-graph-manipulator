@@ -108,27 +108,30 @@ public class TreeCopierNeo4j implements TreeCopier {
                 tree.getRootUri(), tagsOfRootBubble
         );
         try (Session session = driver.session()) {
-            String query = "MATCH (n:GraphElement) " +
-                    "WHERE n.uri IN $geUris AND " +
-                    "n.owner=$copiedUser AND " +
-                    "n.shareLevel IN $shareLevels " +
-                    "WITH count(n) as nbGe, COLLECT(n) as nArray " +
-                    "WITH (CASE WHEN nbGe = $nbGeExpected THEN nArray ELSE null END) as nArray " +
-                    "UNWIND(nArray) as n " +
-                    "OPTIONAL MATCH (n)<-[r:SOURCE|DESTINATION]->() " +
-                    "OPTIONAL MATCH (n)-[:IDENTIFIED_TO]->(t) " +
-                    "WITH nArray,COLLECT(r) as rArray, COLLECT({nUri:'\"'+n.uri+'\"', externalUri:'\"'+t.external_uri+'\"',label:'\"'+t.label+'\"',desc:'\"'+t.comment+'\"', images: t.images}) as tags " +
-                    "CALL apoc.refactor.cloneSubgraph(nArray, rArray, {}) YIELD input, output, error " +
-                    "WITH collect(output) as createdNodes, tags " +
-                    "UNWIND createdNodes as c " +
-                    "SET c.owner=$copier, " +
-                    (isOwner ? "" : "c.shareLevel=$copyShareLevel,") +
-                    "c.creation_date=timestamp(), " +
-                    "c.last_modification_date=timestamp(), " +
-                    "c.copied_from_uri = c.uri, " +
-                    "c.uri='" + userUris.graphUri() + "/'+ split(c.uri, '/')[5] + '/' + apoc.create.uuid() " +
-                    "WITH c, tags " +
-                    "RETURN c.uri as uri, c.copied_from_uri as originalUri, tags";
+            String query = String.format("MATCH (n:GraphElement) " +
+                            "WHERE n.uri IN $geUris AND " +
+                            "n.owner=$copiedUser AND " +
+                            "n.shareLevel IN $shareLevels " +
+                            "WITH count(n) as nbGe, COLLECT(n) as nArray " +
+                            "WITH (CASE WHEN nbGe = $nbGeExpected THEN nArray ELSE null END) as nArray " +
+                            "UNWIND(nArray) as n " +
+                            "OPTIONAL MATCH (n)<-[r:SOURCE|DESTINATION]->() " +
+                            "OPTIONAL MATCH (n)-[:IDENTIFIED_TO]->(t) " +
+                            "WITH nArray,COLLECT(r) as rArray, COLLECT({nUri:'\"'+n.uri+'\"', externalUri:'\"'+t.external_uri+'\"',label:'\"'+t.label+'\"',desc:'\"'+t.comment+'\"', images: t.images}) as tags " +
+                            "CALL apoc.refactor.cloneSubgraph(nArray, rArray, {skipProperties:['nb_visits', 'last_center_date']}) YIELD input, output, error " +
+                            "WITH collect(output) as createdNodes, tags " +
+                            "UNWIND createdNodes as c " +
+                            "SET c.owner=$copier, " +
+                            (isOwner ? "" : "c.shareLevel=$copyShareLevel,") +
+                            (isOwner ? "" : "c.%s=c.nb_private_neighbors+c.nb_friend_neighbors+c.nb_public_neighbors,") +
+                            "c.creation_date=timestamp(), " +
+                            "c.last_modification_date=timestamp(), " +
+                            "c.copied_from_uri = c.uri, " +
+                            "c.uri='" + userUris.graphUri() + "/'+ split(c.uri, '/')[5] + '/' + apoc.create.uuid() " +
+                            "WITH c, tags " +
+                            "RETURN c.uri as uri, c.copied_from_uri as originalUri, tags",
+                    shareLevel.getNbNeighborsPropertyName()
+            );
             Result rs = session.run(
                     query,
                     parameters(
@@ -144,7 +147,6 @@ public class TreeCopierNeo4j implements TreeCopier {
                             shareLevelsToIntegers(inShareLevels),
                             "copyShareLevel",
                             shareLevel.getIndex()
-
                     )
             );
             while (rs.hasNext()) {

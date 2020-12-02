@@ -62,7 +62,8 @@ public class CenterGraphElementOperatorNeo4j implements CenterGraphElementOperat
                             "uri", neo4jFriendlyResource.uri().toString()
                     )
             ).single();
-            return record.get("number").asInt();
+            Object numberAsObject = record.get("number").asObject();
+            return numberAsObject == null ? 0 : (Integer) numberAsObject;
         }
     }
 
@@ -94,8 +95,9 @@ public class CenterGraphElementOperatorNeo4j implements CenterGraphElementOperat
                             "uri", neo4jFriendlyResource.uri().toString()
                     )
             ).single();
-            return record.get("date") == null ? null : new Date(
-                    record.get("date").asLong()
+            Object dateAsObject = record.get("date").asObject();
+            return dateAsObject == null ? null : new Date(
+                    (Long) (dateAsObject)
             );
         }
     }
