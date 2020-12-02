@@ -124,13 +124,15 @@ public class TreeCopierNeo4j implements TreeCopier {
                             "SET c.owner=$copier, " +
                             (isOwner ? "" : "c.shareLevel=$copyShareLevel,") +
                             (isOwner ? "" : "c.%s=c.nb_private_neighbors+c.nb_friend_neighbors+c.nb_public_neighbors,") +
+                            (isOwner ? "" : "%s") +
                             "c.creation_date=timestamp(), " +
                             "c.last_modification_date=timestamp(), " +
                             "c.copied_from_uri = c.uri, " +
                             "c.uri='" + userUris.graphUri() + "/'+ split(c.uri, '/')[5] + '/' + apoc.create.uuid() " +
                             "WITH c, tags " +
                             "RETURN c.uri as uri, c.copied_from_uri as originalUri, tags",
-                    shareLevel.getNbNeighborsPropertyName()
+                    shareLevel.getNbNeighborsPropertyName(),
+                    setOtherNeighborsToZeroQueryPart(shareLevel)
             );
             Result rs = session.run(
                     query,
@@ -225,5 +227,16 @@ public class TreeCopierNeo4j implements TreeCopier {
             }
         }
         return uriAndCopyUri;
+    }
+
+    private String setOtherNeighborsToZeroQueryPart(ShareLevel shareLevel) {
+        switch (shareLevel) {
+            case PRIVATE:
+                return "c.nb_friend_neighbors=0,c.nb_public_neighbors=0,";
+            case FRIENDS:
+                return "c.nb_private_neighbors=0,c.nb_public_neighbors=0,";
+            default:
+                return "c.nb_private_neighbors=0,c.nb_friend_neighbors=0,";
+        }
     }
 }
