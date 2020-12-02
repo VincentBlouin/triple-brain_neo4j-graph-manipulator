@@ -3,10 +3,8 @@ package guru.bubl.module.neo4j_graph_manipulator.graph.graph.tree_copier;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
-import guru.bubl.module.common_utils.Uris;
 import guru.bubl.module.model.User;
 import guru.bubl.module.model.UserUris;
-import guru.bubl.module.model.friend.FriendManager;
 import guru.bubl.module.model.friend.FriendManagerFactory;
 import guru.bubl.module.model.friend.FriendStatus;
 import guru.bubl.module.model.graph.FriendlyResourcePojo;
@@ -26,12 +24,9 @@ import org.neo4j.driver.Session;
 
 import java.net.URI;
 import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static guru.bubl.module.model.UserUris.urisToString;
 import static guru.bubl.module.model.graph.ShareLevel.shareLevelsToIntegers;
-import static guru.bubl.module.neo4j_graph_manipulator.graph.graph.graph_element.GraphElementOperatorNeo4j.incrementNbNeighborsQueryPart;
 import static org.neo4j.driver.Values.parameters;
 
 public class TreeCopierNeo4j implements TreeCopier {
@@ -56,11 +51,36 @@ public class TreeCopierNeo4j implements TreeCopier {
 
     @Override
     public Map<URI, URI> copyTreeOfUser(Tree tree, User copiedUser) {
-        return copyTreeOfUserWithNewParentUri(tree, copiedUser, null);
+        return copyTreeOfUserWithNewParentUriInShareLevel(
+                tree,
+                copiedUser,
+                null,
+                ShareLevel.PRIVATE
+        );
+    }
+
+    @Override
+    public Map<URI, URI> copyTreeOfUserInShareLevel(Tree tree, User copiedUser, ShareLevel shareLevel) {
+        return copyTreeOfUserWithNewParentUriInShareLevel(
+                tree,
+                copiedUser,
+                null,
+                shareLevel
+        );
     }
 
     @Override
     public Map<URI, URI> copyTreeOfUserWithNewParentUri(Tree tree, User copiedUser, URI newParentUri) {
+        return copyTreeOfUserWithNewParentUriInShareLevel(
+                tree,
+                copiedUser,
+                newParentUri,
+                ShareLevel.PRIVATE
+        );
+    }
+
+    @Override
+    public Map<URI, URI> copyTreeOfUserWithNewParentUriInShareLevel(Tree tree, User copiedUser, URI newParentUri, ShareLevel shareLevel) {
         Map<URI, URI> uriAndCopyUri = new HashMap<>();
         UserUris userUris = new UserUris(copier);
         if (newParentUri != null && !userUris.isOwnerOfUri(newParentUri)) {
@@ -102,7 +122,7 @@ public class TreeCopierNeo4j implements TreeCopier {
                     "WITH collect(output) as createdNodes, tags " +
                     "UNWIND createdNodes as c " +
                     "SET c.owner=$copier, " +
-                    "c.shareLevel=10," +
+                    (isOwner ? "" : "c.shareLevel=$copyShareLevel,") +
                     "c.creation_date=timestamp(), " +
                     "c.last_modification_date=timestamp(), " +
                     "c.copied_from_uri = c.uri, " +
@@ -121,7 +141,10 @@ public class TreeCopierNeo4j implements TreeCopier {
                             "copiedUser",
                             copiedUser.username(),
                             "shareLevels",
-                            shareLevelsToIntegers(inShareLevels)
+                            shareLevelsToIntegers(inShareLevels),
+                            "copyShareLevel",
+                            shareLevel.getIndex()
+
                     )
             );
             while (rs.hasNext()) {
