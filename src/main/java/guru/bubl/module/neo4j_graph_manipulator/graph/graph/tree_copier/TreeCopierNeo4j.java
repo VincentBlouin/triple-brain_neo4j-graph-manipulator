@@ -128,6 +128,7 @@ public class TreeCopierNeo4j implements TreeCopier {
                             "c.creation_date=timestamp(), " +
                             "c.last_modification_date=timestamp(), " +
                             "c.copied_from_uri = c.uri, " +
+                            "c.copied_root_uri=$rootUri, " +
                             "c.uri='" + userUris.graphUri() + "/'+ split(c.uri, '/')[5] + '/' + apoc.create.uuid() " +
                             "WITH c, tags " +
                             "RETURN c.uri as uri, c.copied_from_uri as originalUri, tags",
@@ -139,6 +140,8 @@ public class TreeCopierNeo4j implements TreeCopier {
                     parameters(
                             "geUris",
                             urisAsString,
+                            "rootUri",
+                            tree.getRootUri().toString(),
                             "copier",
                             copier.username(),
                             "nbGeExpected",

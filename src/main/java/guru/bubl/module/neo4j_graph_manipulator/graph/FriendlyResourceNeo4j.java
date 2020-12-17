@@ -4,6 +4,7 @@
 
 package guru.bubl.module.neo4j_graph_manipulator.graph;
 
+import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 import guru.bubl.module.model.FriendlyResource;
@@ -11,6 +12,7 @@ import guru.bubl.module.model.Image;
 import guru.bubl.module.model.UserUris;
 import guru.bubl.module.model.graph.FriendlyResourceOperator;
 import guru.bubl.module.model.graph.FriendlyResourcePojo;
+import guru.bubl.module.model.notification.NotificationOperator;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.UserGraphNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.image.ImageFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.image.ImagesNeo4j;
@@ -134,6 +136,7 @@ public class FriendlyResourceNeo4j implements FriendlyResourceOperator, Operator
 
     @Override
     public void label(String label) {
+        addUpdateNotifications("label");
         String query = String.format(
                 "%s SET n.label=$label, %s",
                 queryPrefix(),
@@ -153,6 +156,19 @@ public class FriendlyResourceNeo4j implements FriendlyResourceOperator, Operator
                             label,
                             "last_modification_date",
                             new Date().getTime()
+                    )
+            );
+        }
+    }
+
+    public void addUpdateNotifications(String action) {
+        try (Session session = driver.session()) {
+            String query = "MATCH (ge:Resource{copied_from_uri:$uri}) " +
+                    "CREATE (n:Notification { owner: ge.owner })  ";
+            session.run(
+                    query,
+                    parameters(
+                            "uri", uri.toString()
                     )
             );
         }

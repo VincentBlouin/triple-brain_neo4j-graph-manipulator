@@ -35,6 +35,7 @@ import guru.bubl.module.model.graph.tag.TagFactory;
 import guru.bubl.module.model.graph.tag.TagOperator;
 import guru.bubl.module.model.graph.vertex.VertexFactory;
 import guru.bubl.module.model.graph.vertex.VertexOperator;
+import guru.bubl.module.model.notification.NotificationOperator;
 import guru.bubl.module.neo4j_graph_manipulator.graph.admin.WholeGraphAdminNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.center_graph_element.CenterGraphElementOperatorNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.center_graph_element.CenterGraphElementsOperatorNeo4j;
@@ -50,6 +51,7 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.graph.graph_element.GraphE
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.graph_element.GraphElementSpecialOperatorFactory;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.group_relation.GroupRelationFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.group_relation.GroupRelationOperatorNeo4j;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.notification.NotificationOperatorNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.pattern.PatternUserNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.relation.RelationFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.relation.RelationOperatorNeo4J;
@@ -198,6 +200,7 @@ public class Neo4jModule extends AbstractModule {
 
         bind(GraphFactory.class).to(GraphFactoryNeo4j.class).in(Singleton.class);
         bind(GraphElementSpecialOperatorFactory.class);
+        bind(NotificationOperator.class).to(NotificationOperatorNeo4j.class).in(Singleton.class);
     }
 
 }
