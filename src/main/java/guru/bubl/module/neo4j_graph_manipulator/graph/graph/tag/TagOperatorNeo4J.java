@@ -207,6 +207,11 @@ public class TagOperatorNeo4J implements TagOperator, OperatorNeo4j {
     }
 
     @Override
+    public void addUpdateNotifications(String action) {
+        graphElementOperator.addUpdateNotifications(action);
+    }
+
+    @Override
     public ShareLevel getShareLevel() {
         return graphElementOperator.getShareLevel();
     }

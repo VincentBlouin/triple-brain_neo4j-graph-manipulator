@@ -181,6 +181,7 @@ public class VertexOperatorNeo4j implements VertexOperator, OperatorNeo4j {
 
     @Override
     public RelationPojo addVertexAndRelation() {
+        graphElementOperator.addUpdateNotifications("addVertexAndRelation");
         return forkOperatorFactory.withUri(uri()).addVertexAndRelation();
     }
 
@@ -449,6 +450,11 @@ public class VertexOperatorNeo4j implements VertexOperator, OperatorNeo4j {
     @Override
     public String getPrivateContext() {
         return graphElementOperator.getPrivateContext();
+    }
+
+    @Override
+    public void addUpdateNotifications(String action) {
+        graphElementOperator.addUpdateNotifications(action);
     }
 
     @Override

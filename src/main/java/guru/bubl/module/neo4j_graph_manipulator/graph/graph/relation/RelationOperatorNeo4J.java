@@ -268,6 +268,11 @@ public class RelationOperatorNeo4J implements RelationOperator, OperatorNeo4j {
     }
 
     @Override
+    public void addUpdateNotifications(String action) {
+        graphElementOperator.addUpdateNotifications(action);
+    }
+
+    @Override
     public String getChildrenIndex() {
         return graphElementOperator.getChildrenIndex();
     }

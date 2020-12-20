@@ -118,6 +118,11 @@ public class GroupRelationOperatorNeo4j implements GroupRelationOperator, Operat
     }
 
     @Override
+    public void addUpdateNotifications(String action) {
+        addUpdateNotifications(action);
+    }
+
+    @Override
     public Map<URI, TagPojo> getTags() {
         return graphElementOperator.getTags();
     }

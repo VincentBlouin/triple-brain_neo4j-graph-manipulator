@@ -602,4 +602,9 @@ public class GraphElementOperatorNeo4j implements GraphElementOperator, Operator
             return privateContext.asObject() == null ? "" : privateContext.asString();
         }
     }
+
+    @Override
+    public void addUpdateNotifications(String action) {
+        friendlyResource.addUpdateNotifications(action);
+    }
 }

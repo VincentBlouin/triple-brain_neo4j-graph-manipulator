@@ -17,12 +17,17 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.graph.UserGraphNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.image.ImageFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.image.ImagesNeo4j;
 import org.apache.commons.lang.StringUtils;
+import org.joda.time.DateTime;
 import org.neo4j.driver.Driver;
 import org.neo4j.driver.Record;
 import org.neo4j.driver.Session;
 import org.neo4j.driver.Result;
 
 import java.net.URI;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.chrono.ChronoLocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.Map;
 import java.util.Set;
@@ -162,16 +167,31 @@ public class FriendlyResourceNeo4j implements FriendlyResourceOperator, Operator
     }
 
     public void addUpdateNotifications(String action) {
+        if (!lastModificationIsLongEnoughForUpdate()) {
+            return;
+        }
         try (Session session = driver.session()) {
             String query = "MATCH (ge:Resource{copied_from_uri:$uri}) " +
-                    "CREATE (n:Notification { owner: ge.owner })  ";
+                    "CREATE (n:Notification { " +
+                    "owner: ge.owner, " +
+                    "watchUri: $uri, " +
+                    "rootUri: ge.copied_root_uri, " +
+                    "action:$action, " +
+                    "date:timestamp() " +
+                    "})  ";
             session.run(
                     query,
                     parameters(
-                            "uri", uri.toString()
+                            "uri", uri.toString(),
+                            "action", action
                     )
             );
         }
+    }
+
+    private Boolean lastModificationIsLongEnoughForUpdate() {
+        DateTime lastModificationDate = new DateTime(lastModificationDate());
+        return lastModificationDate.plusDays(1).isBefore(new DateTime());
     }
 
     @Override
@@ -204,6 +224,7 @@ public class FriendlyResourceNeo4j implements FriendlyResourceOperator, Operator
 
     @Override
     public void comment(String comment) {
+        addUpdateNotifications("description");
         String query = String.format(
                 "%sSET n.comment=$comment, %s",
                 queryPrefix(),

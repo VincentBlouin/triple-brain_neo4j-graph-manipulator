@@ -244,6 +244,7 @@ public class ForkOperatorNeo4J implements ForkOperator, OperatorNeo4j {
         newEdge.setDestinationVertex(
                 newVertex
         );
+        graphElementFactoryNeo4j.withUri(uri).updateLastModificationDate();
         return newEdge;
     }
 
