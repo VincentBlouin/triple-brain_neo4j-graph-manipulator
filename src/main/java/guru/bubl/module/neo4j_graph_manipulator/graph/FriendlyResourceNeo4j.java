@@ -175,6 +175,7 @@ public class FriendlyResourceNeo4j implements FriendlyResourceOperator, Operator
                     "CREATE (n:Notification { " +
                     "owner: ge.owner, " +
                     "watchUri: $uri, " +
+                    "watchLabel : ge.label," +
                     "rootUri: ge.copied_root_uri, " +
                     "action:$action, " +
                     "date:timestamp() " +

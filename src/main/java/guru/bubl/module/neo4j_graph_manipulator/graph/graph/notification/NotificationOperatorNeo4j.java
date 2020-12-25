@@ -20,7 +20,7 @@ import static org.neo4j.driver.Values.parameters;
 public class NotificationOperatorNeo4j implements NotificationOperator {
 
     @Inject
-    Driver driver;
+    private Driver driver;
 
     @Override
     public void add() {
@@ -32,7 +32,7 @@ public class NotificationOperatorNeo4j implements NotificationOperator {
         List<Notification> notifications = new ArrayList<>();
         try (Session session = driver.session()) {
             String query = "MATCH (n:Notification{owner:$owner}) " +
-                    "RETURN n.action, n.watchUri, n.rootUri ";
+                    "RETURN n.action, n.watchUri, n.rootUri, n.watchLabel ";
             Result rs = session.run(
                     query,
                     parameters(
@@ -47,7 +47,8 @@ public class NotificationOperatorNeo4j implements NotificationOperator {
                                 URI.create(record.get("n.rootUri").asString()),
                                 URI.create(record.get("n.watchUri").asString()),
                                 new Date(),
-                                record.get("n.action").asString()
+                                record.get("n.action").asString(),
+                                record.get("n.watchLabel").asString()
                         )
                 );
             }
