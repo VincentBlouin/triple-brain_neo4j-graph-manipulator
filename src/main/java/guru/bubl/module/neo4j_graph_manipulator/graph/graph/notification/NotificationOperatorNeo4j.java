@@ -28,11 +28,12 @@ public class NotificationOperatorNeo4j implements NotificationOperator {
     }
 
     @Override
-    public List<Notification> listForUser(User user) {
+    public List<Notification> listForUserAndNbSkip(User user, Integer nbSkip) {
         List<Notification> notifications = new ArrayList<>();
         try (Session session = driver.session()) {
             String query = "MATCH (n:Notification{owner:$owner}) " +
-                    "RETURN n.action, n.watchUri, n.rootUri, n.watchLabel ";
+                    "RETURN n.action, n.watchUri, n.rootUri, n.watchLabel " +
+                    "ORDER BY n.creationDate DESC SKIP " + nbSkip + " LIMIT 10 ";
             Result rs = session.run(
                     query,
                     parameters(
@@ -43,7 +44,6 @@ public class NotificationOperatorNeo4j implements NotificationOperator {
                 Record record = rs.next();
                 notifications.add(
                         new Notification(
-                                "",
                                 URI.create(record.get("n.rootUri").asString()),
                                 URI.create(record.get("n.watchUri").asString()),
                                 new Date(),

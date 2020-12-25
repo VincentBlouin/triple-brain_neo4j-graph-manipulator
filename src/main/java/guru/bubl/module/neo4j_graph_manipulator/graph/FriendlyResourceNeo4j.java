@@ -178,7 +178,7 @@ public class FriendlyResourceNeo4j implements FriendlyResourceOperator, Operator
                     "watchLabel : ge.label," +
                     "rootUri: ge.copied_root_uri, " +
                     "action:$action, " +
-                    "date:timestamp() " +
+                    "creationDate:timestamp() " +
                     "})  ";
             session.run(
                     query,
