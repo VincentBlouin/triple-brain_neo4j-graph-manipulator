@@ -172,13 +172,14 @@ public class FriendlyResourceNeo4j implements FriendlyResourceOperator, Operator
         }
         try (Session session = driver.session()) {
             String query = "MATCH (ge:Resource{copied_from_uri:$uri}) " +
-                    "CREATE (n:Notification { " +
-                    "owner: ge.owner, " +
-                    "watchUri: $uri, " +
+                    "CREATE (n:Resource:Notification { " +
+                    "uri:'/service/users/' + ge.owner + '/notification/' + apoc.create.uuid()," +
+                    "owner: ge.owner," +
+                    "watchUri: $uri," +
                     "watchLabel : ge.label," +
-                    "rootUri: ge.copied_root_uri, " +
-                    "action:$action, " +
-                    "creationDate:timestamp() " +
+                    "rootUri: ge.copied_root_uri," +
+                    "action:$action," +
+                    "creationDate:timestamp()" +
                     "})  ";
             session.run(
                     query,
