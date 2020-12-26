@@ -16,6 +16,7 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.FriendlyResourceFactoryNeo
 import guru.bubl.module.neo4j_graph_manipulator.graph.FriendlyResourceNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.OperatorNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.graph_element.GraphElementFactoryNeo4j;
+import guru.bubl.module.neo4j_graph_manipulator.graph.graph.graph_element.GraphElementOperatorNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.relation.RelationFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.relation.RelationOperatorNeo4J;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.vertex.VertexFactoryNeo4j;
@@ -244,7 +245,9 @@ public class ForkOperatorNeo4J implements ForkOperator, OperatorNeo4j {
         newEdge.setDestinationVertex(
                 newVertex
         );
-        graphElementFactoryNeo4j.withUri(uri).updateLastModificationDate();
+        GraphElementOperatorNeo4j graphElementOperator = graphElementFactoryNeo4j.withUri(uri);
+        graphElementOperator.addUpdateNotifications("addVertexAndRelation");
+        graphElementOperator.updateLastModificationDate();
         return newEdge;
     }
 
