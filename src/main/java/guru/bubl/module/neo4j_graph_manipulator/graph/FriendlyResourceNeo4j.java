@@ -147,10 +147,6 @@ public class FriendlyResourceNeo4j implements FriendlyResourceOperator, Operator
                 queryPrefix(),
                 LAST_MODIFICATION_QUERY_PART
         );
-        Map<String, Object> props = RestApiUtilsNeo4j.map(
-                "label", label
-        );
-        addUpdatedLastModificationDate(props);
         try (Session session = driver.session()) {
             session.run(
                     query,
