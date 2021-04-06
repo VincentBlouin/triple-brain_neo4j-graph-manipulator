@@ -7,14 +7,14 @@ import guru.bubl.module.model.graph.relation.Relation;
 import guru.bubl.module.model.graph.subgraph.SubGraph;
 
 import java.net.URI;
-import java.util.List;
+import java.util.Set;
 
 public class ExportSubGraphToMarkdown {
     private SubGraph subGraph;
     private URI centerUri;
-    private List<URI> centers;
+    private Set<URI> centers;
 
-    public ExportSubGraphToMarkdown(SubGraph subGraph, URI centerUri, List<URI> centers) {
+    public ExportSubGraphToMarkdown(SubGraph subGraph, URI centerUri, Set<URI> centers) {
         this.subGraph = subGraph;
         this.centerUri = centerUri;
         this.centers = centers;
@@ -45,7 +45,7 @@ public class ExportSubGraphToMarkdown {
         if (UserUris.isUriOfAGroupRelation(parentUri)) {
             markdown.append("(" + parent.label() + ")");
         } else if (!isCenter && centers.contains(parentUri)) {
-            markdown.append("[[" + parent.label() + "]]");
+            markdown.append("[[" + parent.label() + "]]").append("\n");
             return markdown.toString();
         } else {
             markdown.append(parent.label());

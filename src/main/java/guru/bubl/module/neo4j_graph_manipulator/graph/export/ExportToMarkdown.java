@@ -6,22 +6,20 @@ import com.google.inject.assistedinject.AssistedInject;
 import guru.bubl.module.model.User;
 import guru.bubl.module.model.graph.GraphFactory;
 import guru.bubl.module.model.graph.ShareLevel;
-import guru.bubl.module.model.graph.edge.Edge;
-import guru.bubl.module.model.graph.edge.EdgePojo;
-import guru.bubl.module.model.graph.relation.Relation;
 import guru.bubl.module.model.graph.subgraph.SubGraph;
-import guru.bubl.module.model.graph.subgraph.SubGraphPojo;
 import guru.bubl.module.model.graph.subgraph.UserGraph;
-import guru.bubl.module.model.graph.vertex.Vertex;
 import org.neo4j.driver.Driver;
 import org.neo4j.driver.Record;
 import org.neo4j.driver.Result;
 import org.neo4j.driver.Session;
 
+import java.io.FileWriter;
 import java.net.URI;
 import java.nio.file.Files;
-import java.util.ArrayList;
+import java.nio.file.Paths;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.neo4j.driver.Values.parameters;
 
@@ -43,17 +41,34 @@ public class ExportToMarkdown {
     }
 
 
-    private List<Files> export() {
-        return null;
+    private void export() {
+        writeFiles(
+                exportStrings()
+        );
     }
 
-    public List<String> exportStrings() {
-        List<URI> centers = new ArrayList<>();
+    private void writeFiles(LinkedHashMap<URI, MdFile> files) {
+        String PATH = "/tmp/mindrespect.com/" + username;
+        try {
+            for (MdFile file : files.values()) {
+                Files.createDirectories(Paths.get(PATH));
+                FileWriter myWriter = new FileWriter(PATH + "/" + file.getName());
+                myWriter.write(file.getContent());
+                myWriter.close();
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+    }
+
+    public LinkedHashMap<URI, MdFile> exportStrings() {
+        LinkedHashMap<URI, MdFile> centers = new LinkedHashMap<>();
         try (Session session = driver.session()) {
             Result rs = session.run(
                     "MATCH (center:GraphElement{owner:$owner}) " +
                             "WHERE EXISTS(center.last_center_date) " +
-                            "RETURN center.uri as uri",
+                            "RETURN center.uri as uri, center.label as label",
                     parameters(
                             "owner",
                             username
@@ -61,16 +76,18 @@ public class ExportToMarkdown {
             );
             while (rs.hasNext()) {
                 Record record = rs.next();
-                centers.add(
-                        URI.create(record.get("uri").asString())
+                centers.put(
+                        URI.create(record.get("uri").asString()),
+                        new MdFile(
+                                record.get("label").asString()
+                        )
                 );
             }
         }
         UserGraph userGraph = graphFactory.loadForUser(
                 User.withUsername(username)
         );
-        List<String> pages = new ArrayList<>();
-        for (URI centerUri : centers) {
+        for (URI centerUri : centers.keySet()) {
             SubGraph subGraph = userGraph.aroundForkUriWithDepthInShareLevels(
                     centerUri,
                     200,
@@ -79,11 +96,10 @@ public class ExportToMarkdown {
             ExportSubGraphToMarkdown exportSubGraphToMarkdown = new ExportSubGraphToMarkdown(
                     subGraph,
                     centerUri,
-                    centers
+                    centers.keySet()
             );
-            pages.add(
-                    exportSubGraphToMarkdown.export()
-            );
+            MdFile mdFile = centers.get(centerUri);
+            mdFile.setContent(exportSubGraphToMarkdown.export());
         }
 //        try (Session session = driver.session()) {
 //            Result rs = session.run(
@@ -135,7 +151,7 @@ public class ExportToMarkdown {
 //                }
 //            }
 //        }
-        return pages;
+        return centers;
     }
 
 //    public static File zip(List<File> files, String filename) {
