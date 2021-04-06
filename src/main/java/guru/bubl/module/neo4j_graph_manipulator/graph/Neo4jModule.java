@@ -39,6 +39,7 @@ import guru.bubl.module.model.notification.NotificationOperator;
 import guru.bubl.module.neo4j_graph_manipulator.graph.admin.WholeGraphAdminNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.center_graph_element.CenterGraphElementOperatorNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.center_graph_element.CenterGraphElementsOperatorNeo4j;
+import guru.bubl.module.neo4j_graph_manipulator.graph.export.ExportToMarkdownFactory;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.GraphFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.UserGraphFactoryNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.EdgeOperatorNeo4j;
@@ -197,6 +198,8 @@ public class Neo4jModule extends AbstractModule {
         install(factoryModuleBuilder
                 .implement(TreeCopier.class, TreeCopierNeo4j.class)
                 .build(TreeCopierFactory.class));
+
+        install(factoryModuleBuilder.build(ExportToMarkdownFactory.class));
 
         bind(GraphFactory.class).to(GraphFactoryNeo4j.class).in(Singleton.class);
         bind(GraphElementSpecialOperatorFactory.class);

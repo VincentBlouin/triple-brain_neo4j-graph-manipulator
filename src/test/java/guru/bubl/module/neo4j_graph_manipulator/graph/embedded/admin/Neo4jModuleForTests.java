@@ -18,13 +18,13 @@ import org.neo4j.driver.Driver;
 import org.neo4j.driver.GraphDatabase;
 import org.neo4j.exceptions.KernelException;
 import org.neo4j.graphdb.GraphDatabaseService;
-import org.neo4j.graphdb.Transaction;
 import org.neo4j.kernel.api.procedure.GlobalProcedures;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
 import java.io.File;
 
-import static guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jModule.*;
+import static guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jModule.DB_PATH_FOR_TESTS;
+import static guru.bubl.module.neo4j_graph_manipulator.graph.Neo4jModule.NEO4J_PASSWORD_FOR_TESTS;
 import static org.neo4j.configuration.GraphDatabaseSettings.DEFAULT_DATABASE_NAME;
 
 public class Neo4jModuleForTests extends AbstractModule {
