@@ -8,18 +8,18 @@ import guru.bubl.module.model.graph.GraphFactory;
 import guru.bubl.module.model.graph.ShareLevel;
 import guru.bubl.module.model.graph.subgraph.SubGraph;
 import guru.bubl.module.model.graph.subgraph.UserGraph;
+import net.lingala.zip4j.ZipFile;
 import org.neo4j.driver.Driver;
 import org.neo4j.driver.Record;
 import org.neo4j.driver.Result;
 import org.neo4j.driver.Session;
 
+import java.io.File;
 import java.io.FileWriter;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
 
 import static org.neo4j.driver.Values.parameters;
 
@@ -41,25 +41,28 @@ public class ExportToMarkdown {
     }
 
 
-    private void export() {
-        writeFiles(
+    public File export() {
+        return writeFilesToZip(
                 exportStrings()
         );
     }
 
-    private void writeFiles(LinkedHashMap<URI, MdFile> files) {
+    private File writeFilesToZip(LinkedHashMap<URI, MdFile> files) {
         String PATH = "/tmp/mindrespect.com/" + username;
         try {
+            ZipFile zipFile = new ZipFile("/tmp/mindrespect.com/" + username + ".zip");
             for (MdFile file : files.values()) {
                 Files.createDirectories(Paths.get(PATH));
-                FileWriter myWriter = new FileWriter(PATH + "/" + file.getName());
+                String filePath = PATH + "/" + file.getName();
+                FileWriter myWriter = new FileWriter(filePath);
                 myWriter.write(file.getContent());
                 myWriter.close();
+                zipFile.addFile(new File(filePath));
             }
+            return zipFile.getFile();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-
     }
 
     public LinkedHashMap<URI, MdFile> exportStrings() {
