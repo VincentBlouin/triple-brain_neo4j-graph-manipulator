@@ -9,6 +9,9 @@ public class MdFile {
     }
 
     public String getName() {
+        if (name.trim().equals("")) {
+            return "write it";
+        }
         return name.replaceAll("[^a-zA-Z0-9\\.\\-]", "_");
     }
 

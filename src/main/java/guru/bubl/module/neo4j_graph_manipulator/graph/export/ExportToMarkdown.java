@@ -218,9 +218,9 @@ public class ExportToMarkdown {
         System.out.println("start writing files " + formatter.format(new Date()));
         String PATH = "/tmp/mindrespect.com/" + username;
         try {
-            ZipFile zipFile = new ZipFile("/tmp/mindrespect.com/" + username + ".zip");
+            Files.createDirectories(Paths.get(PATH));
+            ZipFile zipFile = new ZipFile("/tmp/mindrespect.com/" + username + "/" + username + ".zip");
             for (MdFile file : files.values()) {
-                Files.createDirectories(Paths.get(PATH));
                 String filePath = PATH + "/" + file.getName();
                 FileWriter myWriter = new FileWriter(filePath);
                 myWriter.write(file.getContent());
