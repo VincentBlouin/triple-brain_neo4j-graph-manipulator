@@ -52,7 +52,7 @@ public class ExportToMarkdown {
 
 
     public File export() {
-        System.out.println("start export v6 " + formatter.format(new Date()));
+        System.out.println("start export v7 " + formatter.format(new Date()));
         return writeFilesToZip(
                 exportStrings()
         );
@@ -215,7 +215,7 @@ public class ExportToMarkdown {
 //    }
 
     private File writeFilesToZip(LinkedHashMap<URI, MdFile> files) {
-        System.out.println("writing file " + formatter.format(new Date()));
+        System.out.println("start writing files " + formatter.format(new Date()));
         String PATH = "/tmp/mindrespect.com/" + username;
         try {
             ZipFile zipFile = new ZipFile("/tmp/mindrespect.com/" + username + ".zip");
