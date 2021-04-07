@@ -52,7 +52,7 @@ public class ExportToMarkdown {
 
 
     public File export() {
-        System.out.println("start export v4" + formatter.format(new Date()));
+        System.out.println("start export v5 " + formatter.format(new Date()));
         return writeFilesToZip(
                 exportStrings()
         );
