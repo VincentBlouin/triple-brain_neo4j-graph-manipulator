@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 import guru.bubl.module.model.User;
+import guru.bubl.module.model.UserUris;
 import guru.bubl.module.model.center_graph_element.*;
 import guru.bubl.module.model.graph.GraphFactory;
 import guru.bubl.module.model.graph.ShareLevel;
@@ -51,7 +52,7 @@ public class ExportToMarkdown {
 
 
     public File export() {
-        System.out.println("start export v2" + formatter.format(new Date()));
+        System.out.println("start export v3" + formatter.format(new Date()));
         return writeFilesToZip(
                 exportStrings()
         );
@@ -72,12 +73,14 @@ public class ExportToMarkdown {
             System.out.println("after page " + page);
             for (CenterGraphElement center : centersPojo) {
                 System.out.println("center " + center.getGraphElement().label());
-                centers.put(
-                        center.getGraphElement().uri(),
-                        new MdFile(
-                                center.getGraphElement().label()
-                        )
-                );
+                if (!UserUris.isUriOfATag(center.getGraphElement().uri())) {
+                    centers.put(
+                            center.getGraphElement().uri(),
+                            new MdFile(
+                                    center.getGraphElement().label()
+                            )
+                    );
+                }
             }
             if (centersPojo.size() == 0) {
                 hasMore = false;
@@ -115,7 +118,7 @@ public class ExportToMarkdown {
             System.out.println("get subgraph for " + mdFile.getName());
             SubGraph subGraph = userGraph.aroundForkUriWithDepthInShareLevels(
                     centerUri,
-                    2,
+                    6,
                     ShareLevel.allShareLevelsInt
             );
             System.out.println("export markdown for " + mdFile.getName());
@@ -126,6 +129,7 @@ public class ExportToMarkdown {
             );
             System.out.println("building md file " + mdFile.getName());
             mdFile.setContent(exportSubGraphToMarkdown.export());
+
         }
 //        try (Session session = driver.session()) {
 //            Result rs = session.run(
