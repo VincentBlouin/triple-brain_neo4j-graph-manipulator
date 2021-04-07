@@ -106,21 +106,24 @@ public class ExportToMarkdown {
 //                );
 //            }
 //        }
+        System.out.println("done loading centers");
         UserGraph userGraph = graphFactory.loadForUser(
                 User.withUsername(username)
         );
         for (URI centerUri : centers.keySet()) {
+            MdFile mdFile = centers.get(centerUri);
+            System.out.println("get subgraph for " + mdFile.getName());
             SubGraph subGraph = userGraph.aroundForkUriWithDepthInShareLevels(
                     centerUri,
-                    500,
+                    2,
                     ShareLevel.allShareLevelsInt
             );
+            System.out.println("export markdown for " + mdFile.getName());
             ExportSubGraphToMarkdown exportSubGraphToMarkdown = new ExportSubGraphToMarkdown(
                     subGraph,
                     centerUri,
                     centers.keySet()
             );
-            MdFile mdFile = centers.get(centerUri);
             System.out.println("building md file " + mdFile.getName());
             mdFile.setContent(exportSubGraphToMarkdown.export());
         }
