@@ -52,7 +52,7 @@ public class ExportToMarkdown {
 
 
     public File export() {
-        System.out.println("start export v3" + formatter.format(new Date()));
+        System.out.println("start export v4" + formatter.format(new Date()));
         return writeFilesToZip(
                 exportStrings()
         );
@@ -118,7 +118,7 @@ public class ExportToMarkdown {
             System.out.println("get subgraph for " + mdFile.getName());
             SubGraph subGraph = userGraph.aroundForkUriWithDepthInShareLevels(
                     centerUri,
-                    6,
+                    2,
                     ShareLevel.allShareLevelsInt
             );
             System.out.println("export markdown for " + mdFile.getName());
