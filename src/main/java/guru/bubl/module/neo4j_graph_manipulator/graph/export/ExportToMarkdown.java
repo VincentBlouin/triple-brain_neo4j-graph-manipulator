@@ -52,7 +52,7 @@ public class ExportToMarkdown {
 
 
     public File export() {
-        System.out.println("start export v5 " + formatter.format(new Date()));
+        System.out.println("start export v6 " + formatter.format(new Date()));
         return writeFilesToZip(
                 exportStrings()
         );
@@ -73,7 +73,7 @@ public class ExportToMarkdown {
             System.out.println("after page " + page);
             for (CenterGraphElement center : centersPojo) {
                 System.out.println("center " + center.getGraphElement().label());
-                if (!UserUris.isUriOfATag(center.getGraphElement().uri())) {
+                if (!UserUris.isUriOfATag(center.getGraphElement().uri()) && !UserUris.isUriOfARelation(center.getGraphElement().uri())) {
                     centers.put(
                             center.getGraphElement().uri(),
                             new MdFile(
