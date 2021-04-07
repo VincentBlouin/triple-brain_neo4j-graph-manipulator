@@ -101,7 +101,7 @@ public class ExportToMarkdown {
         for (URI centerUri : centers.keySet()) {
             SubGraph subGraph = userGraph.aroundForkUriWithDepthInShareLevels(
                     centerUri,
-                    200,
+                    500,
                     ShareLevel.allShareLevelsInt
             );
             ExportSubGraphToMarkdown exportSubGraphToMarkdown = new ExportSubGraphToMarkdown(
