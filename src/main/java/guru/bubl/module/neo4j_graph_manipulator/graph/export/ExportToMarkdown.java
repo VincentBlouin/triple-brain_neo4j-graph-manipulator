@@ -19,11 +19,15 @@ import java.io.FileWriter;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.LinkedHashMap;
 
 import static org.neo4j.driver.Values.parameters;
 
 public class ExportToMarkdown {
+
+    private static SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
 
     @Inject
     private Driver driver;
@@ -42,12 +46,14 @@ public class ExportToMarkdown {
 
 
     public File export() {
+        System.out.println("start export " + formatter.format(new Date()));
         return writeFilesToZip(
                 exportStrings()
         );
     }
 
     private File writeFilesToZip(LinkedHashMap<URI, MdFile> files) {
+        System.out.println("writing file " + formatter.format(new Date()));
         String PATH = "/tmp/mindrespect.com/" + username;
         try {
             ZipFile zipFile = new ZipFile("/tmp/mindrespect.com/" + username + ".zip");
@@ -59,6 +65,7 @@ public class ExportToMarkdown {
                 myWriter.close();
                 zipFile.addFile(new File(filePath));
             }
+            System.out.println("done writing file " + formatter.format(new Date()));
             return zipFile.getFile();
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -79,6 +86,7 @@ public class ExportToMarkdown {
             );
             while (rs.hasNext()) {
                 Record record = rs.next();
+                System.out.println("building " + record.get("label").asString() + " " + formatter.format(new Date()));
                 centers.put(
                         URI.create(record.get("uri").asString()),
                         new MdFile(
