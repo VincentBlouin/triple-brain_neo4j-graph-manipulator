@@ -4,6 +4,10 @@ import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 import guru.bubl.module.model.User;
+import guru.bubl.module.model.center_graph_element.CenterGraphElement;
+import guru.bubl.module.model.center_graph_element.CenterGraphElementPojo;
+import guru.bubl.module.model.center_graph_element.CenterGraphElementsOperatorFactory;
+import guru.bubl.module.model.center_graph_element.CenteredGraphElementsOperator;
 import guru.bubl.module.model.graph.GraphFactory;
 import guru.bubl.module.model.graph.ShareLevel;
 import guru.bubl.module.model.graph.subgraph.SubGraph;
@@ -22,6 +26,7 @@ import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.LinkedHashMap;
+import java.util.List;
 
 import static org.neo4j.driver.Values.parameters;
 
@@ -35,13 +40,20 @@ public class ExportToMarkdown {
     @javax.inject.Inject
     private GraphFactory graphFactory;
 
+    private CenteredGraphElementsOperator centeredGraphElementsOperator;
+
     private String username;
 
     @AssistedInject
     protected ExportToMarkdown(
+            CenterGraphElementsOperatorFactory centerGraphElementsOperatorFactory,
             @Assisted String username
     ) {
         this.username = username;
+        this.centeredGraphElementsOperator = centerGraphElementsOperatorFactory.usingLimitAndSkip(
+                5000,
+                0
+        );
     }
 
 
@@ -74,27 +86,36 @@ public class ExportToMarkdown {
 
     public LinkedHashMap<URI, MdFile> exportStrings() {
         LinkedHashMap<URI, MdFile> centers = new LinkedHashMap<>();
-        try (Session session = driver.session()) {
-            Result rs = session.run(
-                    "MATCH (center:GraphElement{owner:$owner}) " +
-                            "WHERE EXISTS(center.last_center_date) " +
-                            "RETURN center.uri as uri, center.label as label",
-                    parameters(
-                            "owner",
-                            username
+        List<CenterGraphElementPojo> centersPojo = centeredGraphElementsOperator.getPublicAndPrivateForOwner(User.withUsername(username));
+        for (CenterGraphElement center : centersPojo) {
+            centers.put(
+                    center.getGraphElement().uri(),
+                    new MdFile(
+                            center.getGraphElement().label()
                     )
             );
-            while (rs.hasNext()) {
-                Record record = rs.next();
-                System.out.println("building " + record.get("label").asString() + " " + formatter.format(new Date()));
-                centers.put(
-                        URI.create(record.get("uri").asString()),
-                        new MdFile(
-                                record.get("label").asString()
-                        )
-                );
-            }
         }
+//        try (Session session = driver.session()) {
+//            Result rs = session.run(
+//                    "MATCH (center:GraphElement{owner:$owner}) " +
+//                            "WHERE EXISTS(center.last_center_date) " +
+//                            "RETURN center.uri as uri, center.label as label",
+//                    parameters(
+//                            "owner",
+//                            username
+//                    )
+//            );
+//            while (rs.hasNext()) {
+//                Record record = rs.next();
+//                System.out.println("building " + record.get("label").asString() + " " + formatter.format(new Date()));
+//                centers.put(
+//                        URI.create(record.get("uri").asString()),
+//                        new MdFile(
+//                                record.get("label").asString()
+//                        )
+//                );
+//            }
+//        }
         UserGraph userGraph = graphFactory.loadForUser(
                 User.withUsername(username)
         );
