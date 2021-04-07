@@ -51,30 +51,10 @@ public class ExportToMarkdown {
 
 
     public File export() {
-        System.out.println("start export " + formatter.format(new Date()));
+        System.out.println("start export v2" + formatter.format(new Date()));
         return writeFilesToZip(
                 exportStrings()
         );
-    }
-
-    private File writeFilesToZip(LinkedHashMap<URI, MdFile> files) {
-        System.out.println("writing file " + formatter.format(new Date()));
-        String PATH = "/tmp/mindrespect.com/" + username;
-        try {
-            ZipFile zipFile = new ZipFile("/tmp/mindrespect.com/" + username + ".zip");
-            for (MdFile file : files.values()) {
-                Files.createDirectories(Paths.get(PATH));
-                String filePath = PATH + "/" + file.getName();
-                FileWriter myWriter = new FileWriter(filePath);
-                myWriter.write(file.getContent());
-                myWriter.close();
-                zipFile.addFile(new File(filePath));
-            }
-            System.out.println("done writing file " + formatter.format(new Date()));
-            return zipFile.getFile();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
     }
 
     public LinkedHashMap<URI, MdFile> exportStrings() {
@@ -83,12 +63,15 @@ public class ExportToMarkdown {
         Boolean hasMore = true;
         Integer skip = 28;
         while (hasMore) {
+            System.out.println("page " + page);
             CenteredGraphElementsOperator centeredGraphElementsOperator = centerGraphElementsOperatorFactory.usingLimitAndSkip(
                     skip,
                     skip * page
             );
             List<CenterGraphElementPojo> centersPojo = centeredGraphElementsOperator.getPublicAndPrivateForOwner(User.withUsername(username));
+            System.out.println("after page " + page);
             for (CenterGraphElement center : centersPojo) {
+                System.out.println("center " + center.getGraphElement().label());
                 centers.put(
                         center.getGraphElement().uri(),
                         new MdFile(
@@ -224,4 +207,23 @@ public class ExportToMarkdown {
 //        return null;
 //    }
 
+    private File writeFilesToZip(LinkedHashMap<URI, MdFile> files) {
+        System.out.println("writing file " + formatter.format(new Date()));
+        String PATH = "/tmp/mindrespect.com/" + username;
+        try {
+            ZipFile zipFile = new ZipFile("/tmp/mindrespect.com/" + username + ".zip");
+            for (MdFile file : files.values()) {
+                Files.createDirectories(Paths.get(PATH));
+                String filePath = PATH + "/" + file.getName();
+                FileWriter myWriter = new FileWriter(filePath);
+                myWriter.write(file.getContent());
+                myWriter.close();
+                zipFile.addFile(new File(filePath));
+            }
+            System.out.println("done writing file " + formatter.format(new Date()));
+            return zipFile.getFile();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 }
