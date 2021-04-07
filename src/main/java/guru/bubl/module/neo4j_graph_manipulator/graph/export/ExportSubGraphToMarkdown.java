@@ -7,12 +7,14 @@ import guru.bubl.module.model.graph.relation.Relation;
 import guru.bubl.module.model.graph.subgraph.SubGraph;
 
 import java.net.URI;
+import java.util.HashSet;
 import java.util.Set;
 
 public class ExportSubGraphToMarkdown {
     private SubGraph subGraph;
     private URI centerUri;
     private Set<URI> centers;
+    private Set<URI> visitedParents = new HashSet<>();
 
     public ExportSubGraphToMarkdown(SubGraph subGraph, URI centerUri, Set<URI> centers) {
         this.subGraph = subGraph;
@@ -25,6 +27,7 @@ public class ExportSubGraphToMarkdown {
     }
 
     public String buildForParentUri(URI parentUri, Relation parentRelation, Integer depth) {
+        visitedParents.add(parentUri);
         StringBuilder markdown = new StringBuilder();
         GraphElement parent = subGraph.vertexWithIdentifier(parentUri);
         if (parent == null) {
@@ -54,7 +57,7 @@ public class ExportSubGraphToMarkdown {
         URI parentForkUri = otherUri(parentUri, parentRelation);
         for (Relation relation : subGraph.edges().values()) {
             URI otherUri = otherUri(parentUri, relation);
-            if (otherUri != null && (parentForkUri == null || !parentForkUri.equals(otherUri))) {
+            if (otherUri != null && (parentForkUri == null || !parentForkUri.equals(otherUri)) && !visitedParents.contains(otherUri)) {
                 markdown.append(
                         buildForParentUri(
                                 otherUri,
@@ -65,7 +68,7 @@ public class ExportSubGraphToMarkdown {
             }
         }
         for (GroupRelationPojo groupRelation : subGraph.getGroupRelations().values()) {
-            if (parentUri.equals(groupRelation.getSourceForkUri())) {
+            if (parentUri.equals(groupRelation.getSourceForkUri()) && !visitedParents.contains(groupRelation.uri())) {
                 markdown.append(
                         buildForParentUri(
                                 groupRelation.uri(),
