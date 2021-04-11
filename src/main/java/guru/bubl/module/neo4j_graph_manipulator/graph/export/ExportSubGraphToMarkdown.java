@@ -63,7 +63,7 @@ public class ExportSubGraphToMarkdown {
         if (UserUris.isUriOfAGroupRelation(parentUri)) {
             markdown.append("(" + parent.label() + ")");
         } else if (!isCenter && centers.contains(parentUri)) {
-            markdown.append("[[" + parent.label() + "]]").append("\n");
+            markdown.append("[[" + MdFile.applyNameFilter(parent.label()) + "]]").append("\n");
             return markdown.toString();
         } else {
             markdown.append(parent.label());

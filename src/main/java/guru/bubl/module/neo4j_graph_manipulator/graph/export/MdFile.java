@@ -12,7 +12,11 @@ public class MdFile {
         if (name.trim().equals("")) {
             return "write it";
         }
-        return name.replaceAll("[^a-zA-Z0-9a-zwÀ-Üà-øoù-ÿŒœ\\.\\-]", "_");
+        return applyNameFilter(name);
+    }
+
+    public static String applyNameFilter(String string) {
+        return string.replaceAll("[^a-zA-Z0-9\\sa-zwÀ-Üà-øoù-ÿŒœ\\.\\-]", "_");
     }
 
     public void setContent(String content) {
