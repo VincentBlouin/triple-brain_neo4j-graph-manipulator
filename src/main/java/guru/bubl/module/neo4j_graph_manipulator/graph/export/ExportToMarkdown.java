@@ -50,7 +50,7 @@ public class ExportToMarkdown {
 
 
     public File export() {
-        System.out.println("start export v7 " + formatter.format(new Date()));
+        System.out.println("start export v8 " + formatter.format(new Date()));
         return writeFilesToZip(
                 exportStrings()
         );
@@ -209,7 +209,7 @@ public class ExportToMarkdown {
             Files.createDirectories(Paths.get(PATH));
             ZipFile zipFile = new ZipFile("/tmp/mindrespect.com/" + username + "/" + username + ".zip");
             for (MdFile file : files.values()) {
-                String filePath = PATH + "/" + file.getName();
+                String filePath = PATH + "/" + file.getName() + ".md";
                 FileWriter myWriter = new FileWriter(filePath);
                 myWriter.write(file.getContent());
                 myWriter.close();
