@@ -22,9 +22,7 @@ import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.LinkedHashMap;
-import java.util.List;
+import java.util.*;
 
 import static org.neo4j.driver.Values.parameters;
 
@@ -64,15 +62,12 @@ public class ExportToMarkdown {
         Boolean hasMore = true;
         Integer skip = 28;
         while (hasMore) {
-            System.out.println("page " + page);
             CenteredGraphElementsOperator centeredGraphElementsOperator = centerGraphElementsOperatorFactory.usingLimitAndSkip(
                     skip,
                     skip * page
             );
             List<CenterGraphElementPojo> centersPojo = centeredGraphElementsOperator.getPublicAndPrivateForOwner(User.withUsername(username));
-            System.out.println("after page " + page);
             for (CenterGraphElement center : centersPojo) {
-                System.out.println("center " + center.getGraphElement().label());
                 if (!UserUris.isUriOfATag(center.getGraphElement().uri()) && !UserUris.isUriOfARelation(center.getGraphElement().uri())) {
                     centers.put(
                             center.getGraphElement().uri(),
@@ -115,21 +110,14 @@ public class ExportToMarkdown {
         );
         for (URI centerUri : centers.keySet()) {
             MdFile mdFile = centers.get(centerUri);
-            System.out.println("get subgraph for " + mdFile.getName());
-            SubGraph subGraph = userGraph.aroundForkUriWithDepthInShareLevels(
-                    centerUri,
-                    2,
-                    ShareLevel.allShareLevelsInt
-            );
-            System.out.println("export markdown for " + mdFile.getName());
+//            System.out.println("export markdown for " + mdFile.getName());
             ExportSubGraphToMarkdown exportSubGraphToMarkdown = new ExportSubGraphToMarkdown(
-                    subGraph,
+                    userGraph,
                     centerUri,
                     centers.keySet()
             );
-            System.out.println("building md file " + mdFile.getName());
+//            System.out.println("building md file " + mdFile.getName());
             mdFile.setContent(exportSubGraphToMarkdown.export());
-
         }
 //        try (Session session = driver.session()) {
 //            Result rs = session.run(

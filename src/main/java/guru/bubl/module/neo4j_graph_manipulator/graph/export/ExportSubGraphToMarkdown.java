@@ -1,23 +1,31 @@
 package guru.bubl.module.neo4j_graph_manipulator.graph.export;
 
 import guru.bubl.module.model.UserUris;
+import guru.bubl.module.model.graph.ShareLevel;
 import guru.bubl.module.model.graph.graph_element.GraphElement;
+import guru.bubl.module.model.graph.group_relation.GroupRelation;
 import guru.bubl.module.model.graph.group_relation.GroupRelationPojo;
 import guru.bubl.module.model.graph.relation.Relation;
 import guru.bubl.module.model.graph.subgraph.SubGraph;
+import guru.bubl.module.model.graph.subgraph.SubGraphPojo;
+import guru.bubl.module.model.graph.subgraph.UserGraph;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 public class ExportSubGraphToMarkdown {
-    private SubGraph subGraph;
+    private SubGraph subGraph = SubGraphPojo.empty();
     private URI centerUri;
     private Set<URI> centers;
     private Set<URI> visitedParents = new HashSet<>();
+    private UserGraph userGraph;
 
-    public ExportSubGraphToMarkdown(SubGraph subGraph, URI centerUri, Set<URI> centers) {
-        this.subGraph = subGraph;
+
+    public ExportSubGraphToMarkdown(UserGraph userGraph, URI centerUri, Set<URI> centers) {
+        this.userGraph = userGraph;
         this.centerUri = centerUri;
         this.centers = centers;
     }
@@ -29,6 +37,13 @@ public class ExportSubGraphToMarkdown {
     public String buildForParentUri(URI parentUri, Relation parentRelation, Integer depth) {
         visitedParents.add(parentUri);
         StringBuilder markdown = new StringBuilder();
+        subGraph.mergeWith(
+                userGraph.aroundForkUriWithDepthInShareLevels(
+                        parentUri,
+                        1,
+                        ShareLevel.allShareLevelsInt
+                )
+        );
         GraphElement parent = subGraph.vertexWithIdentifier(parentUri);
         if (parent == null) {
             parent = subGraph.getGroupRelations().get(parentUri);
@@ -55,7 +70,8 @@ public class ExportSubGraphToMarkdown {
         }
         markdown.append("\n");
         URI parentForkUri = otherUri(parentUri, parentRelation);
-        for (Relation relation : subGraph.edges().values()) {
+        List<Relation> relationsCopy = new ArrayList(subGraph.edges().values());
+        for (Relation relation : relationsCopy) {
             URI otherUri = otherUri(parentUri, relation);
             if (otherUri != null && (parentForkUri == null || !parentForkUri.equals(otherUri)) && !visitedParents.contains(otherUri)) {
                 markdown.append(
@@ -67,7 +83,8 @@ public class ExportSubGraphToMarkdown {
                 );
             }
         }
-        for (GroupRelationPojo groupRelation : subGraph.getGroupRelations().values()) {
+        List<GroupRelationPojo> groupRelationsCopy = new ArrayList(subGraph.getGroupRelations().values());
+        for (GroupRelationPojo groupRelation : groupRelationsCopy) {
             if (parentUri.equals(groupRelation.getSourceForkUri()) && !visitedParents.contains(groupRelation.uri())) {
                 markdown.append(
                         buildForParentUri(
