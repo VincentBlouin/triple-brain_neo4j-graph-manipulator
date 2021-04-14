@@ -44,4 +44,9 @@ public class MdFile {
     public void setLastModificationDate(Long lastModificationDate) {
         this.lastModificationDate = lastModificationDate;
     }
+
+    public static String formatLabel(String label){
+        // \R is regex to replace all line breaks
+        return label.replaceAll("\\R", "");
+    }
 }

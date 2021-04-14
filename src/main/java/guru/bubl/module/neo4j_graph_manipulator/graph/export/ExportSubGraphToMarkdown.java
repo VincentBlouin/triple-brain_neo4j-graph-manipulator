@@ -3,6 +3,7 @@ package guru.bubl.module.neo4j_graph_manipulator.graph.export;
 import com.google.gson.reflect.TypeToken;
 import guru.bubl.module.model.UserUris;
 import guru.bubl.module.model.graph.ShareLevel;
+import guru.bubl.module.model.graph.edge.Edge;
 import guru.bubl.module.model.graph.graph_element.GraphElement;
 import guru.bubl.module.model.graph.graph_element.GraphElementPojo;
 import guru.bubl.module.model.graph.group_relation.GroupRelation;
@@ -18,6 +19,8 @@ import org.codehaus.jettison.json.JSONObject;
 
 import java.net.URI;
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class ExportSubGraphToMarkdown {
     private SubGraph subGraph = SubGraphPojo.empty();
@@ -60,16 +63,16 @@ public class ExportSubGraphToMarkdown {
         }
         String relationLabel = "";
         if (parentRelation != null && !parentRelation.label().trim().equals("")) {
-            relationLabel = "(" + parentRelation.label() + ") ";
+            relationLabel = "(" + MdFile.formatLabel(parentRelation.label()) + ") ";
         }
         markdown.append(relationLabel);
         if (UserUris.isUriOfAGroupRelation(parentUri)) {
-            markdown.append("(" + parent.label() + ")");
+            markdown.append("(" + MdFile.formatLabel(parent.label()) + ")");
         } else if (!isCenter && centers.contains(parentUri)) {
             markdown.append("[[" + MdFile.applyNameFilter(parent.label()) + "]]").append("\n");
             return markdown.toString();
         } else {
-            markdown.append(parent.label());
+            markdown.append(MdFile.formatLabel(parent.label()));
         }
         markdown.append("\n");
         URI parentForkUri = otherUri(parentUri, parentRelation);
@@ -87,33 +90,46 @@ public class ExportSubGraphToMarkdown {
                 childrenIndex
         );
         List<Relation> relationsCopy = new ArrayList(subGraph.edges().values());
-        Collections.sort(relationsCopy, compareByChildrenIndex);
-        for (Relation relation : relationsCopy) {
-            URI otherUri = otherUri(parentUri, relation);
-            if (otherUri != null && (parentForkUri == null || !parentForkUri.equals(otherUri)) && !visitedParents.contains(otherUri)) {
-                markdown.append(
-                        buildForParentUri(
-                                otherUri,
-                                relation,
-                                depth + 1
-                        )
-                );
-            }
-        }
-        List<GroupRelationPojo> groupRelationsCopy = new ArrayList(subGraph.getGroupRelations().values());
-        for (GroupRelationPojo groupRelation : groupRelationsCopy) {
-            if (parentUri.equals(groupRelation.getSourceForkUri()) && !visitedParents.contains(groupRelation.uri())) {
-                markdown.append(
-                        buildForParentUri(
-                                groupRelation.uri(),
-                                null,
-                                depth + 1
-                        )
-                );
+        List<GroupRelation> groupRelationsCopy = new ArrayList(subGraph.getGroupRelations().values());
+        List<Edge> edges = Stream.concat(relationsCopy.stream(), groupRelationsCopy.stream())
+                .collect(Collectors.toList());
+        Collections.sort(edges, compareByChildrenIndex);
+        for (Edge edge : edges) {
+            if (UserUris.isUriOfAGroupRelation(edge.uri())) {
+                GroupRelationPojo groupRelationPojo = (GroupRelationPojo) edge;
+                if (parentUri.equals(groupRelationPojo.getSourceForkUri()) && !visitedParents.contains(edge.uri())) {
+                    markdown.append(
+                            buildForParentUri(
+                                    edge.uri(),
+                                    null,
+                                    depth + 1
+                            )
+                    );
+                }
+            } else {
+                Relation relation = (Relation) edge;
+                URI otherUri = otherUri(parentUri, relation);
+                if (otherUri != null && (parentForkUri == null || !parentForkUri.equals(otherUri)) && !visitedParents.contains(otherUri)) {
+                    markdown.append(
+                            buildForParentUri(
+                                    otherUri,
+                                    relation,
+                                    depth + 1
+                            )
+                    );
+                }
             }
         }
         return markdown.toString();
     }
+
+//    private void buildRelationLine(Relation relation){
+//
+//    }
+//
+//    private void buildRelationLine(Relation relation){
+//
+//    }
 
     private URI otherUri(URI parentUri, Relation relation) {
         if (relation == null) {

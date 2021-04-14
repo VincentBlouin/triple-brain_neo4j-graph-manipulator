@@ -1,5 +1,6 @@
 package guru.bubl.module.neo4j_graph_manipulator.graph.export;
 
+import guru.bubl.module.model.graph.edge.Edge;
 import guru.bubl.module.model.graph.relation.Relation;
 import guru.bubl.module.model.graph.subgraph.SubGraph;
 import org.codehaus.jettison.json.JSONObject;
@@ -8,7 +9,7 @@ import java.net.URI;
 import java.util.Comparator;
 import java.util.Map;
 
-public class CompareByChildrenIndex implements Comparator<Relation> {
+public class CompareByChildrenIndex implements Comparator<Edge> {
 
     private SubGraph subGraph;
     private JSONObject indexInfo;
@@ -21,11 +22,11 @@ public class CompareByChildrenIndex implements Comparator<Relation> {
     }
 
     @Override
-    public int compare(Relation r1, Relation r2) {
+    public int compare(Edge r1, Edge r2) {
         return this.getIndexForRelation(r1) - this.getIndexForRelation(r2);
     }
 
-    private int getIndexForRelation(Relation relation) {
+    private int getIndexForRelation(Edge relation) {
 //        System.out.println(relation.label());
 //        System.out.println(indexInfo);
         if (indexInfo == null) {
