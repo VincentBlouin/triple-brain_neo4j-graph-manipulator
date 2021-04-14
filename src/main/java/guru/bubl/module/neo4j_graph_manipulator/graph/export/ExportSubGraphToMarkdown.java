@@ -1,20 +1,23 @@
 package guru.bubl.module.neo4j_graph_manipulator.graph.export;
 
+import com.google.gson.reflect.TypeToken;
 import guru.bubl.module.model.UserUris;
 import guru.bubl.module.model.graph.ShareLevel;
 import guru.bubl.module.model.graph.graph_element.GraphElement;
+import guru.bubl.module.model.graph.graph_element.GraphElementPojo;
 import guru.bubl.module.model.graph.group_relation.GroupRelation;
 import guru.bubl.module.model.graph.group_relation.GroupRelationPojo;
 import guru.bubl.module.model.graph.relation.Relation;
 import guru.bubl.module.model.graph.subgraph.SubGraph;
 import guru.bubl.module.model.graph.subgraph.SubGraphPojo;
 import guru.bubl.module.model.graph.subgraph.UserGraph;
+import guru.bubl.module.model.json.JsonUtils;
+import org.checkerframework.checker.units.qual.C;
+import org.codehaus.jettison.json.JSONException;
+import org.codehaus.jettison.json.JSONObject;
 
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class ExportSubGraphToMarkdown {
     private SubGraph subGraph = SubGraphPojo.empty();
@@ -70,7 +73,21 @@ public class ExportSubGraphToMarkdown {
         }
         markdown.append("\n");
         URI parentForkUri = otherUri(parentUri, parentRelation);
+        JSONObject childrenIndex = new JSONObject();
+        try {
+            if (!parent.getChildrenIndex().equals("")) {
+                childrenIndex = new JSONObject(parent.getChildrenIndex());
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        CompareByChildrenIndex compareByChildrenIndex = new CompareByChildrenIndex(
+                parentUri,
+                subGraph,
+                childrenIndex
+        );
         List<Relation> relationsCopy = new ArrayList(subGraph.edges().values());
+        Collections.sort(relationsCopy, compareByChildrenIndex);
         for (Relation relation : relationsCopy) {
             URI otherUri = otherUri(parentUri, relation);
             if (otherUri != null && (parentForkUri == null || !parentForkUri.equals(otherUri)) && !visitedParents.contains(otherUri)) {
@@ -105,13 +122,7 @@ public class ExportSubGraphToMarkdown {
         if (parentUri == null) {
             return centerUri;
         }
-        if (relation.sourceUri().equals(parentUri)) {
-            return relation.destinationUri();
-        } else if (relation.destinationUri().equals(parentUri)) {
-            return relation.sourceUri();
-        } else {
-            return null;
-        }
+        return relation.getOtherForkUri(parentUri);
     }
 
 }
