@@ -26,8 +26,8 @@ public class CompareByChildrenIndex implements Comparator<Relation> {
     }
 
     private int getIndexForRelation(Relation relation) {
-        System.out.println(relation.label());
-        System.out.println(indexInfo);
+//        System.out.println(relation.label());
+//        System.out.println(indexInfo);
         if (indexInfo == null) {
 //            System.out.println("null index info");
             return 0;

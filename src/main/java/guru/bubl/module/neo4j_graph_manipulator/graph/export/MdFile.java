@@ -3,6 +3,8 @@ package guru.bubl.module.neo4j_graph_manipulator.graph.export;
 public class MdFile {
     private String name;
     private String content;
+    Long creationDate;
+    Long lastModificationDate;
 
     public MdFile(String name) {
         this.name = name;
@@ -25,5 +27,21 @@ public class MdFile {
 
     public String getContent() {
         return content;
+    }
+
+    public Long getCreationDate() {
+        return creationDate;
+    }
+
+    public void setCreationDate(Long creationDate) {
+        this.creationDate = creationDate;
+    }
+
+    public Long getLastModificationDate() {
+        return lastModificationDate;
+    }
+
+    public void setLastModificationDate(Long lastModificationDate) {
+        this.lastModificationDate = lastModificationDate;
     }
 }

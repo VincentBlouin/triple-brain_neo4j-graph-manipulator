@@ -21,6 +21,7 @@ import java.io.FileWriter;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.nio.file.attribute.FileTime;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -69,11 +70,18 @@ public class ExportToMarkdown {
             List<CenterGraphElementPojo> centersPojo = centeredGraphElementsOperator.getPublicAndPrivateForOwner(User.withUsername(username));
             for (CenterGraphElement center : centersPojo) {
                 if (!UserUris.isUriOfATag(center.getGraphElement().uri()) && !UserUris.isUriOfARelation(center.getGraphElement().uri())) {
+                    MdFile mdFile = new MdFile(
+                            center.getGraphElement().label()
+                    );
+                    mdFile.setLastModificationDate(
+                            center.getLastCenterDate().getTime()
+                    );
+                    mdFile.setCreationDate(
+                            center.getGraphElement().creationDate().getTime()
+                    );
                     centers.put(
                             center.getGraphElement().uri(),
-                            new MdFile(
-                                    center.getGraphElement().label()
-                            )
+                            mdFile
                     );
                 }
             }
@@ -213,7 +221,10 @@ public class ExportToMarkdown {
                 FileWriter myWriter = new FileWriter(filePath);
                 myWriter.write(file.getContent());
                 myWriter.close();
-                zipFile.addFile(new File(filePath));
+                File physicalFile = new File(filePath);
+                physicalFile.setLastModified(file.getLastModificationDate());
+                Files.setAttribute(Paths.get(filePath), "creationTime", FileTime.fromMillis(file.getCreationDate()));
+                zipFile.addFile(physicalFile);
             }
             System.out.println("done writing file " + formatter.format(new Date()));
             return zipFile.getFile();
