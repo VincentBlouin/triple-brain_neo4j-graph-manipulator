@@ -126,7 +126,7 @@ public class ExportSubGraphToMarkdown {
         StringBuilder footNotesStr = new StringBuilder();
         for (int i = 1; i <= footNotes.size(); i++) {
             footNotesStr.append(" [^" + i + "]: ");
-            footNotesStr.append(footNotes.get(i - 1));
+            footNotesStr.append(footNotes.get(i - 1) + "\n");
         }
         return footNotesStr.toString();
     }
