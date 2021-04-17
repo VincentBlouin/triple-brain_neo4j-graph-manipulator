@@ -89,9 +89,7 @@ public class ExportSubGraphToMarkdown {
                 subGraph,
                 childrenIndex
         );
-        List<Relation> relationsCopy = new ArrayList(subGraph.edges().values());
-        List<GroupRelation> groupRelationsCopy = new ArrayList(subGraph.getGroupRelations().values());
-        List<Edge> edges = Stream.concat(relationsCopy.stream(), groupRelationsCopy.stream())
+        List<Edge> edges = Stream.concat(subGraph.edges().values().stream(), subGraph.getGroupRelations().values().stream())
                 .collect(Collectors.toList());
         Collections.sort(edges, compareByChildrenIndex);
         for (Edge edge : edges) {
