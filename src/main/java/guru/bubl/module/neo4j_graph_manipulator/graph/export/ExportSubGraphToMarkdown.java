@@ -25,6 +25,8 @@ public class ExportSubGraphToMarkdown {
     private Set<URI> visitedParents = new HashSet<>();
     private UserGraph userGraph;
 
+    private List<String> footNotes = new ArrayList<>();
+
 
     public ExportSubGraphToMarkdown(UserGraph userGraph, URI centerUri, Set<URI> centers) {
         this.userGraph = userGraph;
@@ -59,16 +61,16 @@ public class ExportSubGraphToMarkdown {
         }
         String relationLabel = "";
         if (parentRelation != null && !parentRelation.label().trim().equals("")) {
-            relationLabel = "(" + MdFile.formatLabel(parentRelation.label()) + ")" + buildTagString(parentRelation) + " " ;
+            relationLabel = "(" + MdFile.formatLabel(parentRelation.label()) + ")" + buildNoteReference(parentRelation) + buildTagString(parentRelation) + " ";
         }
         markdown.append(relationLabel);
         if (UserUris.isUriOfAGroupRelation(parentUri)) {
-            markdown.append("(" + MdFile.formatLabel(parent.label()) + ")" + buildTagString(parent));
+            markdown.append("(" + MdFile.formatLabel(parent.label()) + ")" + buildNoteReference(parent) + buildTagString(parent));
         } else if (!isCenter && centers.contains(parentUri)) {
             markdown.append("[[" + MdFile.applyNameFilter(parent.label()) + "]]").append("\n");
             return markdown.toString();
         } else {
-            markdown.append(MdFile.formatLabel(parent.label()) + buildTagString(parent));
+            markdown.append(MdFile.formatLabel(parent.label()) + buildNoteReference(parent) + buildTagString(parent));
         }
         markdown.append("\n");
         URI parentForkUri = otherUri(parentUri, parentRelation);
@@ -114,27 +116,39 @@ public class ExportSubGraphToMarkdown {
                 }
             }
         }
+        if (isCenter) {
+            markdown.append(buildFootnotes());
+        }
         return markdown.toString();
     }
 
-//    private void buildRelationLine(Relation relation){
-//
-//    }
-//
-//    private void buildRelationLine(Relation relation){
-//
-//    }
+    private String buildFootnotes() {
+        StringBuilder footNotesStr = new StringBuilder();
+        for (int i = 1; i <= footNotes.size(); i++) {
+            footNotesStr.append(" [^" + i + "]: ");
+            footNotesStr.append(footNotes.get(i - 1));
+        }
+        return footNotesStr.toString();
+    }
 
     private String buildTagString(GraphElement graphElement) {
         List<String> tagLabels = new ArrayList<>();
         for (Tag tag : graphElement.getTags().values()) {
-            tagLabels.add("#" + tag.label().trim().replaceAll("\\s+","-"));
+            tagLabels.add("#" + tag.label().trim().replaceAll("\\s+", "-"));
         }
         String space = "";
         if (tagLabels.size() > 0) {
             space = " ";
         }
         return space + String.join(" ", tagLabels);
+    }
+
+    private String buildNoteReference(GraphElement graphElement) {
+        if (!graphElement.gotComments()) {
+            return "";
+        }
+        footNotes.add(graphElement.comment());
+        return " [^" + footNotes.size() + "] ";
     }
 
     private URI otherUri(URI parentUri, Relation relation) {
