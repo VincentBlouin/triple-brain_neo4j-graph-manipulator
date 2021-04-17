@@ -1,19 +1,15 @@
 package guru.bubl.module.neo4j_graph_manipulator.graph.export;
 
-import com.google.gson.reflect.TypeToken;
 import guru.bubl.module.model.UserUris;
 import guru.bubl.module.model.graph.ShareLevel;
 import guru.bubl.module.model.graph.edge.Edge;
 import guru.bubl.module.model.graph.graph_element.GraphElement;
-import guru.bubl.module.model.graph.graph_element.GraphElementPojo;
-import guru.bubl.module.model.graph.group_relation.GroupRelation;
 import guru.bubl.module.model.graph.group_relation.GroupRelationPojo;
 import guru.bubl.module.model.graph.relation.Relation;
 import guru.bubl.module.model.graph.subgraph.SubGraph;
 import guru.bubl.module.model.graph.subgraph.SubGraphPojo;
 import guru.bubl.module.model.graph.subgraph.UserGraph;
-import guru.bubl.module.model.json.JsonUtils;
-import org.checkerframework.checker.units.qual.C;
+import guru.bubl.module.model.graph.tag.Tag;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 
@@ -63,16 +59,16 @@ public class ExportSubGraphToMarkdown {
         }
         String relationLabel = "";
         if (parentRelation != null && !parentRelation.label().trim().equals("")) {
-            relationLabel = "(" + MdFile.formatLabel(parentRelation.label()) + ") ";
+            relationLabel = "(" + MdFile.formatLabel(parentRelation.label()) + ")" + buildTagString(parentRelation) + " " ;
         }
         markdown.append(relationLabel);
         if (UserUris.isUriOfAGroupRelation(parentUri)) {
-            markdown.append("(" + MdFile.formatLabel(parent.label()) + ")");
+            markdown.append("(" + MdFile.formatLabel(parent.label()) + ")" + buildTagString(parent));
         } else if (!isCenter && centers.contains(parentUri)) {
             markdown.append("[[" + MdFile.applyNameFilter(parent.label()) + "]]").append("\n");
             return markdown.toString();
         } else {
-            markdown.append(MdFile.formatLabel(parent.label()));
+            markdown.append(MdFile.formatLabel(parent.label()) + buildTagString(parent));
         }
         markdown.append("\n");
         URI parentForkUri = otherUri(parentUri, parentRelation);
@@ -128,6 +124,18 @@ public class ExportSubGraphToMarkdown {
 //    private void buildRelationLine(Relation relation){
 //
 //    }
+
+    private String buildTagString(GraphElement graphElement) {
+        List<String> tagLabels = new ArrayList<>();
+        for (Tag tag : graphElement.getTags().values()) {
+            tagLabels.add("#" + tag.label().trim().replaceAll("\\s+","-"));
+        }
+        String space = "";
+        if (tagLabels.size() > 0) {
+            space = " ";
+        }
+        return space + String.join(" ", tagLabels);
+    }
 
     private URI otherUri(URI parentUri, Relation relation) {
         if (relation == null) {
