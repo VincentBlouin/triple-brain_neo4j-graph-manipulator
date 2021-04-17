@@ -1,5 +1,6 @@
 package guru.bubl.module.neo4j_graph_manipulator.graph.export;
 
+import com.vladsch.flexmark.html2md.converter.FlexmarkHtmlConverter;
 import guru.bubl.module.model.UserUris;
 import guru.bubl.module.model.graph.ShareLevel;
 import guru.bubl.module.model.graph.edge.Edge;
@@ -126,7 +127,8 @@ public class ExportSubGraphToMarkdown {
         StringBuilder footNotesStr = new StringBuilder();
         for (int i = 1; i <= footNotes.size(); i++) {
             footNotesStr.append(" [^" + i + "]: ");
-            footNotesStr.append(footNotes.get(i - 1) + "\n");
+            String note = FlexmarkHtmlConverter.builder().build().convert(footNotes.get(i - 1));
+            footNotesStr.append(note.trim() + "\n");
         }
         return footNotesStr.toString();
     }
