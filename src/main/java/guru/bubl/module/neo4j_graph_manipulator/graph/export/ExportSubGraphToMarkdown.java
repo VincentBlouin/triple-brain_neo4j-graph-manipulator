@@ -54,9 +54,7 @@ public class ExportSubGraphToMarkdown {
             parent = subGraph.getGroupRelations().get(parentUri);
         }
         Boolean isCenter = parentUri.equals(centerUri) && parentRelation == null;
-        if (isCenter) {
-            markdown.append("# ");
-        } else {
+        if (!isCenter) {
             markdown.append(" ".repeat(Math.max(0, depth * 2)));
             markdown.append("* ");
         }
@@ -65,15 +63,19 @@ public class ExportSubGraphToMarkdown {
             relationLabel = "(" + MdFile.formatLabel(parentRelation.label()) + ")" + buildNoteReference(parentRelation) + buildTagString(parentRelation) + " ";
         }
         markdown.append(relationLabel);
+        String parentLabel = isCenter ? "" : MdFile.formatLabel(parent.label());
+        String afterLabel = buildNoteReference(parent) + buildTagString(parent);
         if (UserUris.isUriOfAGroupRelation(parentUri)) {
-            markdown.append("(" + MdFile.formatLabel(parent.label()) + ")" + buildNoteReference(parent) + buildTagString(parent));
+            markdown.append("(" + parentLabel + ")" + afterLabel);
         } else if (!isCenter && centers.contains(parentUri)) {
             markdown.append("[[" + MdFile.applyNameFilter(parent.label()) + "]]").append("\n");
             return markdown.toString();
         } else {
-            markdown.append(MdFile.formatLabel(parent.label()) + buildNoteReference(parent) + buildTagString(parent));
+            markdown.append(parentLabel + afterLabel);
         }
-        markdown.append("\n");
+        if (!isCenter || !afterLabel.trim().equals("")) {
+            markdown.append("\n");
+        }
         URI parentForkUri = otherUri(parentUri, parentRelation);
         JSONObject childrenIndex = new JSONObject();
         try {
