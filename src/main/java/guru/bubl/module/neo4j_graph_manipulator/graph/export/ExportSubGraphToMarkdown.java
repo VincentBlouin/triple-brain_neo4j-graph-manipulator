@@ -36,7 +36,7 @@ public class ExportSubGraphToMarkdown {
     }
 
     public String export() {
-        return buildForParentUri(centerUri, null, 0);
+        return buildForParentUri(centerUri, null, -1);
     }
 
     public String buildForParentUri(URI parentUri, Relation parentRelation, Integer depth) {
