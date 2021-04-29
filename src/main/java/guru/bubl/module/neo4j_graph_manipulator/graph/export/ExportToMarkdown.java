@@ -8,6 +8,7 @@ import guru.bubl.module.model.UserUris;
 import guru.bubl.module.model.center_graph_element.*;
 import guru.bubl.module.model.graph.GraphFactory;
 import guru.bubl.module.model.graph.ShareLevel;
+import guru.bubl.module.model.graph.graph_element.GraphElement;
 import guru.bubl.module.model.graph.subgraph.SubGraph;
 import guru.bubl.module.model.graph.subgraph.UserGraph;
 import net.lingala.zip4j.ZipFile;
@@ -42,6 +43,8 @@ public class ExportToMarkdown {
 
     private String username;
 
+    private Map<String, URI> centersLabel = new HashMap<>();
+
     @AssistedInject
     protected ExportToMarkdown(
             @Assisted String username
@@ -70,8 +73,10 @@ public class ExportToMarkdown {
             List<CenterGraphElementPojo> centersPojo = centeredGraphElementsOperator.getPublicAndPrivateForOwner(User.withUsername(username));
             for (CenterGraphElement center : centersPojo) {
                 if (!UserUris.isUriOfATag(center.getGraphElement().uri()) && !UserUris.isUriOfARelation(center.getGraphElement().uri())) {
+                    String filename = uniqueCenterName(center);
+                    centersLabel.put(filename, center.getGraphElement().uri());
                     MdFile mdFile = new MdFile(
-                            center.getGraphElement().label()
+                            filename
                     );
                     mdFile.setLastModificationDate(
                             center.getLastCenterDate().getTime()
@@ -83,6 +88,7 @@ public class ExportToMarkdown {
                             center.getGraphElement().uri(),
                             mdFile
                     );
+
                 }
             }
             if (centersPojo.size() == 0) {
@@ -122,7 +128,8 @@ public class ExportToMarkdown {
             ExportSubGraphToMarkdown exportSubGraphToMarkdown = new ExportSubGraphToMarkdown(
                     userGraph,
                     centerUri,
-                    centers.keySet()
+                    centers.keySet(),
+                    centers
             );
 //            System.out.println("building md file " + mdFile.getName());
             mdFile.setContent(exportSubGraphToMarkdown.export());
@@ -209,6 +216,29 @@ public class ExportToMarkdown {
 //        }
 //        return null;
 //    }
+
+    private String uniqueCenterName(CenterGraphElement center) {
+        String name = MdFile.applyNameFilter(center.getGraphElement().label());
+        if (!centersLabel.containsKey(name)) {
+            return name;
+        }
+        URI centerUriWithLabel = centersLabel.get(name);
+        Boolean duplicateLabel = !centerUriWithLabel.equals(center.getGraphElement().uri());
+        if (duplicateLabel) {
+            String[] context = center.getContext().split("\\{\\{");
+            String closestGraphElementStr = context.length > 0 ? context[0] : "";
+            name = MdFile.applyNameFilter(
+                    name + " " + closestGraphElementStr
+            );
+            duplicateLabel = centersLabel.containsKey(name);
+            if (duplicateLabel) {
+                String uriStr = center.getGraphElement().uri().toString();
+                name = name + " " + uriStr.substring(uriStr.lastIndexOf("/") + 1);
+            }
+            name = MdFile.applyNameFilter(name);
+        }
+        return name;
+    }
 
     private File writeFilesToZip(LinkedHashMap<URI, MdFile> files) {
         System.out.println("start writing files " + formatter.format(new Date()));

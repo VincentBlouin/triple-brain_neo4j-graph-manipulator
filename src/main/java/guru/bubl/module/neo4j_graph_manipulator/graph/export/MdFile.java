@@ -11,14 +11,14 @@ public class MdFile {
     }
 
     public String getName() {
-        if (name.trim().equals("")) {
-            return "write it";
-        }
         return applyNameFilter(name);
     }
 
     public static String applyNameFilter(String string) {
-        return string.replaceAll("[^a-zA-Z0-9\\sa-zwÀ-Üà-øoù-ÿŒœ\\.\\-]", "_");
+        if (string.trim().equals("")) {
+            return "write it";
+        }
+        return string.replaceAll("[^a-zA-Z0-9\\sa-zwÀ-Üà-øoù-ÿŒœ\\.\\-]", "_").trim();
     }
 
     public void setContent(String content) {
@@ -45,7 +45,7 @@ public class MdFile {
         this.lastModificationDate = lastModificationDate;
     }
 
-    public static String formatLabel(String label){
+    public static String formatLabel(String label) {
         // \R is regex to replace all line breaks
         return label.replaceAll("\\R", "");
     }

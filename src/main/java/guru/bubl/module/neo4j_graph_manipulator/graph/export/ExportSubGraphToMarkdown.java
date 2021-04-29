@@ -23,16 +23,18 @@ public class ExportSubGraphToMarkdown {
     private SubGraph subGraph = SubGraphPojo.empty();
     private URI centerUri;
     private Set<URI> centers;
+    private LinkedHashMap<URI, MdFile> mdFiles;
     private Set<URI> visitedParents = new HashSet<>();
     private UserGraph userGraph;
 
     private List<String> footNotes = new ArrayList<>();
 
 
-    public ExportSubGraphToMarkdown(UserGraph userGraph, URI centerUri, Set<URI> centers) {
+    public ExportSubGraphToMarkdown(UserGraph userGraph, URI centerUri, Set<URI> centers, LinkedHashMap<URI, MdFile> mdFiles) {
         this.userGraph = userGraph;
         this.centerUri = centerUri;
         this.centers = centers;
+        this.mdFiles = mdFiles;
     }
 
     public String export() {
@@ -68,7 +70,7 @@ public class ExportSubGraphToMarkdown {
         if (UserUris.isUriOfAGroupRelation(parentUri)) {
             markdown.append("(" + parentLabel + ")" + afterLabel);
         } else if (!isCenter && centers.contains(parentUri)) {
-            markdown.append("[[" + MdFile.applyNameFilter(parent.label()) + "]]").append("\n");
+            markdown.append("[[" + mdFiles.get(parent.uri()).getName() + "]]").append("\n");
             return markdown.toString();
         } else {
             markdown.append(parentLabel + afterLabel);
