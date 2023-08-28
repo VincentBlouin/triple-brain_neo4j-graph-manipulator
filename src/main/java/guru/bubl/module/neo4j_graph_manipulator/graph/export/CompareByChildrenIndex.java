@@ -1,13 +1,11 @@
 package guru.bubl.module.neo4j_graph_manipulator.graph.export;
 
 import guru.bubl.module.model.graph.edge.Edge;
-import guru.bubl.module.model.graph.relation.Relation;
 import guru.bubl.module.model.graph.subgraph.SubGraph;
 import org.codehaus.jettison.json.JSONObject;
 
 import java.net.URI;
 import java.util.Comparator;
-import java.util.Map;
 
 public class CompareByChildrenIndex implements Comparator<Edge> {
 

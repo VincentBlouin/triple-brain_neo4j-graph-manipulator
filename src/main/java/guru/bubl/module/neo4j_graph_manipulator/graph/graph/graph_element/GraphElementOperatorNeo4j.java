@@ -25,6 +25,7 @@ import guru.bubl.module.neo4j_graph_manipulator.graph.graph.fork.ForkOperatorNeo
 import guru.bubl.module.neo4j_graph_manipulator.graph.image.ImagesNeo4j;
 import guru.bubl.module.neo4j_graph_manipulator.graph.tag.TagFactoryNeo4J;
 import org.neo4j.driver.*;
+import org.neo4j.driver.Record;
 
 import java.net.URI;
 import java.util.*;

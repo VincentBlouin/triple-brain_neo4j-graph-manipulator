@@ -27,6 +27,7 @@ import org.neo4j.driver.types.Relationship;
 
 import java.net.URI;
 import java.util.*;
+import org.neo4j.driver.Record;
 
 import static org.neo4j.driver.Values.parameters;
 
@@ -94,7 +95,7 @@ public class SubGraphExtractorNeo4j {
             Map<Long, URI> idsUri = new HashMap<>();
             String childIndex = null;
             while (rs.hasNext()) {
-                Record record = rs.next();
+                org.neo4j.driver.Record record = rs.next();
                 Value relationship1 = record.get("rel1");
                 if (!relationship1.isNull()) {
                     relationships.add(relationship1.asRelationship());

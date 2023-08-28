@@ -17,6 +17,7 @@ import guru.bubl.module.model.graph.graph_element.GraphElementPojo;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.TagQueryBuilder;
 import guru.bubl.module.neo4j_graph_manipulator.graph.graph.extractor.subgraph.TagsFromExtractorQueryRowAsArray;
 import org.neo4j.driver.*;
+import org.neo4j.driver.Record;
 
 import java.net.URI;
 import java.util.ArrayList;

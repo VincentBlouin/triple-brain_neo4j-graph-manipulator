@@ -157,14 +157,14 @@
         <dependency>
             <groupId>org.neo4j</groupId>
             <artifactId>neo4j-kernel</artifactId>
-            <version>4.1.3</version>
+            <version>4.1.12</version>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.neo4j</groupId>
             <artifactId>neo4j-io</artifactId>
-            <version>4.1.3</version>
+            <version>4.1.12</version>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
